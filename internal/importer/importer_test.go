@@ -85,3 +85,44 @@ func TestImportRepoExamples(t *testing.T) {
 		})
 	}
 }
+
+func TestImportRepoDeterministicChangeIdentity(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "helm-paas")
+
+	first, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo first run returned error: %v", err)
+	}
+	second, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo second run returned error: %v", err)
+	}
+
+	if first.ChangeID != second.ChangeID {
+		t.Fatalf("expected stable change id, got %q and %q", first.ChangeID, second.ChangeID)
+	}
+	if len(first.Provenance) != len(second.Provenance) {
+		t.Fatalf("expected same provenance count, got %d and %d", len(first.Provenance), len(second.Provenance))
+	}
+	for i := range first.Provenance {
+		if first.Provenance[i].ProvenanceID != second.Provenance[i].ProvenanceID {
+			t.Fatalf("expected stable provenance id at index %d, got %q and %q", i, first.Provenance[i].ProvenanceID, second.Provenance[i].ProvenanceID)
+		}
+	}
+	for i := range first.InversePlans {
+		if first.InversePlans[i].PlanID != second.InversePlans[i].PlanID {
+			t.Fatalf("expected stable inverse plan id at index %d, got %q and %q", i, first.InversePlans[i].PlanID, second.InversePlans[i].PlanID)
+		}
+	}
+
+	for i, prov := range first.Provenance {
+		if prov.RenderedAt != first.ImportedAt {
+			t.Fatalf("expected provenance[%d].rendered_at=%q to match imported_at=%q", i, prov.RenderedAt, first.ImportedAt)
+		}
+	}
+	for i, plan := range first.InversePlans {
+		if plan.CreatedAt != first.ImportedAt {
+			t.Fatalf("expected inverse plan[%d].created_at=%q to match imported_at=%q", i, plan.CreatedAt, first.ImportedAt)
+		}
+	}
+}

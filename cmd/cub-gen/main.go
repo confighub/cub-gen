@@ -51,6 +51,9 @@ func runDetect(args []string) error {
 	ref := fs.String("ref", "HEAD", "Git ref label to include in output")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
 	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
 		return err
 	}
 
@@ -72,6 +75,9 @@ func runLegacyImport(args []string) error {
 	out := fs.String("out", "-", "Output file path, or '-' for stdout")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
 	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
 		return err
 	}
 
@@ -127,6 +133,9 @@ func runGitOpsDiscover(args []string) error {
 	jsonOut := fs.Bool("json", false, "Output JSON")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
 	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
 		return err
 	}
 
@@ -164,6 +173,9 @@ func runGitOpsImport(args []string) error {
 	jsonOut := fs.Bool("json", false, "Output JSON")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
 	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
 		return err
 	}
 	_ = wait
@@ -205,6 +217,9 @@ func runGitOpsCleanup(args []string) error {
 	jsonOut := fs.Bool("json", false, "Output JSON")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
 	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
 		return err
 	}
 

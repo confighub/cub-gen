@@ -103,6 +103,61 @@ func TestGitOpsParityGoldenImportTable(t *testing.T) {
 	assertGoldenText(t, filepath.Join("testdata", "parity", "gitops-import.table.golden.txt"), out)
 }
 
+func TestGitOpsParityGoldenHelp(t *testing.T) {
+	tests := []struct {
+		name         string
+		args         []string
+		stdoutGolden string
+		stderrGolden string
+	}{
+		{
+			name:         "gitops-help",
+			args:         []string{"gitops", "--help"},
+			stdoutGolden: filepath.Join("testdata", "parity", "gitops-help.stdout.golden.txt"),
+		},
+		{
+			name:         "gitops-discover-help",
+			args:         []string{"gitops", "discover", "--help"},
+			stderrGolden: filepath.Join("testdata", "parity", "gitops-discover-help.stderr.golden.txt"),
+		},
+		{
+			name:         "gitops-import-help",
+			args:         []string{"gitops", "import", "--help"},
+			stderrGolden: filepath.Join("testdata", "parity", "gitops-import-help.stderr.golden.txt"),
+		},
+		{
+			name:         "gitops-cleanup-help",
+			args:         []string{"gitops", "cleanup", "--help"},
+			stderrGolden: filepath.Join("testdata", "parity", "gitops-cleanup-help.stderr.golden.txt"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := runWithCapturedIO(tt.args)
+			if err != nil {
+				t.Fatalf("run help returned error: %v", err)
+			}
+
+			if tt.stdoutGolden == "" {
+				if strings.TrimSpace(stdout) != "" {
+					t.Fatalf("expected empty stdout, got: %q", stdout)
+				}
+			} else {
+				assertGoldenText(t, tt.stdoutGolden, stdout)
+			}
+
+			if tt.stderrGolden == "" {
+				if strings.TrimSpace(stderr) != "" {
+					t.Fatalf("expected empty stderr, got: %q", stderr)
+				}
+			} else {
+				assertGoldenText(t, tt.stderrGolden, stderr)
+			}
+		})
+	}
+}
+
 func TestGitOpsParityErrorModes(t *testing.T) {
 	setupAliases(t)
 

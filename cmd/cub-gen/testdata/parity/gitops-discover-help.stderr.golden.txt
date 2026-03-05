@@ -1,0 +1,11 @@
+Usage of gitops discover:
+  -json
+    	Output JSON
+  -pretty
+    	Pretty-print JSON output (default true)
+  -ref string
+    	Git ref label to include in output (default "HEAD")
+  -space string
+    	ConfigHub space label (default "default")
+  -where-resource string
+    	Additional resource filter expression

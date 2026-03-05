@@ -1,0 +1,20 @@
+cub-gen gitops: local parity commands for cub gitops pattern
+
+Usage:
+  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--json] <target-slug>
+  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--wait] [--json] <target-slug> <render-target-slug>
+  cub-gen gitops cleanup [--space SPACE] [--json] <target-slug>
+
+Supported where-resource clauses:
+  kind = 'HelmRelease' | kind = 'Application' | kind = 'Kustomization'
+  kind IN ('HelmRelease','Application')
+  name = 'checkout-api' | resource_name LIKE '<contains-api>' | root LIKE '<contains-prod>'
+  combine clauses with AND
+
+Examples:
+  cub-gen gitops discover --space my-space ./examples/scoredev-paas
+  cub-gen gitops discover --where-resource "kind IN ('HelmRelease') AND resource_name LIKE '<contains-payments>'" ./examples/helm-paas
+  cub-gen gitops import --space my-space ./examples/springboot-paas render-target
+  cub-gen gitops cleanup --space my-space ./examples/springboot-paas
+
+Tip: <target-slug> is a local repo path in this prototype.

@@ -1,0 +1,7 @@
+Usage of gitops cleanup:
+  -json
+    	Output JSON
+  -pretty
+    	Pretty-print JSON output (default true)
+  -space string
+    	ConfigHub space label (default "default")
