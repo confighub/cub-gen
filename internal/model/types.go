@@ -11,6 +11,7 @@ const (
 type GeneratorDetection struct {
 	ID         string        `json:"id"`
 	Kind       GeneratorKind `json:"kind"`
+	Profile    string        `json:"profile"`
 	Name       string        `json:"name"`
 	Root       string        `json:"root"`
 	Inputs     []string      `json:"inputs"`
@@ -48,6 +49,7 @@ type GeneratorContract struct {
 	GeneratorID   string           `json:"generator_id"`
 	Name          string           `json:"name"`
 	Kind          string           `json:"kind"`
+	Profile       string           `json:"profile"`
 	Version       string           `json:"version"`
 	SourceRepo    string           `json:"source_repo"`
 	SourceRef     string           `json:"source_ref"`
@@ -72,17 +74,36 @@ type OutputRef struct {
 	Digest string `json:"digest"`
 }
 
+type FieldOrigin struct {
+	DryPath    string  `json:"dry_path"`
+	WetPath    string  `json:"wet_path"`
+	SourcePath string  `json:"source_path"`
+	Transform  string  `json:"transform"`
+	Confidence float64 `json:"confidence"`
+}
+
+type InverseEditPointer struct {
+	WetPath    string  `json:"wet_path"`
+	DryPath    string  `json:"dry_path"`
+	Owner      string  `json:"owner"`
+	EditHint   string  `json:"edit_hint"`
+	Confidence float64 `json:"confidence"`
+}
+
 type ProvenanceRecord struct {
-	SchemaVersion string      `json:"schema_version"`
-	ProvenanceID  string      `json:"provenance_id"`
-	ChangeID      string      `json:"change_id"`
-	GeneratorID   string      `json:"generator_id"`
-	GeneratorName string      `json:"generator_name"`
-	Version       string      `json:"version"`
-	InputDigest   string      `json:"input_digest"`
-	Sources       []SourceRef `json:"sources"`
-	Outputs       []OutputRef `json:"outputs"`
-	RenderedAt    string      `json:"rendered_at"`
+	SchemaVersion       string               `json:"schema_version"`
+	ProvenanceID        string               `json:"provenance_id"`
+	ChangeID            string               `json:"change_id"`
+	GeneratorID         string               `json:"generator_id"`
+	GeneratorName       string               `json:"generator_name"`
+	GeneratorProfile    string               `json:"generator_profile"`
+	Version             string               `json:"version"`
+	InputDigest         string               `json:"input_digest"`
+	Sources             []SourceRef          `json:"sources"`
+	Outputs             []OutputRef          `json:"outputs"`
+	FieldOriginMap      []FieldOrigin        `json:"field_origin_map"`
+	InverseEditPointers []InverseEditPointer `json:"inverse_edit_pointers"`
+	RenderedAt          string               `json:"rendered_at"`
 }
 
 type InversePatch struct {

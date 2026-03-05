@@ -35,7 +35,7 @@ func TestGitOpsParityGoldenDiscover(t *testing.T) {
 func TestGitOpsParityGoldenImport(t *testing.T) {
 	setupAliases(t)
 
-	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "spring", "render-target"})
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "score", "render-target"})
 	if err != nil {
 		t.Fatalf("run import returned error: %v\nstderr=%s", err, stderr)
 	}
@@ -93,7 +93,7 @@ func TestGitOpsParityGoldenDiscoverTable(t *testing.T) {
 func TestGitOpsParityGoldenImportTable(t *testing.T) {
 	setupAliases(t)
 
-	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "spring", "render-target"})
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "score", "render-target"})
 	if err != nil {
 		t.Fatalf("run import table returned error: %v\nstderr=%s", err, stderr)
 	}

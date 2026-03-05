@@ -37,14 +37,15 @@ var (
 // DiscoveredResource is the discover-phase resource abstraction, modeled after
 // cub gitops discover output entries.
 type DiscoveredResource struct {
-	GeneratorID   string   `json:"generator_id"`
-	ResourceName  string   `json:"resource_name"`
-	ResourceKind  string   `json:"resource_kind"`
-	ResourceType  string   `json:"resource_type"`
-	ResourceBody  string   `json:"resource_body"`
-	GeneratorKind string   `json:"generator_kind"`
-	Root          string   `json:"root"`
-	Inputs        []string `json:"inputs"`
+	GeneratorID      string   `json:"generator_id"`
+	GeneratorProfile string   `json:"generator_profile"`
+	ResourceName     string   `json:"resource_name"`
+	ResourceKind     string   `json:"resource_kind"`
+	ResourceType     string   `json:"resource_type"`
+	ResourceBody     string   `json:"resource_body"`
+	GeneratorKind    string   `json:"generator_kind"`
+	Root             string   `json:"root"`
+	Inputs           []string `json:"inputs"`
 }
 
 // DiscoverResult is the local discover-unit state used by import and cleanup.
@@ -572,14 +573,15 @@ func toDiscoveredResources(detections []model.GeneratorDetection) []DiscoveredRe
 		resourceType := mappedResourceType(g.Kind)
 		body := fmt.Sprintf("kind: %s\nmetadata:\n  name: %s\nspec:\n  root: %s\n", kind, g.Name, g.Root)
 		resources = append(resources, DiscoveredResource{
-			GeneratorID:   g.ID,
-			ResourceName:  g.Name,
-			ResourceKind:  kind,
-			ResourceType:  resourceType,
-			ResourceBody:  body,
-			GeneratorKind: string(g.Kind),
-			Root:          g.Root,
-			Inputs:        append([]string{}, g.Inputs...),
+			GeneratorID:      g.ID,
+			GeneratorProfile: g.Profile,
+			ResourceName:     g.Name,
+			ResourceKind:     kind,
+			ResourceType:     resourceType,
+			ResourceBody:     body,
+			GeneratorKind:    string(g.Kind),
+			Root:             g.Root,
+			Inputs:           append([]string{}, g.Inputs...),
 		})
 	}
 	sort.Slice(resources, func(i, j int) bool {

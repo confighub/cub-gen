@@ -11,28 +11,32 @@ func TestScanRepoExamples(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name         string
-		repoDir      string
-		expectedKind model.GeneratorKind
-		expectedFile string
+		name            string
+		repoDir         string
+		expectedKind    model.GeneratorKind
+		expectedProfile string
+		expectedFile    string
 	}{
 		{
-			name:         "helm-paas",
-			repoDir:      "helm-paas",
-			expectedKind: model.GeneratorHelm,
-			expectedFile: "Chart.yaml",
+			name:            "helm-paas",
+			repoDir:         "helm-paas",
+			expectedKind:    model.GeneratorHelm,
+			expectedProfile: "helm-paas",
+			expectedFile:    "Chart.yaml",
 		},
 		{
-			name:         "scoredev-paas",
-			repoDir:      "scoredev-paas",
-			expectedKind: model.GeneratorScore,
-			expectedFile: "score.yaml",
+			name:            "scoredev-paas",
+			repoDir:         "scoredev-paas",
+			expectedKind:    model.GeneratorScore,
+			expectedProfile: "scoredev-paas",
+			expectedFile:    "score.yaml",
 		},
 		{
-			name:         "springboot-paas",
-			repoDir:      "springboot-paas",
-			expectedKind: model.GeneratorSpringBoot,
-			expectedFile: "pom.xml",
+			name:            "springboot-paas",
+			repoDir:         "springboot-paas",
+			expectedKind:    model.GeneratorSpringBoot,
+			expectedProfile: "springboot-paas",
+			expectedFile:    "pom.xml",
 		},
 	}
 
@@ -54,6 +58,9 @@ func TestScanRepoExamples(t *testing.T) {
 			g := result.Generators[0]
 			if g.Kind != tt.expectedKind {
 				t.Fatalf("expected kind %q, got %q", tt.expectedKind, g.Kind)
+			}
+			if g.Profile != tt.expectedProfile {
+				t.Fatalf("expected profile %q, got %q", tt.expectedProfile, g.Profile)
 			}
 			if g.ID == "" {
 				t.Fatal("expected non-empty generator ID")

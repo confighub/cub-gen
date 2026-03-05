@@ -11,6 +11,7 @@
       ],
       "kind": "helm",
       "name": "helm-paas",
+      "profile": "helm-paas",
       "root": ""
     }
   ],
@@ -22,6 +23,7 @@
     {
       "generator_id": "gen_635643e45fbf3410",
       "generator_kind": "helm",
+      "generator_profile": "helm-paas",
       "inputs": [
         "Chart.yaml",
         "values-prod.yaml",
