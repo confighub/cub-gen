@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -68,7 +69,7 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 		contract := buildContract(detection, g)
 		contracts = append(contracts, contract)
 		provenance = append(provenance, buildProvenance(changeID, space, detection, g, importedAt))
-		inversePlans = append(inversePlans, buildInversePlan(changeID, dryUnitID, g, importedAt))
+		inversePlans = append(inversePlans, buildInversePlan(changeID, dryUnitID, detection, g, importedAt))
 	}
 
 	return model.ImportResult{
@@ -144,13 +145,13 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 			URI:    outputURI,
 			Digest: outputDigest,
 		}},
-		FieldOriginMap:      fieldOriginsForKind(g.Kind),
-		InverseEditPointers: inversePointersForKind(g.Kind),
+		FieldOriginMap:      fieldOriginsForGenerator(detection, g),
+		InverseEditPointers: inversePointersForGenerator(detection, g),
 		RenderedAt:          renderedAt,
 	}
 }
 
-func buildInversePlan(changeID, targetUnitID string, g model.GeneratorDetection, createdAt string) model.InverseTransformPlan {
+func buildInversePlan(changeID, targetUnitID string, detection model.DetectionResult, g model.GeneratorDetection, createdAt string) model.InverseTransformPlan {
 	return model.InverseTransformPlan{
 		SchemaVersion: inversePlanSchema,
 		PlanID:        "inv_" + shortID(changeID+":"+g.ID),
@@ -159,7 +160,7 @@ func buildInversePlan(changeID, targetUnitID string, g model.GeneratorDetection,
 		SourceRef:     g.Root,
 		TargetUnitID:  targetUnitID,
 		Status:        "draft",
-		Patches:       defaultPatchesForKind(g.Kind),
+		Patches:       defaultPatchesForGenerator(detection, g),
 		CreatedAt:     createdAt,
 	}
 }
@@ -199,8 +200,8 @@ func capabilitiesForKind(kind model.GeneratorKind) []string {
 	}
 }
 
-func defaultPatchesForKind(kind model.GeneratorKind) []model.InversePatch {
-	switch kind {
+func defaultPatchesForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.InversePatch {
+	switch g.Kind {
 	case model.GeneratorHelm:
 		return []model.InversePatch{{
 			Operation:      "replace",
@@ -212,10 +213,11 @@ func defaultPatchesForKind(kind model.GeneratorKind) []model.InversePatch {
 			Reason:         "Container image tag maps cleanly to helm values.",
 		}}
 	case model.GeneratorScore:
+		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		return []model.InversePatch{{
 			Operation:      "replace",
-			DryPath:        "containers.main.variables.LOG_LEVEL",
-			WetPath:        "Deployment/spec/template/spec/containers[0]/env[name=LOG_LEVEL]/value",
+			DryPath:        fmt.Sprintf("containers.%s.variables.%s", hints.ContainerName, hints.VariableName),
+			WetPath:        fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/env[name=%s]/value", hints.ContainerName, hints.VariableName),
 			EditableBy:     "app-team",
 			Confidence:     0.90,
 			RequiresReview: false,
@@ -236,8 +238,8 @@ func defaultPatchesForKind(kind model.GeneratorKind) []model.InversePatch {
 	}
 }
 
-func fieldOriginsForKind(kind model.GeneratorKind) []model.FieldOrigin {
-	switch kind {
+func fieldOriginsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.FieldOrigin {
+	switch g.Kind {
 	case model.GeneratorHelm:
 		return []model.FieldOrigin{
 			{
@@ -249,25 +251,26 @@ func fieldOriginsForKind(kind model.GeneratorKind) []model.FieldOrigin {
 			},
 		}
 	case model.GeneratorScore:
+		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		return []model.FieldOrigin{
 			{
-				DryPath:    "containers.main.image",
-				WetPath:    "Deployment/spec/template/spec/containers[name=main]/image",
-				SourcePath: "score.yaml",
+				DryPath:    fmt.Sprintf("containers.%s.image", hints.ContainerName),
+				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/image", hints.ContainerName),
+				SourcePath: hints.SourcePath,
 				Transform:  "score-to-k8s",
 				Confidence: 0.94,
 			},
 			{
-				DryPath:    "containers.main.variables.LOG_LEVEL",
-				WetPath:    "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value",
-				SourcePath: "score.yaml",
+				DryPath:    fmt.Sprintf("containers.%s.variables.%s", hints.ContainerName, hints.VariableName),
+				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/env[name=%s]/value", hints.ContainerName, hints.VariableName),
+				SourcePath: hints.SourcePath,
 				Transform:  "score-to-k8s",
 				Confidence: 0.90,
 			},
 			{
-				DryPath:    "service.ports.web.port",
-				WetPath:    "Service/spec/ports[name=web]/port",
-				SourcePath: "score.yaml",
+				DryPath:    fmt.Sprintf("service.ports.%s.port", hints.ServicePortName),
+				WetPath:    fmt.Sprintf("Service/spec/ports[name=%s]/port", hints.ServicePortName),
+				SourcePath: hints.SourcePath,
 				Transform:  "score-to-k8s",
 				Confidence: 0.91,
 			},
@@ -287,8 +290,8 @@ func fieldOriginsForKind(kind model.GeneratorKind) []model.FieldOrigin {
 	}
 }
 
-func inversePointersForKind(kind model.GeneratorKind) []model.InverseEditPointer {
-	switch kind {
+func inversePointersForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.InverseEditPointer {
+	switch g.Kind {
 	case model.GeneratorHelm:
 		return []model.InverseEditPointer{
 			{
@@ -300,26 +303,27 @@ func inversePointersForKind(kind model.GeneratorKind) []model.InverseEditPointer
 			},
 		}
 	case model.GeneratorScore:
+		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		return []model.InverseEditPointer{
 			{
-				WetPath:    "Deployment/spec/template/spec/containers[name=main]/image",
-				DryPath:    "containers.main.image",
+				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/image", hints.ContainerName),
+				DryPath:    fmt.Sprintf("containers.%s.image", hints.ContainerName),
 				Owner:      "app-team",
-				EditHint:   "Edit the Score container image in score.yaml.",
+				EditHint:   fmt.Sprintf("Edit the Score container image in %s.", hints.SourcePath),
 				Confidence: 0.94,
 			},
 			{
-				WetPath:    "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value",
-				DryPath:    "containers.main.variables.LOG_LEVEL",
+				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/env[name=%s]/value", hints.ContainerName, hints.VariableName),
+				DryPath:    fmt.Sprintf("containers.%s.variables.%s", hints.ContainerName, hints.VariableName),
 				Owner:      "app-team",
-				EditHint:   "Edit LOG_LEVEL under containers.main.variables in score.yaml.",
+				EditHint:   fmt.Sprintf("Edit %s under containers.%s.variables in %s.", hints.VariableName, hints.ContainerName, hints.SourcePath),
 				Confidence: 0.90,
 			},
 			{
-				WetPath:    "Service/spec/ports[name=web]/port",
-				DryPath:    "service.ports.web.port",
+				WetPath:    fmt.Sprintf("Service/spec/ports[name=%s]/port", hints.ServicePortName),
+				DryPath:    fmt.Sprintf("service.ports.%s.port", hints.ServicePortName),
 				Owner:      "app-team",
-				EditHint:   "Edit web service port in score.yaml.",
+				EditHint:   fmt.Sprintf("Edit %s service port in %s.", hints.ServicePortName, hints.SourcePath),
 				Confidence: 0.91,
 			},
 		}
@@ -336,6 +340,108 @@ func inversePointersForKind(kind model.GeneratorKind) []model.InverseEditPointer
 	default:
 		return []model.InverseEditPointer{}
 	}
+}
+
+type scoreHints struct {
+	SourcePath      string
+	ContainerName   string
+	VariableName    string
+	ServicePortName string
+}
+
+func scorePathHintsFromInputs(repo string, inputs []string) scoreHints {
+	h := scoreHints{
+		SourcePath:      "score.yaml",
+		ContainerName:   "main",
+		VariableName:    "LOG_LEVEL",
+		ServicePortName: "web",
+	}
+
+	scorePath := firstScoreInputPath(inputs)
+	if scorePath == "" {
+		return h
+	}
+	h.SourcePath = filepath.ToSlash(scorePath)
+
+	content, err := os.ReadFile(filepath.Join(repo, scorePath))
+	if err != nil {
+		return h
+	}
+
+	lines := strings.Split(string(content), "\n")
+	inContainers := false
+	inVariables := false
+	inService := false
+	inPorts := false
+	currentContainer := ""
+
+	for _, line := range lines {
+		raw := strings.TrimRight(line, "\r")
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		indent := len(raw) - len(strings.TrimLeft(raw, " "))
+
+		if indent == 0 {
+			inContainers = trimmed == "containers:"
+			inService = trimmed == "service:"
+			inVariables = false
+			inPorts = false
+			currentContainer = ""
+			continue
+		}
+
+		if inContainers {
+			if indent == 2 && strings.HasSuffix(trimmed, ":") {
+				currentContainer = strings.TrimSuffix(trimmed, ":")
+				if currentContainer != "" {
+					h.ContainerName = currentContainer
+				}
+				inVariables = false
+				continue
+			}
+			if indent == 4 && trimmed == "variables:" && currentContainer == h.ContainerName {
+				inVariables = true
+				continue
+			}
+			if inVariables && indent == 6 && strings.Contains(trimmed, ":") {
+				name := strings.TrimSpace(strings.SplitN(trimmed, ":", 2)[0])
+				if name != "" {
+					if strings.EqualFold(name, "LOG_LEVEL") || h.VariableName == "LOG_LEVEL" {
+						h.VariableName = name
+					}
+				}
+				continue
+			}
+		}
+
+		if inService {
+			if indent == 2 && trimmed == "ports:" {
+				inPorts = true
+				continue
+			}
+			if inPorts && indent == 4 && strings.HasSuffix(trimmed, ":") {
+				name := strings.TrimSuffix(trimmed, ":")
+				if name != "" {
+					h.ServicePortName = name
+				}
+				continue
+			}
+		}
+	}
+
+	return h
+}
+
+func firstScoreInputPath(inputs []string) string {
+	for _, in := range inputs {
+		base := strings.ToLower(filepath.Base(in))
+		if base == "score.yaml" || base == "score.yml" {
+			return in
+		}
+	}
+	return ""
 }
 
 func inferInputSchema(kind model.GeneratorKind, inputPath string) string {
