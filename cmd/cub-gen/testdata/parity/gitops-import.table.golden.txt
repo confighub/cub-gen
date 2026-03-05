@@ -1,0 +1,6 @@
+Discovered 1 GitOps resources, creating renderer units...
+Created renderer units: 1
+Rendering discovered resources...
+Created wet units: 1
+Created links: 1
+GitOps import complete

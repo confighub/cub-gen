@@ -1,0 +1,41 @@
+{
+  "alias_path_suffix": "examples/helm-paas",
+  "detections": [
+    {
+      "confidence": 0.98,
+      "id": "gen_635643e45fbf3410",
+      "inputs": [
+        "Chart.yaml",
+        "values-prod.yaml",
+        "values.yaml"
+      ],
+      "kind": "helm",
+      "name": "helm-paas",
+      "root": ""
+    }
+  ],
+  "discover_file": "\u003cdiscover_file\u003e",
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
+  "discovered_at": "\u003ctimestamp\u003e",
+  "ref": "HEAD",
+  "resources": [
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "generator_kind": "helm",
+      "inputs": [
+        "Chart.yaml",
+        "values-prod.yaml",
+        "values.yaml"
+      ],
+      "resource_body": "kind: HelmRelease\nmetadata:\n  name: helm-paas\nspec:\n  root: \n",
+      "resource_kind": "HelmRelease",
+      "resource_name": "helm-paas",
+      "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease",
+      "root": ""
+    }
+  ],
+  "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
+  "target_path_expected_suffix": "examples/helm-paas",
+  "target_slug": "helm"
+}
