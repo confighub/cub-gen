@@ -12,13 +12,14 @@ func TestImportRepoExamples(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name         string
-		repoDir      string
-		expectedKind model.GeneratorKind
+		name            string
+		repoDir         string
+		expectedKind    model.GeneratorKind
+		expectedProfile string
 	}{
-		{name: "helm-paas", repoDir: "helm-paas", expectedKind: model.GeneratorHelm},
-		{name: "scoredev-paas", repoDir: "scoredev-paas", expectedKind: model.GeneratorScore},
-		{name: "springboot-paas", repoDir: "springboot-paas", expectedKind: model.GeneratorSpringBoot},
+		{name: "helm-paas", repoDir: "helm-paas", expectedKind: model.GeneratorHelm, expectedProfile: "helm-paas"},
+		{name: "scoredev-paas", repoDir: "scoredev-paas", expectedKind: model.GeneratorScore, expectedProfile: "scoredev-paas"},
+		{name: "springboot-paas", repoDir: "springboot-paas", expectedKind: model.GeneratorSpringBoot, expectedProfile: "springboot-paas"},
 	}
 
 	for _, tt := range tests {
@@ -45,6 +46,9 @@ func TestImportRepoExamples(t *testing.T) {
 			if result.Detection.Generators[0].Kind != tt.expectedKind {
 				t.Fatalf("expected detected kind %q, got %q", tt.expectedKind, result.Detection.Generators[0].Kind)
 			}
+			if result.Detection.Generators[0].Profile != tt.expectedProfile {
+				t.Fatalf("expected detected profile %q, got %q", tt.expectedProfile, result.Detection.Generators[0].Profile)
+			}
 
 			if len(result.Units) != 3 {
 				t.Fatalf("expected 3 units, got %d", len(result.Units))
@@ -69,10 +73,22 @@ func TestImportRepoExamples(t *testing.T) {
 			if contract.Kind != string(tt.expectedKind) {
 				t.Fatalf("expected contract kind %q, got %q", tt.expectedKind, contract.Kind)
 			}
+			if contract.Profile != tt.expectedProfile {
+				t.Fatalf("expected contract profile %q, got %q", tt.expectedProfile, contract.Profile)
+			}
 
 			prov := result.Provenance[0]
 			if prov.InputDigest == "" || len(prov.Sources) == 0 || len(prov.Outputs) == 0 {
 				t.Fatalf("expected populated provenance; got %+v", prov)
+			}
+			if prov.GeneratorProfile != tt.expectedProfile {
+				t.Fatalf("expected provenance generator profile %q, got %q", tt.expectedProfile, prov.GeneratorProfile)
+			}
+			if len(prov.FieldOriginMap) == 0 {
+				t.Fatalf("expected field_origin_map entries; got %+v", prov)
+			}
+			if len(prov.InverseEditPointers) == 0 {
+				t.Fatalf("expected inverse_edit_pointers entries; got %+v", prov)
 			}
 
 			plan := result.InversePlans[0]

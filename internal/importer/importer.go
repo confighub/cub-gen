@@ -101,6 +101,7 @@ func buildContract(detection model.DetectionResult, g model.GeneratorDetection) 
 		GeneratorID:   g.ID,
 		Name:          g.Name,
 		Kind:          string(g.Kind),
+		Profile:       g.Profile,
 		Version:       "0.1.0",
 		SourceRepo:    detection.Repo,
 		SourceRef:     detection.Ref,
@@ -129,20 +130,23 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 	inputDigest := digestFor(strings.Join(g.Inputs, "|"))
 
 	return model.ProvenanceRecord{
-		SchemaVersion: provenanceSchema,
-		ProvenanceID:  "prov_" + shortID(changeID+":"+g.ID),
-		ChangeID:      changeID,
-		GeneratorID:   g.ID,
-		GeneratorName: g.Name,
-		Version:       "0.1.0",
-		InputDigest:   inputDigest,
-		Sources:       sources,
+		SchemaVersion:    provenanceSchema,
+		ProvenanceID:     "prov_" + shortID(changeID+":"+g.ID),
+		ChangeID:         changeID,
+		GeneratorID:      g.ID,
+		GeneratorName:    g.Name,
+		GeneratorProfile: g.Profile,
+		Version:          "0.1.0",
+		InputDigest:      inputDigest,
+		Sources:          sources,
 		Outputs: []model.OutputRef{{
 			Role:   "rendered-manifests",
 			URI:    outputURI,
 			Digest: outputDigest,
 		}},
-		RenderedAt: renderedAt,
+		FieldOriginMap:      fieldOriginsForKind(g.Kind),
+		InverseEditPointers: inversePointersForKind(g.Kind),
+		RenderedAt:          renderedAt,
 	}
 }
 
@@ -229,6 +233,108 @@ func defaultPatchesForKind(kind model.GeneratorKind) []model.InversePatch {
 		}}
 	default:
 		return []model.InversePatch{}
+	}
+}
+
+func fieldOriginsForKind(kind model.GeneratorKind) []model.FieldOrigin {
+	switch kind {
+	case model.GeneratorHelm:
+		return []model.FieldOrigin{
+			{
+				DryPath:    "values.image.tag",
+				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+				SourcePath: "values.yaml",
+				Transform:  "helm-template",
+				Confidence: 0.86,
+			},
+		}
+	case model.GeneratorScore:
+		return []model.FieldOrigin{
+			{
+				DryPath:    "containers.main.image",
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/image",
+				SourcePath: "score.yaml",
+				Transform:  "score-to-k8s",
+				Confidence: 0.94,
+			},
+			{
+				DryPath:    "containers.main.variables.LOG_LEVEL",
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value",
+				SourcePath: "score.yaml",
+				Transform:  "score-to-k8s",
+				Confidence: 0.90,
+			},
+			{
+				DryPath:    "service.ports.web.port",
+				WetPath:    "Service/spec/ports[name=web]/port",
+				SourcePath: "score.yaml",
+				Transform:  "score-to-k8s",
+				Confidence: 0.91,
+			},
+		}
+	case model.GeneratorSpringBoot:
+		return []model.FieldOrigin{
+			{
+				DryPath:    "spring.datasource.url",
+				WetPath:    "ConfigMap/data/application.yaml:spring.datasource.url",
+				SourcePath: "src/main/resources/application.yaml",
+				Transform:  "spring-config-to-manifest",
+				Confidence: 0.78,
+			},
+		}
+	default:
+		return []model.FieldOrigin{}
+	}
+}
+
+func inversePointersForKind(kind model.GeneratorKind) []model.InverseEditPointer {
+	switch kind {
+	case model.GeneratorHelm:
+		return []model.InverseEditPointer{
+			{
+				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+				DryPath:    "values.image.tag",
+				Owner:      "app-team",
+				EditHint:   "Edit chart values file and keep chart template unchanged.",
+				Confidence: 0.86,
+			},
+		}
+	case model.GeneratorScore:
+		return []model.InverseEditPointer{
+			{
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/image",
+				DryPath:    "containers.main.image",
+				Owner:      "app-team",
+				EditHint:   "Edit the Score container image in score.yaml.",
+				Confidence: 0.94,
+			},
+			{
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value",
+				DryPath:    "containers.main.variables.LOG_LEVEL",
+				Owner:      "app-team",
+				EditHint:   "Edit LOG_LEVEL under containers.main.variables in score.yaml.",
+				Confidence: 0.90,
+			},
+			{
+				WetPath:    "Service/spec/ports[name=web]/port",
+				DryPath:    "service.ports.web.port",
+				Owner:      "app-team",
+				EditHint:   "Edit web service port in score.yaml.",
+				Confidence: 0.91,
+			},
+		}
+	case model.GeneratorSpringBoot:
+		return []model.InverseEditPointer{
+			{
+				WetPath:    "ConfigMap/data/application.yaml:spring.datasource.url",
+				DryPath:    "spring.datasource.url",
+				Owner:      "platform-engineer",
+				EditHint:   "Edit datasource URL in application.yaml profile hierarchy.",
+				Confidence: 0.78,
+			},
+		}
+	default:
+		return []model.InverseEditPointer{}
 	}
 }
 

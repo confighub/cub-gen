@@ -27,6 +27,16 @@ go build ./cmd/cub-gen
 - `examples/scoredev-paas`
 - `examples/springboot-paas`
 
+## Score.dev import contract (MVP-01)
+
+For score.dev repos, `gitops import --json` now emits:
+
+- `generator_profile: "scoredev-paas"`
+- provenance `field_origin_map` entries
+- provenance `inverse_edit_pointers` entries
+
+This makes app-level edits explicit: each important rendered field points back to a DRY score path and edit hint.
+
 ## Quality model (inherited from cub-scout, adapted)
 
 - Deterministic behavior: same input => same output

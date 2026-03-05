@@ -105,6 +105,7 @@ func detectHelm(repo string) ([]model.GeneratorDetection, error) {
 		detected[key] = model.GeneratorDetection{
 			ID:         "gen_" + id,
 			Kind:       model.GeneratorHelm,
+			Profile:    profileForKind(model.GeneratorHelm),
 			Name:       name,
 			Root:       filepath.ToSlash(relRoot),
 			Inputs:     inputs,
@@ -162,6 +163,7 @@ func detectScore(repo string) ([]model.GeneratorDetection, error) {
 		detected[key] = model.GeneratorDetection{
 			ID:         "gen_" + id,
 			Kind:       model.GeneratorScore,
+			Profile:    profileForKind(model.GeneratorScore),
 			Name:       name,
 			Root:       filepath.ToSlash(relRoot),
 			Inputs:     inputs,
@@ -244,6 +246,7 @@ func detectSpringBoot(repo string) ([]model.GeneratorDetection, error) {
 		detected = append(detected, model.GeneratorDetection{
 			ID:         "gen_" + shortID("springboot:"+filepath.ToSlash(relRoot)),
 			Kind:       model.GeneratorSpringBoot,
+			Profile:    profileForKind(model.GeneratorSpringBoot),
 			Name:       name,
 			Root:       filepath.ToSlash(relRoot),
 			Inputs:     unique(inputs),
@@ -305,4 +308,17 @@ func unique(v []string) []string {
 		out = append(out, item)
 	}
 	return out
+}
+
+func profileForKind(kind model.GeneratorKind) string {
+	switch kind {
+	case model.GeneratorHelm:
+		return "helm-paas"
+	case model.GeneratorScore:
+		return "scoredev-paas"
+	case model.GeneratorSpringBoot:
+		return "springboot-paas"
+	default:
+		return "generator"
+	}
 }
