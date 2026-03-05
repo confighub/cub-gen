@@ -132,6 +132,9 @@ func TestImportRepoHelmDryWetContract(t *testing.T) {
 	if !renderedLineageHasKind(prov.RenderedLineage, "Deployment") || !renderedLineageHasKind(prov.RenderedLineage, "Service") {
 		t.Fatalf("expected rendered lineage to include Deployment and Service, got %+v", prov.RenderedLineage)
 	}
+	if !renderedLineageHasSourcePath(prov.RenderedLineage, "values.yaml") || !renderedLineageHasSourcePath(prov.RenderedLineage, "values-prod.yaml") {
+		t.Fatalf("expected rendered lineage to include both Helm values source paths, got %+v", prov.RenderedLineage)
+	}
 
 	if !dryInputHasRolePath(result.DryInputs, "chart", "Chart.yaml") {
 		t.Fatalf("expected chart dry input, got %+v", result.DryInputs)
@@ -298,6 +301,15 @@ func containsString(v []string, needle string) bool {
 func renderedLineageHasKind(v []model.RenderedObjectLineage, kind string) bool {
 	for _, item := range v {
 		if item.Kind == kind {
+			return true
+		}
+	}
+	return false
+}
+
+func renderedLineageHasSourcePath(v []model.RenderedObjectLineage, sourcePath string) bool {
+	for _, item := range v {
+		if item.SourcePath == sourcePath {
 			return true
 		}
 	}

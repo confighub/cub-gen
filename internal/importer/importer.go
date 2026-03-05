@@ -558,16 +558,24 @@ func valuesPathsForGenerator(g model.GeneratorDetection) []string {
 func renderedLineageForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.RenderedObjectLineage {
 	switch g.Kind {
 	case model.GeneratorHelm:
+		chart := chartPathForGenerator(g)
 		values := valuesPathsForGenerator(g)
-		sourceValues := "values.yaml"
-		if len(values) > 0 {
-			sourceValues = values[0]
+		if len(values) == 0 {
+			// Fall back to chart path if no values files were detected.
+			if chart != "" {
+				values = []string{chart}
+			}
 		}
-		return []model.RenderedObjectLineage{
-			{Kind: "HelmRelease", Name: g.Name, Namespace: "apps", SourcePath: chartPathForGenerator(g), SourceDryPath: "Chart.yaml"},
-			{Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: sourceValues, SourceDryPath: "values.image.tag"},
-			{Kind: "Service", Name: g.Name, Namespace: "apps", SourcePath: sourceValues, SourceDryPath: "values.service.port"},
+		lineage := []model.RenderedObjectLineage{
+			{Kind: "HelmRelease", Name: g.Name, Namespace: "apps", SourcePath: chart, SourceDryPath: "Chart.yaml"},
 		}
+		for _, vp := range values {
+			lineage = append(lineage,
+				model.RenderedObjectLineage{Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: vp, SourceDryPath: "values.image.tag"},
+				model.RenderedObjectLineage{Kind: "Service", Name: g.Name, Namespace: "apps", SourcePath: vp, SourceDryPath: "values.service.port"},
+			)
+		}
+		return lineage
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		return []model.RenderedObjectLineage{

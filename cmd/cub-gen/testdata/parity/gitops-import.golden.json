@@ -181,6 +181,20 @@
           "namespace": "apps",
           "source_dry_path": "values.service.port",
           "source_path": "values-prod.yaml"
+        },
+        {
+          "kind": "Deployment",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "values.image.tag",
+          "source_path": "values.yaml"
+        },
+        {
+          "kind": "Service",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "values.service.port",
+          "source_path": "values.yaml"
         }
       ],
       "schema_version": "cub.confighub.io/provenance/v1",
