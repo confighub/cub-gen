@@ -74,6 +74,14 @@ type OutputRef struct {
 	Digest string `json:"digest"`
 }
 
+type RenderedObjectLineage struct {
+	Kind          string `json:"kind"`
+	Name          string `json:"name"`
+	Namespace     string `json:"namespace,omitempty"`
+	SourcePath    string `json:"source_path,omitempty"`
+	SourceDryPath string `json:"source_dry_path,omitempty"`
+}
+
 type FieldOrigin struct {
 	DryPath    string  `json:"dry_path"`
 	WetPath    string  `json:"wet_path"`
@@ -91,19 +99,22 @@ type InverseEditPointer struct {
 }
 
 type ProvenanceRecord struct {
-	SchemaVersion       string               `json:"schema_version"`
-	ProvenanceID        string               `json:"provenance_id"`
-	ChangeID            string               `json:"change_id"`
-	GeneratorID         string               `json:"generator_id"`
-	GeneratorName       string               `json:"generator_name"`
-	GeneratorProfile    string               `json:"generator_profile"`
-	Version             string               `json:"version"`
-	InputDigest         string               `json:"input_digest"`
-	Sources             []SourceRef          `json:"sources"`
-	Outputs             []OutputRef          `json:"outputs"`
-	FieldOriginMap      []FieldOrigin        `json:"field_origin_map"`
-	InverseEditPointers []InverseEditPointer `json:"inverse_edit_pointers"`
-	RenderedAt          string               `json:"rendered_at"`
+	SchemaVersion       string                  `json:"schema_version"`
+	ProvenanceID        string                  `json:"provenance_id"`
+	ChangeID            string                  `json:"change_id"`
+	GeneratorID         string                  `json:"generator_id"`
+	GeneratorName       string                  `json:"generator_name"`
+	GeneratorProfile    string                  `json:"generator_profile"`
+	Version             string                  `json:"version"`
+	InputDigest         string                  `json:"input_digest"`
+	Sources             []SourceRef             `json:"sources"`
+	Outputs             []OutputRef             `json:"outputs"`
+	ChartPath           string                  `json:"chart_path,omitempty"`
+	ValuesPaths         []string                `json:"values_paths,omitempty"`
+	RenderedLineage     []RenderedObjectLineage `json:"rendered_object_lineage,omitempty"`
+	FieldOriginMap      []FieldOrigin           `json:"field_origin_map"`
+	InverseEditPointers []InverseEditPointer    `json:"inverse_edit_pointers"`
+	RenderedAt          string                  `json:"rendered_at"`
 }
 
 type InversePatch struct {
@@ -128,6 +139,22 @@ type InverseTransformPlan struct {
 	CreatedAt     string         `json:"created_at"`
 }
 
+type DryInputRef struct {
+	GeneratorID string `json:"generator_id"`
+	Profile     string `json:"profile"`
+	Role        string `json:"role"`
+	Path        string `json:"path"`
+	Required    bool   `json:"required"`
+}
+
+type WetManifestTarget struct {
+	GeneratorID   string `json:"generator_id"`
+	Kind          string `json:"kind"`
+	Name          string `json:"name"`
+	Namespace     string `json:"namespace,omitempty"`
+	SourceDryPath string `json:"source_dry_path,omitempty"`
+}
+
 type ImportResult struct {
 	Repo               string                 `json:"repo"`
 	Ref                string                 `json:"ref"`
@@ -140,4 +167,6 @@ type ImportResult struct {
 	GeneratorContracts []GeneratorContract    `json:"generator_contracts"`
 	Provenance         []ProvenanceRecord     `json:"provenance"`
 	InversePlans       []InverseTransformPlan `json:"inverse_transform_plans"`
+	DryInputs          []DryInputRef          `json:"dry_inputs"`
+	WetManifestTargets []WetManifestTarget    `json:"wet_manifest_targets"`
 }

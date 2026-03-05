@@ -15,6 +15,7 @@ Contract lock means:
 - JSON and table output contracts are golden-tested
 - help/usage output for `gitops` and subcommands is golden-tested
 - unsupported behavior must fail explicitly (never silently degrade)
+- Helm import contract includes explicit DRY/WET surfaces (`dry_inputs`, `wet_manifest_targets`) and provenance lineage fields (`chart_path`, `values_paths`, `rendered_object_lineage`)
 
 ## Command contract parity
 

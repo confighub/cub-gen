@@ -66,6 +66,12 @@ func TestImportRepoExamples(t *testing.T) {
 			if len(result.InversePlans) != 1 {
 				t.Fatalf("expected 1 inverse plan, got %d", len(result.InversePlans))
 			}
+			if len(result.DryInputs) == 0 {
+				t.Fatalf("expected dry input refs, got %+v", result.DryInputs)
+			}
+			if len(result.WetManifestTargets) == 0 {
+				t.Fatalf("expected wet manifest targets, got %+v", result.WetManifestTargets)
+			}
 
 			contract := result.GeneratorContracts[0]
 			if contract.SchemaVersion == "" || contract.GeneratorID == "" || contract.Kind == "" {
@@ -91,6 +97,9 @@ func TestImportRepoExamples(t *testing.T) {
 			if len(prov.InverseEditPointers) == 0 {
 				t.Fatalf("expected inverse_edit_pointers entries; got %+v", prov)
 			}
+			if len(prov.RenderedLineage) == 0 {
+				t.Fatalf("expected rendered object lineage entries; got %+v", prov)
+			}
 
 			plan := result.InversePlans[0]
 			if plan.Status != "draft" {
@@ -100,6 +109,45 @@ func TestImportRepoExamples(t *testing.T) {
 				t.Fatalf("expected at least one inverse patch; got %+v", plan)
 			}
 		})
+	}
+}
+
+func TestImportRepoHelmDryWetContract(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "helm-paas")
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+	prov := result.Provenance[0]
+	if prov.ChartPath != "Chart.yaml" {
+		t.Fatalf("expected chart_path Chart.yaml, got %q", prov.ChartPath)
+	}
+	if !containsString(prov.ValuesPaths, "values.yaml") || !containsString(prov.ValuesPaths, "values-prod.yaml") {
+		t.Fatalf("expected values paths to include values.yaml and values-prod.yaml, got %+v", prov.ValuesPaths)
+	}
+	if !renderedLineageHasKind(prov.RenderedLineage, "Deployment") || !renderedLineageHasKind(prov.RenderedLineage, "Service") {
+		t.Fatalf("expected rendered lineage to include Deployment and Service, got %+v", prov.RenderedLineage)
+	}
+
+	if !dryInputHasRolePath(result.DryInputs, "chart", "Chart.yaml") {
+		t.Fatalf("expected chart dry input, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRolePath(result.DryInputs, "values", "values.yaml") {
+		t.Fatalf("expected values.yaml dry input, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRolePath(result.DryInputs, "values", "values-prod.yaml") {
+		t.Fatalf("expected values-prod.yaml dry input, got %+v", result.DryInputs)
+	}
+
+	if !wetTargetHasKind(result.WetManifestTargets, "HelmRelease") {
+		t.Fatalf("expected HelmRelease wet target, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKind(result.WetManifestTargets, "Deployment") {
+		t.Fatalf("expected Deployment wet target, got %+v", result.WetManifestTargets)
 	}
 }
 
@@ -232,6 +280,42 @@ func fieldOriginHasDryPath(v []model.FieldOrigin, dryPath string) bool {
 func inversePointerHasDryPath(v []model.InverseEditPointer, dryPath string) bool {
 	for _, item := range v {
 		if item.DryPath == dryPath {
+			return true
+		}
+	}
+	return false
+}
+
+func containsString(v []string, needle string) bool {
+	for _, item := range v {
+		if item == needle {
+			return true
+		}
+	}
+	return false
+}
+
+func renderedLineageHasKind(v []model.RenderedObjectLineage, kind string) bool {
+	for _, item := range v {
+		if item.Kind == kind {
+			return true
+		}
+	}
+	return false
+}
+
+func dryInputHasRolePath(v []model.DryInputRef, role, path string) bool {
+	for _, item := range v {
+		if item.Role == role && item.Path == path {
+			return true
+		}
+	}
+	return false
+}
+
+func wetTargetHasKind(v []model.WetManifestTarget, kind string) bool {
+	for _, item := range v {
+		if item.Kind == kind {
 			return true
 		}
 	}

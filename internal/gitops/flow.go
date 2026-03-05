@@ -65,22 +65,24 @@ type DiscoverResult struct {
 // ImportFlowResult models the staged import output in the same conceptual shape
 // as cub gitops import: discover -> dry units -> rendered wet units + links.
 type ImportFlowResult struct {
-	Space            string                       `json:"space"`
-	TargetSlug       string                       `json:"target_slug"`
-	TargetPath       string                       `json:"target_path"`
-	RenderTargetSlug string                       `json:"render_target_slug"`
-	Ref              string                       `json:"ref"`
-	WhereResource    string                       `json:"where_resource,omitempty"`
-	DiscoverUnitSlug string                       `json:"discover_unit_slug"`
-	ImportedAt       string                       `json:"imported_at"`
-	Discovered       []DiscoveredResource         `json:"discovered"`
-	DryUnits         []model.UnitRef              `json:"dry_units"`
-	WetUnits         []model.UnitRef              `json:"wet_units"`
-	GeneratorUnits   []model.UnitRef              `json:"generator_units"`
-	Links            []model.UnitLink             `json:"links"`
-	Contracts        []model.GeneratorContract    `json:"contracts"`
-	Provenance       []model.ProvenanceRecord     `json:"provenance"`
-	InversePlans     []model.InverseTransformPlan `json:"inverse_transform_plans"`
+	Space              string                       `json:"space"`
+	TargetSlug         string                       `json:"target_slug"`
+	TargetPath         string                       `json:"target_path"`
+	RenderTargetSlug   string                       `json:"render_target_slug"`
+	Ref                string                       `json:"ref"`
+	WhereResource      string                       `json:"where_resource,omitempty"`
+	DiscoverUnitSlug   string                       `json:"discover_unit_slug"`
+	ImportedAt         string                       `json:"imported_at"`
+	Discovered         []DiscoveredResource         `json:"discovered"`
+	DryUnits           []model.UnitRef              `json:"dry_units"`
+	WetUnits           []model.UnitRef              `json:"wet_units"`
+	GeneratorUnits     []model.UnitRef              `json:"generator_units"`
+	Links              []model.UnitLink             `json:"links"`
+	Contracts          []model.GeneratorContract    `json:"contracts"`
+	Provenance         []model.ProvenanceRecord     `json:"provenance"`
+	InversePlans       []model.InverseTransformPlan `json:"inverse_transform_plans"`
+	DryInputs          []model.DryInputRef          `json:"dry_inputs"`
+	WetManifestTargets []model.WetManifestTarget    `json:"wet_manifest_targets"`
 }
 
 // targetRef is a locally-resolved target identifier.
@@ -206,22 +208,24 @@ func Import(targetPath, renderTargetSlug, ref, space, whereResource string) (Imp
 	dryUnits, wetUnits, generatorUnits := splitUnits(importResult.Units)
 
 	return ImportFlowResult{
-		Space:            discovered.Space,
-		TargetSlug:       discovered.TargetSlug,
-		TargetPath:       discovered.TargetPath,
-		RenderTargetSlug: renderTarget.Slug,
-		Ref:              discovered.Ref,
-		WhereResource:    discovered.WhereResource,
-		DiscoverUnitSlug: discovered.DiscoverUnitSlug,
-		ImportedAt:       time.Now().UTC().Format(time.RFC3339),
-		Discovered:       discovered.Resources,
-		DryUnits:         dryUnits,
-		WetUnits:         wetUnits,
-		GeneratorUnits:   generatorUnits,
-		Links:            importResult.Links,
-		Contracts:        importResult.GeneratorContracts,
-		Provenance:       importResult.Provenance,
-		InversePlans:     importResult.InversePlans,
+		Space:              discovered.Space,
+		TargetSlug:         discovered.TargetSlug,
+		TargetPath:         discovered.TargetPath,
+		RenderTargetSlug:   renderTarget.Slug,
+		Ref:                discovered.Ref,
+		WhereResource:      discovered.WhereResource,
+		DiscoverUnitSlug:   discovered.DiscoverUnitSlug,
+		ImportedAt:         time.Now().UTC().Format(time.RFC3339),
+		Discovered:         discovered.Resources,
+		DryUnits:           dryUnits,
+		WetUnits:           wetUnits,
+		GeneratorUnits:     generatorUnits,
+		Links:              importResult.Links,
+		Contracts:          importResult.GeneratorContracts,
+		Provenance:         importResult.Provenance,
+		InversePlans:       importResult.InversePlans,
+		DryInputs:          importResult.DryInputs,
+		WetManifestTargets: importResult.WetManifestTargets,
 	}, nil
 }
 

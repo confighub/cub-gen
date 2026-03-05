@@ -49,6 +49,8 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 	contracts := make([]model.GeneratorContract, 0, len(detection.Generators))
 	provenance := make([]model.ProvenanceRecord, 0, len(detection.Generators))
 	inversePlans := make([]model.InverseTransformPlan, 0, len(detection.Generators))
+	dryInputs := make([]model.DryInputRef, 0, len(detection.Generators)*3)
+	wetTargets := make([]model.WetManifestTarget, 0, len(detection.Generators)*3)
 
 	for _, g := range detection.Generators {
 		dryUnitID := "dry_" + shortID(g.ID+":dry")
@@ -70,6 +72,8 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 		contracts = append(contracts, contract)
 		provenance = append(provenance, buildProvenance(changeID, space, detection, g, importedAt))
 		inversePlans = append(inversePlans, buildInversePlan(changeID, dryUnitID, detection, g, importedAt))
+		dryInputs = append(dryInputs, dryInputsForGenerator(g)...)
+		wetTargets = append(wetTargets, wetManifestTargetsForGenerator(detection, g)...)
 	}
 
 	return model.ImportResult{
@@ -84,6 +88,8 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 		GeneratorContracts: contracts,
 		Provenance:         provenance,
 		InversePlans:       inversePlans,
+		DryInputs:          dryInputs,
+		WetManifestTargets: wetTargets,
 	}, nil
 }
 
@@ -145,6 +151,9 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 			URI:    outputURI,
 			Digest: outputDigest,
 		}},
+		ChartPath:           chartPathForGenerator(g),
+		ValuesPaths:         valuesPathsForGenerator(g),
+		RenderedLineage:     renderedLineageForGenerator(detection, g),
 		FieldOriginMap:      fieldOriginsForGenerator(detection, g),
 		InverseEditPointers: inversePointersForGenerator(detection, g),
 		RenderedAt:          renderedAt,
@@ -442,6 +451,138 @@ func firstScoreInputPath(inputs []string) string {
 		}
 	}
 	return ""
+}
+
+func dryInputsForGenerator(g model.GeneratorDetection) []model.DryInputRef {
+	out := make([]model.DryInputRef, 0, len(g.Inputs))
+	for _, in := range g.Inputs {
+		out = append(out, model.DryInputRef{
+			GeneratorID: g.ID,
+			Profile:     g.Profile,
+			Role:        classifyDryInputRole(g.Kind, in),
+			Path:        in,
+			Required:    true,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Role != out[j].Role {
+			return out[i].Role < out[j].Role
+		}
+		return out[i].Path < out[j].Path
+	})
+	return out
+}
+
+func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.WetManifestTarget {
+	switch g.Kind {
+	case model.GeneratorHelm:
+		return []model.WetManifestTarget{
+			{GeneratorID: g.ID, Kind: "HelmRelease", Name: g.Name, Namespace: "apps"},
+			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Namespace: "apps", SourceDryPath: "values.image.tag"},
+			{GeneratorID: g.ID, Kind: "Service", Name: g.Name, Namespace: "apps", SourceDryPath: "values.service.port"},
+		}
+	case model.GeneratorScore:
+		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
+		return []model.WetManifestTarget{
+			{GeneratorID: g.ID, Kind: "Application", Name: g.Name, Namespace: "apps"},
+			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Namespace: "apps", SourceDryPath: fmt.Sprintf("containers.%s.image", hints.ContainerName)},
+			{GeneratorID: g.ID, Kind: "Service", Name: g.Name, Namespace: "apps", SourceDryPath: fmt.Sprintf("service.ports.%s.port", hints.ServicePortName)},
+		}
+	case model.GeneratorSpringBoot:
+		return []model.WetManifestTarget{
+			{GeneratorID: g.ID, Kind: "Kustomization", Name: g.Name, Namespace: "apps"},
+			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-config", Namespace: "apps", SourceDryPath: "spring.datasource.url"},
+		}
+	default:
+		return []model.WetManifestTarget{}
+	}
+}
+
+func classifyDryInputRole(kind model.GeneratorKind, in string) string {
+	base := strings.ToLower(filepath.Base(in))
+	switch kind {
+	case model.GeneratorHelm:
+		switch {
+		case base == "chart.yaml":
+			return "chart"
+		case strings.HasPrefix(base, "values") && (strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml")):
+			return "values"
+		default:
+			return "helm-input"
+		}
+	case model.GeneratorScore:
+		if base == "score.yaml" || base == "score.yml" {
+			return "score-spec"
+		}
+		return "score-input"
+	case model.GeneratorSpringBoot:
+		if base == "pom.xml" || base == "build.gradle" || base == "build.gradle.kts" {
+			return "build-config"
+		}
+		if strings.HasPrefix(base, "application") && (strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml")) {
+			return "app-config"
+		}
+		return "spring-input"
+	default:
+		return "input"
+	}
+}
+
+func chartPathForGenerator(g model.GeneratorDetection) string {
+	if g.Kind != model.GeneratorHelm {
+		return ""
+	}
+	for _, in := range g.Inputs {
+		if strings.EqualFold(filepath.Base(in), "chart.yaml") {
+			return in
+		}
+	}
+	return ""
+}
+
+func valuesPathsForGenerator(g model.GeneratorDetection) []string {
+	if g.Kind != model.GeneratorHelm {
+		return nil
+	}
+	out := make([]string, 0, len(g.Inputs))
+	for _, in := range g.Inputs {
+		base := strings.ToLower(filepath.Base(in))
+		if strings.HasPrefix(base, "values") && (strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml")) {
+			out = append(out, in)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+func renderedLineageForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.RenderedObjectLineage {
+	switch g.Kind {
+	case model.GeneratorHelm:
+		values := valuesPathsForGenerator(g)
+		sourceValues := "values.yaml"
+		if len(values) > 0 {
+			sourceValues = values[0]
+		}
+		return []model.RenderedObjectLineage{
+			{Kind: "HelmRelease", Name: g.Name, Namespace: "apps", SourcePath: chartPathForGenerator(g), SourceDryPath: "Chart.yaml"},
+			{Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: sourceValues, SourceDryPath: "values.image.tag"},
+			{Kind: "Service", Name: g.Name, Namespace: "apps", SourcePath: sourceValues, SourceDryPath: "values.service.port"},
+		}
+	case model.GeneratorScore:
+		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
+		return []model.RenderedObjectLineage{
+			{Kind: "Application", Name: g.Name, Namespace: "apps", SourcePath: hints.SourcePath, SourceDryPath: "metadata.name"},
+			{Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: hints.SourcePath, SourceDryPath: fmt.Sprintf("containers.%s.image", hints.ContainerName)},
+			{Kind: "Service", Name: g.Name, Namespace: "apps", SourcePath: hints.SourcePath, SourceDryPath: fmt.Sprintf("service.ports.%s.port", hints.ServicePortName)},
+		}
+	case model.GeneratorSpringBoot:
+		return []model.RenderedObjectLineage{
+			{Kind: "Kustomization", Name: g.Name, Namespace: "apps", SourcePath: "kustomization.yaml", SourceDryPath: "resources"},
+			{Kind: "ConfigMap", Name: g.Name + "-config", Namespace: "apps", SourcePath: "src/main/resources/application.yaml", SourceDryPath: "spring.datasource.url"},
+		}
+	default:
+		return nil
+	}
 }
 
 func inferInputSchema(kind model.GeneratorKind, inputPath string) string {
