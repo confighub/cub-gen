@@ -8,6 +8,14 @@ Status values:
 - `partial`: same contract shape, simplified implementation
 - `deferred`: intentionally not implemented yet
 
+Current lock level: `v0.1-parity-locked` (2026-03-05 baseline)
+
+Contract lock means:
+- command names/arity for `discover|import|cleanup` are frozen for v0.1
+- JSON and table output contracts are golden-tested
+- help/usage output for `gitops` and subcommands is golden-tested
+- unsupported behavior must fail explicitly (never silently degrade)
+
 ## Command contract parity
 
 | Area | `cub gitops` | `cub-gen gitops` | Status | Notes |
@@ -59,5 +67,9 @@ Status values:
   - `cmd/cub-gen/testdata/parity/gitops-cleanup.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`
+  - `cmd/cub-gen/testdata/parity/gitops-help.stdout.golden.txt`
+  - `cmd/cub-gen/testdata/parity/gitops-discover-help.stderr.golden.txt`
+  - `cmd/cub-gen/testdata/parity/gitops-import-help.stderr.golden.txt`
+  - `cmd/cub-gen/testdata/parity/gitops-cleanup-help.stderr.golden.txt`
 - Error-mode tests:
   - `cmd/cub-gen/gitops_parity_test.go`

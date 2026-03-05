@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -40,7 +41,7 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 	if space == "" {
 		space = "default"
 	}
-	changeID := "chg_" + shortID(strings.Join([]string{detection.Repo, detection.Ref, importedAt}, "|"))
+	changeID := stableChangeID(detection, space)
 
 	units := make([]model.UnitRef, 0, len(detection.Generators)*3)
 	links := make([]model.UnitLink, 0, len(detection.Generators))
@@ -66,8 +67,8 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 
 		contract := buildContract(detection, g)
 		contracts = append(contracts, contract)
-		provenance = append(provenance, buildProvenance(changeID, space, detection, g))
-		inversePlans = append(inversePlans, buildInversePlan(changeID, dryUnitID, g))
+		provenance = append(provenance, buildProvenance(changeID, space, detection, g, importedAt))
+		inversePlans = append(inversePlans, buildInversePlan(changeID, dryUnitID, g, importedAt))
 	}
 
 	return model.ImportResult{
@@ -112,7 +113,7 @@ func buildContract(detection model.DetectionResult, g model.GeneratorDetection) 
 	}
 }
 
-func buildProvenance(changeID, space string, detection model.DetectionResult, g model.GeneratorDetection) model.ProvenanceRecord {
+func buildProvenance(changeID, space string, detection model.DetectionResult, g model.GeneratorDetection, renderedAt string) model.ProvenanceRecord {
 	sources := make([]model.SourceRef, 0, len(g.Inputs))
 	for _, in := range g.Inputs {
 		sources = append(sources, model.SourceRef{
@@ -141,11 +142,11 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 			URI:    outputURI,
 			Digest: outputDigest,
 		}},
-		RenderedAt: time.Now().UTC().Format(time.RFC3339),
+		RenderedAt: renderedAt,
 	}
 }
 
-func buildInversePlan(changeID, targetUnitID string, g model.GeneratorDetection) model.InverseTransformPlan {
+func buildInversePlan(changeID, targetUnitID string, g model.GeneratorDetection, createdAt string) model.InverseTransformPlan {
 	return model.InverseTransformPlan{
 		SchemaVersion: inversePlanSchema,
 		PlanID:        "inv_" + shortID(changeID+":"+g.ID),
@@ -155,8 +156,30 @@ func buildInversePlan(changeID, targetUnitID string, g model.GeneratorDetection)
 		TargetUnitID:  targetUnitID,
 		Status:        "draft",
 		Patches:       defaultPatchesForKind(g.Kind),
-		CreatedAt:     time.Now().UTC().Format(time.RFC3339),
+		CreatedAt:     createdAt,
 	}
+}
+
+func stableChangeID(detection model.DetectionResult, space string) string {
+	parts := make([]string, 0, len(detection.Generators)+3)
+	parts = append(parts, "v1")
+	parts = append(parts, strings.TrimSpace(strings.ToLower(space)))
+	parts = append(parts, strings.TrimSpace(detection.Ref))
+
+	entries := make([]string, 0, len(detection.Generators))
+	for _, g := range detection.Generators {
+		entries = append(entries, strings.Join([]string{
+			string(g.Kind),
+			g.ID,
+			g.Name,
+			g.Root,
+			strings.Join(g.Inputs, ","),
+		}, ":"))
+	}
+	sort.Strings(entries)
+	parts = append(parts, entries...)
+
+	return "chg_" + shortID(strings.Join(parts, "|"))
 }
 
 func capabilitiesForKind(kind model.GeneratorKind) []string {

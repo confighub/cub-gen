@@ -3,7 +3,7 @@
 examples/**/.cub-gen/
 
 # Build artifacts
-cub-gen
+/cub-gen
 *.test
 *.out
 coverage.txt

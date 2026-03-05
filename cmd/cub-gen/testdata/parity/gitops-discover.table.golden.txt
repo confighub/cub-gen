@@ -1,0 +1,2 @@
+Resource Type	Resource Name
+helm.toolkit.fluxcd.io/v2/HelmRelease	helm-paas
