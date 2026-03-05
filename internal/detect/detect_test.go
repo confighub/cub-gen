@@ -1,0 +1,78 @@
+package detect
+
+import (
+	"path/filepath"
+	"testing"
+
+	"github.com/confighub/cub-gen/internal/model"
+)
+
+func TestScanRepoExamples(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		repoDir      string
+		expectedKind model.GeneratorKind
+		expectedFile string
+	}{
+		{
+			name:         "helm-paas",
+			repoDir:      "helm-paas",
+			expectedKind: model.GeneratorHelm,
+			expectedFile: "Chart.yaml",
+		},
+		{
+			name:         "scoredev-paas",
+			repoDir:      "scoredev-paas",
+			expectedKind: model.GeneratorScore,
+			expectedFile: "score.yaml",
+		},
+		{
+			name:         "springboot-paas",
+			repoDir:      "springboot-paas",
+			expectedKind: model.GeneratorSpringBoot,
+			expectedFile: "pom.xml",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repo := filepath.Join("..", "..", "examples", tt.repoDir)
+			result, err := ScanRepo(repo, "main")
+			if err != nil {
+				t.Fatalf("ScanRepo returned error: %v", err)
+			}
+
+			if len(result.Generators) != 1 {
+				t.Fatalf("expected 1 generator, got %d", len(result.Generators))
+			}
+
+			g := result.Generators[0]
+			if g.Kind != tt.expectedKind {
+				t.Fatalf("expected kind %q, got %q", tt.expectedKind, g.Kind)
+			}
+			if g.ID == "" {
+				t.Fatal("expected non-empty generator ID")
+			}
+			if len(g.Inputs) == 0 {
+				t.Fatal("expected at least one input")
+			}
+			if !contains(g.Inputs, tt.expectedFile) {
+				t.Fatalf("expected inputs to contain %q; got %v", tt.expectedFile, g.Inputs)
+			}
+		})
+	}
+}
+
+func contains(v []string, suffix string) bool {
+	for _, item := range v {
+		if filepath.Base(item) == suffix || item == suffix {
+			return true
+		}
+	}
+	return false
+}

@@ -1,0 +1,34 @@
+# cub-gen Test Inventory
+
+## Current automated tests
+
+### CLI parity tests
+
+- `cmd/cub-gen/gitops_parity_test.go`
+  - golden discover JSON
+  - golden import JSON
+  - golden cleanup JSON
+  - golden discover/import table output
+  - error mode coverage
+
+### Internal logic tests
+
+- `internal/detect/detect_test.go`
+- `internal/importer/importer_test.go`
+- `internal/gitops/flow_test.go`
+
+## Golden artifacts
+
+- `cmd/cub-gen/testdata/parity/gitops-discover.golden.json`
+- `cmd/cub-gen/testdata/parity/gitops-import.golden.json`
+- `cmd/cub-gen/testdata/parity/gitops-cleanup.golden.json`
+- `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
+- `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`
+
+## Mandatory validation commands
+
+```bash
+go build ./cmd/cub-gen
+go test ./...
+go test ./cmd/cub-gen -run '^TestGitOpsParity' -count=1 -v
+```

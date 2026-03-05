@@ -1,0 +1,16 @@
+apiVersion: score.dev/v1b1
+metadata:
+  name: checkout-api
+containers:
+  main:
+    image: ghcr.io/example/checkout-api:v1.0.0
+    variables:
+      LOG_LEVEL: info
+service:
+  ports:
+    web:
+      port: 8080
+      targetPort: 8080
+resources:
+  postgres:
+    type: postgres

@@ -1,0 +1,308 @@
+package detect
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/confighub/cub-gen/internal/model"
+)
+
+// ScanRepo scans a local repository path and returns deterministic generator detections.
+func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
+	if repoPath == "" {
+		return model.DetectionResult{}, errors.New("repo path is required")
+	}
+
+	absRepo, err := filepath.Abs(repoPath)
+	if err != nil {
+		return model.DetectionResult{}, fmt.Errorf("resolve repo path: %w", err)
+	}
+
+	st, err := os.Stat(absRepo)
+	if err != nil {
+		return model.DetectionResult{}, fmt.Errorf("stat repo: %w", err)
+	}
+	if !st.IsDir() {
+		return model.DetectionResult{}, fmt.Errorf("repo path is not a directory: %s", absRepo)
+	}
+
+	helmDetections, err := detectHelm(absRepo)
+	if err != nil {
+		return model.DetectionResult{}, err
+	}
+	scoreDetections, err := detectScore(absRepo)
+	if err != nil {
+		return model.DetectionResult{}, err
+	}
+	springDetections, err := detectSpringBoot(absRepo)
+	if err != nil {
+		return model.DetectionResult{}, err
+	}
+
+	all := append(helmDetections, scoreDetections...)
+	all = append(all, springDetections...)
+	sort.Slice(all, func(i, j int) bool {
+		if all[i].Kind != all[j].Kind {
+			return all[i].Kind < all[j].Kind
+		}
+		if all[i].Root != all[j].Root {
+			return all[i].Root < all[j].Root
+		}
+		return all[i].Name < all[j].Name
+	})
+
+	return model.DetectionResult{
+		Repo:       absRepo,
+		Ref:        ref,
+		DetectedAt: time.Now().UTC().Format(time.RFC3339),
+		Generators: all,
+	}, nil
+}
+
+func detectHelm(repo string) ([]model.GeneratorDetection, error) {
+	detected := make(map[string]model.GeneratorDetection)
+	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() && shouldSkipDir(d.Name()) {
+			return filepath.SkipDir
+		}
+		if d.IsDir() || d.Name() != "Chart.yaml" {
+			return nil
+		}
+
+		root := filepath.Dir(path)
+		relRoot, err := filepath.Rel(repo, root)
+		if err != nil {
+			return err
+		}
+		if relRoot == "." {
+			relRoot = ""
+		}
+		inputs := []string{filepath.ToSlash(relJoin(relRoot, "Chart.yaml"))}
+		matches, _ := filepath.Glob(filepath.Join(root, "values*.yaml"))
+		for _, match := range matches {
+			rel, relErr := filepath.Rel(repo, match)
+			if relErr != nil {
+				continue
+			}
+			inputs = append(inputs, filepath.ToSlash(rel))
+		}
+		sort.Strings(inputs)
+
+		name := filepath.Base(root)
+		id := shortID("helm:" + filepath.ToSlash(relRoot))
+		key := "helm:" + relRoot
+		detected[key] = model.GeneratorDetection{
+			ID:         "gen_" + id,
+			Kind:       model.GeneratorHelm,
+			Name:       name,
+			Root:       filepath.ToSlash(relRoot),
+			Inputs:     inputs,
+			Confidence: 0.98,
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("detect helm: %w", err)
+	}
+	return mapValuesSorted(detected), nil
+}
+
+func detectScore(repo string) ([]model.GeneratorDetection, error) {
+	detected := make(map[string]model.GeneratorDetection)
+	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() && shouldSkipDir(d.Name()) {
+			return filepath.SkipDir
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if d.Name() != "score.yaml" && d.Name() != "score.yml" {
+			return nil
+		}
+
+		b, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		content := strings.ToLower(string(b))
+		if !strings.Contains(content, "score.dev/") && !strings.Contains(content, "kind: workload") {
+			return nil
+		}
+
+		root := filepath.Dir(path)
+		relRoot, err := filepath.Rel(repo, root)
+		if err != nil {
+			return err
+		}
+		if relRoot == "." {
+			relRoot = ""
+		}
+		relFile, err := filepath.Rel(repo, path)
+		if err != nil {
+			return err
+		}
+		inputs := []string{filepath.ToSlash(relFile)}
+		name := filepath.Base(root)
+		id := shortID("score:" + filepath.ToSlash(relRoot))
+		key := "score:" + relRoot
+		detected[key] = model.GeneratorDetection{
+			ID:         "gen_" + id,
+			Kind:       model.GeneratorScore,
+			Name:       name,
+			Root:       filepath.ToSlash(relRoot),
+			Inputs:     inputs,
+			Confidence: 0.96,
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("detect score: %w", err)
+	}
+	return mapValuesSorted(detected), nil
+}
+
+func detectSpringBoot(repo string) ([]model.GeneratorDetection, error) {
+	buildRoots := map[string]string{}
+
+	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() && shouldSkipDir(d.Name()) {
+			return filepath.SkipDir
+		}
+		if d.IsDir() {
+			return nil
+		}
+
+		switch d.Name() {
+		case "pom.xml", "build.gradle", "build.gradle.kts":
+			root := filepath.Dir(path)
+			buildRoots[root] = d.Name()
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("scan spring build files: %w", err)
+	}
+
+	detected := make([]model.GeneratorDetection, 0, len(buildRoots))
+	for root, buildFile := range buildRoots {
+		appYAML := filepath.Join(root, "src", "main", "resources", "application.yaml")
+		appYML := filepath.Join(root, "src", "main", "resources", "application.yml")
+		cfg := ""
+		if _, err := os.Stat(appYAML); err == nil {
+			cfg = appYAML
+		} else if _, err := os.Stat(appYML); err == nil {
+			cfg = appYML
+		}
+		if cfg == "" {
+			continue
+		}
+
+		relRoot, err := filepath.Rel(repo, root)
+		if err != nil {
+			return nil, err
+		}
+		if relRoot == "." {
+			relRoot = ""
+		}
+		inputs := make([]string, 0, 4)
+		inputs = append(inputs, filepath.ToSlash(relJoin(relRoot, buildFile)))
+		relCfg, err := filepath.Rel(repo, cfg)
+		if err == nil {
+			inputs = append(inputs, filepath.ToSlash(relCfg))
+		}
+		cfgDir := filepath.Dir(cfg)
+		profiles, _ := filepath.Glob(filepath.Join(cfgDir, "application-*.yaml"))
+		profilesYml, _ := filepath.Glob(filepath.Join(cfgDir, "application-*.yml"))
+		profiles = append(profiles, profilesYml...)
+		for _, profile := range profiles {
+			rel, relErr := filepath.Rel(repo, profile)
+			if relErr != nil {
+				continue
+			}
+			inputs = append(inputs, filepath.ToSlash(rel))
+		}
+		sort.Strings(inputs)
+
+		name := filepath.Base(root)
+		detected = append(detected, model.GeneratorDetection{
+			ID:         "gen_" + shortID("springboot:"+filepath.ToSlash(relRoot)),
+			Kind:       model.GeneratorSpringBoot,
+			Name:       name,
+			Root:       filepath.ToSlash(relRoot),
+			Inputs:     unique(inputs),
+			Confidence: 0.93,
+		})
+	}
+
+	sort.Slice(detected, func(i, j int) bool {
+		if detected[i].Root == detected[j].Root {
+			return detected[i].Name < detected[j].Name
+		}
+		return detected[i].Root < detected[j].Root
+	})
+	return detected, nil
+}
+
+func mapValuesSorted(m map[string]model.GeneratorDetection) []model.GeneratorDetection {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	out := make([]model.GeneratorDetection, 0, len(keys))
+	for _, k := range keys {
+		out = append(out, m[k])
+	}
+	return out
+}
+
+func shouldSkipDir(name string) bool {
+	switch name {
+	case ".git", "node_modules", "vendor", ".idea", ".vscode":
+		return true
+	default:
+		return false
+	}
+}
+
+func shortID(s string) string {
+	sum := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(sum[:])[:16]
+}
+
+func relJoin(root, base string) string {
+	if root == "" {
+		return base
+	}
+	return filepath.Join(root, base)
+}
+
+func unique(v []string) []string {
+	seen := make(map[string]struct{}, len(v))
+	out := make([]string, 0, len(v))
+	for _, item := range v {
+		if _, ok := seen[item]; ok {
+			continue
+		}
+		seen[item] = struct{}{}
+		out = append(out, item)
+	}
+	return out
+}

@@ -1,0 +1,3 @@
+replicaCount: 4
+image:
+  tag: v1.0.3

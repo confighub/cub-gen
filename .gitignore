@@ -1,0 +1,12 @@
+# Local state
+.cub-gen/
+examples/**/.cub-gen/
+
+# Build artifacts
+cub-gen
+*.test
+*.out
+coverage.txt
+
+# OS/editor noise
+.DS_Store
