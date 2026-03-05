@@ -35,7 +35,7 @@ func TestGitOpsParityGoldenDiscover(t *testing.T) {
 func TestGitOpsParityGoldenImport(t *testing.T) {
 	setupAliases(t)
 
-	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "score", "render-target"})
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "helm", "render-target"})
 	if err != nil {
 		t.Fatalf("run import returned error: %v\nstderr=%s", err, stderr)
 	}
@@ -55,12 +55,12 @@ func TestGitOpsParityGoldenImport(t *testing.T) {
 func TestGitOpsParityGoldenCleanup(t *testing.T) {
 	setupAliases(t)
 
-	_, _, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "score"})
+	_, _, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "helm"})
 	if err != nil {
 		t.Fatalf("pre-cleanup discover returned error: %v", err)
 	}
 
-	out, stderr, err := runWithCapturedIO([]string{"gitops", "cleanup", "--space", "platform", "--json", "score"})
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "cleanup", "--space", "platform", "--json", "helm"})
 	if err != nil {
 		t.Fatalf("run cleanup returned error: %v\nstderr=%s", err, stderr)
 	}
@@ -93,7 +93,7 @@ func TestGitOpsParityGoldenDiscoverTable(t *testing.T) {
 func TestGitOpsParityGoldenImportTable(t *testing.T) {
 	setupAliases(t)
 
-	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "score", "render-target"})
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "helm", "render-target"})
 	if err != nil {
 		t.Fatalf("run import table returned error: %v\nstderr=%s", err, stderr)
 	}

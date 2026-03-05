@@ -3,22 +3,32 @@
     {
       "capabilities": [
         "render-manifests",
-        "workload-spec",
-        "inverse-score-patch"
+        "values-overrides",
+        "inverse-values-patch"
       ],
       "deterministic": true,
-      "generator_id": "gen_5813cd3820138512",
+      "generator_id": "gen_635643e45fbf3410",
       "inputs": [
         {
           "name": "input_01",
           "required": true,
-          "schema_ref": "https://docs.score.dev/schemas/score-v1b1.json"
+          "schema_ref": "https://json.schemastore.org/chart"
+        },
+        {
+          "name": "input_02",
+          "required": true,
+          "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+        },
+        {
+          "name": "input_03",
+          "required": true,
+          "schema_ref": "https://json-schema.org/draft/2020-12/schema"
         }
       ],
-      "kind": "score",
-      "name": "scoredev-paas",
+      "kind": "helm",
+      "name": "helm-paas",
       "output_format": "kubernetes/yaml",
-      "profile": "scoredev-paas",
+      "profile": "helm-paas",
       "schema_version": "cub.confighub.io/generator-contract/v1",
       "source_path": "",
       "source_ref": "HEAD",
@@ -30,33 +40,58 @@
   "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
   "discovered": [
     {
-      "generator_id": "gen_5813cd3820138512",
-      "generator_kind": "score",
-      "generator_profile": "scoredev-paas",
+      "generator_id": "gen_635643e45fbf3410",
+      "generator_kind": "helm",
+      "generator_profile": "helm-paas",
       "inputs": [
-        "score.yaml"
+        "Chart.yaml",
+        "values-prod.yaml",
+        "values.yaml"
       ],
-      "resource_body": "kind: Application\nmetadata:\n  name: scoredev-paas\nspec:\n  root: \n",
-      "resource_kind": "Application",
-      "resource_name": "scoredev-paas",
-      "resource_type": "argoproj.io/v1alpha1/Application",
+      "resource_body": "kind: HelmRelease\nmetadata:\n  name: helm-paas\nspec:\n  root: \n",
+      "resource_kind": "HelmRelease",
+      "resource_name": "helm-paas",
+      "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease",
       "root": ""
+    }
+  ],
+  "dry_inputs": [
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "path": "Chart.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "chart"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "path": "values-prod.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "values"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "path": "values.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "values"
     }
   ],
   "dry_units": [
     {
-      "id": "dry_9a0407a761eadbab",
+      "id": "dry_55f23c7293f5bf86",
       "kind": "dry-unit",
       "layer": "dry",
-      "name": "scoredev-paas-dry"
+      "name": "helm-paas-dry"
     }
   ],
   "generator_units": [
     {
-      "id": "gen_9670efa074cb2d03",
+      "id": "gen_70b4d2ade0642f1c",
       "kind": "generator-unit",
       "layer": "generator",
-      "name": "scoredev-paas-generator"
+      "name": "helm-paas-generator"
     }
   ],
   "imported_at": "\u003ctimestamp\u003e",
@@ -66,100 +101,126 @@
       "created_at": "\u003ctimestamp\u003e",
       "patches": [
         {
-          "confidence": 0.9,
-          "dry_path": "containers.main.variables.LOG_LEVEL",
+          "confidence": 0.86,
+          "dry_path": "values.image.tag",
           "editable_by": "app-team",
           "op": "replace",
-          "reason": "Score variable maps to a single Kubernetes env var.",
+          "reason": "Container image tag maps cleanly to helm values.",
           "requires_review": false,
-          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value"
+          "wet_path": "Deployment/spec/template/spec/containers[0]/image"
         }
       ],
       "plan_id": "\u003cplan_id\u003e",
       "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
-      "source_kind": "score",
+      "source_kind": "helm",
       "source_ref": "",
       "status": "draft",
-      "target_unit_id": "dry_9a0407a761eadbab"
+      "target_unit_id": "dry_55f23c7293f5bf86"
     }
   ],
   "links": [
     {
-      "dry_unit_id": "dry_9a0407a761eadbab",
-      "generator_unit_id": "gen_9670efa074cb2d03",
-      "wet_unit_id": "wet_3b630d8a9fb3502c"
+      "dry_unit_id": "dry_55f23c7293f5bf86",
+      "generator_unit_id": "gen_70b4d2ade0642f1c",
+      "wet_unit_id": "wet_b4595877225309fc"
     }
   ],
   "provenance": [
     {
       "change_id": "\u003cchange_id\u003e",
+      "chart_path": "Chart.yaml",
       "field_origin_map": [
         {
-          "confidence": 0.94,
-          "dry_path": "containers.main.image",
-          "source_path": "score.yaml",
-          "transform": "score-to-k8s",
-          "wet_path": "Deployment/spec/template/spec/containers[name=main]/image"
-        },
-        {
-          "confidence": 0.9,
-          "dry_path": "containers.main.variables.LOG_LEVEL",
-          "source_path": "score.yaml",
-          "transform": "score-to-k8s",
-          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value"
-        },
-        {
-          "confidence": 0.91,
-          "dry_path": "service.ports.web.port",
-          "source_path": "score.yaml",
-          "transform": "score-to-k8s",
-          "wet_path": "Service/spec/ports[name=web]/port"
+          "confidence": 0.86,
+          "dry_path": "values.image.tag",
+          "source_path": "values.yaml",
+          "transform": "helm-template",
+          "wet_path": "Deployment/spec/template/spec/containers[0]/image"
         }
       ],
-      "generator_id": "gen_5813cd3820138512",
-      "generator_name": "scoredev-paas",
-      "generator_profile": "scoredev-paas",
-      "input_digest": "sha256:d6046ef3f99c2542355019a1cc5932bd10e494ed8144d6e304625d93d5decd79",
+      "generator_id": "gen_635643e45fbf3410",
+      "generator_name": "helm-paas",
+      "generator_profile": "helm-paas",
+      "input_digest": "sha256:0ceaab864fc2c01e0d45011864aa2f8bbe3e1f9a6f2a4bc81b1d4d667dbd6ba9",
       "inverse_edit_pointers": [
         {
-          "confidence": 0.94,
-          "dry_path": "containers.main.image",
-          "edit_hint": "Edit the Score container image in score.yaml.",
+          "confidence": 0.86,
+          "dry_path": "values.image.tag",
+          "edit_hint": "Edit chart values file and keep chart template unchanged.",
           "owner": "app-team",
-          "wet_path": "Deployment/spec/template/spec/containers[name=main]/image"
-        },
-        {
-          "confidence": 0.9,
-          "dry_path": "containers.main.variables.LOG_LEVEL",
-          "edit_hint": "Edit LOG_LEVEL under containers.main.variables in score.yaml.",
-          "owner": "app-team",
-          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value"
-        },
-        {
-          "confidence": 0.91,
-          "dry_path": "service.ports.web.port",
-          "edit_hint": "Edit web service port in score.yaml.",
-          "owner": "app-team",
-          "wet_path": "Service/spec/ports[name=web]/port"
+          "wet_path": "Deployment/spec/template/spec/containers[0]/image"
         }
       ],
       "outputs": [
         {
           "digest": "\u003cdigest\u003e",
           "role": "rendered-manifests",
-          "uri": "oci://example.local/platform/scoredev-paas:latest"
+          "uri": "oci://example.local/platform/helm-paas:latest"
         }
       ],
       "provenance_id": "\u003cprovenance_id\u003e",
       "rendered_at": "\u003ctimestamp\u003e",
+      "rendered_object_lineage": [
+        {
+          "kind": "HelmRelease",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "Chart.yaml",
+          "source_path": "Chart.yaml"
+        },
+        {
+          "kind": "Deployment",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "values.image.tag",
+          "source_path": "values-prod.yaml"
+        },
+        {
+          "kind": "Service",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "values.service.port",
+          "source_path": "values-prod.yaml"
+        },
+        {
+          "kind": "Deployment",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "values.image.tag",
+          "source_path": "values.yaml"
+        },
+        {
+          "kind": "Service",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "values.service.port",
+          "source_path": "values.yaml"
+        }
+      ],
       "schema_version": "cub.confighub.io/provenance/v1",
       "sources": [
         {
-          "path": "score.yaml",
+          "path": "Chart.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "values-prod.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "values.yaml",
           "revision": "HEAD",
           "role": "generator-input",
           "uri": "\u003csource_uri\u003e"
         }
+      ],
+      "values_paths": [
+        "values-prod.yaml",
+        "values.yaml"
       ],
       "version": "0.1.0"
     }
@@ -168,13 +229,35 @@
   "render_target_slug": "render-target",
   "space": "platform",
   "target_path": "\u003ctarget_path\u003e",
-  "target_slug": "score",
+  "target_slug": "helm",
+  "wet_manifest_targets": [
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "kind": "HelmRelease",
+      "name": "helm-paas",
+      "namespace": "apps"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "kind": "Deployment",
+      "name": "helm-paas",
+      "namespace": "apps",
+      "source_dry_path": "values.image.tag"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "kind": "Service",
+      "name": "helm-paas",
+      "namespace": "apps",
+      "source_dry_path": "values.service.port"
+    }
+  ],
   "wet_units": [
     {
-      "id": "wet_3b630d8a9fb3502c",
+      "id": "wet_b4595877225309fc",
       "kind": "wet-unit",
       "layer": "wet",
-      "name": "scoredev-paas-wet"
+      "name": "helm-paas-wet"
     }
   ]
 }

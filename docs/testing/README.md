@@ -18,6 +18,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 - CLI output contract tests in `cmd/cub-gen/gitops_parity_test.go`.
 - Golden files under `cmd/cub-gen/testdata/parity/`.
 - Includes command help/usage goldens to lock human-facing CLI contract.
+- Helm example is covered across discover/import/cleanup parity paths.
 
 ### Tier 3: examples proof
 
