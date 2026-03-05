@@ -19,6 +19,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 - Golden files under `cmd/cub-gen/testdata/parity/`.
 - Includes command help/usage goldens to lock human-facing CLI contract.
 - Helm example is covered across discover/import/cleanup parity paths.
+- Spring Boot import JSON contract is golden-locked (`gitops-import-spring.golden.json`).
 
 ### Tier 3: examples proof
 

@@ -52,6 +52,26 @@ func TestGitOpsParityGoldenImport(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import.golden.json"), got)
 }
 
+func TestGitOpsParityGoldenImportSpring(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "spring", "render-target"})
+	if err != nil {
+		t.Fatalf("run spring import returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal spring import json: %v\noutput=%s", err, out)
+	}
+	normalizeImport(got)
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-spring.golden.json"), got)
+}
+
 func TestGitOpsParityGoldenCleanup(t *testing.T) {
 	setupAliases(t)
 

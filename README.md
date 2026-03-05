@@ -47,6 +47,16 @@ For Helm repos, `gitops import --json` now emits explicit DRY and WET structures
 - provenance `values_paths`
 - provenance `rendered_object_lineage`
 
+## Spring Boot import contract (MVP-03)
+
+For Spring Boot repos, `gitops import --json` now emits app/platform ownership boundaries:
+
+- `dry_inputs` with explicit ownership:
+  - `app-config-base` / `app-config-profile` owned by `app-team`
+  - `build-config` owned by `platform-engineer`
+- `wet_manifest_targets` owned by `platform-runtime`
+- provenance + inverse-edit pointers include app-team edit paths (`spring.application.name`, `server.port`) and platform-owned edits (`spring.datasource.url`)
+
 ## Quality model (inherited from cub-scout, adapted)
 
 - Deterministic behavior: same input => same output
