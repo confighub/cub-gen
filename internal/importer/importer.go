@@ -233,15 +233,35 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 			Reason:         "Score variable maps to a single Kubernetes env var.",
 		}}
 	case model.GeneratorSpringBoot:
-		return []model.InversePatch{{
-			Operation:      "replace",
-			DryPath:        "spring.datasource.url",
-			WetPath:        "ConfigMap/data/application.yaml:spring.datasource.url",
-			EditableBy:     "platform-engineer",
-			Confidence:     0.78,
-			RequiresReview: true,
-			Reason:         "Database connectivity impacts shared runtime dependencies.",
-		}}
+		return []model.InversePatch{
+			{
+				Operation:      "replace",
+				DryPath:        "spring.application.name",
+				WetPath:        "Deployment/metadata/labels[app.kubernetes.io/name]",
+				EditableBy:     "app-team",
+				Confidence:     0.88,
+				RequiresReview: false,
+				Reason:         "Application identity should be app-editable without platform escalation.",
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "server.port",
+				WetPath:        "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
+				EditableBy:     "app-team",
+				Confidence:     0.91,
+				RequiresReview: false,
+				Reason:         "Application listener port is an app-level configuration concern.",
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spring.datasource.url",
+				WetPath:        "ConfigMap/data/application.yaml:spring.datasource.url",
+				EditableBy:     "platform-engineer",
+				Confidence:     0.78,
+				RequiresReview: true,
+				Reason:         "Database connectivity impacts shared runtime dependencies.",
+			},
+		}
 	default:
 		return []model.InversePatch{}
 	}
@@ -285,15 +305,40 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 			},
 		}
 	case model.GeneratorSpringBoot:
-		return []model.FieldOrigin{
+		hints := springPathHintsFromInputs(g.Inputs)
+		origins := []model.FieldOrigin{
+			{
+				DryPath:    "spring.application.name",
+				WetPath:    "Deployment/metadata/labels[app.kubernetes.io/name]",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  "spring-config-to-manifest",
+				Confidence: 0.89,
+			},
+			{
+				DryPath:    "server.port",
+				WetPath:    "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  "spring-config-to-manifest",
+				Confidence: 0.92,
+			},
 			{
 				DryPath:    "spring.datasource.url",
 				WetPath:    "ConfigMap/data/application.yaml:spring.datasource.url",
-				SourcePath: "src/main/resources/application.yaml",
+				SourcePath: hints.BaseConfigPath,
 				Transform:  "spring-config-to-manifest",
 				Confidence: 0.78,
 			},
 		}
+		if hints.ProfileConfigPath != "" {
+			origins = append(origins, model.FieldOrigin{
+				DryPath:    "server.port",
+				WetPath:    "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
+				SourcePath: hints.ProfileConfigPath,
+				Transform:  "spring-profile-overlay",
+				Confidence: 0.88,
+			})
+		}
+		return origins
 	default:
 		return []model.FieldOrigin{}
 	}
@@ -337,12 +382,27 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			},
 		}
 	case model.GeneratorSpringBoot:
+		hints := springPathHintsFromInputs(g.Inputs)
 		return []model.InverseEditPointer{
+			{
+				WetPath:    "Deployment/metadata/labels[app.kubernetes.io/name]",
+				DryPath:    "spring.application.name",
+				Owner:      "app-team",
+				EditHint:   fmt.Sprintf("Edit spring.application.name in %s.", hints.BaseConfigPath),
+				Confidence: 0.89,
+			},
+			{
+				WetPath:    "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
+				DryPath:    "server.port",
+				Owner:      "app-team",
+				EditHint:   springServerPortEditHint(hints),
+				Confidence: 0.91,
+			},
 			{
 				WetPath:    "ConfigMap/data/application.yaml:spring.datasource.url",
 				DryPath:    "spring.datasource.url",
 				Owner:      "platform-engineer",
-				EditHint:   "Edit datasource URL in application.yaml profile hierarchy.",
+				EditHint:   fmt.Sprintf("Edit spring.datasource.url in %s and coordinate with platform ownership rules.", hints.BaseConfigPath),
 				Confidence: 0.78,
 			},
 		}
@@ -456,10 +516,12 @@ func firstScoreInputPath(inputs []string) string {
 func dryInputsForGenerator(g model.GeneratorDetection) []model.DryInputRef {
 	out := make([]model.DryInputRef, 0, len(g.Inputs))
 	for _, in := range g.Inputs {
+		role := classifyDryInputRole(g.Kind, in)
 		out = append(out, model.DryInputRef{
 			GeneratorID: g.ID,
 			Profile:     g.Profile,
-			Role:        classifyDryInputRole(g.Kind, in),
+			Role:        role,
+			Owner:       ownerForDryInput(g.Kind, role),
 			Path:        in,
 			Required:    true,
 		})
@@ -477,21 +539,22 @@ func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.Gen
 	switch g.Kind {
 	case model.GeneratorHelm:
 		return []model.WetManifestTarget{
-			{GeneratorID: g.ID, Kind: "HelmRelease", Name: g.Name, Namespace: "apps"},
-			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Namespace: "apps", SourceDryPath: "values.image.tag"},
-			{GeneratorID: g.ID, Kind: "Service", Name: g.Name, Namespace: "apps", SourceDryPath: "values.service.port"},
+			{GeneratorID: g.ID, Kind: "HelmRelease", Name: g.Name, Owner: "platform-runtime", Namespace: "apps"},
+			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "values.image.tag"},
+			{GeneratorID: g.ID, Kind: "Service", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "values.service.port"},
 		}
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		return []model.WetManifestTarget{
-			{GeneratorID: g.ID, Kind: "Application", Name: g.Name, Namespace: "apps"},
-			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Namespace: "apps", SourceDryPath: fmt.Sprintf("containers.%s.image", hints.ContainerName)},
-			{GeneratorID: g.ID, Kind: "Service", Name: g.Name, Namespace: "apps", SourceDryPath: fmt.Sprintf("service.ports.%s.port", hints.ServicePortName)},
+			{GeneratorID: g.ID, Kind: "Application", Name: g.Name, Owner: "platform-runtime", Namespace: "apps"},
+			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: fmt.Sprintf("containers.%s.image", hints.ContainerName)},
+			{GeneratorID: g.ID, Kind: "Service", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: fmt.Sprintf("service.ports.%s.port", hints.ServicePortName)},
 		}
 	case model.GeneratorSpringBoot:
 		return []model.WetManifestTarget{
-			{GeneratorID: g.ID, Kind: "Kustomization", Name: g.Name, Namespace: "apps"},
-			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-config", Namespace: "apps", SourceDryPath: "spring.datasource.url"},
+			{GeneratorID: g.ID, Kind: "Kustomization", Name: g.Name, Owner: "platform-runtime", Namespace: "apps"},
+			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "server.port"},
+			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-config", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "spring.datasource.url"},
 		}
 	default:
 		return []model.WetManifestTarget{}
@@ -519,12 +582,34 @@ func classifyDryInputRole(kind model.GeneratorKind, in string) string {
 		if base == "pom.xml" || base == "build.gradle" || base == "build.gradle.kts" {
 			return "build-config"
 		}
-		if strings.HasPrefix(base, "application") && (strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml")) {
-			return "app-config"
+		if base == "application.yaml" || base == "application.yml" {
+			return "app-config-base"
+		}
+		if strings.HasPrefix(base, "application-") && (strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml")) {
+			return "app-config-profile"
 		}
 		return "spring-input"
 	default:
 		return "input"
+	}
+}
+
+func ownerForDryInput(kind model.GeneratorKind, role string) string {
+	switch kind {
+	case model.GeneratorHelm:
+		if role == "values" {
+			return "app-team"
+		}
+		return "platform-engineer"
+	case model.GeneratorScore:
+		return "app-team"
+	case model.GeneratorSpringBoot:
+		if strings.HasPrefix(role, "app-config") {
+			return "app-team"
+		}
+		return "platform-engineer"
+	default:
+		return "platform-engineer"
 	}
 }
 
@@ -584,13 +669,73 @@ func renderedLineageForGenerator(detection model.DetectionResult, g model.Genera
 			{Kind: "Service", Name: g.Name, Namespace: "apps", SourcePath: hints.SourcePath, SourceDryPath: fmt.Sprintf("service.ports.%s.port", hints.ServicePortName)},
 		}
 	case model.GeneratorSpringBoot:
-		return []model.RenderedObjectLineage{
-			{Kind: "Kustomization", Name: g.Name, Namespace: "apps", SourcePath: "kustomization.yaml", SourceDryPath: "resources"},
-			{Kind: "ConfigMap", Name: g.Name + "-config", Namespace: "apps", SourcePath: "src/main/resources/application.yaml", SourceDryPath: "spring.datasource.url"},
+		hints := springPathHintsFromInputs(g.Inputs)
+		lineage := []model.RenderedObjectLineage{
+			{Kind: "Kustomization", Name: g.Name, Namespace: "apps", SourcePath: hints.BuildConfigPath, SourceDryPath: "build"},
+			{Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: hints.BaseConfigPath, SourceDryPath: "spring.application.name"},
+			{Kind: "ConfigMap", Name: g.Name + "-config", Namespace: "apps", SourcePath: hints.BaseConfigPath, SourceDryPath: "spring.datasource.url"},
 		}
+		if hints.ProfileConfigPath != "" {
+			lineage = append(lineage, model.RenderedObjectLineage{
+				Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: hints.ProfileConfigPath, SourceDryPath: "server.port",
+			})
+		} else {
+			lineage = append(lineage, model.RenderedObjectLineage{
+				Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: hints.BaseConfigPath, SourceDryPath: "server.port",
+			})
+		}
+		return lineage
 	default:
 		return nil
 	}
+}
+
+type springHints struct {
+	BuildConfigPath   string
+	BaseConfigPath    string
+	ProfileConfigPath string
+}
+
+func springPathHintsFromInputs(inputs []string) springHints {
+	h := springHints{
+		BuildConfigPath: "pom.xml",
+		BaseConfigPath:  "src/main/resources/application.yaml",
+	}
+
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		base := strings.ToLower(filepath.Base(in))
+		switch base {
+		case "pom.xml", "build.gradle", "build.gradle.kts":
+			h.BuildConfigPath = p
+		case "application.yaml", "application.yml":
+			h.BaseConfigPath = p
+		}
+	}
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		base := strings.ToLower(filepath.Base(in))
+		if strings.HasPrefix(base, "application-") && (strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml")) {
+			if h.ProfileConfigPath == "" || p < h.ProfileConfigPath {
+				h.ProfileConfigPath = p
+			}
+		}
+	}
+	if h.BaseConfigPath == "" {
+		if h.ProfileConfigPath != "" {
+			h.BaseConfigPath = h.ProfileConfigPath
+		} else {
+			h.BaseConfigPath = "src/main/resources/application.yaml"
+		}
+	}
+	return h
+}
+
+func springServerPortEditHint(h springHints) string {
+	if h.ProfileConfigPath != "" {
+		return fmt.Sprintf("Edit server.port in %s for environment overrides; use %s for the default.", h.ProfileConfigPath, h.BaseConfigPath)
+	}
+	return fmt.Sprintf("Edit server.port in %s.", h.BaseConfigPath)
 }
 
 func inferInputSchema(kind model.GeneratorKind, inputPath string) string {

@@ -143,6 +143,7 @@ type DryInputRef struct {
 	GeneratorID string `json:"generator_id"`
 	Profile     string `json:"profile"`
 	Role        string `json:"role"`
+	Owner       string `json:"owner"`
 	Path        string `json:"path"`
 	Required    bool   `json:"required"`
 }
@@ -151,6 +152,7 @@ type WetManifestTarget struct {
 	GeneratorID   string `json:"generator_id"`
 	Kind          string `json:"kind"`
 	Name          string `json:"name"`
+	Owner         string `json:"owner"`
 	Namespace     string `json:"namespace,omitempty"`
 	SourceDryPath string `json:"source_dry_path,omitempty"`
 }

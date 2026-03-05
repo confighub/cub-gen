@@ -16,6 +16,7 @@ Contract lock means:
 - help/usage output for `gitops` and subcommands is golden-tested
 - unsupported behavior must fail explicitly (never silently degrade)
 - Helm import contract includes explicit DRY/WET surfaces (`dry_inputs`, `wet_manifest_targets`) and provenance lineage fields (`chart_path`, `values_paths`, `rendered_object_lineage`)
+- Spring Boot import contract includes explicit DRY ownership (`dry_inputs.owner`) and platform-owned WET targets (`wet_manifest_targets.owner`) with app-team inverse-edit hints
 
 ## Command contract parity
 
@@ -65,6 +66,7 @@ Contract lock means:
 - Command parity golden tests:
   - `cmd/cub-gen/testdata/parity/gitops-discover.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import.golden.json`
+  - `cmd/cub-gen/testdata/parity/gitops-import-spring.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-cleanup.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`

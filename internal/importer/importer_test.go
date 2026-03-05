@@ -145,12 +145,76 @@ func TestImportRepoHelmDryWetContract(t *testing.T) {
 	if !dryInputHasRolePath(result.DryInputs, "values", "values-prod.yaml") {
 		t.Fatalf("expected values-prod.yaml dry input, got %+v", result.DryInputs)
 	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "chart", "platform-engineer", "Chart.yaml") {
+		t.Fatalf("expected chart owner to be platform-engineer, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "values", "app-team", "values.yaml") {
+		t.Fatalf("expected values.yaml owner to be app-team, got %+v", result.DryInputs)
+	}
 
 	if !wetTargetHasKind(result.WetManifestTargets, "HelmRelease") {
 		t.Fatalf("expected HelmRelease wet target, got %+v", result.WetManifestTargets)
 	}
 	if !wetTargetHasKind(result.WetManifestTargets, "Deployment") {
 		t.Fatalf("expected Deployment wet target, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "HelmRelease", "platform-runtime") {
+		t.Fatalf("expected HelmRelease owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+}
+
+func TestImportRepoSpringBootDryWetContract(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "springboot-paas")
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+	prov := result.Provenance[0]
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "spring.application.name") {
+		t.Fatalf("expected spring.application.name field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "server.port") {
+		t.Fatalf("expected server.port field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "spring.datasource.url") {
+		t.Fatalf("expected spring.datasource.url field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHasDryPath(prov.InverseEditPointers, "spring.application.name") {
+		t.Fatalf("expected spring.application.name inverse pointer, got %+v", prov.InverseEditPointers)
+	}
+	if !inversePointerHasDryPath(prov.InverseEditPointers, "server.port") {
+		t.Fatalf("expected server.port inverse pointer, got %+v", prov.InverseEditPointers)
+	}
+
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "app-config-base", "app-team", "src/main/resources/application.yaml") {
+		t.Fatalf("expected base app config owned by app-team, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "app-config-profile", "app-team", "src/main/resources/application-prod.yaml") {
+		t.Fatalf("expected profile app config owned by app-team, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "build-config", "platform-engineer", "pom.xml") {
+		t.Fatalf("expected build config owned by platform-engineer, got %+v", result.DryInputs)
+	}
+
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "Kustomization", "platform-runtime") {
+		t.Fatalf("expected Kustomization owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "Deployment", "platform-runtime") {
+		t.Fatalf("expected Deployment owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "ConfigMap", "platform-runtime") {
+		t.Fatalf("expected ConfigMap owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+
+	if len(result.InversePlans) != 1 {
+		t.Fatalf("expected 1 inverse plan, got %d", len(result.InversePlans))
+	}
+	if len(result.InversePlans[0].Patches) < 2 {
+		t.Fatalf("expected at least 2 spring inverse patches, got %+v", result.InversePlans[0].Patches)
 	}
 }
 
@@ -325,9 +389,27 @@ func dryInputHasRolePath(v []model.DryInputRef, role, path string) bool {
 	return false
 }
 
+func dryInputHasRoleOwnerPath(v []model.DryInputRef, role, owner, path string) bool {
+	for _, item := range v {
+		if item.Role == role && item.Owner == owner && item.Path == path {
+			return true
+		}
+	}
+	return false
+}
+
 func wetTargetHasKind(v []model.WetManifestTarget, kind string) bool {
 	for _, item := range v {
 		if item.Kind == kind {
+			return true
+		}
+	}
+	return false
+}
+
+func wetTargetHasKindOwner(v []model.WetManifestTarget, kind, owner string) bool {
+	for _, item := range v {
+		if item.Kind == kind && item.Owner == owner {
 			return true
 		}
 	}

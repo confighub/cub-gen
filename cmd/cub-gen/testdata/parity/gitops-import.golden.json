@@ -58,6 +58,7 @@
   "dry_inputs": [
     {
       "generator_id": "gen_635643e45fbf3410",
+      "owner": "platform-engineer",
       "path": "Chart.yaml",
       "profile": "helm-paas",
       "required": true,
@@ -65,6 +66,7 @@
     },
     {
       "generator_id": "gen_635643e45fbf3410",
+      "owner": "app-team",
       "path": "values-prod.yaml",
       "profile": "helm-paas",
       "required": true,
@@ -72,6 +74,7 @@
     },
     {
       "generator_id": "gen_635643e45fbf3410",
+      "owner": "app-team",
       "path": "values.yaml",
       "profile": "helm-paas",
       "required": true,
@@ -235,13 +238,15 @@
       "generator_id": "gen_635643e45fbf3410",
       "kind": "HelmRelease",
       "name": "helm-paas",
-      "namespace": "apps"
+      "namespace": "apps",
+      "owner": "platform-runtime"
     },
     {
       "generator_id": "gen_635643e45fbf3410",
       "kind": "Deployment",
       "name": "helm-paas",
       "namespace": "apps",
+      "owner": "platform-runtime",
       "source_dry_path": "values.image.tag"
     },
     {
@@ -249,6 +254,7 @@
       "kind": "Service",
       "name": "helm-paas",
       "namespace": "apps",
+      "owner": "platform-runtime",
       "source_dry_path": "values.service.port"
     }
   ],
