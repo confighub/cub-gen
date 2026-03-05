@@ -1,20 +1,15 @@
 # cub-gen
 
-`cub-gen` is a standalone, local-first prototype for Git-native generator import.
-
-It is intentionally separate from `cub-scout`:
-
-1. `cub-scout` focuses on observation/exploration.
-2. `cub-gen` focuses on deterministic generator ingestion, lineage, and parity with `cub gitops` command shape.
+`cub-gen` is a prototype for Git-native generator import based on `cub gitops`.
 
 ## Current scope
 
 - Detect generator source types in a repo (`helm`, `score.dev`, `springboot`)
-- Mirror `cub gitops` flow stages:
+- Per `cub gitops` the flow stages are:
   - `gitops discover`
   - `gitops import`
   - `gitops cleanup`
-- Keep all behavior local (no ConfigHub API dependency yet)
+- Keep all behavior local for now
 
 ## Quick start
 
