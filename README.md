@@ -80,6 +80,8 @@ Or run direct mode (import + bundle in one command):
 
 ```bash
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas
+./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas
+./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas
 ```
 
 Bundle output includes:
@@ -93,12 +95,20 @@ Verify a bundle (file or stdin):
 
 ```bash
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas | ./cub-gen verify --in -
+./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas | ./cub-gen verify --in -
+./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas | ./cub-gen verify --in -
 ```
 
 Emit an attestation record from a verified bundle:
 
 ```bash
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas \
+  | ./cub-gen attest --in - --verifier ci-bot \
+  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
+./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas \
+  | ./cub-gen attest --in - --verifier ci-bot \
+  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
+./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas \
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
 ```
