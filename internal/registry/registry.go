@@ -26,18 +26,20 @@ type WetTargetTemplate struct {
 // FamilySpec captures cross-cutting generator-family metadata used by multiple
 // command/runtime layers.
 type FamilySpec struct {
-	Kind             model.GeneratorKind
-	Profile          string
-	ResourceKind     string
-	ResourceType     string
-	Capabilities     []string
-	RoleSchemaRefs   map[string]string
-	HintDefaults     map[string]string
-	InputRoleRules   []InputRoleRule
-	DefaultInputRole string
-	RoleOwners       map[string]string
-	DefaultOwner     string
-	WetTargets       []WetTargetTemplate
+	Kind                        model.GeneratorKind
+	Profile                     string
+	ResourceKind                string
+	ResourceType                string
+	Capabilities                []string
+	RoleSchemaRefs              map[string]string
+	HintDefaults                map[string]string
+	FieldOriginTransform        string
+	FieldOriginOverlayTransform string
+	InputRoleRules              []InputRoleRule
+	DefaultInputRole            string
+	RoleOwners                  map[string]string
+	DefaultOwner                string
+	WetTargets                  []WetTargetTemplate
 }
 
 var familySpecs = map[model.GeneratorKind]FamilySpec{
@@ -53,6 +55,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		HintDefaults: map[string]string{
 			"chart_path": "Chart.yaml",
 		},
+		FieldOriginTransform: "helm-template",
 		InputRoleRules: []InputRoleRule{
 			{Role: "chart", ExactBasenames: []string{"chart.yaml"}},
 			{Role: "values", Prefixes: []string{"values"}, Extensions: []string{".yaml", ".yml"}},
@@ -79,9 +82,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"variable_name":     "LOG_LEVEL",
 			"service_port_name": "web",
 		},
-		InputRoleRules:   []InputRoleRule{{Role: "score-spec", ExactBasenames: []string{"score.yaml", "score.yml"}}},
-		DefaultInputRole: "score-input",
-		DefaultOwner:     "app-team",
+		FieldOriginTransform: "score-to-k8s",
+		InputRoleRules:       []InputRoleRule{{Role: "score-spec", ExactBasenames: []string{"score.yaml", "score.yml"}}},
+		DefaultInputRole:     "score-input",
+		DefaultOwner:         "app-team",
 		WetTargets: []WetTargetTemplate{
 			{Kind: "Application", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps"},
 			{Kind: "Deployment", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "containers.{{container}}.image"},
@@ -102,6 +106,8 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"build_config_path": "pom.xml",
 			"base_config_path":  "src/main/resources/application.yaml",
 		},
+		FieldOriginTransform:        "spring-config-to-manifest",
+		FieldOriginOverlayTransform: "spring-profile-overlay",
 		InputRoleRules: []InputRoleRule{
 			{Role: "build-config", ExactBasenames: []string{"pom.xml", "build.gradle", "build.gradle.kts"}},
 			{Role: "app-config-base", ExactBasenames: []string{"application.yaml", "application.yml"}},
@@ -132,6 +138,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		HintDefaults: map[string]string{
 			"catalog_path": "catalog-info.yaml",
 		},
+		FieldOriginTransform: "backstage-component-to-application",
 		InputRoleRules: []InputRoleRule{
 			{Role: "catalog-spec", ExactBasenames: []string{"catalog-info.yaml", "catalog-info.yml"}},
 			{Role: "app-config", ExactBasenames: []string{"app-config.yaml", "app-config.yml"}},
@@ -157,6 +164,8 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		HintDefaults: map[string]string{
 			"base_config_path": "ably.yaml",
 		},
+		FieldOriginTransform:        "ably-config-to-runtime",
+		FieldOriginOverlayTransform: "ably-overlay-merge",
 		InputRoleRules: []InputRoleRule{
 			{Role: "provider-config-base", ExactBasenames: []string{"ably.yaml", "ably.yml", "ably.json"}},
 			{Role: "provider-config-overlay", Prefixes: []string{"ably-"}, Extensions: []string{".yaml", ".yml", ".json"}},
@@ -181,6 +190,8 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		HintDefaults: map[string]string{
 			"base_spec_path": "operations.yaml",
 		},
+		FieldOriginTransform:        "ops-workflow-to-argo-workflow",
+		FieldOriginOverlayTransform: "ops-workflow-overlay-merge",
 		InputRoleRules: []InputRoleRule{
 			{Role: "operations-base", ExactBasenames: []string{"operations.yaml", "operations.yml", "workflow.yaml", "workflow.yml"}},
 			{Role: "operations-overlay", Prefixes: []string{"operations-", "workflow-"}, Extensions: []string{".yaml", ".yml"}},
@@ -200,18 +211,20 @@ func Spec(kind model.GeneratorKind) (FamilySpec, bool) {
 		return FamilySpec{}, false
 	}
 	return FamilySpec{
-		Kind:             spec.Kind,
-		Profile:          spec.Profile,
-		ResourceKind:     spec.ResourceKind,
-		ResourceType:     spec.ResourceType,
-		Capabilities:     append([]string(nil), spec.Capabilities...),
-		RoleSchemaRefs:   copyRoleSchemaRefs(spec.RoleSchemaRefs),
-		HintDefaults:     copyHintDefaults(spec.HintDefaults),
-		InputRoleRules:   copyInputRoleRules(spec.InputRoleRules),
-		DefaultInputRole: spec.DefaultInputRole,
-		RoleOwners:       copyRoleOwners(spec.RoleOwners),
-		DefaultOwner:     spec.DefaultOwner,
-		WetTargets:       copyWetTargets(spec.WetTargets),
+		Kind:                        spec.Kind,
+		Profile:                     spec.Profile,
+		ResourceKind:                spec.ResourceKind,
+		ResourceType:                spec.ResourceType,
+		Capabilities:                append([]string(nil), spec.Capabilities...),
+		RoleSchemaRefs:              copyRoleSchemaRefs(spec.RoleSchemaRefs),
+		HintDefaults:                copyHintDefaults(spec.HintDefaults),
+		FieldOriginTransform:        spec.FieldOriginTransform,
+		FieldOriginOverlayTransform: spec.FieldOriginOverlayTransform,
+		InputRoleRules:              copyInputRoleRules(spec.InputRoleRules),
+		DefaultInputRole:            spec.DefaultInputRole,
+		RoleOwners:                  copyRoleOwners(spec.RoleOwners),
+		DefaultOwner:                spec.DefaultOwner,
+		WetTargets:                  copyWetTargets(spec.WetTargets),
 	}, true
 }
 
@@ -256,6 +269,28 @@ func HintDefault(kind model.GeneratorKind, key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func FieldOriginTransform(kind model.GeneratorKind) string {
+	spec, ok := Spec(kind)
+	if !ok {
+		return "generator-transform"
+	}
+	if strings.TrimSpace(spec.FieldOriginTransform) != "" {
+		return spec.FieldOriginTransform
+	}
+	return "generator-transform"
+}
+
+func FieldOriginOverlayTransform(kind model.GeneratorKind) string {
+	spec, ok := Spec(kind)
+	if !ok {
+		return FieldOriginTransform(kind)
+	}
+	if strings.TrimSpace(spec.FieldOriginOverlayTransform) != "" {
+		return spec.FieldOriginOverlayTransform
+	}
+	return FieldOriginTransform(kind)
 }
 
 func SchemaRef(kind model.GeneratorKind, inputPath string) string {

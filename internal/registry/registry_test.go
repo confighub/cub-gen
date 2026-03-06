@@ -68,6 +68,12 @@ func TestRegistryFallbacks(t *testing.T) {
 	if got := HintDefault(unknown, "source_path", "default.yaml"); got != "default.yaml" {
 		t.Fatalf("expected hint default fallback default.yaml, got %q", got)
 	}
+	if got := FieldOriginTransform(unknown); got != "generator-transform" {
+		t.Fatalf("expected field origin transform fallback generator-transform, got %q", got)
+	}
+	if got := FieldOriginOverlayTransform(unknown); got != "generator-transform" {
+		t.Fatalf("expected field origin overlay transform fallback generator-transform, got %q", got)
+	}
 	if got := InputRole(unknown, "any.yaml"); got != "input" {
 		t.Fatalf("expected input role fallback input, got %q", got)
 	}
@@ -168,6 +174,15 @@ func TestRegistryHintDefaults(t *testing.T) {
 	}
 	if got := HintDefault(model.GeneratorSpringBoot, "base_config_path", "fallback.yaml"); got != "src/main/resources/application.yaml" {
 		t.Fatalf("expected spring base_config_path hint default, got %q", got)
+	}
+	if got := FieldOriginTransform(model.GeneratorBackstage); got != "backstage-component-to-application" {
+		t.Fatalf("expected backstage field origin transform, got %q", got)
+	}
+	if got := FieldOriginOverlayTransform(model.GeneratorSpringBoot); got != "spring-profile-overlay" {
+		t.Fatalf("expected spring overlay field origin transform, got %q", got)
+	}
+	if got := FieldOriginOverlayTransform(model.GeneratorHelm); got != "helm-template" {
+		t.Fatalf("expected helm overlay transform to fall back to base transform, got %q", got)
 	}
 
 	// Ensure returned specs are copies.
