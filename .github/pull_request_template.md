@@ -20,13 +20,14 @@
 |---|---|---|---|
 | Unit | Yes | `go test ./...` | Core logic output is stable |
 | Parity/Golden | If CLI/JSON/table output changed | `go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v` | Contract output is stable |
-| Example proof | If user-visible flow changed | `go run ./cmd/cub-gen ...` | Docs/example output matches implementation |
+| Example proof | If user-visible flow changed | `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v` | Docs/example output matches implementation |
 
 ## Commands Run
 
 - [ ] `go build ./cmd/cub-gen`
 - [ ] `go test ./...`
 - [ ] `go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v`
+- [ ] `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v` (if user-visible flow changed)
 - Additional commands:
 
 ## Graceful Degradation / Error Behavior

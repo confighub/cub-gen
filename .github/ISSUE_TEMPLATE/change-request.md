@@ -28,7 +28,7 @@ assignees: []
 |---|---|---|---|
 | Unit | Yes | `go test ./...` | deterministic logic result |
 | Parity/Golden | If output contract changes | `go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v` | stable CLI contract |
-| Example proof | If user-visible behavior changes | `go run ./cmd/cub-gen ...` | docs/example aligned |
+| Example proof | If user-visible behavior changes | `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v` | docs/example aligned |
 
 ## Graceful Degradation
 

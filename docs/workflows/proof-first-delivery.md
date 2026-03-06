@@ -21,7 +21,7 @@ This is the inherited delivery model from cub-scout, trimmed for cub-gen scope.
 |---|---|---|---|
 | Unit | Yes | `go test ./...` | deterministic logic/output |
 | Parity/Golden | For CLI behavior | `go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v` | stable command contract |
-| Example proof | For user-visible changes | `go run ./cmd/cub-gen ...` | docs/example matches behavior |
+| Example proof | For user-visible changes | `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v` | docs/example matches behavior |
 
 ## Completion rule
 
