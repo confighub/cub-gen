@@ -8,9 +8,22 @@ import (
 )
 
 func TestPublishGoldenFromImport(t *testing.T) {
+	assertPublishFromImportGolden(t, "helm", filepath.Join("testdata", "parity", "publish-from-import.golden.json"))
+}
+
+func TestPublishGoldenFromImportScore(t *testing.T) {
+	assertPublishFromImportGolden(t, "score", filepath.Join("testdata", "parity", "publish-from-import-score.golden.json"))
+}
+
+func TestPublishGoldenFromImportSpring(t *testing.T) {
+	assertPublishFromImportGolden(t, "spring", filepath.Join("testdata", "parity", "publish-from-import-spring.golden.json"))
+}
+
+func assertPublishFromImportGolden(t *testing.T, target, goldenPath string) {
+	t.Helper()
 	setupAliases(t)
 
-	importOut, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "helm", "render-target"})
+	importOut, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", target, "render-target"})
 	if err != nil {
 		t.Fatalf("run import returned error: %v\nstderr=%s", err, stderr)
 	}
@@ -34,7 +47,7 @@ func TestPublishGoldenFromImport(t *testing.T) {
 	}
 	normalizePublish(got)
 
-	assertGoldenJSON(t, filepath.Join("testdata", "parity", "publish-from-import.golden.json"), got)
+	assertGoldenJSON(t, goldenPath, got)
 }
 
 func TestPublishGoldenDirectHelm(t *testing.T) {
