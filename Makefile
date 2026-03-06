@@ -1,4 +1,4 @@
-.PHONY: build test test-parity test-contracts test-examples ci
+.PHONY: build test test-parity test-contracts test-examples update-goldens ci
 
 PARITY_TEST_PATTERN := ^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)
 
@@ -15,5 +15,8 @@ test-parity: test-contracts
 
 test-examples:
 	go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$$' -count=1 -v
+
+update-goldens:
+	UPDATE_GOLDEN=1 go test ./cmd/cub-gen -run 'Golden' -count=1 -v
 
 ci: build test test-contracts test-examples

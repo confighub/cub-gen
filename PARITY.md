@@ -8,7 +8,7 @@ Status values:
 - `partial`: same contract shape, simplified implementation
 - `deferred`: intentionally not implemented yet
 
-Current lock level: `v0.1-parity-locked` (2026-03-05 baseline)
+Current lock level: `v0.1-parity-locked` (2026-03-06 expanded contract baseline)
 
 Contract lock means:
 - command names/arity for `discover|import|cleanup` are frozen for v0.1
@@ -69,11 +69,27 @@ Contract lock means:
 ## Proof references
 
 - Command parity golden tests:
+  - `cmd/cub-gen/testdata/parity/top-help.stdout.golden.txt`
+  - `cmd/cub-gen/testdata/parity/publish-help.stderr.golden.txt`
+  - `cmd/cub-gen/testdata/parity/verify-help.stderr.golden.txt`
+  - `cmd/cub-gen/testdata/parity/attest-help.stderr.golden.txt`
+  - `cmd/cub-gen/testdata/parity/verify-attestation-help.stderr.golden.txt`
+  - `cmd/cub-gen/testdata/parity/gitops-help.stdout.golden.txt`
+  - `cmd/cub-gen/testdata/parity/gitops-discover-help.stderr.golden.txt`
+  - `cmd/cub-gen/testdata/parity/gitops-import-help.stderr.golden.txt`
+  - `cmd/cub-gen/testdata/parity/gitops-cleanup-help.stderr.golden.txt`
   - `cmd/cub-gen/testdata/parity/gitops-discover.golden.json`
+  - `cmd/cub-gen/testdata/parity/gitops-discover-score.golden.json`
+  - `cmd/cub-gen/testdata/parity/gitops-discover-spring.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import.golden.json`
+  - `cmd/cub-gen/testdata/parity/gitops-import-score.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import-spring.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-cleanup.golden.json`
+  - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
+  - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/publish-from-import.golden.json`
+  - `cmd/cub-gen/testdata/parity/publish-direct-score.golden.json`
+  - `cmd/cub-gen/testdata/parity/publish-direct-spring.golden.json`
   - `cmd/cub-gen/testdata/parity/verify.stdout.golden.txt`
   - `cmd/cub-gen/testdata/parity/verify.json.golden.json`
   - `cmd/cub-gen/testdata/parity/verify-tampered.stderr.golden.txt`
@@ -81,11 +97,6 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/attest-tampered.stderr.golden.txt`
   - `cmd/cub-gen/testdata/parity/verify-attestation.json.golden.json`
   - `cmd/cub-gen/testdata/parity/verify-attestation-tampered.stderr.golden.txt`
-  - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
-  - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`
-  - `cmd/cub-gen/testdata/parity/gitops-help.stdout.golden.txt`
-  - `cmd/cub-gen/testdata/parity/gitops-discover-help.stderr.golden.txt`
-  - `cmd/cub-gen/testdata/parity/gitops-import-help.stderr.golden.txt`
-  - `cmd/cub-gen/testdata/parity/gitops-cleanup-help.stderr.golden.txt`
 - Error-mode tests:
+  - `cmd/cub-gen/command_surface_parity_test.go`
   - `cmd/cub-gen/gitops_parity_test.go`

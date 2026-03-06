@@ -25,9 +25,9 @@ go test ./... -v
 | Change type | Required tests |
 |---|---|
 | Detection/import logic | Unit tests in `internal/...` |
-| CLI output/flags | Parity/golden tests in `cmd/cub-gen/gitops_parity_test.go` |
-| Command contract change | Parity tests + `PARITY.md` update |
-| New user-visible flow | Example update + proof command in PR |
+| CLI output/flags | Contract/golden tests in `cmd/cub-gen/*_parity_test.go` |
+| Command contract change | `make test-contracts` + `PARITY.md` update |
+| New user-visible flow | `make test-examples` + docs/example update |
 
 ## Pull request checklist
 
@@ -41,5 +41,6 @@ go test ./... -v
 ```bash
 go build ./cmd/cub-gen
 go test ./...
-go test ./cmd/cub-gen -run '^TestGitOpsParity' -count=1 -v
+go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v
+go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v
 ```
