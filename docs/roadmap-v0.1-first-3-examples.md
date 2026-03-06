@@ -1,6 +1,6 @@
 # cub-gen v0.1 Roadmap: First 3 Examples
 
-Status date: 2026-03-05
+Status date: 2026-03-06
 
 ## Purpose
 
@@ -39,11 +39,23 @@ They want opinionated app kits (DRY) while still preserving auditable runtime in
 
 ## Work items
 
-1. [#6](https://github.com/confighub/cub-gen/issues/6) MVP-00: lock CLI parity against `cub gitops`.
-2. [#2](https://github.com/confighub/cub-gen/issues/2) MVP-01: score.dev import with provenance + inverse map.
-3. [#3](https://github.com/confighub/cub-gen/issues/3) MVP-02: Helm PaaS import parity.
-4. [#4](https://github.com/confighub/cub-gen/issues/4) MVP-03: Spring Boot PaaS import path.
-5. [#5](https://github.com/confighub/cub-gen/issues/5) MVP-04: adoption-focused docs/UX.
+1. [x] [#6](https://github.com/confighub/cub-gen/issues/6) MVP-00: lock CLI parity against `cub gitops`.
+2. [x] [#2](https://github.com/confighub/cub-gen/issues/2) MVP-01: score.dev import with provenance + inverse map.
+3. [x] [#3](https://github.com/confighub/cub-gen/issues/3) MVP-02: Helm PaaS import parity.
+4. [x] [#4](https://github.com/confighub/cub-gen/issues/4) MVP-03: Spring Boot PaaS import path.
+5. [x] [#5](https://github.com/confighub/cub-gen/issues/5) MVP-04: adoption-focused docs/UX.
+
+## Current status snapshot (implemented)
+
+1. `gitops discover/import/cleanup` parity contracts are golden-locked.
+2. First three examples (Helm, Score, Spring Boot) are golden-locked for discover/import JSON outputs.
+3. Top-level and subcommand help/usage output is golden-locked.
+4. Path-mode smoke tests prove direct `./examples/...` usage without alias config.
+5. Local bridge path is available and tested:
+   - `publish` (bundle generation)
+   - `verify` (bundle integrity)
+   - `attest` (attestation record)
+   - `verify-attestation` (attestation integrity + optional bundle linkage)
 
 Milestone: [v0.1 - first 3 examples](https://github.com/confighub/cub-gen/milestone/1)
 
