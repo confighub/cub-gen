@@ -59,6 +59,10 @@ func TestVerifyAttestationGoldenTamperedError(t *testing.T) {
 	assertGoldenText(t, "testdata/parity/verify-attestation-tampered.stderr.golden.txt", err.Error()+"\n")
 }
 
+func TestVerifyAttestationGoldenLinkedHelmJSON(t *testing.T) {
+	assertVerifyAttestationLinkedGolden(t, "helm", "testdata/parity/verify-attestation-linked-helm.json.golden.json")
+}
+
 func TestVerifyAttestationGoldenLinkedScoreJSON(t *testing.T) {
 	assertVerifyAttestationLinkedGolden(t, "score", "testdata/parity/verify-attestation-linked-score.json.golden.json")
 }
