@@ -1002,44 +1002,7 @@ func opsWorkflowScheduleEditHint(h opsWorkflowHints) string {
 }
 
 func inferInputSchema(kind model.GeneratorKind, inputPath string) string {
-	ext := strings.ToLower(filepath.Ext(inputPath))
-	switch {
-	case ext == ".yaml" || ext == ".yml":
-		if kind == model.GeneratorHelm && strings.Contains(strings.ToLower(filepath.Base(inputPath)), "chart") {
-			return "https://json.schemastore.org/chart"
-		}
-		if kind == model.GeneratorScore {
-			return "https://docs.score.dev/schemas/score-v1b1.json"
-		}
-		if kind == model.GeneratorSpringBoot {
-			return "https://json.schemastore.org/spring-configuration-metadata"
-		}
-		if kind == model.GeneratorBackstage {
-			base := strings.ToLower(filepath.Base(inputPath))
-			if base == "catalog-info.yaml" || base == "catalog-info.yml" {
-				return "https://json.schemastore.org/backstage-catalog-info"
-			}
-			if base == "app-config.yaml" || base == "app-config.yml" {
-				return "https://json.schemastore.org/backstage-app-config"
-			}
-		}
-		if kind == model.GeneratorAbly {
-			return "https://schema.confighub.dev/generators/ably-config-v1"
-		}
-		if kind == model.GeneratorOpsFlow {
-			return "https://schema.confighub.dev/generators/ops-workflow-v1"
-		}
-		return "https://json-schema.org/draft/2020-12/schema"
-	case ext == ".json":
-		if kind == model.GeneratorAbly {
-			return "https://schema.confighub.dev/generators/ably-config-v1"
-		}
-		return "https://json-schema.org/draft/2020-12/schema"
-	case ext == ".xml":
-		return "https://maven.apache.org/xsd/maven-4.0.0.xsd"
-	default:
-		return "https://json-schema.org/draft/2020-12/schema"
-	}
+	return registry.SchemaRef(kind, inputPath)
 }
 
 func sanitizeName(name string) string {

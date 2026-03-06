@@ -164,6 +164,53 @@ func Capabilities(kind model.GeneratorKind) []string {
 	return append([]string(nil), spec.Capabilities...)
 }
 
+func SchemaRef(kind model.GeneratorKind, inputPath string) string {
+	base := strings.ToLower(filepath.Base(inputPath))
+	ext := strings.ToLower(filepath.Ext(base))
+	role := InputRole(kind, inputPath)
+
+	switch ext {
+	case ".xml":
+		return "https://maven.apache.org/xsd/maven-4.0.0.xsd"
+	case ".yaml", ".yml":
+		switch kind {
+		case model.GeneratorHelm:
+			if role == "chart" {
+				return "https://json.schemastore.org/chart"
+			}
+		case model.GeneratorScore:
+			if role == "score-spec" {
+				return "https://docs.score.dev/schemas/score-v1b1.json"
+			}
+		case model.GeneratorSpringBoot:
+			if role == "app-config-base" || role == "app-config-profile" {
+				return "https://json.schemastore.org/spring-configuration-metadata"
+			}
+		case model.GeneratorBackstage:
+			if role == "catalog-spec" {
+				return "https://json.schemastore.org/backstage-catalog-info"
+			}
+			if role == "app-config" {
+				return "https://json.schemastore.org/backstage-app-config"
+			}
+		case model.GeneratorAbly:
+			if strings.HasPrefix(role, "provider-config") {
+				return "https://schema.confighub.dev/generators/ably-config-v1"
+			}
+		case model.GeneratorOpsFlow:
+			if strings.HasPrefix(role, "operations-") {
+				return "https://schema.confighub.dev/generators/ops-workflow-v1"
+			}
+		}
+	case ".json":
+		if kind == model.GeneratorAbly && strings.HasPrefix(role, "provider-config") {
+			return "https://schema.confighub.dev/generators/ably-config-v1"
+		}
+	}
+
+	return "https://json-schema.org/draft/2020-12/schema"
+}
+
 func InputRole(kind model.GeneratorKind, inputPath string) string {
 	spec, ok := Spec(kind)
 	if !ok {
