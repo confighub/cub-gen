@@ -5,7 +5,9 @@
 ### CLI parity tests
 
 - `cmd/cub-gen/gitops_parity_test.go`
-  - golden discover JSON
+  - golden discover JSON (Helm)
+  - golden discover JSON (Score)
+  - golden discover JSON (Spring Boot)
   - golden import JSON (Helm)
   - golden import JSON (Score)
   - golden import JSON (Spring Boot)
@@ -22,6 +24,8 @@
 ## Golden artifacts
 
 - `cmd/cub-gen/testdata/parity/gitops-discover.golden.json`
+- `cmd/cub-gen/testdata/parity/gitops-discover-score.golden.json`
+- `cmd/cub-gen/testdata/parity/gitops-discover-spring.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-import.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-import-score.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-import-spring.golden.json`
