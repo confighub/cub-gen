@@ -48,6 +48,42 @@ func TestAttestFromStdin(t *testing.T) {
 	}
 }
 
+func TestAttestFromStdinFirstThreeTargets(t *testing.T) {
+	setupAliases(t)
+
+	targets := []string{"helm", "score", "spring"}
+	for _, target := range targets {
+		t.Run(target, func(t *testing.T) {
+			bundleJSON, err := generateBundleJSONForTarget(target)
+			if err != nil {
+				t.Fatalf("generate bundle for target %q: %v", target, err)
+			}
+
+			out, stderr, err := runWithCapturedIOAndStdin([]string{"attest", "--in", "-", "--verifier", "ci-bot"}, bundleJSON)
+			if err != nil {
+				t.Fatalf("attest returned error: %v\nstderr=%s", err, stderr)
+			}
+			if strings.TrimSpace(stderr) != "" {
+				t.Fatalf("expected empty stderr, got %q", stderr)
+			}
+
+			var got map[string]any
+			if err := json.Unmarshal([]byte(out), &got); err != nil {
+				t.Fatalf("unmarshal attest output: %v\noutput=%s", err, out)
+			}
+			if got["status"] != "verified" {
+				t.Fatalf("unexpected status for target %q: %v", target, got["status"])
+			}
+			if got["verifier"] != "ci-bot" {
+				t.Fatalf("unexpected verifier for target %q: %v", target, got["verifier"])
+			}
+			if v, ok := got["attestation_digest"].(string); !ok || !strings.HasPrefix(v, "sha256:") {
+				t.Fatalf("unexpected attestation_digest for target %q: %v", target, got["attestation_digest"])
+			}
+		})
+	}
+}
+
 func TestAttestFromFileToFile(t *testing.T) {
 	setupAliases(t)
 
