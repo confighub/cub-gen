@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/confighub/cub-gen/internal/attest"
 	"github.com/confighub/cub-gen/internal/detect"
@@ -43,6 +44,8 @@ func run(args []string) error {
 		return runVerify(args[1:])
 	case "attest":
 		return runAttest(args[1:])
+	case "verify-attestation":
+		return runVerifyAttestation(args[1:])
 	case "gitops":
 		return runGitOps(args[1:])
 	default:
@@ -278,6 +281,80 @@ func runAttest(args []string) error {
 	return writeJSON(f, rec, *pretty)
 }
 
+func runVerifyAttestation(args []string) error {
+	fs := flag.NewFlagSet("verify-attestation", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	in := fs.String("in", "-", "Attestation JSON input path, or '-' for stdin")
+	bundlePath := fs.String("bundle", "", "Optional bundle JSON input path to verify digest linkage")
+	jsonOut := fs.Bool("json", false, "Output JSON")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	if fs.NArg() != 0 {
+		return errors.New("usage: cub-gen verify-attestation [flags]")
+	}
+
+	var recBytes []byte
+	var err error
+	if *in == "-" {
+		recBytes, err = io.ReadAll(os.Stdin)
+		if err != nil {
+			return fmt.Errorf("read stdin: %w", err)
+		}
+	} else {
+		recBytes, err = os.ReadFile(*in)
+		if err != nil {
+			return fmt.Errorf("read input file: %w", err)
+		}
+	}
+
+	var rec attest.Record
+	if err := json.Unmarshal(recBytes, &rec); err != nil {
+		return fmt.Errorf("parse attestation json: %w", err)
+	}
+
+	linked := false
+	if strings.TrimSpace(*bundlePath) == "" {
+		if err := attest.VerifyRecord(rec); err != nil {
+			return err
+		}
+	} else {
+		bundleBytes, err := os.ReadFile(*bundlePath)
+		if err != nil {
+			return fmt.Errorf("read bundle file: %w", err)
+		}
+		var bundle publish.ChangeBundle
+		if err := json.Unmarshal(bundleBytes, &bundle); err != nil {
+			return fmt.Errorf("parse bundle json: %w", err)
+		}
+		if err := attest.VerifyRecordAgainstBundle(rec, bundle); err != nil {
+			return err
+		}
+		linked = true
+	}
+
+	if *jsonOut {
+		return writeJSON(os.Stdout, map[string]any{
+			"valid":               true,
+			"linked_bundle_check": linked,
+			"attestation_digest":  rec.AttestationDigest,
+			"bundle_digest":       rec.BundleDigest,
+			"change_id":           rec.ChangeID,
+		}, *pretty)
+	}
+
+	if linked {
+		fmt.Printf("Attestation verification OK (linked): %s\n", rec.AttestationDigest)
+		return nil
+	}
+	fmt.Printf("Attestation verification OK: %s\n", rec.AttestationDigest)
+	return nil
+}
+
 func runGitOps(args []string) error {
 	if len(args) == 0 {
 		printGitOpsUsage(os.Stderr)
@@ -465,6 +542,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen verify [--in FILE|-] [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "GitOps parity examples:")
@@ -475,6 +553,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas")
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen verify --in -")
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot")
+	fmt.Fprintln(out, "  cub-gen verify-attestation --in attestation.json --bundle bundle.json")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Note: gitops commands are local-only prototypes that mirror cub gitops stages.")
 }
