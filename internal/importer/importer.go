@@ -722,44 +722,46 @@ func dryInputsForGenerator(g model.GeneratorDetection) []model.DryInputRef {
 }
 
 func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.WetManifestTarget {
-	switch g.Kind {
-	case model.GeneratorHelm:
-		return []model.WetManifestTarget{
-			{GeneratorID: g.ID, Kind: "HelmRelease", Name: g.Name, Owner: "platform-runtime", Namespace: "apps"},
-			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "values.image.tag"},
-			{GeneratorID: g.ID, Kind: "Service", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "values.service.port"},
-		}
-	case model.GeneratorScore:
-		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
-		return []model.WetManifestTarget{
-			{GeneratorID: g.ID, Kind: "Application", Name: g.Name, Owner: "platform-runtime", Namespace: "apps"},
-			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: fmt.Sprintf("containers.%s.image", hints.ContainerName)},
-			{GeneratorID: g.ID, Kind: "Service", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: fmt.Sprintf("service.ports.%s.port", hints.ServicePortName)},
-		}
-	case model.GeneratorSpringBoot:
-		return []model.WetManifestTarget{
-			{GeneratorID: g.ID, Kind: "Kustomization", Name: g.Name, Owner: "platform-runtime", Namespace: "apps"},
-			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "server.port"},
-			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-config", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "spring.datasource.url"},
-		}
-	case model.GeneratorBackstage:
-		return []model.WetManifestTarget{
-			{GeneratorID: g.ID, Kind: "Application", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "metadata.name"},
-			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-catalog", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "spec.lifecycle"},
-		}
-	case model.GeneratorAbly:
-		return []model.WetManifestTarget{
-			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-ably", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "app.environment"},
-			{GeneratorID: g.ID, Kind: "Secret", Name: g.Name + "-ably-credentials", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "credentials.api_key_ref"},
-		}
-	case model.GeneratorOpsFlow:
-		return []model.WetManifestTarget{
-			{GeneratorID: g.ID, Kind: "Workflow", Name: g.Name + "-workflow", Owner: "platform-runtime", Namespace: "ops", SourceDryPath: "actions.deploy.image_tag"},
-			{GeneratorID: g.ID, Kind: "Job", Name: g.Name + "-dry-run", Owner: "platform-runtime", Namespace: "ops", SourceDryPath: "triggers.schedule"},
-		}
-	default:
+	templates := registry.WetTargetTemplates(g.Kind)
+	if len(templates) == 0 {
 		return []model.WetManifestTarget{}
 	}
+
+	vars := map[string]string{"name": g.Name}
+	if g.Kind == model.GeneratorScore {
+		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
+		vars["container"] = hints.ContainerName
+		vars["service_port"] = hints.ServicePortName
+	}
+
+	out := make([]model.WetManifestTarget, 0, len(templates))
+	for _, t := range templates {
+		out = append(out, model.WetManifestTarget{
+			GeneratorID:   g.ID,
+			Kind:          t.Kind,
+			Name:          renderTargetTemplate(t.NameTemplate, vars),
+			Owner:         t.Owner,
+			Namespace:     t.Namespace,
+			SourceDryPath: renderTargetTemplate(t.SourceDryPathTemplate, vars),
+		})
+	}
+	return out
+}
+
+func renderTargetTemplate(template string, vars map[string]string) string {
+	if template == "" || len(vars) == 0 {
+		return template
+	}
+	keys := make([]string, 0, len(vars))
+	for k := range vars {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	out := template
+	for _, k := range keys {
+		out = strings.ReplaceAll(out, "{{"+k+"}}", vars[k])
+	}
+	return out
 }
 
 func chartPathForGenerator(g model.GeneratorDetection) string {

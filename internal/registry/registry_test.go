@@ -135,3 +135,26 @@ func TestRegistrySchemaRef(t *testing.T) {
 		})
 	}
 }
+
+func TestRegistryWetTargetTemplates(t *testing.T) {
+	score := WetTargetTemplates(model.GeneratorScore)
+	if len(score) != 3 {
+		t.Fatalf("expected 3 score wet target templates, got %d", len(score))
+	}
+	if score[0].Kind != "Application" || score[0].NameTemplate != "{{name}}" {
+		t.Fatalf("unexpected score template[0]: %+v", score[0])
+	}
+	if score[1].SourceDryPathTemplate != "containers.{{container}}.image" {
+		t.Fatalf("unexpected score deployment source path template: %q", score[1].SourceDryPathTemplate)
+	}
+	if score[2].SourceDryPathTemplate != "service.ports.{{service_port}}.port" {
+		t.Fatalf("unexpected score service source path template: %q", score[2].SourceDryPathTemplate)
+	}
+
+	// Ensure returned templates are copies, not direct registry storage.
+	score[0].Kind = "Mutated"
+	again := WetTargetTemplates(model.GeneratorScore)
+	if again[0].Kind != "Application" {
+		t.Fatalf("expected immutable template copy, got %+v", again[0])
+	}
+}
