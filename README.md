@@ -107,7 +107,10 @@ without coupling the core flow to a running ConfigHub backend.
 ./cub-gen generators
 ./cub-gen generators --json | jq '.families[] | {kind, profile, resource_kind}'
 ./cub-gen generators --kind helm
+./cub-gen generators --kind helm,score
 ./cub-gen generators --capability render-manifests
+./cub-gen generators --capability inverse-values-patch,inverse-score-patch
+./cub-gen generators --strict-filters --kind helm,score
 ```
 
 Or run direct mode (import + bundle in one command):

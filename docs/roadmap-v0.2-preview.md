@@ -51,6 +51,7 @@ Implemented in this preview slice:
 33. Added comma-separated multi-value filtering support for `generators` (`--kind`, `--profile`, `--capability`) with parity contracts for multi-match outputs.
 34. Added table-mode multi-filter parity contracts for `generators` (kind and capability comma-list flows) to keep human-readable output locked alongside JSON.
 35. Added optional strict filter validation (`--strict-filters`) for `generators` to fail fast on unknown kind/profile/capability values.
+36. Updated `README.md` generator inventory examples to include multi-value and strict-filter command flows for faster adoption.
 
 ## v0.2 preview invariants
 
