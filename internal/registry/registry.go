@@ -15,6 +15,14 @@ type InputRoleRule struct {
 	Extensions     []string
 }
 
+type WetTargetTemplate struct {
+	Kind                  string
+	NameTemplate          string
+	Owner                 string
+	Namespace             string
+	SourceDryPathTemplate string
+}
+
 // FamilySpec captures cross-cutting generator-family metadata used by multiple
 // command/runtime layers.
 type FamilySpec struct {
@@ -27,6 +35,7 @@ type FamilySpec struct {
 	DefaultInputRole string
 	RoleOwners       map[string]string
 	DefaultOwner     string
+	WetTargets       []WetTargetTemplate
 }
 
 var familySpecs = map[model.GeneratorKind]FamilySpec{
@@ -43,6 +52,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		DefaultInputRole: "helm-input",
 		RoleOwners:       map[string]string{"values": "app-team"},
 		DefaultOwner:     "platform-engineer",
+		WetTargets: []WetTargetTemplate{
+			{Kind: "HelmRelease", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps"},
+			{Kind: "Deployment", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "values.image.tag"},
+			{Kind: "Service", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "values.service.port"},
+		},
 	},
 	model.GeneratorScore: {
 		Kind:             model.GeneratorScore,
@@ -53,6 +67,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		InputRoleRules:   []InputRoleRule{{Role: "score-spec", ExactBasenames: []string{"score.yaml", "score.yml"}}},
 		DefaultInputRole: "score-input",
 		DefaultOwner:     "app-team",
+		WetTargets: []WetTargetTemplate{
+			{Kind: "Application", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps"},
+			{Kind: "Deployment", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "containers.{{container}}.image"},
+			{Kind: "Service", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "service.ports.{{service_port}}.port"},
+		},
 	},
 	model.GeneratorSpringBoot: {
 		Kind:         model.GeneratorSpringBoot,
@@ -71,6 +90,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"app-config-profile": "app-team",
 		},
 		DefaultOwner: "platform-engineer",
+		WetTargets: []WetTargetTemplate{
+			{Kind: "Kustomization", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps"},
+			{Kind: "Deployment", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "server.port"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-config", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "spring.datasource.url"},
+		},
 	},
 	model.GeneratorBackstage: {
 		Kind:         model.GeneratorBackstage,
@@ -85,6 +109,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		DefaultInputRole: "backstage-input",
 		RoleOwners:       map[string]string{"app-config": "app-team"},
 		DefaultOwner:     "platform-engineer",
+		WetTargets: []WetTargetTemplate{
+			{Kind: "Application", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "metadata.name"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-catalog", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "spec.lifecycle"},
+		},
 	},
 	model.GeneratorAbly: {
 		Kind:         model.GeneratorAbly,
@@ -98,6 +126,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		DefaultInputRole: "provider-config",
 		DefaultOwner:     "app-team",
+		WetTargets: []WetTargetTemplate{
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-ably", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "app.environment"},
+			{Kind: "Secret", NameTemplate: "{{name}}-ably-credentials", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "credentials.api_key_ref"},
+		},
 	},
 	model.GeneratorOpsFlow: {
 		Kind:         model.GeneratorOpsFlow,
@@ -111,6 +143,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		DefaultInputRole: "operations-input",
 		DefaultOwner:     "platform-engineer",
+		WetTargets: []WetTargetTemplate{
+			{Kind: "Workflow", NameTemplate: "{{name}}-workflow", Owner: "platform-runtime", Namespace: "ops", SourceDryPathTemplate: "actions.deploy.image_tag"},
+			{Kind: "Job", NameTemplate: "{{name}}-dry-run", Owner: "platform-runtime", Namespace: "ops", SourceDryPathTemplate: "triggers.schedule"},
+		},
 	},
 }
 
@@ -129,6 +165,7 @@ func Spec(kind model.GeneratorKind) (FamilySpec, bool) {
 		DefaultInputRole: spec.DefaultInputRole,
 		RoleOwners:       copyRoleOwners(spec.RoleOwners),
 		DefaultOwner:     spec.DefaultOwner,
+		WetTargets:       copyWetTargets(spec.WetTargets),
 	}, true
 }
 
@@ -269,6 +306,14 @@ func SupportedResourceKinds() []string {
 	return kinds
 }
 
+func WetTargetTemplates(kind model.GeneratorKind) []WetTargetTemplate {
+	spec, ok := Spec(kind)
+	if !ok {
+		return nil
+	}
+	return copyWetTargets(spec.WetTargets)
+}
+
 func matchesInputRule(rule InputRoleRule, base, ext string) bool {
 	for _, exact := range rule.ExactBasenames {
 		if base == strings.ToLower(exact) {
@@ -312,6 +357,20 @@ func copyRoleOwners(in map[string]string) map[string]string {
 	out := make(map[string]string, len(in))
 	for k, v := range in {
 		out[k] = v
+	}
+	return out
+}
+
+func copyWetTargets(in []WetTargetTemplate) []WetTargetTemplate {
+	out := make([]WetTargetTemplate, 0, len(in))
+	for _, target := range in {
+		out = append(out, WetTargetTemplate{
+			Kind:                  target.Kind,
+			NameTemplate:          target.NameTemplate,
+			Owner:                 target.Owner,
+			Namespace:             target.Namespace,
+			SourceDryPathTemplate: target.SourceDryPathTemplate,
+		})
 	}
 	return out
 }
