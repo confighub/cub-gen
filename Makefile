@@ -1,4 +1,6 @@
-.PHONY: build test test-parity ci
+.PHONY: build test test-parity test-contracts ci
+
+PARITY_TEST_PATTERN := ^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)
 
 build:
 	go build ./cmd/cub-gen
@@ -6,7 +8,9 @@ build:
 test:
 	go test ./...
 
-test-parity:
-	go test ./cmd/cub-gen -run '^TestGitOpsParity' -count=1 -v
+test-contracts:
+	go test ./cmd/cub-gen -run '$(PARITY_TEST_PATTERN)' -count=1 -v
 
-ci: build test test-parity
+test-parity: test-contracts
+
+ci: build test test-contracts

@@ -27,7 +27,7 @@ assignees: []
 | Proof tier | Required? | Planned command(s) | Assertion |
 |---|---|---|---|
 | Unit | Yes | `go test ./...` | deterministic logic result |
-| Parity/Golden | If output contract changes | `go test ./cmd/cub-gen -run '^TestGitOpsParity' -count=1 -v` | stable CLI contract |
+| Parity/Golden | If output contract changes | `go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v` | stable CLI contract |
 | Example proof | If user-visible behavior changes | `go run ./cmd/cub-gen ...` | docs/example aligned |
 
 ## Graceful Degradation
