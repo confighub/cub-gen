@@ -34,6 +34,7 @@ Implemented in this preview slice:
 16. Extended publish parity goldens and verify-attestation linked goldens to include Ops workflow.
 17. Extended path-mode smoke and bridge smoke tests to include Ops workflow.
 18. Added a shared generator family registry (`internal/registry`) for cross-cutting metadata (profile/resource mapping/capabilities) to reduce multi-file switch edits.
+19. Extended the family registry to own DRY input role classification and role-owner mapping, removing importer-local switch logic for these semantics.
 
 ## v0.2 preview invariants
 
@@ -44,6 +45,6 @@ Implemented in this preview slice:
 
 ## Next slices toward v0.2
 
-1. Extend the family registry pattern to input-role ownership and richer family semantics.
+1. Extend the family registry pattern further to cover schema inference and additional family-level semantics.
 2. Keep generator-family capability metadata contract tests updated as families are added.
 3. Keep bridge artifacts (`publish/verify/attest`) symmetric across all supported families.

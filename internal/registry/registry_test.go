@@ -53,4 +53,45 @@ func TestRegistryFallbacks(t *testing.T) {
 	if got := Capabilities(unknown); !reflect.DeepEqual(got, []string{"render-manifests"}) {
 		t.Fatalf("expected capabilities fallback render-manifests, got %+v", got)
 	}
+	if got := InputRole(unknown, "any.yaml"); got != "input" {
+		t.Fatalf("expected input role fallback input, got %q", got)
+	}
+	if got := OwnerForRole(unknown, "any"); got != "platform-engineer" {
+		t.Fatalf("expected owner fallback platform-engineer, got %q", got)
+	}
+}
+
+func TestRegistryInputRoleAndOwnerClassification(t *testing.T) {
+	tests := []struct {
+		name          string
+		kind          model.GeneratorKind
+		path          string
+		expectedRole  string
+		expectedOwner string
+	}{
+		{name: "helm-chart", kind: model.GeneratorHelm, path: "Chart.yaml", expectedRole: "chart", expectedOwner: "platform-engineer"},
+		{name: "helm-values", kind: model.GeneratorHelm, path: "values-prod.yaml", expectedRole: "values", expectedOwner: "app-team"},
+		{name: "score-spec", kind: model.GeneratorScore, path: "score.yaml", expectedRole: "score-spec", expectedOwner: "app-team"},
+		{name: "spring-build", kind: model.GeneratorSpringBoot, path: "pom.xml", expectedRole: "build-config", expectedOwner: "platform-engineer"},
+		{name: "spring-profile", kind: model.GeneratorSpringBoot, path: "application-prod.yml", expectedRole: "app-config-profile", expectedOwner: "app-team"},
+		{name: "backstage-catalog", kind: model.GeneratorBackstage, path: "catalog-info.yaml", expectedRole: "catalog-spec", expectedOwner: "platform-engineer"},
+		{name: "backstage-app-config", kind: model.GeneratorBackstage, path: "app-config.yaml", expectedRole: "app-config", expectedOwner: "app-team"},
+		{name: "ably-base", kind: model.GeneratorAbly, path: "ably.yaml", expectedRole: "provider-config-base", expectedOwner: "app-team"},
+		{name: "ably-overlay", kind: model.GeneratorAbly, path: "ably-prod.json", expectedRole: "provider-config-overlay", expectedOwner: "app-team"},
+		{name: "ops-base", kind: model.GeneratorOpsFlow, path: "operations.yaml", expectedRole: "operations-base", expectedOwner: "platform-engineer"},
+		{name: "ops-overlay", kind: model.GeneratorOpsFlow, path: "workflow-prod.yml", expectedRole: "operations-overlay", expectedOwner: "platform-engineer"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			role := InputRole(tt.kind, tt.path)
+			if role != tt.expectedRole {
+				t.Fatalf("expected role %q, got %q", tt.expectedRole, role)
+			}
+			owner := OwnerForRole(tt.kind, role)
+			if owner != tt.expectedOwner {
+				t.Fatalf("expected owner %q, got %q", tt.expectedOwner, owner)
+			}
+		})
+	}
 }
