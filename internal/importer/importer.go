@@ -204,66 +204,87 @@ func capabilitiesForKind(kind model.GeneratorKind) []string {
 func defaultPatchesForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.InversePatch {
 	switch g.Kind {
 	case model.GeneratorHelm:
+		policy := registry.InversePatchTemplateFor(g.Kind, "image_tag", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.86, RequiresReview: false,
+		})
 		return []model.InversePatch{{
 			Operation:      "replace",
 			DryPath:        "values.image.tag",
 			WetPath:        "Deployment/spec/template/spec/containers[0]/image",
-			EditableBy:     "app-team",
-			Confidence:     0.86,
-			RequiresReview: false,
+			EditableBy:     policy.EditableBy,
+			Confidence:     policy.Confidence,
+			RequiresReview: policy.RequiresReview,
 			Reason:         registry.InversePatchReason(g.Kind, "image_tag", "Container image tag maps cleanly to helm values."),
 		}}
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
+		policy := registry.InversePatchTemplateFor(g.Kind, "env_var", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.90, RequiresReview: false,
+		})
 		return []model.InversePatch{{
 			Operation:      "replace",
 			DryPath:        fmt.Sprintf("containers.%s.variables.%s", hints.ContainerName, hints.VariableName),
 			WetPath:        fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/env[name=%s]/value", hints.ContainerName, hints.VariableName),
-			EditableBy:     "app-team",
-			Confidence:     0.90,
-			RequiresReview: false,
+			EditableBy:     policy.EditableBy,
+			Confidence:     policy.Confidence,
+			RequiresReview: policy.RequiresReview,
 			Reason:         registry.InversePatchReason(g.Kind, "env_var", "Score variable maps to a single Kubernetes env var."),
 		}}
 	case model.GeneratorSpringBoot:
+		appNamePolicy := registry.InversePatchTemplateFor(g.Kind, "app_name", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.88, RequiresReview: false,
+		})
+		serverPortPolicy := registry.InversePatchTemplateFor(g.Kind, "server_port", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.91, RequiresReview: false,
+		})
+		datasourcePolicy := registry.InversePatchTemplateFor(g.Kind, "datasource_url", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.78, RequiresReview: true,
+		})
 		return []model.InversePatch{
 			{
 				Operation:      "replace",
 				DryPath:        "spring.application.name",
 				WetPath:        "Deployment/metadata/labels[app.kubernetes.io/name]",
-				EditableBy:     "app-team",
-				Confidence:     0.88,
-				RequiresReview: false,
+				EditableBy:     appNamePolicy.EditableBy,
+				Confidence:     appNamePolicy.Confidence,
+				RequiresReview: appNamePolicy.RequiresReview,
 				Reason:         registry.InversePatchReason(g.Kind, "app_name", "Application identity should be app-editable without platform escalation."),
 			},
 			{
 				Operation:      "replace",
 				DryPath:        "server.port",
 				WetPath:        "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
-				EditableBy:     "app-team",
-				Confidence:     0.91,
-				RequiresReview: false,
+				EditableBy:     serverPortPolicy.EditableBy,
+				Confidence:     serverPortPolicy.Confidence,
+				RequiresReview: serverPortPolicy.RequiresReview,
 				Reason:         registry.InversePatchReason(g.Kind, "server_port", "Application listener port is an app-level configuration concern."),
 			},
 			{
 				Operation:      "replace",
 				DryPath:        "spring.datasource.url",
 				WetPath:        "ConfigMap/data/application.yaml:spring.datasource.url",
-				EditableBy:     "platform-engineer",
-				Confidence:     0.78,
-				RequiresReview: true,
+				EditableBy:     datasourcePolicy.EditableBy,
+				Confidence:     datasourcePolicy.Confidence,
+				RequiresReview: datasourcePolicy.RequiresReview,
 				Reason:         registry.InversePatchReason(g.Kind, "datasource_url", "Database connectivity impacts shared runtime dependencies."),
 			},
 		}
 	case model.GeneratorBackstage:
 		hints := backstagePathHintsFromInputs(g.Inputs)
+		identityPolicy := registry.InversePatchTemplateFor(g.Kind, "identity", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.87, RequiresReview: false,
+		})
+		lifecyclePolicy := registry.InversePatchTemplateFor(g.Kind, "lifecycle", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.82, RequiresReview: true,
+		})
 		return []model.InversePatch{
 			{
 				Operation:      "replace",
 				DryPath:        "metadata.name",
 				WetPath:        "Application/metadata/name",
-				EditableBy:     "platform-engineer",
-				Confidence:     0.87,
-				RequiresReview: false,
+				EditableBy:     identityPolicy.EditableBy,
+				Confidence:     identityPolicy.Confidence,
+				RequiresReview: identityPolicy.RequiresReview,
 				Reason: renderTargetTemplate(
 					registry.InversePatchReason(g.Kind, "identity", "Backstage component identity is sourced from {{catalog_path}}."),
 					map[string]string{"catalog_path": hints.CatalogPath},
@@ -273,22 +294,28 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Operation:      "replace",
 				DryPath:        "spec.lifecycle",
 				WetPath:        "Application/metadata/labels[lifecycle]",
-				EditableBy:     "platform-engineer",
-				Confidence:     0.82,
-				RequiresReview: true,
+				EditableBy:     lifecyclePolicy.EditableBy,
+				Confidence:     lifecyclePolicy.Confidence,
+				RequiresReview: lifecyclePolicy.RequiresReview,
 				Reason:         registry.InversePatchReason(g.Kind, "lifecycle", "Lifecycle changes impact platform ownership and support policy."),
 			},
 		}
 	case model.GeneratorAbly:
 		hints := ablyPathHintsFromInputs(g.Inputs)
+		environmentPolicy := registry.InversePatchTemplateFor(g.Kind, "environment", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.90, RequiresReview: false,
+		})
+		channelsPolicy := registry.InversePatchTemplateFor(g.Kind, "channels", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.88, RequiresReview: false,
+		})
 		return []model.InversePatch{
 			{
 				Operation:      "replace",
 				DryPath:        "app.environment",
 				WetPath:        "ConfigMap/data/ABLY_ENVIRONMENT",
-				EditableBy:     "app-team",
-				Confidence:     0.90,
-				RequiresReview: false,
+				EditableBy:     environmentPolicy.EditableBy,
+				Confidence:     environmentPolicy.Confidence,
+				RequiresReview: environmentPolicy.RequiresReview,
 				Reason: renderTargetTemplate(
 					registry.InversePatchReason(g.Kind, "environment", "Environment is sourced from {{base_config_path}}."),
 					map[string]string{"base_config_path": hints.BaseConfigPath},
@@ -298,22 +325,28 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Operation:      "replace",
 				DryPath:        "channels.inbound",
 				WetPath:        "ConfigMap/data/ABLY_CHANNEL_INBOUND",
-				EditableBy:     "app-team",
-				Confidence:     0.88,
-				RequiresReview: false,
+				EditableBy:     channelsPolicy.EditableBy,
+				Confidence:     channelsPolicy.Confidence,
+				RequiresReview: channelsPolicy.RequiresReview,
 				Reason:         registry.InversePatchReason(g.Kind, "channels", "Channel mapping is app-level runtime behavior."),
 			},
 		}
 	case model.GeneratorOpsFlow:
 		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
+		imageTagPolicy := registry.InversePatchTemplateFor(g.Kind, "image_tag", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.87, RequiresReview: true,
+		})
+		schedulePolicy := registry.InversePatchTemplateFor(g.Kind, "schedule", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.84, RequiresReview: true,
+		})
 		return []model.InversePatch{
 			{
 				Operation:      "replace",
 				DryPath:        "actions.deploy.image_tag",
 				WetPath:        "Workflow/spec/templates[name=deploy]/container/image",
-				EditableBy:     "platform-engineer",
-				Confidence:     0.87,
-				RequiresReview: true,
+				EditableBy:     imageTagPolicy.EditableBy,
+				Confidence:     imageTagPolicy.Confidence,
+				RequiresReview: imageTagPolicy.RequiresReview,
 				Reason: renderTargetTemplate(
 					registry.InversePatchReason(g.Kind, "image_tag", "Deployment action image tag is sourced from {{base_spec_path}}."),
 					map[string]string{"base_spec_path": hints.BaseSpecPath},
@@ -323,9 +356,9 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Operation:      "replace",
 				DryPath:        "triggers.schedule",
 				WetPath:        "Workflow/spec/schedule",
-				EditableBy:     "platform-engineer",
-				Confidence:     0.84,
-				RequiresReview: true,
+				EditableBy:     schedulePolicy.EditableBy,
+				Confidence:     schedulePolicy.Confidence,
+				RequiresReview: schedulePolicy.RequiresReview,
 				Reason:         registry.InversePatchReason(g.Kind, "schedule", "Schedule changes affect operational execution timing."),
 			},
 		}

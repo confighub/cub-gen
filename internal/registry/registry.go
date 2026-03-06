@@ -23,6 +23,12 @@ type WetTargetTemplate struct {
 	SourceDryPathTemplate string
 }
 
+type InversePatchTemplate struct {
+	EditableBy     string
+	Confidence     float64
+	RequiresReview bool
+}
+
 // FamilySpec captures cross-cutting generator-family metadata used by multiple
 // command/runtime layers.
 type FamilySpec struct {
@@ -35,6 +41,7 @@ type FamilySpec struct {
 	HintDefaults                map[string]string
 	InversePatchReasons         map[string]string
 	InverseEditHints            map[string]string
+	InversePatchTemplates       map[string]InversePatchTemplate
 	FieldOriginTransform        string
 	FieldOriginOverlayTransform string
 	InputRoleRules              []InputRoleRule
@@ -62,6 +69,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		InverseEditHints: map[string]string{
 			"image_tag": "Edit chart values file and keep chart template unchanged.",
+		},
+		InversePatchTemplates: map[string]InversePatchTemplate{
+			"image_tag": {EditableBy: "app-team", Confidence: 0.86, RequiresReview: false},
 		},
 		FieldOriginTransform: "helm-template",
 		InputRoleRules: []InputRoleRule{
@@ -98,6 +108,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"env_var": "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}.",
 			"port":    "Edit {{service_port_name}} service port in {{source_path}}.",
 		},
+		InversePatchTemplates: map[string]InversePatchTemplate{
+			"env_var": {EditableBy: "app-team", Confidence: 0.90, RequiresReview: false},
+		},
 		FieldOriginTransform: "score-to-k8s",
 		InputRoleRules:       []InputRoleRule{{Role: "score-spec", ExactBasenames: []string{"score.yaml", "score.yml"}}},
 		DefaultInputRole:     "score-input",
@@ -132,6 +145,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"server_port_base":    "Edit server.port in {{base_config_path}}.",
 			"server_port_overlay": "Edit server.port in {{profile_config_path}} for environment overrides; use {{base_config_path}} for the default.",
 			"datasource_url":      "Edit spring.datasource.url in {{base_config_path}} and coordinate with platform ownership rules.",
+		},
+		InversePatchTemplates: map[string]InversePatchTemplate{
+			"app_name":       {EditableBy: "app-team", Confidence: 0.88, RequiresReview: false},
+			"server_port":    {EditableBy: "app-team", Confidence: 0.91, RequiresReview: false},
+			"datasource_url": {EditableBy: "platform-engineer", Confidence: 0.78, RequiresReview: true},
 		},
 		FieldOriginTransform:        "spring-config-to-manifest",
 		FieldOriginOverlayTransform: "spring-profile-overlay",
@@ -173,6 +191,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"name":      "Edit metadata.name in {{catalog_path}}.",
 			"lifecycle": "Edit spec.lifecycle in {{catalog_path}} and coordinate rollout policy.",
 		},
+		InversePatchTemplates: map[string]InversePatchTemplate{
+			"identity":  {EditableBy: "platform-engineer", Confidence: 0.87, RequiresReview: false},
+			"lifecycle": {EditableBy: "platform-engineer", Confidence: 0.82, RequiresReview: true},
+		},
 		FieldOriginTransform: "backstage-component-to-application",
 		InputRoleRules: []InputRoleRule{
 			{Role: "catalog-spec", ExactBasenames: []string{"catalog-info.yaml", "catalog-info.yml"}},
@@ -207,6 +229,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"environment":      "Edit app.environment in {{base_config_path}}.",
 			"channels_base":    "Edit channels.inbound in {{base_config_path}}.",
 			"channels_overlay": "Edit channels.inbound in {{overlay_config_path}} for environment-specific behavior; use {{base_config_path}} for defaults.",
+		},
+		InversePatchTemplates: map[string]InversePatchTemplate{
+			"environment": {EditableBy: "app-team", Confidence: 0.90, RequiresReview: false},
+			"channels":    {EditableBy: "app-team", Confidence: 0.88, RequiresReview: false},
 		},
 		FieldOriginTransform:        "ably-config-to-runtime",
 		FieldOriginOverlayTransform: "ably-overlay-merge",
@@ -243,6 +269,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"schedule_base":    "Edit triggers.schedule in {{base_spec_path}}.",
 			"schedule_overlay": "Edit triggers.schedule in {{overlay_spec_path}} for environment-specific cadence; use {{base_spec_path}} for defaults.",
 		},
+		InversePatchTemplates: map[string]InversePatchTemplate{
+			"image_tag": {EditableBy: "platform-engineer", Confidence: 0.87, RequiresReview: true},
+			"schedule":  {EditableBy: "platform-engineer", Confidence: 0.84, RequiresReview: true},
+		},
 		FieldOriginTransform:        "ops-workflow-to-argo-workflow",
 		FieldOriginOverlayTransform: "ops-workflow-overlay-merge",
 		InputRoleRules: []InputRoleRule{
@@ -273,6 +303,7 @@ func Spec(kind model.GeneratorKind) (FamilySpec, bool) {
 		HintDefaults:                copyHintDefaults(spec.HintDefaults),
 		InversePatchReasons:         copyInversePatchReasons(spec.InversePatchReasons),
 		InverseEditHints:            copyInverseEditHints(spec.InverseEditHints),
+		InversePatchTemplates:       copyInversePatchTemplates(spec.InversePatchTemplates),
 		FieldOriginTransform:        spec.FieldOriginTransform,
 		FieldOriginOverlayTransform: spec.FieldOriginOverlayTransform,
 		InputRoleRules:              copyInputRoleRules(spec.InputRoleRules),
@@ -332,6 +363,17 @@ func InversePatchReason(kind model.GeneratorKind, key, fallback string) string {
 		return fallback
 	}
 	if v, ok := spec.InversePatchReasons[key]; ok && strings.TrimSpace(v) != "" {
+		return v
+	}
+	return fallback
+}
+
+func InversePatchTemplateFor(kind model.GeneratorKind, key string, fallback InversePatchTemplate) InversePatchTemplate {
+	spec, ok := Spec(kind)
+	if !ok {
+		return fallback
+	}
+	if v, ok := spec.InversePatchTemplates[key]; ok {
 		return v
 	}
 	return fallback
@@ -541,6 +583,17 @@ func copyInverseEditHints(in map[string]string) map[string]string {
 		return nil
 	}
 	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func copyInversePatchTemplates(in map[string]InversePatchTemplate) map[string]InversePatchTemplate {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]InversePatchTemplate, len(in))
 	for k, v := range in {
 		out[k] = v
 	}

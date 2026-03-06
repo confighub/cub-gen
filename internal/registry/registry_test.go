@@ -77,6 +77,11 @@ func TestRegistryFallbacks(t *testing.T) {
 	if got := InversePatchReason(unknown, "image_tag", "fallback-reason"); got != "fallback-reason" {
 		t.Fatalf("expected inverse patch reason fallback fallback-reason, got %q", got)
 	}
+	if got := InversePatchTemplateFor(unknown, "image_tag", InversePatchTemplate{
+		EditableBy: "fallback-owner", Confidence: 1.0, RequiresReview: true,
+	}); got.EditableBy != "fallback-owner" || got.Confidence != 1.0 || !got.RequiresReview {
+		t.Fatalf("expected inverse patch template fallback to be returned, got %+v", got)
+	}
 	if got := InverseEditHint(unknown, "image_tag", "fallback-hint"); got != "fallback-hint" {
 		t.Fatalf("expected inverse edit hint fallback fallback-hint, got %q", got)
 	}
@@ -196,6 +201,9 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := InversePatchReason(model.GeneratorAbly, "channels", "fallback"); got != "Channel mapping is app-level runtime behavior." {
 		t.Fatalf("expected ably channels inverse patch reason, got %q", got)
 	}
+	if got := InversePatchTemplateFor(model.GeneratorOpsFlow, "schedule", InversePatchTemplate{}); got.EditableBy != "platform-engineer" || got.Confidence != 0.84 || !got.RequiresReview {
+		t.Fatalf("expected ops schedule inverse patch template, got %+v", got)
+	}
 	if got := InverseEditHint(model.GeneratorScore, "env_var", "fallback"); got != "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}." {
 		t.Fatalf("expected score env_var inverse edit hint template, got %q", got)
 	}
@@ -215,6 +223,10 @@ func TestRegistryHintDefaults(t *testing.T) {
 	spec.InversePatchReasons["env_var"] = "mutated reason"
 	if got := InversePatchReason(model.GeneratorScore, "env_var", "fallback"); got != "Score variable maps to a single Kubernetes env var." {
 		t.Fatalf("expected immutable inverse patch reasons, got %q", got)
+	}
+	spec.InversePatchTemplates["env_var"] = InversePatchTemplate{EditableBy: "mutated", Confidence: 0.01, RequiresReview: true}
+	if got := InversePatchTemplateFor(model.GeneratorScore, "env_var", InversePatchTemplate{}); got.EditableBy != "app-team" || got.Confidence != 0.90 || got.RequiresReview {
+		t.Fatalf("expected immutable inverse patch templates, got %+v", got)
 	}
 	spec.InverseEditHints["env_var"] = "mutated hint"
 	if got := InverseEditHint(model.GeneratorScore, "env_var", "fallback"); got != "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}." {
