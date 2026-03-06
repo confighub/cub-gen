@@ -89,6 +89,12 @@ Bundle output includes:
 
 This gives you a simple verification handle for attestation pipelines.
 
+Verify a bundle (file or stdin):
+
+```bash
+./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas | ./cub-gen verify --in -
+```
+
 ## Plain-English collaboration story
 
 A practical app-team/platform-team path in a Spring Boot repo:

@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"sort"
 	"time"
 
@@ -143,4 +144,25 @@ func computeBundleDigest(bundle ChangeBundle) string {
 	}
 	sum := sha256.Sum256(b)
 	return digestAlgorithm + ":" + hex.EncodeToString(sum[:])
+}
+
+// VerifyBundle validates bundle schema and digest integrity.
+func VerifyBundle(bundle ChangeBundle) error {
+	if bundle.SchemaVersion != changeBundleSchema {
+		return fmt.Errorf("unsupported schema_version %q", bundle.SchemaVersion)
+	}
+	if bundle.DigestAlgorithm == "" {
+		return fmt.Errorf("missing digest_algorithm")
+	}
+	if bundle.DigestAlgorithm != digestAlgorithm {
+		return fmt.Errorf("unsupported digest_algorithm %q", bundle.DigestAlgorithm)
+	}
+	if bundle.BundleDigest == "" {
+		return fmt.Errorf("missing bundle_digest")
+	}
+	expected := computeBundleDigest(bundle)
+	if bundle.BundleDigest != expected {
+		return fmt.Errorf("bundle digest mismatch: expected %s, got %s", expected, bundle.BundleDigest)
+	}
+	return nil
 }

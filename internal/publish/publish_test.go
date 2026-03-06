@@ -70,3 +70,34 @@ func TestBuildBundleAtChangeIDFallbackToInversePlans(t *testing.T) {
 		t.Fatalf("expected fallback change id chg_fallback, got %q", bundle.ChangeID)
 	}
 }
+
+func TestVerifyBundle(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "helm-paas")
+	imported, err := gitopsflow.Import(repo, repo, "HEAD", "platform", "")
+	if err != nil {
+		t.Fatalf("Import returned error: %v", err)
+	}
+	bundle := BuildBundleAt(imported, time.Date(2026, 3, 6, 0, 0, 0, 0, time.UTC))
+
+	if err := VerifyBundle(bundle); err != nil {
+		t.Fatalf("VerifyBundle returned error for valid bundle: %v", err)
+	}
+
+	tampered := bundle
+	tampered.Space = "tampered"
+	if err := VerifyBundle(tampered); err == nil {
+		t.Fatal("expected VerifyBundle to fail on tampered bundle")
+	}
+
+	missingDigest := bundle
+	missingDigest.BundleDigest = ""
+	if err := VerifyBundle(missingDigest); err == nil || !strings.Contains(err.Error(), "missing bundle_digest") {
+		t.Fatalf("expected missing bundle_digest error, got %v", err)
+	}
+
+	unsupported := bundle
+	unsupported.DigestAlgorithm = "sha512"
+	if err := VerifyBundle(unsupported); err == nil || !strings.Contains(err.Error(), "unsupported digest_algorithm") {
+		t.Fatalf("expected unsupported digest_algorithm error, got %v", err)
+	}
+}
