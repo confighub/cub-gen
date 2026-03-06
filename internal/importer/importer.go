@@ -84,8 +84,8 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 		wetTargets = append(wetTargets, wetManifestTargetsForGenerator(detection, g)...)
 	}
 
-	if err := contracts.ValidateTripleSet(generatorContracts, provenance, inversePlans); err != nil {
-		return model.ImportResult{}, fmt.Errorf("validate contract triple set: %w", err)
+	if err := contracts.ValidateGovernedImportTriples(len(detection.Generators), generatorContracts, provenance, inversePlans); err != nil {
+		return model.ImportResult{}, err
 	}
 
 	return model.ImportResult{

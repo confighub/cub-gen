@@ -537,11 +537,10 @@ func TestImportDetectionFailsOnInvalidContractTriple(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected schema validation error, got nil")
 	}
-	if !strings.Contains(err.Error(), `validate contract triple for generator "gen_invalid" (score):`) {
-		t.Fatalf("expected generator-scoped contract triple error, got: %v", err)
-	}
-	if !strings.Contains(err.Error(), "generator_contract schema validation failed") {
-		t.Fatalf("expected contract schema validation failure, got: %v", err)
+
+	expected := `validate contract triple for generator "gen_invalid" (score): generator_contract schema validation failed: /source_ref: length must be >= 1, but got 0`
+	if err.Error() != expected {
+		t.Fatalf("expected deterministic error %q, got %q", expected, err.Error())
 	}
 }
 

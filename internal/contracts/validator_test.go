@@ -37,6 +37,42 @@ func TestValidateTripleSetCardinalityMismatch(t *testing.T) {
 	}
 }
 
+func TestValidateGovernedImportTriplesMissing(t *testing.T) {
+	err := ValidateGovernedImportTriples(1, nil, nil, nil)
+	if err == nil {
+		t.Fatal("expected governed import missing triple error, got nil")
+	}
+
+	expected := "governed import blocked: required contract triple missing (detected=1 contracts=0 provenance=0 inverse_plans=0)"
+	if err.Error() != expected {
+		t.Fatalf("expected error %q, got %q", expected, err.Error())
+	}
+}
+
+func TestValidateGovernedImportTriplesCardinalityMismatch(t *testing.T) {
+	contract, provenance, inversePlan := validTripleFixture()
+	err := ValidateGovernedImportTriples(
+		2,
+		[]model.GeneratorContract{contract},
+		[]model.ProvenanceRecord{provenance},
+		[]model.InverseTransformPlan{inversePlan},
+	)
+	if err == nil {
+		t.Fatal("expected governed import cardinality mismatch error, got nil")
+	}
+
+	expected := "governed import blocked: contract triple cardinality mismatch (detected=2 contracts=1 provenance=1 inverse_plans=1)"
+	if err.Error() != expected {
+		t.Fatalf("expected error %q, got %q", expected, err.Error())
+	}
+}
+
+func TestValidateGovernedImportTriplesZeroDetectedAllowed(t *testing.T) {
+	if err := ValidateGovernedImportTriples(0, nil, nil, nil); err != nil {
+		t.Fatalf("expected nil error for zero-detected import, got: %v", err)
+	}
+}
+
 func TestValidateGeneratorContractInvalid(t *testing.T) {
 	contract, _, _ := validTripleFixture()
 	contract.SchemaVersion = "invalid/schema"
@@ -47,6 +83,9 @@ func TestValidateGeneratorContractInvalid(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "generator_contract schema validation failed") {
 		t.Fatalf("expected generator contract validation message, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "/schema_version") {
+		t.Fatalf("expected deterministic schema path in error, got: %v", err)
 	}
 }
 
