@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/confighub/cub-gen/internal/model"
+	"github.com/confighub/cub-gen/internal/registry"
 )
 
 // ScanRepo scans a local repository path and returns deterministic generator detections.
@@ -544,20 +545,5 @@ func unique(v []string) []string {
 }
 
 func profileForKind(kind model.GeneratorKind) string {
-	switch kind {
-	case model.GeneratorHelm:
-		return "helm-paas"
-	case model.GeneratorScore:
-		return "scoredev-paas"
-	case model.GeneratorSpringBoot:
-		return "springboot-paas"
-	case model.GeneratorBackstage:
-		return "backstage-idp"
-	case model.GeneratorAbly:
-		return "ably-config"
-	case model.GeneratorOpsFlow:
-		return "ops-workflow"
-	default:
-		return "generator"
-	}
+	return registry.Profile(kind)
 }
