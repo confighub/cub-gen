@@ -702,12 +702,12 @@ func firstScoreInputPath(inputs []string) string {
 func dryInputsForGenerator(g model.GeneratorDetection) []model.DryInputRef {
 	out := make([]model.DryInputRef, 0, len(g.Inputs))
 	for _, in := range g.Inputs {
-		role := classifyDryInputRole(g.Kind, in)
+		role := registry.InputRole(g.Kind, in)
 		out = append(out, model.DryInputRef{
 			GeneratorID: g.ID,
 			Profile:     g.Profile,
 			Role:        role,
-			Owner:       ownerForDryInput(g.Kind, role),
+			Owner:       registry.OwnerForRole(g.Kind, role),
 			Path:        in,
 			Required:    true,
 		})
@@ -759,93 +759,6 @@ func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.Gen
 		}
 	default:
 		return []model.WetManifestTarget{}
-	}
-}
-
-func classifyDryInputRole(kind model.GeneratorKind, in string) string {
-	base := strings.ToLower(filepath.Base(in))
-	switch kind {
-	case model.GeneratorHelm:
-		switch {
-		case base == "chart.yaml":
-			return "chart"
-		case strings.HasPrefix(base, "values") && (strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml")):
-			return "values"
-		default:
-			return "helm-input"
-		}
-	case model.GeneratorScore:
-		if base == "score.yaml" || base == "score.yml" {
-			return "score-spec"
-		}
-		return "score-input"
-	case model.GeneratorSpringBoot:
-		if base == "pom.xml" || base == "build.gradle" || base == "build.gradle.kts" {
-			return "build-config"
-		}
-		if base == "application.yaml" || base == "application.yml" {
-			return "app-config-base"
-		}
-		if strings.HasPrefix(base, "application-") && (strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml")) {
-			return "app-config-profile"
-		}
-		return "spring-input"
-	case model.GeneratorBackstage:
-		if base == "catalog-info.yaml" || base == "catalog-info.yml" {
-			return "catalog-spec"
-		}
-		if base == "app-config.yaml" || base == "app-config.yml" {
-			return "app-config"
-		}
-		return "backstage-input"
-	case model.GeneratorAbly:
-		switch {
-		case base == "ably.yaml" || base == "ably.yml" || base == "ably.json":
-			return "provider-config-base"
-		case strings.HasPrefix(base, "ably-"):
-			return "provider-config-overlay"
-		default:
-			return "provider-config"
-		}
-	case model.GeneratorOpsFlow:
-		switch {
-		case base == "operations.yaml" || base == "operations.yml" || base == "workflow.yaml" || base == "workflow.yml":
-			return "operations-base"
-		case strings.HasPrefix(base, "operations-") || strings.HasPrefix(base, "workflow-"):
-			return "operations-overlay"
-		default:
-			return "operations-input"
-		}
-	default:
-		return "input"
-	}
-}
-
-func ownerForDryInput(kind model.GeneratorKind, role string) string {
-	switch kind {
-	case model.GeneratorHelm:
-		if role == "values" {
-			return "app-team"
-		}
-		return "platform-engineer"
-	case model.GeneratorScore:
-		return "app-team"
-	case model.GeneratorSpringBoot:
-		if strings.HasPrefix(role, "app-config") {
-			return "app-team"
-		}
-		return "platform-engineer"
-	case model.GeneratorBackstage:
-		if role == "app-config" {
-			return "app-team"
-		}
-		return "platform-engineer"
-	case model.GeneratorAbly:
-		return "app-team"
-	case model.GeneratorOpsFlow:
-		return "platform-engineer"
-	default:
-		return "platform-engineer"
 	}
 }
 
