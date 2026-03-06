@@ -26,7 +26,7 @@ go test ./... -v
 |---|---|
 | Detection/import logic | Unit tests in `internal/...` |
 | CLI output/flags | Contract/golden tests in `cmd/cub-gen/*_parity_test.go` |
-| Command contract change | `make test-contracts` + `PARITY.md` update |
+| Command contract change | Follow `docs/testing/contract-drift-checklist.md` + `PARITY.md` update |
 | New user-visible flow | `make test-examples` + docs/example update |
 
 ## Pull request checklist
@@ -35,6 +35,7 @@ go test ./... -v
 2. Include deterministic success criteria.
 3. Include commands run and outcome summary.
 4. Confirm docs/parity updates when relevant.
+5. For contract drift, confirm checklist completion in `docs/testing/contract-drift-checklist.md`.
 
 ## Mandatory commands before PR
 

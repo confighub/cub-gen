@@ -15,6 +15,10 @@ This is the inherited delivery model from cub-scout, trimmed for cub-gen scope.
 9. Update docs/parity/examples.
 10. Mark done only after final pass post-doc updates.
 
+If the task changes a frozen contract surface, run the additional checklist:
+
+1. `docs/testing/contract-drift-checklist.md`
+
 ## Proof matrix template
 
 | Proof tier | Required? | Command | Assertion |
