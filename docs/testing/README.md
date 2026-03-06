@@ -13,6 +13,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 - `go test ./...`
 - Core detection/import/flow logic tests in `internal/...`.
 - Cross-family contract-triple conformance fixtures in `internal/contracts/triple_conformance_fixtures_test.go` (Helm/Score/Spring/Backstage/Ably/Ops).
+- Bridge ingest client idempotency/error-path tests in `internal/bridge/ingest_test.go`.
 - Bridge bundle tests in `internal/publish/...`.
 - Attestation model tests in `internal/attest/...`.
 
