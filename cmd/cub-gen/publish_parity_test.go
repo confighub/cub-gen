@@ -37,6 +37,35 @@ func TestPublishGoldenFromImport(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "publish-from-import.golden.json"), got)
 }
 
+func TestPublishGoldenDirectScore(t *testing.T) {
+	assertPublishDirectGolden(t, "score", filepath.Join("testdata", "parity", "publish-direct-score.golden.json"))
+}
+
+func TestPublishGoldenDirectSpring(t *testing.T) {
+	assertPublishDirectGolden(t, "spring", filepath.Join("testdata", "parity", "publish-direct-spring.golden.json"))
+}
+
+func assertPublishDirectGolden(t *testing.T, target, golden string) {
+	t.Helper()
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"publish", "--space", "platform", target, "render-target"})
+	if err != nil {
+		t.Fatalf("run direct publish returned error: %v\nstderr=%s", err, stderr)
+	}
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal direct publish json: %v\noutput=%s", err, out)
+	}
+	normalizePublish(got)
+
+	assertGoldenJSON(t, golden, got)
+}
+
 func normalizePublish(m map[string]any) {
 	replaceString(m, "generated_at", "<timestamp>")
 	replaceString(m, "change_id", "<change_id>")
