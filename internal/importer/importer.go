@@ -211,7 +211,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 			EditableBy:     "app-team",
 			Confidence:     0.86,
 			RequiresReview: false,
-			Reason:         "Container image tag maps cleanly to helm values.",
+			Reason:         registry.InversePatchReason(g.Kind, "image_tag", "Container image tag maps cleanly to helm values."),
 		}}
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
@@ -222,7 +222,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 			EditableBy:     "app-team",
 			Confidence:     0.90,
 			RequiresReview: false,
-			Reason:         "Score variable maps to a single Kubernetes env var.",
+			Reason:         registry.InversePatchReason(g.Kind, "env_var", "Score variable maps to a single Kubernetes env var."),
 		}}
 	case model.GeneratorSpringBoot:
 		return []model.InversePatch{
@@ -233,7 +233,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				EditableBy:     "app-team",
 				Confidence:     0.88,
 				RequiresReview: false,
-				Reason:         "Application identity should be app-editable without platform escalation.",
+				Reason:         registry.InversePatchReason(g.Kind, "app_name", "Application identity should be app-editable without platform escalation."),
 			},
 			{
 				Operation:      "replace",
@@ -242,7 +242,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				EditableBy:     "app-team",
 				Confidence:     0.91,
 				RequiresReview: false,
-				Reason:         "Application listener port is an app-level configuration concern.",
+				Reason:         registry.InversePatchReason(g.Kind, "server_port", "Application listener port is an app-level configuration concern."),
 			},
 			{
 				Operation:      "replace",
@@ -251,7 +251,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				EditableBy:     "platform-engineer",
 				Confidence:     0.78,
 				RequiresReview: true,
-				Reason:         "Database connectivity impacts shared runtime dependencies.",
+				Reason:         registry.InversePatchReason(g.Kind, "datasource_url", "Database connectivity impacts shared runtime dependencies."),
 			},
 		}
 	case model.GeneratorBackstage:
@@ -264,7 +264,10 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				EditableBy:     "platform-engineer",
 				Confidence:     0.87,
 				RequiresReview: false,
-				Reason:         fmt.Sprintf("Backstage component identity is sourced from %s.", hints.CatalogPath),
+				Reason: renderTargetTemplate(
+					registry.InversePatchReason(g.Kind, "identity", "Backstage component identity is sourced from {{catalog_path}}."),
+					map[string]string{"catalog_path": hints.CatalogPath},
+				),
 			},
 			{
 				Operation:      "replace",
@@ -273,7 +276,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				EditableBy:     "platform-engineer",
 				Confidence:     0.82,
 				RequiresReview: true,
-				Reason:         "Lifecycle changes impact platform ownership and support policy.",
+				Reason:         registry.InversePatchReason(g.Kind, "lifecycle", "Lifecycle changes impact platform ownership and support policy."),
 			},
 		}
 	case model.GeneratorAbly:
@@ -286,7 +289,10 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				EditableBy:     "app-team",
 				Confidence:     0.90,
 				RequiresReview: false,
-				Reason:         fmt.Sprintf("Environment is sourced from %s.", hints.BaseConfigPath),
+				Reason: renderTargetTemplate(
+					registry.InversePatchReason(g.Kind, "environment", "Environment is sourced from {{base_config_path}}."),
+					map[string]string{"base_config_path": hints.BaseConfigPath},
+				),
 			},
 			{
 				Operation:      "replace",
@@ -295,7 +301,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				EditableBy:     "app-team",
 				Confidence:     0.88,
 				RequiresReview: false,
-				Reason:         "Channel mapping is app-level runtime behavior.",
+				Reason:         registry.InversePatchReason(g.Kind, "channels", "Channel mapping is app-level runtime behavior."),
 			},
 		}
 	case model.GeneratorOpsFlow:
@@ -308,7 +314,10 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				EditableBy:     "platform-engineer",
 				Confidence:     0.87,
 				RequiresReview: true,
-				Reason:         fmt.Sprintf("Deployment action image tag is sourced from %s.", hints.BaseSpecPath),
+				Reason: renderTargetTemplate(
+					registry.InversePatchReason(g.Kind, "image_tag", "Deployment action image tag is sourced from {{base_spec_path}}."),
+					map[string]string{"base_spec_path": hints.BaseSpecPath},
+				),
 			},
 			{
 				Operation:      "replace",
@@ -317,7 +326,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				EditableBy:     "platform-engineer",
 				Confidence:     0.84,
 				RequiresReview: true,
-				Reason:         "Schedule changes affect operational execution timing.",
+				Reason:         registry.InversePatchReason(g.Kind, "schedule", "Schedule changes affect operational execution timing."),
 			},
 		}
 	default:

@@ -74,6 +74,9 @@ func TestRegistryFallbacks(t *testing.T) {
 	if got := FieldOriginOverlayTransform(unknown); got != "generator-transform" {
 		t.Fatalf("expected field origin overlay transform fallback generator-transform, got %q", got)
 	}
+	if got := InversePatchReason(unknown, "image_tag", "fallback-reason"); got != "fallback-reason" {
+		t.Fatalf("expected inverse patch reason fallback fallback-reason, got %q", got)
+	}
 	if got := InputRole(unknown, "any.yaml"); got != "input" {
 		t.Fatalf("expected input role fallback input, got %q", got)
 	}
@@ -184,6 +187,12 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := FieldOriginOverlayTransform(model.GeneratorHelm); got != "helm-template" {
 		t.Fatalf("expected helm overlay transform to fall back to base transform, got %q", got)
 	}
+	if got := InversePatchReason(model.GeneratorBackstage, "identity", "fallback"); got != "Backstage component identity is sourced from {{catalog_path}}." {
+		t.Fatalf("expected backstage inverse patch reason template, got %q", got)
+	}
+	if got := InversePatchReason(model.GeneratorAbly, "channels", "fallback"); got != "Channel mapping is app-level runtime behavior." {
+		t.Fatalf("expected ably channels inverse patch reason, got %q", got)
+	}
 
 	// Ensure returned specs are copies.
 	spec, ok := Spec(model.GeneratorScore)
@@ -193,5 +202,9 @@ func TestRegistryHintDefaults(t *testing.T) {
 	spec.HintDefaults["source_path"] = "mutated.yaml"
 	if got := HintDefault(model.GeneratorScore, "source_path", "fallback.yaml"); got != "score.yaml" {
 		t.Fatalf("expected immutable hint defaults, got %q", got)
+	}
+	spec.InversePatchReasons["env_var"] = "mutated reason"
+	if got := InversePatchReason(model.GeneratorScore, "env_var", "fallback"); got != "Score variable maps to a single Kubernetes env var." {
+		t.Fatalf("expected immutable inverse patch reasons, got %q", got)
 	}
 }
