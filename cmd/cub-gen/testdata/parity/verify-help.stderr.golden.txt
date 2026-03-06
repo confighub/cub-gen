@@ -1,0 +1,7 @@
+Usage of verify:
+  -in string
+    	Bundle JSON input path, or '-' for stdin (default "-")
+  -json
+    	Output JSON
+  -pretty
+    	Pretty-print JSON output (default true)

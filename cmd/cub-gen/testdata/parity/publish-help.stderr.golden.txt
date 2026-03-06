@@ -1,0 +1,13 @@
+Usage of publish:
+  -in string
+    	ImportFlow JSON input path, or '-' for stdin (default "-")
+  -out string
+    	Bundle JSON output path, or '-' for stdout (default "-")
+  -pretty
+    	Pretty-print JSON output (default true)
+  -ref string
+    	Git ref label to include in output (direct mode) (default "HEAD")
+  -space string
+    	ConfigHub space label (direct mode) (default "default")
+  -where-resource string
+    	Additional resource filter expression (direct mode)
