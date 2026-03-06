@@ -57,6 +57,7 @@ Implemented in this preview slice:
 39. Added `cub-gen generators --json --details` to expose registry-backed policy/provenance templates (`inverse_patch_templates`, `inverse_pointer_templates`, `field_origin_confidences`) for transparent family introspection.
 40. Refactored rendered object lineage definitions into registry-driven templates (`RenderedLineageTemplates`), removing importer-local per-family lineage literals while preserving output behavior.
 41. Refactored Helm provenance source-path semantics to use registry-driven role/hint metadata (`chart_role`, `values_role`, `primary_values_path`) with deterministic values ordering and preserved parity outputs.
+42. Added generator metadata conformance tests to enforce cross-surface consistency between registry specs, `generators --json`, and `generators --json --details` outputs.
 
 ## v0.2 preview invariants
 
