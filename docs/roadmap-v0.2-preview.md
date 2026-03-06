@@ -47,6 +47,7 @@ Implemented in this preview slice:
 29. Expanded `generators` table-mode parity contracts to lock deterministic filtered and empty-match outputs.
 30. Refactored inverse patch reason strings into registry-driven templates (`InversePatchReasons`) with placeholder rendering for family path hints.
 31. Refactored inverse edit hint strings into registry-driven templates (`InverseEditHints`) with placeholder rendering for family path hints and overlay-specific messaging.
+32. Improved `generators --help` to render supported kind/profile/capability values directly from the registry for self-discoverable filter usage.
 
 ## v0.2 preview invariants
 
