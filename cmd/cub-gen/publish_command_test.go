@@ -105,7 +105,7 @@ func TestPublishFromStdin(t *testing.T) {
 	}
 }
 
-func TestPublishDirectTargetModeFirstThree(t *testing.T) {
+func TestPublishDirectTargetModeSupportedTargets(t *testing.T) {
 	setupAliases(t)
 
 	tests := []struct {
@@ -132,6 +132,11 @@ func TestPublishDirectTargetModeFirstThree(t *testing.T) {
 			name:            "backstage",
 			target:          "backstage",
 			expectedProfile: "backstage-idp",
+		},
+		{
+			name:            "ably",
+			target:          "ably",
+			expectedProfile: "ably-config",
 		},
 	}
 

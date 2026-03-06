@@ -4,7 +4,7 @@
 
 ## What cub-gen does today
 
-- Detects generator-style app sources in Git repos (`helm`, `score.dev`, `springboot`, `backstage`).
+- Detects generator-style app sources in Git repos (`helm`, `score.dev`, `springboot`, `backstage`, `ably-config`).
 - Runs the same staged flow shape as `cub gitops`:
   - `gitops discover`
   - `gitops import`
@@ -71,6 +71,14 @@ go build ./cmd/cub-gen
 ./cub-gen gitops cleanup --space platform ./examples/backstage-idp
 ```
 
+### Ably app-config example
+
+```bash
+./cub-gen gitops discover --space platform ./examples/ably-config
+./cub-gen gitops import --space platform --json ./examples/ably-config ./examples/ably-config | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
+./cub-gen gitops cleanup --space platform ./examples/ably-config
+```
+
 ### Optional bridge artifact (local, no backend)
 
 Generate a ConfigHub-ready change bundle from import output:
@@ -91,6 +99,7 @@ Or run direct mode (import + bundle in one command):
 ./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas
 ./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas
 ./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp
+./cub-gen publish --space platform ./examples/ably-config ./examples/ably-config
 ```
 
 Bundle output includes:
@@ -107,6 +116,7 @@ Verify a bundle (file or stdin):
 ./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp | ./cub-gen verify --in -
+./cub-gen publish --space platform ./examples/ably-config ./examples/ably-config | ./cub-gen verify --in -
 ```
 
 Emit an attestation record from a verified bundle:
@@ -122,6 +132,9 @@ Emit an attestation record from a verified bundle:
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
 ./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp \
+  | ./cub-gen attest --in - --verifier ci-bot \
+  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
+./cub-gen publish --space platform ./examples/ably-config ./examples/ably-config \
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
 ```
@@ -168,6 +181,12 @@ A practical app-team/platform-team path in a Spring Boot repo:
 - `generator_profile: "backstage-idp"`
 - dry input ownership split (`catalog-spec` vs `app-config`)
 - inverse-edit paths for component metadata (`metadata.name`, `spec.lifecycle`)
+
+### Ably app-config (v0.2 preview)
+
+- `generator_profile: "ably-config"`
+- app-team DRY ownership (`provider-config-base`, `provider-config-overlay`)
+- inverse-edit paths for app runtime provider config (`app.environment`, `channels.inbound`)
 
 ## Quality model (inherited from cub-scout, adapted)
 

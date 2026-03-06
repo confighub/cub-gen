@@ -1,0 +1,41 @@
+{
+  "alias_path_suffix": "examples/ably-config",
+  "detections": [
+    {
+      "confidence": 0.9,
+      "id": "gen_8c38d405bdc97967",
+      "inputs": [
+        "ably-prod.yaml",
+        "ably.yaml"
+      ],
+      "kind": "ably",
+      "name": "ably-config",
+      "profile": "ably-config",
+      "root": ""
+    }
+  ],
+  "discover_file": "\u003cdiscover_file\u003e",
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
+  "discovered_at": "\u003ctimestamp\u003e",
+  "ref": "HEAD",
+  "resources": [
+    {
+      "generator_id": "gen_8c38d405bdc97967",
+      "generator_kind": "ably",
+      "generator_profile": "ably-config",
+      "inputs": [
+        "ably-prod.yaml",
+        "ably.yaml"
+      ],
+      "resource_body": "kind: ConfigMap\nmetadata:\n  name: ably-config\nspec:\n  root: \n",
+      "resource_kind": "ConfigMap",
+      "resource_name": "ably-config",
+      "resource_type": "v1/ConfigMap",
+      "root": ""
+    }
+  ],
+  "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
+  "target_path_expected_suffix": "examples/ably-config",
+  "target_slug": "ably"
+}

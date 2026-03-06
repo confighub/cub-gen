@@ -101,6 +101,29 @@ func TestGitOpsParityGoldenDiscoverBackstage(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-backstage.golden.json"), got)
 }
 
+func TestGitOpsParityGoldenDiscoverAbly(t *testing.T) {
+	aliases := setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "ably"})
+	if err != nil {
+		t.Fatalf("run ably discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal ably discover json: %v\noutput=%s", err, out)
+	}
+	normalizeDiscover(got)
+
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("examples", "ably-config"))
+	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["ably"]), filepath.ToSlash(filepath.Join("examples", "ably-config")))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-ably.golden.json"), got)
+}
+
 func TestGitOpsParityGoldenImport(t *testing.T) {
 	setupAliases(t)
 
@@ -179,6 +202,26 @@ func TestGitOpsParityGoldenImportBackstage(t *testing.T) {
 	normalizeImport(got)
 
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-backstage.golden.json"), got)
+}
+
+func TestGitOpsParityGoldenImportAbly(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "ably", "render-target"})
+	if err != nil {
+		t.Fatalf("run ably import returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal ably import json: %v\noutput=%s", err, out)
+	}
+	normalizeImport(got)
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-ably.golden.json"), got)
 }
 
 func TestGitOpsParityGoldenCleanup(t *testing.T) {
@@ -388,6 +431,10 @@ func setupAliases(t *testing.T) map[string]string {
 	if err != nil {
 		t.Fatalf("resolve backstage path: %v", err)
 	}
+	ablyAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "ably-config"))
+	if err != nil {
+		t.Fatalf("resolve ably path: %v", err)
+	}
 
 	cfgDir := t.TempDir()
 	cfgPath := filepath.Join(cfgDir, "targets.json")
@@ -398,6 +445,7 @@ func setupAliases(t *testing.T) map[string]string {
 			"score":     scoreAbs,
 			"spring":    springAbs,
 			"backstage": backstageAbs,
+			"ably":      ablyAbs,
 			"render-target": map[string]any{
 				"toolchain": "kubernetes/yaml",
 				"providers": []string{"fluxrenderer", "argocdrenderer"},
@@ -418,6 +466,7 @@ func setupAliases(t *testing.T) map[string]string {
 		"score":     scoreAbs,
 		"spring":    springAbs,
 		"backstage": backstageAbs,
+		"ably":      ablyAbs,
 	}
 }
 

@@ -9,25 +9,27 @@
   - golden discover JSON (Score)
   - golden discover JSON (Spring Boot)
   - golden discover JSON (Backstage IDP)
+  - golden discover JSON (Ably app-config)
   - golden import JSON (Helm)
   - golden import JSON (Score)
   - golden import JSON (Spring Boot)
   - golden import JSON (Backstage IDP)
+  - golden import JSON (Ably app-config)
   - golden cleanup JSON
   - golden discover/import table output
   - error mode coverage
 - `cmd/cub-gen/examples_smoke_test.go`
-  - path-mode discover/import for Helm, Score, Spring, Backstage (`./examples/...` without alias config)
+  - path-mode discover/import for Helm, Score, Spring, Backstage, Ably (`./examples/...` without alias config)
 - `cmd/cub-gen/examples_bridge_smoke_test.go`
-  - path-mode publish/verify/attest/verify-attestation flow for Helm, Score, Spring, Backstage (no alias config)
+  - path-mode publish/verify/attest/verify-attestation flow for Helm, Score, Spring, Backstage, Ably (no alias config)
 - `cmd/cub-gen/publish_command_test.go`
-  - direct publish mode validated for Helm, Score, Spring, Backstage
+  - direct publish mode validated for Helm, Score, Spring, Backstage, Ably
 - `cmd/cub-gen/verify_command_test.go`
-  - verify JSON path validated for Helm, Score, Spring, Backstage bundles
+  - verify JSON path validated for Helm, Score, Spring, Backstage, Ably bundles
 - `cmd/cub-gen/attest_command_test.go`
-  - attest path validated for Helm, Score, Spring, Backstage bundles
+  - attest path validated for Helm, Score, Spring, Backstage, Ably bundles
 - `cmd/cub-gen/verify_attestation_command_test.go`
-  - verify-attestation JSON and linked-bundle JSON paths validated for Helm, Score, Spring, Backstage attestation records
+  - verify-attestation JSON and linked-bundle JSON paths validated for Helm, Score, Spring, Backstage, Ably attestation records
 
 ### Internal logic tests
 
@@ -41,23 +43,31 @@
 - `cmd/cub-gen/testdata/parity/gitops-discover-score.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-discover-spring.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-discover-backstage.golden.json`
+- `cmd/cub-gen/testdata/parity/gitops-discover-ably.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-import.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-import-score.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-import-spring.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-import-backstage.golden.json`
+- `cmd/cub-gen/testdata/parity/gitops-import-ably.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-cleanup.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
 - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`
 - `cmd/cub-gen/testdata/parity/publish-from-import.golden.json`
 - `cmd/cub-gen/testdata/parity/publish-from-import-score.golden.json`
 - `cmd/cub-gen/testdata/parity/publish-from-import-spring.golden.json`
+- `cmd/cub-gen/testdata/parity/publish-from-import-backstage.golden.json`
+- `cmd/cub-gen/testdata/parity/publish-from-import-ably.golden.json`
 - `cmd/cub-gen/testdata/parity/publish-direct-helm.golden.json`
 - `cmd/cub-gen/testdata/parity/publish-direct-score.golden.json`
 - `cmd/cub-gen/testdata/parity/publish-direct-spring.golden.json`
+- `cmd/cub-gen/testdata/parity/publish-direct-backstage.golden.json`
+- `cmd/cub-gen/testdata/parity/publish-direct-ably.golden.json`
 - `cmd/cub-gen/testdata/parity/verify-attestation.json.golden.json`
 - `cmd/cub-gen/testdata/parity/verify-attestation-linked-helm.json.golden.json`
 - `cmd/cub-gen/testdata/parity/verify-attestation-linked-score.json.golden.json`
 - `cmd/cub-gen/testdata/parity/verify-attestation-linked-spring.json.golden.json`
+- `cmd/cub-gen/testdata/parity/verify-attestation-linked-backstage.json.golden.json`
+- `cmd/cub-gen/testdata/parity/verify-attestation-linked-ably.json.golden.json`
 
 ## Mandatory validation commands
 

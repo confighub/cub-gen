@@ -1,0 +1,272 @@
+{
+  "bundle_digest": "\u003cbundle_digest\u003e",
+  "change_id": "\u003cchange_id\u003e",
+  "contracts": [
+    {
+      "capabilities": [
+        "app-config-only",
+        "provider-config",
+        "inverse-provider-config-patch"
+      ],
+      "deterministic": true,
+      "generator_id": "gen_8c38d405bdc97967",
+      "inputs": [
+        {
+          "name": "input_01",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/ably-config-v1"
+        },
+        {
+          "name": "input_02",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/ably-config-v1"
+        }
+      ],
+      "kind": "ably",
+      "name": "ably-config",
+      "output_format": "kubernetes/yaml",
+      "profile": "ably-config",
+      "schema_version": "cub.confighub.io/generator-contract/v1",
+      "source_path": "",
+      "source_ref": "HEAD",
+      "source_repo": "\u003ctarget_path\u003e",
+      "transport": "oci+git",
+      "version": "0.1.0"
+    }
+  ],
+  "digest_algorithm": "sha256",
+  "discovered": [
+    {
+      "generator_id": "gen_8c38d405bdc97967",
+      "generator_kind": "ably",
+      "generator_profile": "ably-config",
+      "inputs": [
+        "ably-prod.yaml",
+        "ably.yaml"
+      ],
+      "resource_body": "kind: ConfigMap\nmetadata:\n  name: ably-config\nspec:\n  root: \n",
+      "resource_kind": "ConfigMap",
+      "resource_name": "ably-config",
+      "resource_type": "v1/ConfigMap",
+      "root": ""
+    }
+  ],
+  "dry_inputs": [
+    {
+      "generator_id": "gen_8c38d405bdc97967",
+      "owner": "app-team",
+      "path": "ably.yaml",
+      "profile": "ably-config",
+      "required": true,
+      "role": "provider-config-base"
+    },
+    {
+      "generator_id": "gen_8c38d405bdc97967",
+      "owner": "app-team",
+      "path": "ably-prod.yaml",
+      "profile": "ably-config",
+      "required": true,
+      "role": "provider-config-overlay"
+    }
+  ],
+  "dry_units": [
+    {
+      "id": "dry_81d31492577f5656",
+      "kind": "dry-unit",
+      "layer": "dry",
+      "name": "ably-config-dry"
+    }
+  ],
+  "generated_at": "\u003ctimestamp\u003e",
+  "generator_units": [
+    {
+      "id": "gen_e140b47854b90c71",
+      "kind": "generator-unit",
+      "layer": "generator",
+      "name": "ably-config-generator"
+    }
+  ],
+  "inverse_transform_plans": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "created_at": "\u003ctimestamp\u003e",
+      "patches": [
+        {
+          "confidence": 0.9,
+          "dry_path": "app.environment",
+          "editable_by": "app-team",
+          "op": "replace",
+          "reason": "Environment is sourced from ably.yaml.",
+          "requires_review": false,
+          "wet_path": "ConfigMap/data/ABLY_ENVIRONMENT"
+        },
+        {
+          "confidence": 0.88,
+          "dry_path": "channels.inbound",
+          "editable_by": "app-team",
+          "op": "replace",
+          "reason": "Channel mapping is app-level runtime behavior.",
+          "requires_review": false,
+          "wet_path": "ConfigMap/data/ABLY_CHANNEL_INBOUND"
+        }
+      ],
+      "plan_id": "\u003cplan_id\u003e",
+      "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+      "source_kind": "ably",
+      "source_ref": "",
+      "status": "draft",
+      "target_unit_id": "dry_81d31492577f5656"
+    }
+  ],
+  "links": [
+    {
+      "dry_unit_id": "dry_81d31492577f5656",
+      "generator_unit_id": "gen_e140b47854b90c71",
+      "wet_unit_id": "wet_3e91016693281ace"
+    }
+  ],
+  "provenance": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "field_origin_map": [
+        {
+          "confidence": 0.9,
+          "dry_path": "app.environment",
+          "source_path": "ably.yaml",
+          "transform": "ably-config-to-runtime",
+          "wet_path": "ConfigMap/data/ABLY_ENVIRONMENT"
+        },
+        {
+          "confidence": 0.88,
+          "dry_path": "channels.inbound",
+          "source_path": "ably.yaml",
+          "transform": "ably-config-to-runtime",
+          "wet_path": "ConfigMap/data/ABLY_CHANNEL_INBOUND"
+        },
+        {
+          "confidence": 0.84,
+          "dry_path": "channels.inbound",
+          "source_path": "ably-prod.yaml",
+          "transform": "ably-overlay-merge",
+          "wet_path": "ConfigMap/data/ABLY_CHANNEL_INBOUND"
+        }
+      ],
+      "generator_id": "gen_8c38d405bdc97967",
+      "generator_name": "ably-config",
+      "generator_profile": "ably-config",
+      "input_digest": "sha256:0ebf188c0dbbd6554b5789fa2f7a63be2c0599273aa6b25ae38d4dc17813ba18",
+      "inverse_edit_pointers": [
+        {
+          "confidence": 0.9,
+          "dry_path": "app.environment",
+          "edit_hint": "Edit app.environment in ably.yaml.",
+          "owner": "app-team",
+          "wet_path": "ConfigMap/data/ABLY_ENVIRONMENT"
+        },
+        {
+          "confidence": 0.88,
+          "dry_path": "channels.inbound",
+          "edit_hint": "Edit channels.inbound in ably-prod.yaml for environment-specific behavior; use ably.yaml for defaults.",
+          "owner": "app-team",
+          "wet_path": "ConfigMap/data/ABLY_CHANNEL_INBOUND"
+        }
+      ],
+      "outputs": [
+        {
+          "digest": "\u003cdigest\u003e",
+          "role": "rendered-manifests",
+          "uri": "oci://example.local/platform/ably-config:latest"
+        }
+      ],
+      "provenance_id": "\u003cprovenance_id\u003e",
+      "rendered_at": "\u003ctimestamp\u003e",
+      "rendered_object_lineage": [
+        {
+          "kind": "ConfigMap",
+          "name": "ably-config-ably",
+          "namespace": "apps",
+          "source_dry_path": "app.environment",
+          "source_path": "ably.yaml"
+        },
+        {
+          "kind": "Secret",
+          "name": "ably-config-ably-credentials",
+          "namespace": "apps",
+          "source_dry_path": "credentials.api_key_ref",
+          "source_path": "ably.yaml"
+        },
+        {
+          "kind": "ConfigMap",
+          "name": "ably-config-ably",
+          "namespace": "apps",
+          "source_dry_path": "channels.inbound",
+          "source_path": "ably-prod.yaml"
+        }
+      ],
+      "schema_version": "cub.confighub.io/provenance/v1",
+      "sources": [
+        {
+          "path": "ably-prod.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "ably.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        }
+      ],
+      "version": "0.1.0"
+    }
+  ],
+  "ref": "HEAD",
+  "render_target_slug": "render-target",
+  "schema_version": "cub.confighub.io/change-bundle/v1",
+  "source": "cub-gen",
+  "space": "platform",
+  "summary": {
+    "contracts": 1,
+    "discovered_resources": 1,
+    "dry_inputs": 2,
+    "dry_units": 1,
+    "generator_profiles": [
+      "ably-config"
+    ],
+    "generator_units": 1,
+    "inverse_transform_plans": 1,
+    "links": 1,
+    "provenance_records": 1,
+    "wet_manifest_targets": 2,
+    "wet_units": 1
+  },
+  "target_path": "\u003ctarget_path\u003e",
+  "target_slug": "ably",
+  "wet_manifest_targets": [
+    {
+      "generator_id": "gen_8c38d405bdc97967",
+      "kind": "ConfigMap",
+      "name": "ably-config-ably",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "app.environment"
+    },
+    {
+      "generator_id": "gen_8c38d405bdc97967",
+      "kind": "Secret",
+      "name": "ably-config-ably-credentials",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "credentials.api_key_ref"
+    }
+  ],
+  "wet_units": [
+    {
+      "id": "wet_3e91016693281ace",
+      "kind": "wet-unit",
+      "layer": "wet",
+      "name": "ably-config-wet"
+    }
+  ]
+}

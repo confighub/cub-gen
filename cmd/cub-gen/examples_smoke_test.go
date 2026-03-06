@@ -38,6 +38,12 @@ func TestExamplesPathModeDiscoverAndImport(t *testing.T) {
 			expectedProfile: "backstage-idp",
 			expectedKind:    "backstage",
 		},
+		{
+			name:            "ably",
+			repoSuffix:      filepath.Join("examples", "ably-config"),
+			expectedProfile: "ably-config",
+			expectedKind:    "ably",
+		},
 	}
 
 	for _, tt := range tests {

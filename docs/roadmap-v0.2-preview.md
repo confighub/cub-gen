@@ -18,6 +18,14 @@ Implemented in this preview slice:
    - `gitops-import-backstage.golden.json`
 5. Extended path-mode smoke and bridge smoke tests to include Backstage.
 6. Added generator capability contract tests across all supported families.
+7. Added `ably-config` app-config-only generator family (detect + import).
+8. Added example repo fixture at `examples/ably-config/`.
+9. Added gitops parity goldens for Ably discover/import:
+   - `gitops-discover-ably.golden.json`
+   - `gitops-import-ably.golden.json`
+10. Extended publish parity goldens to all supported families (Helm/Score/Spring/Backstage/Ably) in both from-import and direct modes.
+11. Extended verify-attestation linked parity goldens to include Backstage and Ably.
+12. Extended path-mode smoke and bridge smoke tests to include Ably.
 
 ## v0.2 preview invariants
 
@@ -28,8 +36,7 @@ Implemented in this preview slice:
 
 ## Next slices toward v0.2
 
-1. Add one app-config-only generator family (e.g. config-provider style DRY source).
-2. Add one ops/workflow-style generator family.
-3. Define a stable extension surface for adding generator families without large switch edits.
-4. Keep generator-family capability metadata contract tests updated as families are added.
-5. Keep bridge artifacts (`publish/verify/attest`) symmetric across all supported families.
+1. Add one ops/workflow-style generator family.
+2. Define a stable extension surface for adding generator families without large switch edits.
+3. Keep generator-family capability metadata contract tests updated as families are added.
+4. Keep bridge artifacts (`publish/verify/attest`) symmetric across all supported families.
