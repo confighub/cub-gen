@@ -34,6 +34,7 @@ type FamilySpec struct {
 	RoleSchemaRefs              map[string]string
 	HintDefaults                map[string]string
 	InversePatchReasons         map[string]string
+	InverseEditHints            map[string]string
 	FieldOriginTransform        string
 	FieldOriginOverlayTransform string
 	InputRoleRules              []InputRoleRule
@@ -58,6 +59,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		InversePatchReasons: map[string]string{
 			"image_tag": "Container image tag maps cleanly to helm values.",
+		},
+		InverseEditHints: map[string]string{
+			"image_tag": "Edit chart values file and keep chart template unchanged.",
 		},
 		FieldOriginTransform: "helm-template",
 		InputRoleRules: []InputRoleRule{
@@ -89,6 +93,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		InversePatchReasons: map[string]string{
 			"env_var": "Score variable maps to a single Kubernetes env var.",
 		},
+		InverseEditHints: map[string]string{
+			"image":   "Edit the Score container image in {{source_path}}.",
+			"env_var": "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}.",
+			"port":    "Edit {{service_port_name}} service port in {{source_path}}.",
+		},
 		FieldOriginTransform: "score-to-k8s",
 		InputRoleRules:       []InputRoleRule{{Role: "score-spec", ExactBasenames: []string{"score.yaml", "score.yml"}}},
 		DefaultInputRole:     "score-input",
@@ -117,6 +126,12 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"app_name":       "Application identity should be app-editable without platform escalation.",
 			"server_port":    "Application listener port is an app-level configuration concern.",
 			"datasource_url": "Database connectivity impacts shared runtime dependencies.",
+		},
+		InverseEditHints: map[string]string{
+			"app_name":            "Edit spring.application.name in {{base_config_path}}.",
+			"server_port_base":    "Edit server.port in {{base_config_path}}.",
+			"server_port_overlay": "Edit server.port in {{profile_config_path}} for environment overrides; use {{base_config_path}} for the default.",
+			"datasource_url":      "Edit spring.datasource.url in {{base_config_path}} and coordinate with platform ownership rules.",
 		},
 		FieldOriginTransform:        "spring-config-to-manifest",
 		FieldOriginOverlayTransform: "spring-profile-overlay",
@@ -154,6 +169,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"identity":  "Backstage component identity is sourced from {{catalog_path}}.",
 			"lifecycle": "Lifecycle changes impact platform ownership and support policy.",
 		},
+		InverseEditHints: map[string]string{
+			"name":      "Edit metadata.name in {{catalog_path}}.",
+			"lifecycle": "Edit spec.lifecycle in {{catalog_path}} and coordinate rollout policy.",
+		},
 		FieldOriginTransform: "backstage-component-to-application",
 		InputRoleRules: []InputRoleRule{
 			{Role: "catalog-spec", ExactBasenames: []string{"catalog-info.yaml", "catalog-info.yml"}},
@@ -183,6 +202,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		InversePatchReasons: map[string]string{
 			"environment": "Environment is sourced from {{base_config_path}}.",
 			"channels":    "Channel mapping is app-level runtime behavior.",
+		},
+		InverseEditHints: map[string]string{
+			"environment":      "Edit app.environment in {{base_config_path}}.",
+			"channels_base":    "Edit channels.inbound in {{base_config_path}}.",
+			"channels_overlay": "Edit channels.inbound in {{overlay_config_path}} for environment-specific behavior; use {{base_config_path}} for defaults.",
 		},
 		FieldOriginTransform:        "ably-config-to-runtime",
 		FieldOriginOverlayTransform: "ably-overlay-merge",
@@ -214,6 +238,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"image_tag": "Deployment action image tag is sourced from {{base_spec_path}}.",
 			"schedule":  "Schedule changes affect operational execution timing.",
 		},
+		InverseEditHints: map[string]string{
+			"image_tag":        "Edit actions.deploy.image_tag in {{base_spec_path}}.",
+			"schedule_base":    "Edit triggers.schedule in {{base_spec_path}}.",
+			"schedule_overlay": "Edit triggers.schedule in {{overlay_spec_path}} for environment-specific cadence; use {{base_spec_path}} for defaults.",
+		},
 		FieldOriginTransform:        "ops-workflow-to-argo-workflow",
 		FieldOriginOverlayTransform: "ops-workflow-overlay-merge",
 		InputRoleRules: []InputRoleRule{
@@ -243,6 +272,7 @@ func Spec(kind model.GeneratorKind) (FamilySpec, bool) {
 		RoleSchemaRefs:              copyRoleSchemaRefs(spec.RoleSchemaRefs),
 		HintDefaults:                copyHintDefaults(spec.HintDefaults),
 		InversePatchReasons:         copyInversePatchReasons(spec.InversePatchReasons),
+		InverseEditHints:            copyInverseEditHints(spec.InverseEditHints),
 		FieldOriginTransform:        spec.FieldOriginTransform,
 		FieldOriginOverlayTransform: spec.FieldOriginOverlayTransform,
 		InputRoleRules:              copyInputRoleRules(spec.InputRoleRules),
@@ -302,6 +332,17 @@ func InversePatchReason(kind model.GeneratorKind, key, fallback string) string {
 		return fallback
 	}
 	if v, ok := spec.InversePatchReasons[key]; ok && strings.TrimSpace(v) != "" {
+		return v
+	}
+	return fallback
+}
+
+func InverseEditHint(kind model.GeneratorKind, key, fallback string) string {
+	spec, ok := Spec(kind)
+	if !ok {
+		return fallback
+	}
+	if v, ok := spec.InverseEditHints[key]; ok && strings.TrimSpace(v) != "" {
 		return v
 	}
 	return fallback
@@ -485,6 +526,17 @@ func copyHintDefaults(in map[string]string) map[string]string {
 }
 
 func copyInversePatchReasons(in map[string]string) map[string]string {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func copyInverseEditHints(in map[string]string) map[string]string {
 	if in == nil {
 		return nil
 	}

@@ -77,6 +77,9 @@ func TestRegistryFallbacks(t *testing.T) {
 	if got := InversePatchReason(unknown, "image_tag", "fallback-reason"); got != "fallback-reason" {
 		t.Fatalf("expected inverse patch reason fallback fallback-reason, got %q", got)
 	}
+	if got := InverseEditHint(unknown, "image_tag", "fallback-hint"); got != "fallback-hint" {
+		t.Fatalf("expected inverse edit hint fallback fallback-hint, got %q", got)
+	}
 	if got := InputRole(unknown, "any.yaml"); got != "input" {
 		t.Fatalf("expected input role fallback input, got %q", got)
 	}
@@ -193,6 +196,12 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := InversePatchReason(model.GeneratorAbly, "channels", "fallback"); got != "Channel mapping is app-level runtime behavior." {
 		t.Fatalf("expected ably channels inverse patch reason, got %q", got)
 	}
+	if got := InverseEditHint(model.GeneratorScore, "env_var", "fallback"); got != "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}." {
+		t.Fatalf("expected score env_var inverse edit hint template, got %q", got)
+	}
+	if got := InverseEditHint(model.GeneratorSpringBoot, "server_port_overlay", "fallback"); got != "Edit server.port in {{profile_config_path}} for environment overrides; use {{base_config_path}} for the default." {
+		t.Fatalf("expected spring server_port_overlay inverse edit hint template, got %q", got)
+	}
 
 	// Ensure returned specs are copies.
 	spec, ok := Spec(model.GeneratorScore)
@@ -206,5 +215,9 @@ func TestRegistryHintDefaults(t *testing.T) {
 	spec.InversePatchReasons["env_var"] = "mutated reason"
 	if got := InversePatchReason(model.GeneratorScore, "env_var", "fallback"); got != "Score variable maps to a single Kubernetes env var." {
 		t.Fatalf("expected immutable inverse patch reasons, got %q", got)
+	}
+	spec.InverseEditHints["env_var"] = "mutated hint"
+	if got := InverseEditHint(model.GeneratorScore, "env_var", "fallback"); got != "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}." {
+		t.Fatalf("expected immutable inverse edit hints, got %q", got)
 	}
 }
