@@ -53,6 +53,7 @@ Implemented in this preview slice:
 35. Added optional strict filter validation (`--strict-filters`) for `generators` to fail fast on unknown kind/profile/capability values.
 36. Updated `README.md` generator inventory examples to include multi-value and strict-filter command flows for faster adoption.
 37. Refactored provenance `field_origin_map.confidence` values into registry-driven templates (`FieldOriginConfidences`) to remove importer-local confidence literals while preserving output behavior.
+38. Refactored inverse edit pointer ownership/confidence defaults into registry-driven templates (`InversePointerTemplates`) to remove importer-local policy literals while preserving output behavior.
 
 ## v0.2 preview invariants
 
