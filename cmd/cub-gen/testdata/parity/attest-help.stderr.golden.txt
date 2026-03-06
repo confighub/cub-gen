@@ -1,0 +1,9 @@
+Usage of attest:
+  -in string
+    	Bundle JSON input path, or '-' for stdin (default "-")
+  -out string
+    	Attestation JSON output path, or '-' for stdout (default "-")
+  -pretty
+    	Pretty-print JSON output (default true)
+  -verifier string
+    	Verifier identity label (default "cub-gen")
