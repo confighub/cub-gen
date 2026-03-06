@@ -88,6 +88,8 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/publish-from-import.golden.json`
+  - `cmd/cub-gen/testdata/parity/publish-from-import-score.golden.json`
+  - `cmd/cub-gen/testdata/parity/publish-from-import-spring.golden.json`
   - `cmd/cub-gen/testdata/parity/publish-direct-helm.golden.json`
   - `cmd/cub-gen/testdata/parity/publish-direct-score.golden.json`
   - `cmd/cub-gen/testdata/parity/publish-direct-spring.golden.json`
