@@ -28,18 +28,19 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 - Golden files under `cmd/cub-gen/testdata/parity/`.
 - Includes command help/usage goldens to lock human-facing CLI contract.
 - Helm example is covered across discover/import/cleanup parity paths.
-- Score and Spring Boot discover/import JSON contracts are golden-locked.
+- Score, Spring Boot, and Backstage IDP discover/import JSON contracts are golden-locked.
 - Score import JSON contract is golden-locked (`gitops-import-score.golden.json`).
 - Spring Boot import JSON contract is golden-locked (`gitops-import-spring.golden.json`).
+- Backstage import JSON contract is golden-locked (`gitops-import-backstage.golden.json`).
 
 ### Tier 3: examples proof
 
 - Run at least one command per example for changed behavior.
 - For bridge changes, validate import -> publish pipeline output.
-- Automated path-mode smoke for Helm/Score/Spring in `cmd/cub-gen/examples_smoke_test.go`.
-- Automated path-mode bridge smoke (`publish -> verify -> attest -> verify-attestation`) for Helm/Score/Spring in `cmd/cub-gen/examples_bridge_smoke_test.go`.
-- Publish/verify/attest command tests include Helm/Score/Spring bundle flows.
-- Verify-attestation command tests include Helm/Score/Spring attestation flows (with and without linked bundle checks).
+- Automated path-mode smoke for Helm/Score/Spring/Backstage in `cmd/cub-gen/examples_smoke_test.go`.
+- Automated path-mode bridge smoke (`publish -> verify -> attest -> verify-attestation`) for Helm/Score/Spring/Backstage in `cmd/cub-gen/examples_bridge_smoke_test.go`.
+- Publish/verify/attest command tests include Helm/Score/Spring/Backstage bundle flows.
+- Verify-attestation command tests include Helm/Score/Spring/Backstage attestation flows (with and without linked bundle checks).
 
 ## Required commands
 

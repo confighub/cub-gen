@@ -128,6 +128,11 @@ func TestPublishDirectTargetModeFirstThree(t *testing.T) {
 			target:          "spring",
 			expectedProfile: "springboot-paas",
 		},
+		{
+			name:            "backstage",
+			target:          "backstage",
+			expectedProfile: "backstage-idp",
+		},
 	}
 
 	for _, tt := range tests {

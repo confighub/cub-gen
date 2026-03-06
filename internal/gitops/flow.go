@@ -792,6 +792,8 @@ func mappedResourceKind(kind model.GeneratorKind) string {
 		return "Application"
 	case model.GeneratorSpringBoot:
 		return "Kustomization"
+	case model.GeneratorBackstage:
+		return "Component"
 	default:
 		return "Resource"
 	}
@@ -805,6 +807,8 @@ func mappedResourceType(kind model.GeneratorKind) string {
 		return "argoproj.io/v1alpha1/Application"
 	case model.GeneratorSpringBoot:
 		return "kustomize.toolkit.fluxcd.io/v1/Kustomization"
+	case model.GeneratorBackstage:
+		return "backstage.io/v1alpha1/Component"
 	default:
 		return "v1/Resource"
 	}

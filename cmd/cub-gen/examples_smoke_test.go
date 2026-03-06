@@ -32,6 +32,12 @@ func TestExamplesPathModeDiscoverAndImport(t *testing.T) {
 			expectedProfile: "springboot-paas",
 			expectedKind:    "springboot",
 		},
+		{
+			name:            "backstage",
+			repoSuffix:      filepath.Join("examples", "backstage-idp"),
+			expectedProfile: "backstage-idp",
+			expectedKind:    "backstage",
+		},
 	}
 
 	for _, tt := range tests {

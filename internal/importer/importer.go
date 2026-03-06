@@ -204,6 +204,8 @@ func capabilitiesForKind(kind model.GeneratorKind) []string {
 		return []string{"render-manifests", "workload-spec", "inverse-score-patch"}
 	case model.GeneratorSpringBoot:
 		return []string{"render-app-config", "profile-overrides", "inverse-app-config-patch"}
+	case model.GeneratorBackstage:
+		return []string{"catalog-metadata", "render-manifests", "inverse-catalog-patch"}
 	default:
 		return []string{"render-manifests"}
 	}
@@ -260,6 +262,28 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Confidence:     0.78,
 				RequiresReview: true,
 				Reason:         "Database connectivity impacts shared runtime dependencies.",
+			},
+		}
+	case model.GeneratorBackstage:
+		hints := backstagePathHintsFromInputs(g.Inputs)
+		return []model.InversePatch{
+			{
+				Operation:      "replace",
+				DryPath:        "metadata.name",
+				WetPath:        "Application/metadata/name",
+				EditableBy:     "platform-engineer",
+				Confidence:     0.87,
+				RequiresReview: false,
+				Reason:         fmt.Sprintf("Backstage component identity is sourced from %s.", hints.CatalogPath),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spec.lifecycle",
+				WetPath:        "Application/metadata/labels[lifecycle]",
+				EditableBy:     "platform-engineer",
+				Confidence:     0.82,
+				RequiresReview: true,
+				Reason:         "Lifecycle changes impact platform ownership and support policy.",
 			},
 		}
 	default:
@@ -339,6 +363,24 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 			})
 		}
 		return origins
+	case model.GeneratorBackstage:
+		hints := backstagePathHintsFromInputs(g.Inputs)
+		return []model.FieldOrigin{
+			{
+				DryPath:    "metadata.name",
+				WetPath:    "Application/metadata/name",
+				SourcePath: hints.CatalogPath,
+				Transform:  "backstage-component-to-application",
+				Confidence: 0.90,
+			},
+			{
+				DryPath:    "spec.lifecycle",
+				WetPath:    "Application/metadata/labels[lifecycle]",
+				SourcePath: hints.CatalogPath,
+				Transform:  "backstage-component-to-application",
+				Confidence: 0.82,
+			},
+		}
 	default:
 		return []model.FieldOrigin{}
 	}
@@ -404,6 +446,24 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				Owner:      "platform-engineer",
 				EditHint:   fmt.Sprintf("Edit spring.datasource.url in %s and coordinate with platform ownership rules.", hints.BaseConfigPath),
 				Confidence: 0.78,
+			},
+		}
+	case model.GeneratorBackstage:
+		hints := backstagePathHintsFromInputs(g.Inputs)
+		return []model.InverseEditPointer{
+			{
+				WetPath:    "Application/metadata/name",
+				DryPath:    "metadata.name",
+				Owner:      "platform-engineer",
+				EditHint:   fmt.Sprintf("Edit metadata.name in %s.", hints.CatalogPath),
+				Confidence: 0.90,
+			},
+			{
+				WetPath:    "Application/metadata/labels[lifecycle]",
+				DryPath:    "spec.lifecycle",
+				Owner:      "platform-engineer",
+				EditHint:   fmt.Sprintf("Edit spec.lifecycle in %s and coordinate rollout policy.", hints.CatalogPath),
+				Confidence: 0.82,
 			},
 		}
 	default:
@@ -556,6 +616,11 @@ func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.Gen
 			{GeneratorID: g.ID, Kind: "Deployment", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "server.port"},
 			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-config", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "spring.datasource.url"},
 		}
+	case model.GeneratorBackstage:
+		return []model.WetManifestTarget{
+			{GeneratorID: g.ID, Kind: "Application", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "metadata.name"},
+			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-catalog", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "spec.lifecycle"},
+		}
 	default:
 		return []model.WetManifestTarget{}
 	}
@@ -589,6 +654,14 @@ func classifyDryInputRole(kind model.GeneratorKind, in string) string {
 			return "app-config-profile"
 		}
 		return "spring-input"
+	case model.GeneratorBackstage:
+		if base == "catalog-info.yaml" || base == "catalog-info.yml" {
+			return "catalog-spec"
+		}
+		if base == "app-config.yaml" || base == "app-config.yml" {
+			return "app-config"
+		}
+		return "backstage-input"
 	default:
 		return "input"
 	}
@@ -605,6 +678,11 @@ func ownerForDryInput(kind model.GeneratorKind, role string) string {
 		return "app-team"
 	case model.GeneratorSpringBoot:
 		if strings.HasPrefix(role, "app-config") {
+			return "app-team"
+		}
+		return "platform-engineer"
+	case model.GeneratorBackstage:
+		if role == "app-config" {
 			return "app-team"
 		}
 		return "platform-engineer"
@@ -685,6 +763,12 @@ func renderedLineageForGenerator(detection model.DetectionResult, g model.Genera
 			})
 		}
 		return lineage
+	case model.GeneratorBackstage:
+		hints := backstagePathHintsFromInputs(g.Inputs)
+		return []model.RenderedObjectLineage{
+			{Kind: "Application", Name: g.Name, Namespace: "apps", SourcePath: hints.CatalogPath, SourceDryPath: "metadata.name"},
+			{Kind: "ConfigMap", Name: g.Name + "-catalog", Namespace: "apps", SourcePath: hints.CatalogPath, SourceDryPath: "spec.lifecycle"},
+		}
 	default:
 		return nil
 	}
@@ -738,6 +822,28 @@ func springServerPortEditHint(h springHints) string {
 	return fmt.Sprintf("Edit server.port in %s.", h.BaseConfigPath)
 }
 
+type backstageHints struct {
+	CatalogPath   string
+	AppConfigPath string
+}
+
+func backstagePathHintsFromInputs(inputs []string) backstageHints {
+	h := backstageHints{
+		CatalogPath: "catalog-info.yaml",
+	}
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		base := strings.ToLower(filepath.Base(in))
+		switch base {
+		case "catalog-info.yaml", "catalog-info.yml":
+			h.CatalogPath = p
+		case "app-config.yaml", "app-config.yml":
+			h.AppConfigPath = p
+		}
+	}
+	return h
+}
+
 func inferInputSchema(kind model.GeneratorKind, inputPath string) string {
 	ext := strings.ToLower(filepath.Ext(inputPath))
 	switch {
@@ -750,6 +856,15 @@ func inferInputSchema(kind model.GeneratorKind, inputPath string) string {
 		}
 		if kind == model.GeneratorSpringBoot {
 			return "https://json.schemastore.org/spring-configuration-metadata"
+		}
+		if kind == model.GeneratorBackstage {
+			base := strings.ToLower(filepath.Base(inputPath))
+			if base == "catalog-info.yaml" || base == "catalog-info.yml" {
+				return "https://json.schemastore.org/backstage-catalog-info"
+			}
+			if base == "app-config.yaml" || base == "app-config.yml" {
+				return "https://json.schemastore.org/backstage-app-config"
+			}
 		}
 		return "https://json-schema.org/draft/2020-12/schema"
 	case ext == ".xml":

@@ -1,0 +1,239 @@
+{
+  "contracts": [
+    {
+      "capabilities": [
+        "catalog-metadata",
+        "render-manifests",
+        "inverse-catalog-patch"
+      ],
+      "deterministic": true,
+      "generator_id": "gen_e2b1e1884db80431",
+      "inputs": [
+        {
+          "name": "input_01",
+          "required": true,
+          "schema_ref": "https://json.schemastore.org/backstage-app-config"
+        },
+        {
+          "name": "input_02",
+          "required": true,
+          "schema_ref": "https://json.schemastore.org/backstage-catalog-info"
+        }
+      ],
+      "kind": "backstage",
+      "name": "backstage-idp",
+      "output_format": "kubernetes/yaml",
+      "profile": "backstage-idp",
+      "schema_version": "cub.confighub.io/generator-contract/v1",
+      "source_path": "",
+      "source_ref": "HEAD",
+      "source_repo": "\u003ctarget_path\u003e",
+      "transport": "oci+git",
+      "version": "0.1.0"
+    }
+  ],
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
+  "discovered": [
+    {
+      "generator_id": "gen_e2b1e1884db80431",
+      "generator_kind": "backstage",
+      "generator_profile": "backstage-idp",
+      "inputs": [
+        "app-config.yaml",
+        "catalog-info.yaml"
+      ],
+      "resource_body": "kind: Component\nmetadata:\n  name: backstage-idp\nspec:\n  root: \n",
+      "resource_kind": "Component",
+      "resource_name": "backstage-idp",
+      "resource_type": "backstage.io/v1alpha1/Component",
+      "root": ""
+    }
+  ],
+  "dry_inputs": [
+    {
+      "generator_id": "gen_e2b1e1884db80431",
+      "owner": "app-team",
+      "path": "app-config.yaml",
+      "profile": "backstage-idp",
+      "required": true,
+      "role": "app-config"
+    },
+    {
+      "generator_id": "gen_e2b1e1884db80431",
+      "owner": "platform-engineer",
+      "path": "catalog-info.yaml",
+      "profile": "backstage-idp",
+      "required": true,
+      "role": "catalog-spec"
+    }
+  ],
+  "dry_units": [
+    {
+      "id": "dry_7007755753d09225",
+      "kind": "dry-unit",
+      "layer": "dry",
+      "name": "backstage-idp-dry"
+    }
+  ],
+  "generator_units": [
+    {
+      "id": "gen_6ebd590319cd283b",
+      "kind": "generator-unit",
+      "layer": "generator",
+      "name": "backstage-idp-generator"
+    }
+  ],
+  "imported_at": "\u003ctimestamp\u003e",
+  "inverse_transform_plans": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "created_at": "\u003ctimestamp\u003e",
+      "patches": [
+        {
+          "confidence": 0.87,
+          "dry_path": "metadata.name",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Backstage component identity is sourced from catalog-info.yaml.",
+          "requires_review": false,
+          "wet_path": "Application/metadata/name"
+        },
+        {
+          "confidence": 0.82,
+          "dry_path": "spec.lifecycle",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Lifecycle changes impact platform ownership and support policy.",
+          "requires_review": true,
+          "wet_path": "Application/metadata/labels[lifecycle]"
+        }
+      ],
+      "plan_id": "\u003cplan_id\u003e",
+      "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+      "source_kind": "backstage",
+      "source_ref": "",
+      "status": "draft",
+      "target_unit_id": "dry_7007755753d09225"
+    }
+  ],
+  "links": [
+    {
+      "dry_unit_id": "dry_7007755753d09225",
+      "generator_unit_id": "gen_6ebd590319cd283b",
+      "wet_unit_id": "wet_ed93b23fac4bc5cf"
+    }
+  ],
+  "provenance": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "field_origin_map": [
+        {
+          "confidence": 0.9,
+          "dry_path": "metadata.name",
+          "source_path": "catalog-info.yaml",
+          "transform": "backstage-component-to-application",
+          "wet_path": "Application/metadata/name"
+        },
+        {
+          "confidence": 0.82,
+          "dry_path": "spec.lifecycle",
+          "source_path": "catalog-info.yaml",
+          "transform": "backstage-component-to-application",
+          "wet_path": "Application/metadata/labels[lifecycle]"
+        }
+      ],
+      "generator_id": "gen_e2b1e1884db80431",
+      "generator_name": "backstage-idp",
+      "generator_profile": "backstage-idp",
+      "input_digest": "sha256:7b555a85b6fe433f290d2dcbaf41918c3e9d4089aff4375390a8511acad78bb0",
+      "inverse_edit_pointers": [
+        {
+          "confidence": 0.9,
+          "dry_path": "metadata.name",
+          "edit_hint": "Edit metadata.name in catalog-info.yaml.",
+          "owner": "platform-engineer",
+          "wet_path": "Application/metadata/name"
+        },
+        {
+          "confidence": 0.82,
+          "dry_path": "spec.lifecycle",
+          "edit_hint": "Edit spec.lifecycle in catalog-info.yaml and coordinate rollout policy.",
+          "owner": "platform-engineer",
+          "wet_path": "Application/metadata/labels[lifecycle]"
+        }
+      ],
+      "outputs": [
+        {
+          "digest": "\u003cdigest\u003e",
+          "role": "rendered-manifests",
+          "uri": "oci://example.local/platform/backstage-idp:latest"
+        }
+      ],
+      "provenance_id": "\u003cprovenance_id\u003e",
+      "rendered_at": "\u003ctimestamp\u003e",
+      "rendered_object_lineage": [
+        {
+          "kind": "Application",
+          "name": "backstage-idp",
+          "namespace": "apps",
+          "source_dry_path": "metadata.name",
+          "source_path": "catalog-info.yaml"
+        },
+        {
+          "kind": "ConfigMap",
+          "name": "backstage-idp-catalog",
+          "namespace": "apps",
+          "source_dry_path": "spec.lifecycle",
+          "source_path": "catalog-info.yaml"
+        }
+      ],
+      "schema_version": "cub.confighub.io/provenance/v1",
+      "sources": [
+        {
+          "path": "app-config.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "catalog-info.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        }
+      ],
+      "version": "0.1.0"
+    }
+  ],
+  "ref": "HEAD",
+  "render_target_slug": "render-target",
+  "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
+  "target_slug": "backstage",
+  "wet_manifest_targets": [
+    {
+      "generator_id": "gen_e2b1e1884db80431",
+      "kind": "Application",
+      "name": "backstage-idp",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "metadata.name"
+    },
+    {
+      "generator_id": "gen_e2b1e1884db80431",
+      "kind": "ConfigMap",
+      "name": "backstage-idp-catalog",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "spec.lifecycle"
+    }
+  ],
+  "wet_units": [
+    {
+      "id": "wet_ed93b23fac4bc5cf",
+      "kind": "wet-unit",
+      "layer": "wet",
+      "name": "backstage-idp-wet"
+    }
+  ]
+}

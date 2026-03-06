@@ -1,0 +1,6 @@
+app:
+  title: Payments Platform
+  baseUrl: https://payments.internal.example
+
+backend:
+  baseUrl: https://payments.internal.example

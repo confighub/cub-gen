@@ -21,6 +21,7 @@ func TestImportRepoExamples(t *testing.T) {
 		{name: "helm-paas", repoDir: "helm-paas", expectedKind: model.GeneratorHelm, expectedProfile: "helm-paas"},
 		{name: "scoredev-paas", repoDir: "scoredev-paas", expectedKind: model.GeneratorScore, expectedProfile: "scoredev-paas"},
 		{name: "springboot-paas", repoDir: "springboot-paas", expectedKind: model.GeneratorSpringBoot, expectedProfile: "springboot-paas"},
+		{name: "backstage-idp", repoDir: "backstage-idp", expectedKind: model.GeneratorBackstage, expectedProfile: "backstage-idp"},
 	}
 
 	for _, tt := range tests {
@@ -215,6 +216,42 @@ func TestImportRepoSpringBootDryWetContract(t *testing.T) {
 	}
 	if len(result.InversePlans[0].Patches) < 2 {
 		t.Fatalf("expected at least 2 spring inverse patches, got %+v", result.InversePlans[0].Patches)
+	}
+}
+
+func TestImportRepoBackstageDryWetContract(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "backstage-idp")
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+	prov := result.Provenance[0]
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "metadata.name") {
+		t.Fatalf("expected metadata.name field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "spec.lifecycle") {
+		t.Fatalf("expected spec.lifecycle field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHasDryPath(prov.InverseEditPointers, "metadata.name") {
+		t.Fatalf("expected metadata.name inverse pointer, got %+v", prov.InverseEditPointers)
+	}
+
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "catalog-spec", "platform-engineer", "catalog-info.yaml") {
+		t.Fatalf("expected catalog-spec owner to be platform-engineer, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "app-config", "app-team", "app-config.yaml") {
+		t.Fatalf("expected app-config owner to be app-team, got %+v", result.DryInputs)
+	}
+
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "Application", "platform-runtime") {
+		t.Fatalf("expected Application owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "ConfigMap", "platform-runtime") {
+		t.Fatalf("expected ConfigMap owner to be platform-runtime, got %+v", result.WetManifestTargets)
 	}
 }
 

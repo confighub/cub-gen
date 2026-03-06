@@ -89,7 +89,7 @@ func TestVerifyAttestationJSONOutput(t *testing.T) {
 func TestVerifyAttestationJSONOutputFirstThreeTargets(t *testing.T) {
 	setupAliases(t)
 
-	targets := []string{"helm", "score", "spring"}
+	targets := []string{"helm", "score", "spring", "backstage"}
 	for _, target := range targets {
 		t.Run(target, func(t *testing.T) {
 			attJSON, _, err := generateAttestationJSONForTarget("ci-bot", target)
@@ -122,7 +122,7 @@ func TestVerifyAttestationJSONOutputFirstThreeTargets(t *testing.T) {
 func TestVerifyAttestationLinkedJSONOutputFirstThreeTargets(t *testing.T) {
 	setupAliases(t)
 
-	targets := []string{"helm", "score", "spring"}
+	targets := []string{"helm", "score", "spring", "backstage"}
 	for _, target := range targets {
 		t.Run(target, func(t *testing.T) {
 			attJSON, bundleJSON, err := generateAttestationJSONForTarget("ci-bot", target)
