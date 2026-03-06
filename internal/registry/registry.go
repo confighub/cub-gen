@@ -23,6 +23,17 @@ type WetTargetTemplate struct {
 	SourceDryPathTemplate string
 }
 
+type RenderedLineageTemplate struct {
+	Kind                   string
+	NameTemplate           string
+	Namespace              string
+	SourcePathHint         string
+	SourcePathHintFallback string
+	SourcePathHintMulti    bool
+	SourceDryPathTemplate  string
+	Optional               bool
+}
+
 type InversePatchTemplate struct {
 	EditableBy     string
 	Confidence     float64
@@ -49,6 +60,7 @@ type FamilySpec struct {
 	InversePatchTemplates       map[string]InversePatchTemplate
 	InversePointerTemplates     map[string]InversePointerTemplate
 	FieldOriginConfidences      map[string]float64
+	RenderedLineageTemplates    []RenderedLineageTemplate
 	FieldOriginTransform        string
 	FieldOriginOverlayTransform string
 	InputRoleRules              []InputRoleRule
@@ -85,6 +97,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		FieldOriginConfidences: map[string]float64{
 			"image_tag": 0.86,
+		},
+		RenderedLineageTemplates: []RenderedLineageTemplate{
+			{Kind: "HelmRelease", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "chart_path", SourceDryPathTemplate: "Chart.yaml"},
+			{Kind: "Deployment", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "values_paths", SourcePathHintFallback: "chart_path", SourcePathHintMulti: true, SourceDryPathTemplate: "values.image.tag"},
+			{Kind: "Service", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "values_paths", SourcePathHintFallback: "chart_path", SourcePathHintMulti: true, SourceDryPathTemplate: "values.service.port"},
 		},
 		FieldOriginTransform: "helm-template",
 		InputRoleRules: []InputRoleRule{
@@ -133,6 +150,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"image":   0.94,
 			"env_var": 0.90,
 			"port":    0.91,
+		},
+		RenderedLineageTemplates: []RenderedLineageTemplate{
+			{Kind: "Application", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "source_path", SourceDryPathTemplate: "metadata.name"},
+			{Kind: "Deployment", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "source_path", SourceDryPathTemplate: "containers.{{container_name}}.image"},
+			{Kind: "Service", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "source_path", SourceDryPathTemplate: "service.ports.{{service_port_name}}.port"},
 		},
 		FieldOriginTransform: "score-to-k8s",
 		InputRoleRules:       []InputRoleRule{{Role: "score-spec", ExactBasenames: []string{"score.yaml", "score.yml"}}},
@@ -184,6 +206,12 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"server_port_base":    0.92,
 			"server_port_overlay": 0.88,
 			"datasource_url":      0.78,
+		},
+		RenderedLineageTemplates: []RenderedLineageTemplate{
+			{Kind: "Kustomization", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "build_config_path", SourceDryPathTemplate: "build"},
+			{Kind: "Deployment", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "spring.application.name"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-config", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "spring.datasource.url"},
+			{Kind: "Deployment", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "profile_config_path", SourcePathHintFallback: "base_config_path", SourceDryPathTemplate: "server.port"},
 		},
 		FieldOriginTransform:        "spring-config-to-manifest",
 		FieldOriginOverlayTransform: "spring-profile-overlay",
@@ -237,6 +265,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"identity":  0.90,
 			"lifecycle": 0.82,
 		},
+		RenderedLineageTemplates: []RenderedLineageTemplate{
+			{Kind: "Application", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "catalog_path", SourceDryPathTemplate: "metadata.name"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-catalog", Namespace: "apps", SourcePathHint: "catalog_path", SourceDryPathTemplate: "spec.lifecycle"},
+		},
 		FieldOriginTransform: "backstage-component-to-application",
 		InputRoleRules: []InputRoleRule{
 			{Role: "catalog-spec", ExactBasenames: []string{"catalog-info.yaml", "catalog-info.yml"}},
@@ -284,6 +316,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"environment":      0.90,
 			"channels_base":    0.88,
 			"channels_overlay": 0.84,
+		},
+		RenderedLineageTemplates: []RenderedLineageTemplate{
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-ably", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "app.environment"},
+			{Kind: "Secret", NameTemplate: "{{name}}-ably-credentials", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "credentials.api_key_ref"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-ably", Namespace: "apps", SourcePathHint: "overlay_config_path", SourceDryPathTemplate: "channels.inbound", Optional: true},
 		},
 		FieldOriginTransform:        "ably-config-to-runtime",
 		FieldOriginOverlayTransform: "ably-overlay-merge",
@@ -333,6 +370,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"schedule_base":    0.84,
 			"schedule_overlay": 0.80,
 		},
+		RenderedLineageTemplates: []RenderedLineageTemplate{
+			{Kind: "Workflow", NameTemplate: "{{name}}-workflow", Namespace: "ops", SourcePathHint: "base_spec_path", SourceDryPathTemplate: "actions.deploy.image_tag"},
+			{Kind: "Job", NameTemplate: "{{name}}-dry-run", Namespace: "ops", SourcePathHint: "base_spec_path", SourceDryPathTemplate: "triggers.schedule"},
+			{Kind: "Workflow", NameTemplate: "{{name}}-workflow", Namespace: "ops", SourcePathHint: "overlay_spec_path", SourceDryPathTemplate: "triggers.schedule", Optional: true},
+		},
 		FieldOriginTransform:        "ops-workflow-to-argo-workflow",
 		FieldOriginOverlayTransform: "ops-workflow-overlay-merge",
 		InputRoleRules: []InputRoleRule{
@@ -366,6 +408,7 @@ func Spec(kind model.GeneratorKind) (FamilySpec, bool) {
 		InversePatchTemplates:       copyInversePatchTemplates(spec.InversePatchTemplates),
 		InversePointerTemplates:     copyInversePointerTemplates(spec.InversePointerTemplates),
 		FieldOriginConfidences:      copyFieldOriginConfidences(spec.FieldOriginConfidences),
+		RenderedLineageTemplates:    copyRenderedLineageTemplates(spec.RenderedLineageTemplates),
 		FieldOriginTransform:        spec.FieldOriginTransform,
 		FieldOriginOverlayTransform: spec.FieldOriginOverlayTransform,
 		InputRoleRules:              copyInputRoleRules(spec.InputRoleRules),
@@ -582,6 +625,14 @@ func WetTargetTemplates(kind model.GeneratorKind) []WetTargetTemplate {
 	return copyWetTargets(spec.WetTargets)
 }
 
+func RenderedLineageTemplates(kind model.GeneratorKind) []RenderedLineageTemplate {
+	spec, ok := Spec(kind)
+	if !ok {
+		return nil
+	}
+	return copyRenderedLineageTemplates(spec.RenderedLineageTemplates)
+}
+
 func matchesInputRule(rule InputRoleRule, base, ext string) bool {
 	for _, exact := range rule.ExactBasenames {
 		if base == strings.ToLower(exact) {
@@ -702,6 +753,23 @@ func copyFieldOriginConfidences(in map[string]float64) map[string]float64 {
 	out := make(map[string]float64, len(in))
 	for k, v := range in {
 		out[k] = v
+	}
+	return out
+}
+
+func copyRenderedLineageTemplates(in []RenderedLineageTemplate) []RenderedLineageTemplate {
+	out := make([]RenderedLineageTemplate, 0, len(in))
+	for _, tpl := range in {
+		out = append(out, RenderedLineageTemplate{
+			Kind:                   tpl.Kind,
+			NameTemplate:           tpl.NameTemplate,
+			Namespace:              tpl.Namespace,
+			SourcePathHint:         tpl.SourcePathHint,
+			SourcePathHintFallback: tpl.SourcePathHintFallback,
+			SourcePathHintMulti:    tpl.SourcePathHintMulti,
+			SourceDryPathTemplate:  tpl.SourceDryPathTemplate,
+			Optional:               tpl.Optional,
+		})
 	}
 	return out
 }

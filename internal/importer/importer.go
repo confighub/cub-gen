@@ -910,83 +910,134 @@ func valuesPathsForGenerator(g model.GeneratorDetection) []string {
 }
 
 func renderedLineageForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.RenderedObjectLineage {
+	templates := registry.RenderedLineageTemplates(g.Kind)
+	if len(templates) == 0 {
+		return nil
+	}
+	vars, singleHints, multiHints := lineageTemplateContext(detection, g)
+
+	lineage := make([]model.RenderedObjectLineage, 0, len(templates))
+	for i := 0; i < len(templates); i++ {
+		tpl := templates[i]
+		if tpl.SourcePathHintMulti {
+			// Preserve legacy order for repeated-source templates:
+			// emit all contiguous templates per source path before moving on.
+			j := i + 1
+			for j < len(templates) {
+				next := templates[j]
+				if !next.SourcePathHintMulti ||
+					next.SourcePathHint != tpl.SourcePathHint ||
+					next.SourcePathHintFallback != tpl.SourcePathHintFallback {
+					break
+				}
+				j++
+			}
+
+			sourcePaths := lineageSourcePathsForTemplate(tpl, singleHints, multiHints)
+			if len(sourcePaths) > 0 {
+				for _, sourcePath := range sourcePaths {
+					for k := i; k < j; k++ {
+						groupTpl := templates[k]
+						if strings.TrimSpace(sourcePath) == "" && groupTpl.Optional {
+							continue
+						}
+						lineage = append(lineage, model.RenderedObjectLineage{
+							Kind:          groupTpl.Kind,
+							Name:          renderTargetTemplate(groupTpl.NameTemplate, vars),
+							Namespace:     groupTpl.Namespace,
+							SourcePath:    sourcePath,
+							SourceDryPath: renderTargetTemplate(groupTpl.SourceDryPathTemplate, vars),
+						})
+					}
+				}
+			}
+
+			i = j - 1
+			continue
+		}
+
+		sourcePaths := lineageSourcePathsForTemplate(tpl, singleHints, multiHints)
+		if len(sourcePaths) == 0 {
+			continue
+		}
+
+		name := renderTargetTemplate(tpl.NameTemplate, vars)
+		sourceDryPath := renderTargetTemplate(tpl.SourceDryPathTemplate, vars)
+		for _, sourcePath := range sourcePaths {
+			if strings.TrimSpace(sourcePath) == "" && tpl.Optional {
+				continue
+			}
+			lineage = append(lineage, model.RenderedObjectLineage{
+				Kind:          tpl.Kind,
+				Name:          name,
+				Namespace:     tpl.Namespace,
+				SourcePath:    sourcePath,
+				SourceDryPath: sourceDryPath,
+			})
+		}
+	}
+	return lineage
+}
+
+func lineageTemplateContext(detection model.DetectionResult, g model.GeneratorDetection) (map[string]string, map[string]string, map[string][]string) {
+	vars := map[string]string{"name": g.Name}
+	singleHints := map[string]string{}
+	multiHints := map[string][]string{}
+
 	switch g.Kind {
 	case model.GeneratorHelm:
 		chart := chartPathForGenerator(g)
 		values := valuesPathsForGenerator(g)
-		if len(values) == 0 {
-			// Fall back to chart path if no values files were detected.
-			if chart != "" {
-				values = []string{chart}
-			}
+		if len(values) == 0 && chart != "" {
+			values = []string{chart}
 		}
-		lineage := []model.RenderedObjectLineage{
-			{Kind: "HelmRelease", Name: g.Name, Namespace: "apps", SourcePath: chart, SourceDryPath: "Chart.yaml"},
-		}
-		for _, vp := range values {
-			lineage = append(lineage,
-				model.RenderedObjectLineage{Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: vp, SourceDryPath: "values.image.tag"},
-				model.RenderedObjectLineage{Kind: "Service", Name: g.Name, Namespace: "apps", SourcePath: vp, SourceDryPath: "values.service.port"},
-			)
-		}
-		return lineage
+		singleHints["chart_path"] = chart
+		multiHints["values_paths"] = values
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
-		return []model.RenderedObjectLineage{
-			{Kind: "Application", Name: g.Name, Namespace: "apps", SourcePath: hints.SourcePath, SourceDryPath: "metadata.name"},
-			{Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: hints.SourcePath, SourceDryPath: fmt.Sprintf("containers.%s.image", hints.ContainerName)},
-			{Kind: "Service", Name: g.Name, Namespace: "apps", SourcePath: hints.SourcePath, SourceDryPath: fmt.Sprintf("service.ports.%s.port", hints.ServicePortName)},
-		}
+		singleHints["source_path"] = hints.SourcePath
+		vars["container_name"] = hints.ContainerName
+		vars["service_port_name"] = hints.ServicePortName
 	case model.GeneratorSpringBoot:
 		hints := springPathHintsFromInputs(g.Inputs)
-		lineage := []model.RenderedObjectLineage{
-			{Kind: "Kustomization", Name: g.Name, Namespace: "apps", SourcePath: hints.BuildConfigPath, SourceDryPath: "build"},
-			{Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: hints.BaseConfigPath, SourceDryPath: "spring.application.name"},
-			{Kind: "ConfigMap", Name: g.Name + "-config", Namespace: "apps", SourcePath: hints.BaseConfigPath, SourceDryPath: "spring.datasource.url"},
-		}
-		if hints.ProfileConfigPath != "" {
-			lineage = append(lineage, model.RenderedObjectLineage{
-				Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: hints.ProfileConfigPath, SourceDryPath: "server.port",
-			})
-		} else {
-			lineage = append(lineage, model.RenderedObjectLineage{
-				Kind: "Deployment", Name: g.Name, Namespace: "apps", SourcePath: hints.BaseConfigPath, SourceDryPath: "server.port",
-			})
-		}
-		return lineage
+		singleHints["build_config_path"] = hints.BuildConfigPath
+		singleHints["base_config_path"] = hints.BaseConfigPath
+		singleHints["profile_config_path"] = hints.ProfileConfigPath
 	case model.GeneratorBackstage:
 		hints := backstagePathHintsFromInputs(g.Inputs)
-		return []model.RenderedObjectLineage{
-			{Kind: "Application", Name: g.Name, Namespace: "apps", SourcePath: hints.CatalogPath, SourceDryPath: "metadata.name"},
-			{Kind: "ConfigMap", Name: g.Name + "-catalog", Namespace: "apps", SourcePath: hints.CatalogPath, SourceDryPath: "spec.lifecycle"},
-		}
+		singleHints["catalog_path"] = hints.CatalogPath
 	case model.GeneratorAbly:
 		hints := ablyPathHintsFromInputs(g.Inputs)
-		lineage := []model.RenderedObjectLineage{
-			{Kind: "ConfigMap", Name: g.Name + "-ably", Namespace: "apps", SourcePath: hints.BaseConfigPath, SourceDryPath: "app.environment"},
-			{Kind: "Secret", Name: g.Name + "-ably-credentials", Namespace: "apps", SourcePath: hints.BaseConfigPath, SourceDryPath: "credentials.api_key_ref"},
-		}
-		if hints.OverlayConfigPath != "" {
-			lineage = append(lineage, model.RenderedObjectLineage{
-				Kind: "ConfigMap", Name: g.Name + "-ably", Namespace: "apps", SourcePath: hints.OverlayConfigPath, SourceDryPath: "channels.inbound",
-			})
-		}
-		return lineage
+		singleHints["base_config_path"] = hints.BaseConfigPath
+		singleHints["overlay_config_path"] = hints.OverlayConfigPath
 	case model.GeneratorOpsFlow:
 		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
-		lineage := []model.RenderedObjectLineage{
-			{Kind: "Workflow", Name: g.Name + "-workflow", Namespace: "ops", SourcePath: hints.BaseSpecPath, SourceDryPath: "actions.deploy.image_tag"},
-			{Kind: "Job", Name: g.Name + "-dry-run", Namespace: "ops", SourcePath: hints.BaseSpecPath, SourceDryPath: "triggers.schedule"},
+		singleHints["base_spec_path"] = hints.BaseSpecPath
+		singleHints["overlay_spec_path"] = hints.OverlaySpecPath
+	}
+
+	return vars, singleHints, multiHints
+}
+
+func lineageSourcePathsForTemplate(tpl registry.RenderedLineageTemplate, singleHints map[string]string, multiHints map[string][]string) []string {
+	if tpl.SourcePathHintMulti {
+		sourcePaths := append([]string(nil), multiHints[tpl.SourcePathHint]...)
+		if len(sourcePaths) == 0 && tpl.SourcePathHintFallback != "" {
+			if fallback := strings.TrimSpace(singleHints[tpl.SourcePathHintFallback]); fallback != "" {
+				sourcePaths = []string{fallback}
+			}
 		}
-		if hints.OverlaySpecPath != "" {
-			lineage = append(lineage, model.RenderedObjectLineage{
-				Kind: "Workflow", Name: g.Name + "-workflow", Namespace: "ops", SourcePath: hints.OverlaySpecPath, SourceDryPath: "triggers.schedule",
-			})
-		}
-		return lineage
-	default:
+		return sourcePaths
+	}
+
+	sourcePath := strings.TrimSpace(singleHints[tpl.SourcePathHint])
+	if sourcePath == "" && tpl.SourcePathHintFallback != "" {
+		sourcePath = strings.TrimSpace(singleHints[tpl.SourcePathHintFallback])
+	}
+	if sourcePath == "" && tpl.Optional {
 		return nil
 	}
+	return []string{sourcePath}
 }
 
 type springHints struct {

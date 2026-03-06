@@ -55,6 +55,7 @@ Implemented in this preview slice:
 37. Refactored provenance `field_origin_map.confidence` values into registry-driven templates (`FieldOriginConfidences`) to remove importer-local confidence literals while preserving output behavior.
 38. Refactored inverse edit pointer ownership/confidence defaults into registry-driven templates (`InversePointerTemplates`) to remove importer-local policy literals while preserving output behavior.
 39. Added `cub-gen generators --json --details` to expose registry-backed policy/provenance templates (`inverse_patch_templates`, `inverse_pointer_templates`, `field_origin_confidences`) for transparent family introspection.
+40. Refactored rendered object lineage definitions into registry-driven templates (`RenderedLineageTemplates`), removing importer-local per-family lineage literals while preserving output behavior.
 
 ## v0.2 preview invariants
 

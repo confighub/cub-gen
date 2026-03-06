@@ -93,6 +93,9 @@ func TestRegistryFallbacks(t *testing.T) {
 	if got := InverseEditHint(unknown, "image_tag", "fallback-hint"); got != "fallback-hint" {
 		t.Fatalf("expected inverse edit hint fallback fallback-hint, got %q", got)
 	}
+	if got := RenderedLineageTemplates(unknown); got != nil {
+		t.Fatalf("expected rendered lineage templates fallback nil, got %+v", got)
+	}
 	if got := InputRole(unknown, "any.yaml"); got != "input" {
 		t.Fatalf("expected input role fallback input, got %q", got)
 	}
@@ -184,6 +187,19 @@ func TestRegistryWetTargetTemplates(t *testing.T) {
 	again := WetTargetTemplates(model.GeneratorScore)
 	if again[0].Kind != "Application" {
 		t.Fatalf("expected immutable template copy, got %+v", again[0])
+	}
+
+	springLineage := RenderedLineageTemplates(model.GeneratorSpringBoot)
+	if len(springLineage) != 4 {
+		t.Fatalf("expected 4 spring rendered lineage templates, got %d", len(springLineage))
+	}
+	if springLineage[3].SourcePathHint != "profile_config_path" || springLineage[3].SourcePathHintFallback != "base_config_path" {
+		t.Fatalf("unexpected spring profile lineage template: %+v", springLineage[3])
+	}
+	springLineage[0].Kind = "Mutated"
+	againLineage := RenderedLineageTemplates(model.GeneratorSpringBoot)
+	if againLineage[0].Kind != "Kustomization" {
+		t.Fatalf("expected immutable rendered lineage template copy, got %+v", againLineage[0])
 	}
 }
 
