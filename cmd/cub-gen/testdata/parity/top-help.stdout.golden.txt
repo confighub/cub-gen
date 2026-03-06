@@ -16,8 +16,14 @@ GitOps parity examples:
   cub-gen gitops cleanup --space my-space ./examples/helm-paas
   cub-gen gitops import --space my-space --json ./examples/helm-paas local-renderer | cub-gen publish --in -
   cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas
+  cub-gen publish --space my-space ./examples/scoredev-paas ./examples/scoredev-paas
+  cub-gen publish --space my-space ./examples/springboot-paas ./examples/springboot-paas
   cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen verify --in -
+  cub-gen publish --space my-space ./examples/scoredev-paas ./examples/scoredev-paas | cub-gen verify --in -
+  cub-gen publish --space my-space ./examples/springboot-paas ./examples/springboot-paas | cub-gen verify --in -
   cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot
+  cub-gen publish --space my-space ./examples/scoredev-paas ./examples/scoredev-paas | cub-gen attest --in - --verifier ci-bot
+  cub-gen publish --space my-space ./examples/springboot-paas ./examples/springboot-paas | cub-gen attest --in - --verifier ci-bot
   cub-gen verify-attestation --in attestation.json --bundle bundle.json
 
 Note: gitops commands are local-only prototypes that mirror cub gitops stages.
