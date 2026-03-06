@@ -32,6 +32,7 @@ type FamilySpec struct {
 	ResourceType     string
 	Capabilities     []string
 	RoleSchemaRefs   map[string]string
+	HintDefaults     map[string]string
 	InputRoleRules   []InputRoleRule
 	DefaultInputRole string
 	RoleOwners       map[string]string
@@ -49,6 +50,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		RoleSchemaRefs: map[string]string{
 			"chart": "https://json.schemastore.org/chart",
 		},
+		HintDefaults: map[string]string{
+			"chart_path": "Chart.yaml",
+		},
 		InputRoleRules: []InputRoleRule{
 			{Role: "chart", ExactBasenames: []string{"chart.yaml"}},
 			{Role: "values", Prefixes: []string{"values"}, Extensions: []string{".yaml", ".yml"}},
@@ -63,12 +67,18 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 	},
 	model.GeneratorScore: {
-		Kind:             model.GeneratorScore,
-		Profile:          "scoredev-paas",
-		ResourceKind:     "Application",
-		ResourceType:     "argoproj.io/v1alpha1/Application",
-		Capabilities:     []string{"render-manifests", "workload-spec", "inverse-score-patch"},
-		RoleSchemaRefs:   map[string]string{"score-spec": "https://docs.score.dev/schemas/score-v1b1.json"},
+		Kind:           model.GeneratorScore,
+		Profile:        "scoredev-paas",
+		ResourceKind:   "Application",
+		ResourceType:   "argoproj.io/v1alpha1/Application",
+		Capabilities:   []string{"render-manifests", "workload-spec", "inverse-score-patch"},
+		RoleSchemaRefs: map[string]string{"score-spec": "https://docs.score.dev/schemas/score-v1b1.json"},
+		HintDefaults: map[string]string{
+			"source_path":       "score.yaml",
+			"container_name":    "main",
+			"variable_name":     "LOG_LEVEL",
+			"service_port_name": "web",
+		},
 		InputRoleRules:   []InputRoleRule{{Role: "score-spec", ExactBasenames: []string{"score.yaml", "score.yml"}}},
 		DefaultInputRole: "score-input",
 		DefaultOwner:     "app-team",
@@ -87,6 +97,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		RoleSchemaRefs: map[string]string{
 			"app-config-base":    "https://json.schemastore.org/spring-configuration-metadata",
 			"app-config-profile": "https://json.schemastore.org/spring-configuration-metadata",
+		},
+		HintDefaults: map[string]string{
+			"build_config_path": "pom.xml",
+			"base_config_path":  "src/main/resources/application.yaml",
 		},
 		InputRoleRules: []InputRoleRule{
 			{Role: "build-config", ExactBasenames: []string{"pom.xml", "build.gradle", "build.gradle.kts"}},
@@ -115,6 +129,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"catalog-spec": "https://json.schemastore.org/backstage-catalog-info",
 			"app-config":   "https://json.schemastore.org/backstage-app-config",
 		},
+		HintDefaults: map[string]string{
+			"catalog_path": "catalog-info.yaml",
+		},
 		InputRoleRules: []InputRoleRule{
 			{Role: "catalog-spec", ExactBasenames: []string{"catalog-info.yaml", "catalog-info.yml"}},
 			{Role: "app-config", ExactBasenames: []string{"app-config.yaml", "app-config.yml"}},
@@ -137,6 +154,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"provider-config-base":    "https://schema.confighub.dev/generators/ably-config-v1",
 			"provider-config-overlay": "https://schema.confighub.dev/generators/ably-config-v1",
 		},
+		HintDefaults: map[string]string{
+			"base_config_path": "ably.yaml",
+		},
 		InputRoleRules: []InputRoleRule{
 			{Role: "provider-config-base", ExactBasenames: []string{"ably.yaml", "ably.yml", "ably.json"}},
 			{Role: "provider-config-overlay", Prefixes: []string{"ably-"}, Extensions: []string{".yaml", ".yml", ".json"}},
@@ -157,6 +177,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		RoleSchemaRefs: map[string]string{
 			"operations-base":    "https://schema.confighub.dev/generators/ops-workflow-v1",
 			"operations-overlay": "https://schema.confighub.dev/generators/ops-workflow-v1",
+		},
+		HintDefaults: map[string]string{
+			"base_spec_path": "operations.yaml",
 		},
 		InputRoleRules: []InputRoleRule{
 			{Role: "operations-base", ExactBasenames: []string{"operations.yaml", "operations.yml", "workflow.yaml", "workflow.yml"}},
@@ -183,6 +206,7 @@ func Spec(kind model.GeneratorKind) (FamilySpec, bool) {
 		ResourceType:     spec.ResourceType,
 		Capabilities:     append([]string(nil), spec.Capabilities...),
 		RoleSchemaRefs:   copyRoleSchemaRefs(spec.RoleSchemaRefs),
+		HintDefaults:     copyHintDefaults(spec.HintDefaults),
 		InputRoleRules:   copyInputRoleRules(spec.InputRoleRules),
 		DefaultInputRole: spec.DefaultInputRole,
 		RoleOwners:       copyRoleOwners(spec.RoleOwners),
@@ -221,6 +245,17 @@ func Capabilities(kind model.GeneratorKind) []string {
 		return []string{"render-manifests"}
 	}
 	return append([]string(nil), spec.Capabilities...)
+}
+
+func HintDefault(kind model.GeneratorKind, key, fallback string) string {
+	spec, ok := Spec(kind)
+	if !ok {
+		return fallback
+	}
+	if v, ok := spec.HintDefaults[key]; ok && strings.TrimSpace(v) != "" {
+		return v
+	}
+	return fallback
 }
 
 func SchemaRef(kind model.GeneratorKind, inputPath string) string {
@@ -357,6 +392,17 @@ func copyRoleOwners(in map[string]string) map[string]string {
 }
 
 func copyRoleSchemaRefs(in map[string]string) map[string]string {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func copyHintDefaults(in map[string]string) map[string]string {
 	if in == nil {
 		return nil
 	}

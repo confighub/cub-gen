@@ -65,6 +65,9 @@ func TestRegistryFallbacks(t *testing.T) {
 	if got := Capabilities(unknown); !reflect.DeepEqual(got, []string{"render-manifests"}) {
 		t.Fatalf("expected capabilities fallback render-manifests, got %+v", got)
 	}
+	if got := HintDefault(unknown, "source_path", "default.yaml"); got != "default.yaml" {
+		t.Fatalf("expected hint default fallback default.yaml, got %q", got)
+	}
 	if got := InputRole(unknown, "any.yaml"); got != "input" {
 		t.Fatalf("expected input role fallback input, got %q", got)
 	}
@@ -156,5 +159,24 @@ func TestRegistryWetTargetTemplates(t *testing.T) {
 	again := WetTargetTemplates(model.GeneratorScore)
 	if again[0].Kind != "Application" {
 		t.Fatalf("expected immutable template copy, got %+v", again[0])
+	}
+}
+
+func TestRegistryHintDefaults(t *testing.T) {
+	if got := HintDefault(model.GeneratorScore, "source_path", "fallback.yaml"); got != "score.yaml" {
+		t.Fatalf("expected score source_path hint default score.yaml, got %q", got)
+	}
+	if got := HintDefault(model.GeneratorSpringBoot, "base_config_path", "fallback.yaml"); got != "src/main/resources/application.yaml" {
+		t.Fatalf("expected spring base_config_path hint default, got %q", got)
+	}
+
+	// Ensure returned specs are copies.
+	spec, ok := Spec(model.GeneratorScore)
+	if !ok {
+		t.Fatalf("expected score spec")
+	}
+	spec.HintDefaults["source_path"] = "mutated.yaml"
+	if got := HintDefault(model.GeneratorScore, "source_path", "fallback.yaml"); got != "score.yaml" {
+		t.Fatalf("expected immutable hint defaults, got %q", got)
 	}
 }

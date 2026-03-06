@@ -606,10 +606,10 @@ type scoreHints struct {
 
 func scorePathHintsFromInputs(repo string, inputs []string) scoreHints {
 	h := scoreHints{
-		SourcePath:      "score.yaml",
-		ContainerName:   "main",
-		VariableName:    "LOG_LEVEL",
-		ServicePortName: "web",
+		SourcePath:      registry.HintDefault(model.GeneratorScore, "source_path", "score.yaml"),
+		ContainerName:   registry.HintDefault(model.GeneratorScore, "container_name", "main"),
+		VariableName:    registry.HintDefault(model.GeneratorScore, "variable_name", "LOG_LEVEL"),
+		ServicePortName: registry.HintDefault(model.GeneratorScore, "service_port_name", "web"),
 	}
 
 	scorePath := firstScoreInputPath(inputs)
@@ -879,8 +879,8 @@ type springHints struct {
 
 func springPathHintsFromInputs(inputs []string) springHints {
 	h := springHints{
-		BuildConfigPath: "pom.xml",
-		BaseConfigPath:  "src/main/resources/application.yaml",
+		BuildConfigPath: registry.HintDefault(model.GeneratorSpringBoot, "build_config_path", "pom.xml"),
+		BaseConfigPath:  registry.HintDefault(model.GeneratorSpringBoot, "base_config_path", "src/main/resources/application.yaml"),
 	}
 
 	for _, in := range inputs {
@@ -906,7 +906,7 @@ func springPathHintsFromInputs(inputs []string) springHints {
 		if h.ProfileConfigPath != "" {
 			h.BaseConfigPath = h.ProfileConfigPath
 		} else {
-			h.BaseConfigPath = "src/main/resources/application.yaml"
+			h.BaseConfigPath = registry.HintDefault(model.GeneratorSpringBoot, "base_config_path", "src/main/resources/application.yaml")
 		}
 	}
 	return h
@@ -926,7 +926,7 @@ type backstageHints struct {
 
 func backstagePathHintsFromInputs(inputs []string) backstageHints {
 	h := backstageHints{
-		CatalogPath: "catalog-info.yaml",
+		CatalogPath: registry.HintDefault(model.GeneratorBackstage, "catalog_path", "catalog-info.yaml"),
 	}
 	for _, in := range inputs {
 		p := filepath.ToSlash(in)
@@ -948,7 +948,7 @@ type ablyHints struct {
 
 func ablyPathHintsFromInputs(inputs []string) ablyHints {
 	h := ablyHints{
-		BaseConfigPath: "ably.yaml",
+		BaseConfigPath: registry.HintDefault(model.GeneratorAbly, "base_config_path", "ably.yaml"),
 	}
 	for _, in := range inputs {
 		p := filepath.ToSlash(in)
@@ -979,7 +979,7 @@ type opsWorkflowHints struct {
 
 func opsWorkflowPathHintsFromInputs(inputs []string) opsWorkflowHints {
 	h := opsWorkflowHints{
-		BaseSpecPath: "operations.yaml",
+		BaseSpecPath: registry.HintDefault(model.GeneratorOpsFlow, "base_spec_path", "operations.yaml"),
 	}
 	for _, in := range inputs {
 		p := filepath.ToSlash(in)
