@@ -12,6 +12,7 @@ import (
 	"github.com/confighub/cub-gen/internal/detect"
 	gitopsflow "github.com/confighub/cub-gen/internal/gitops"
 	"github.com/confighub/cub-gen/internal/importer"
+	"github.com/confighub/cub-gen/internal/publish"
 )
 
 func main() {
@@ -35,6 +36,8 @@ func run(args []string) error {
 		return runDetect(args[1:])
 	case "import":
 		return runLegacyImport(args[1:])
+	case "publish":
+		return runPublish(args[1:])
 	case "gitops":
 		return runGitOps(args[1:])
 	default:
@@ -99,6 +102,56 @@ func runLegacyImport(args []string) error {
 	}()
 
 	return writeJSON(f, result, *pretty)
+}
+
+func runPublish(args []string) error {
+	fs := flag.NewFlagSet("publish", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	in := fs.String("in", "-", "ImportFlow JSON input path, or '-' for stdin")
+	out := fs.String("out", "-", "Bundle JSON output path, or '-' for stdout")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	if fs.NArg() != 0 {
+		return errors.New("usage: cub-gen publish [flags]")
+	}
+
+	var inputBytes []byte
+	var err error
+	if *in == "-" {
+		inputBytes, err = io.ReadAll(os.Stdin)
+		if err != nil {
+			return fmt.Errorf("read stdin: %w", err)
+		}
+	} else {
+		inputBytes, err = os.ReadFile(*in)
+		if err != nil {
+			return fmt.Errorf("read input file: %w", err)
+		}
+	}
+
+	var imported gitopsflow.ImportFlowResult
+	if err := json.Unmarshal(inputBytes, &imported); err != nil {
+		return fmt.Errorf("parse import flow json: %w", err)
+	}
+
+	bundle := publish.BuildBundle(imported)
+	if *out == "-" {
+		return writeJSON(os.Stdout, bundle, *pretty)
+	}
+
+	f, err := os.Create(*out)
+	if err != nil {
+		return fmt.Errorf("create output file: %w", err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	return writeJSON(f, bundle, *pretty)
 }
 
 func runGitOps(args []string) error {
@@ -284,12 +337,14 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintln(out, "  cub-gen detect [--repo PATH] [--ref REF] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen import [--repo PATH] [--ref REF] [--space SPACE] [--out FILE|-] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen publish [--in FILE|-] [--out FILE|-] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "GitOps parity examples:")
 	fmt.Fprintln(out, "  cub-gen gitops discover --space my-space ./examples/helm-paas")
 	fmt.Fprintln(out, "  cub-gen gitops import --space my-space ./examples/helm-paas local-renderer")
 	fmt.Fprintln(out, "  cub-gen gitops cleanup --space my-space ./examples/helm-paas")
+	fmt.Fprintln(out, "  cub-gen gitops import --space my-space --json ./examples/helm-paas local-renderer | cub-gen publish --in -")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Note: gitops commands are local-only prototypes that mirror cub gitops stages.")
 }

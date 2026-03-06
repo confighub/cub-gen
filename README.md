@@ -63,6 +63,19 @@ go build ./cmd/cub-gen
 ./cub-gen gitops cleanup --space platform ./examples/springboot-paas
 ```
 
+### Optional bridge artifact (local, no backend)
+
+Generate a ConfigHub-ready change bundle from import output:
+
+```bash
+./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+  | ./cub-gen publish --in - --out - \
+  | jq '{schema_version,source,change_id,summary}'
+```
+
+This emits a deterministic `change-bundle` JSON envelope you can upload later,
+without coupling the core flow to a running ConfigHub backend.
+
 ## Plain-English collaboration story
 
 A practical app-team/platform-team path in a Spring Boot repo:
