@@ -37,6 +37,10 @@ func TestPublishGoldenFromImport(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "publish-from-import.golden.json"), got)
 }
 
+func TestPublishGoldenDirectHelm(t *testing.T) {
+	assertPublishDirectGolden(t, "helm", filepath.Join("testdata", "parity", "publish-direct-helm.golden.json"))
+}
+
 func TestPublishGoldenDirectScore(t *testing.T) {
 	assertPublishDirectGolden(t, "score", filepath.Join("testdata", "parity", "publish-direct-score.golden.json"))
 }

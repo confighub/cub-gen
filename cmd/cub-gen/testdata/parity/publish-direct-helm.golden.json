@@ -1,0 +1,288 @@
+{
+  "bundle_digest": "\u003cbundle_digest\u003e",
+  "change_id": "\u003cchange_id\u003e",
+  "contracts": [
+    {
+      "capabilities": [
+        "render-manifests",
+        "values-overrides",
+        "inverse-values-patch"
+      ],
+      "deterministic": true,
+      "generator_id": "gen_635643e45fbf3410",
+      "inputs": [
+        {
+          "name": "input_01",
+          "required": true,
+          "schema_ref": "https://json.schemastore.org/chart"
+        },
+        {
+          "name": "input_02",
+          "required": true,
+          "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+        },
+        {
+          "name": "input_03",
+          "required": true,
+          "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+        }
+      ],
+      "kind": "helm",
+      "name": "helm-paas",
+      "output_format": "kubernetes/yaml",
+      "profile": "helm-paas",
+      "schema_version": "cub.confighub.io/generator-contract/v1",
+      "source_path": "",
+      "source_ref": "HEAD",
+      "source_repo": "\u003ctarget_path\u003e",
+      "transport": "oci+git",
+      "version": "0.1.0"
+    }
+  ],
+  "digest_algorithm": "sha256",
+  "discovered": [
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "generator_kind": "helm",
+      "generator_profile": "helm-paas",
+      "inputs": [
+        "Chart.yaml",
+        "values-prod.yaml",
+        "values.yaml"
+      ],
+      "resource_body": "kind: HelmRelease\nmetadata:\n  name: helm-paas\nspec:\n  root: \n",
+      "resource_kind": "HelmRelease",
+      "resource_name": "helm-paas",
+      "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease",
+      "root": ""
+    }
+  ],
+  "dry_inputs": [
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "owner": "platform-engineer",
+      "path": "Chart.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "chart"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "owner": "app-team",
+      "path": "values-prod.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "values"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "owner": "app-team",
+      "path": "values.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "values"
+    }
+  ],
+  "dry_units": [
+    {
+      "id": "dry_55f23c7293f5bf86",
+      "kind": "dry-unit",
+      "layer": "dry",
+      "name": "helm-paas-dry"
+    }
+  ],
+  "generated_at": "\u003ctimestamp\u003e",
+  "generator_units": [
+    {
+      "id": "gen_70b4d2ade0642f1c",
+      "kind": "generator-unit",
+      "layer": "generator",
+      "name": "helm-paas-generator"
+    }
+  ],
+  "inverse_transform_plans": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "created_at": "\u003ctimestamp\u003e",
+      "patches": [
+        {
+          "confidence": 0.86,
+          "dry_path": "values.image.tag",
+          "editable_by": "app-team",
+          "op": "replace",
+          "reason": "Container image tag maps cleanly to helm values.",
+          "requires_review": false,
+          "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+        }
+      ],
+      "plan_id": "\u003cplan_id\u003e",
+      "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+      "source_kind": "helm",
+      "source_ref": "",
+      "status": "draft",
+      "target_unit_id": "dry_55f23c7293f5bf86"
+    }
+  ],
+  "links": [
+    {
+      "dry_unit_id": "dry_55f23c7293f5bf86",
+      "generator_unit_id": "gen_70b4d2ade0642f1c",
+      "wet_unit_id": "wet_b4595877225309fc"
+    }
+  ],
+  "provenance": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "chart_path": "Chart.yaml",
+      "field_origin_map": [
+        {
+          "confidence": 0.86,
+          "dry_path": "values.image.tag",
+          "source_path": "values.yaml",
+          "transform": "helm-template",
+          "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+        }
+      ],
+      "generator_id": "gen_635643e45fbf3410",
+      "generator_name": "helm-paas",
+      "generator_profile": "helm-paas",
+      "input_digest": "sha256:0ceaab864fc2c01e0d45011864aa2f8bbe3e1f9a6f2a4bc81b1d4d667dbd6ba9",
+      "inverse_edit_pointers": [
+        {
+          "confidence": 0.86,
+          "dry_path": "values.image.tag",
+          "edit_hint": "Edit chart values file and keep chart template unchanged.",
+          "owner": "app-team",
+          "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+        }
+      ],
+      "outputs": [
+        {
+          "digest": "\u003cdigest\u003e",
+          "role": "rendered-manifests",
+          "uri": "oci://example.local/platform/helm-paas:latest"
+        }
+      ],
+      "provenance_id": "\u003cprovenance_id\u003e",
+      "rendered_at": "\u003ctimestamp\u003e",
+      "rendered_object_lineage": [
+        {
+          "kind": "HelmRelease",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "Chart.yaml",
+          "source_path": "Chart.yaml"
+        },
+        {
+          "kind": "Deployment",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "values.image.tag",
+          "source_path": "values-prod.yaml"
+        },
+        {
+          "kind": "Service",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "values.service.port",
+          "source_path": "values-prod.yaml"
+        },
+        {
+          "kind": "Deployment",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "values.image.tag",
+          "source_path": "values.yaml"
+        },
+        {
+          "kind": "Service",
+          "name": "helm-paas",
+          "namespace": "apps",
+          "source_dry_path": "values.service.port",
+          "source_path": "values.yaml"
+        }
+      ],
+      "schema_version": "cub.confighub.io/provenance/v1",
+      "sources": [
+        {
+          "path": "Chart.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "values-prod.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "values.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        }
+      ],
+      "values_paths": [
+        "values-prod.yaml",
+        "values.yaml"
+      ],
+      "version": "0.1.0"
+    }
+  ],
+  "ref": "HEAD",
+  "render_target_slug": "render-target",
+  "schema_version": "cub.confighub.io/change-bundle/v1",
+  "source": "cub-gen",
+  "space": "platform",
+  "summary": {
+    "contracts": 1,
+    "discovered_resources": 1,
+    "dry_inputs": 3,
+    "dry_units": 1,
+    "generator_profiles": [
+      "helm-paas"
+    ],
+    "generator_units": 1,
+    "inverse_transform_plans": 1,
+    "links": 1,
+    "provenance_records": 1,
+    "wet_manifest_targets": 3,
+    "wet_units": 1
+  },
+  "target_path": "\u003ctarget_path\u003e",
+  "target_slug": "helm",
+  "wet_manifest_targets": [
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "kind": "HelmRelease",
+      "name": "helm-paas",
+      "namespace": "apps",
+      "owner": "platform-runtime"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "kind": "Deployment",
+      "name": "helm-paas",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "values.image.tag"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "kind": "Service",
+      "name": "helm-paas",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "values.service.port"
+    }
+  ],
+  "wet_units": [
+    {
+      "id": "wet_b4595877225309fc",
+      "kind": "wet-unit",
+      "layer": "wet",
+      "name": "helm-paas-wet"
+    }
+  ]
+}

@@ -18,7 +18,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 ### Tier 2: parity/golden
 
 - CLI output contract tests in `cmd/cub-gen/gitops_parity_test.go`.
-- Bridge publish golden locks in `cmd/cub-gen/publish_parity_test.go` (import path + direct score/spring paths).
+- Bridge publish golden locks in `cmd/cub-gen/publish_parity_test.go` (import path + direct helm/score/spring paths).
 - Verify command behavior tests in `cmd/cub-gen/verify_command_test.go`.
 - Verify command golden locks in `cmd/cub-gen/verify_parity_test.go`.
 - Attest command behavior tests in `cmd/cub-gen/attest_command_test.go`.
