@@ -55,6 +55,54 @@ func TestGeneratorsGoldenJSONCapabilityFilter(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "generators-capability-ops.golden.json"), got)
 }
 
+func TestGeneratorsGoldenJSONProfileFilter(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--json", "--profile", "springboot-paas"})
+	if err != nil {
+		t.Fatalf("run generators --json --profile returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal generators profile json: %v\noutput=%s", err, out)
+	}
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "generators-profile-spring.golden.json"), got)
+}
+
+func TestGeneratorsGoldenJSONCombinedFilters(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--json", "--kind", "score", "--profile", "scoredev-paas", "--capability", "workload-spec"})
+	if err != nil {
+		t.Fatalf("run generators --json combined filters returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal generators combined filter json: %v\noutput=%s", err, out)
+	}
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "generators-combined-score.golden.json"), got)
+}
+
+func TestGeneratorsGoldenJSONNoMatches(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--json", "--profile", "non-existent-profile"})
+	if err != nil {
+		t.Fatalf("run generators --json no matches returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal generators no matches json: %v\noutput=%s", err, out)
+	}
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "generators-empty.golden.json"), got)
+}
+
 func TestGeneratorsGoldenTable(t *testing.T) {
 	out, stderr, err := runWithCapturedIO([]string{"generators"})
 	if err != nil {

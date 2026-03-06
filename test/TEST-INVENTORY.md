@@ -22,7 +22,7 @@
   - error mode coverage
 - `cmd/cub-gen/generators_parity_test.go`
   - golden generator family JSON contract
-  - golden generator family filtered JSON contracts (kind + capability)
+  - golden generator family filtered JSON contracts (kind + capability + profile + combined + empty match)
   - golden generator family table contract
   - golden generators help output contract
 - `cmd/cub-gen/examples_smoke_test.go`
@@ -83,6 +83,9 @@
 - `cmd/cub-gen/testdata/parity/generators.golden.json`
 - `cmd/cub-gen/testdata/parity/generators-kind-helm.golden.json`
 - `cmd/cub-gen/testdata/parity/generators-capability-ops.golden.json`
+- `cmd/cub-gen/testdata/parity/generators-profile-spring.golden.json`
+- `cmd/cub-gen/testdata/parity/generators-combined-score.golden.json`
+- `cmd/cub-gen/testdata/parity/generators-empty.golden.json`
 - `cmd/cub-gen/testdata/parity/generators.table.golden.txt`
 - `cmd/cub-gen/testdata/parity/generators-help.stderr.golden.txt`
 

@@ -41,6 +41,7 @@ Implemented in this preview slice:
 23. Added `cub-gen generators` command (table + JSON + help golden contracts) to expose registry-backed supported family inventory.
 24. Extended `cub-gen generators` with deterministic filters (`--kind`, `--profile`, `--capability`) and locked filtered output contracts.
 25. Refactored input schema inference to be registry-driven (`RoleSchemaRefs`) instead of importer-local switch logic, preserving existing schema outputs while reducing per-family branching.
+26. Expanded `generators` parity contracts to lock profile-filter, combined-filter, and empty-match JSON outputs.
 
 ## v0.2 preview invariants
 

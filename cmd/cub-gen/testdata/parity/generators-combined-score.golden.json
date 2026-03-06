@@ -1,0 +1,16 @@
+{
+  "count": 1,
+  "families": [
+    {
+      "capabilities": [
+        "render-manifests",
+        "workload-spec",
+        "inverse-score-patch"
+      ],
+      "kind": "score",
+      "profile": "scoredev-paas",
+      "resource_kind": "Application",
+      "resource_type": "argoproj.io/v1alpha1/Application"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "count": 1,
+  "families": [
+    {
+      "capabilities": [
+        "render-app-config",
+        "profile-overrides",
+        "inverse-app-config-patch"
+      ],
+      "kind": "springboot",
+      "profile": "springboot-paas",
+      "resource_kind": "Kustomization",
+      "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization"
+    }
+  ]
+}
