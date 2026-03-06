@@ -1,6 +1,9 @@
 package publish
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"sort"
 	"time"
 
@@ -11,6 +14,7 @@ import (
 const (
 	changeBundleSchema = "cub.confighub.io/change-bundle/v1"
 	changeBundleSource = "cub-gen"
+	digestAlgorithm    = "sha256"
 )
 
 // Summary captures high-signal counts for bridge ingestion and audit logs.
@@ -34,6 +38,8 @@ type ChangeBundle struct {
 	SchemaVersion      string                          `json:"schema_version"`
 	Source             string                          `json:"source"`
 	GeneratedAt        string                          `json:"generated_at"`
+	DigestAlgorithm    string                          `json:"digest_algorithm"`
+	BundleDigest       string                          `json:"bundle_digest"`
 	Space              string                          `json:"space"`
 	TargetSlug         string                          `json:"target_slug"`
 	TargetPath         string                          `json:"target_path"`
@@ -67,10 +73,11 @@ func BuildBundleAt(imported gitopsflow.ImportFlowResult, at time.Time) ChangeBun
 	}
 	sort.Strings(profiles)
 
-	return ChangeBundle{
+	bundle := ChangeBundle{
 		SchemaVersion:    changeBundleSchema,
 		Source:           changeBundleSource,
 		GeneratedAt:      at.UTC().Format(time.RFC3339),
+		DigestAlgorithm:  digestAlgorithm,
 		Space:            imported.Space,
 		TargetSlug:       imported.TargetSlug,
 		TargetPath:       imported.TargetPath,
@@ -101,6 +108,8 @@ func BuildBundleAt(imported gitopsflow.ImportFlowResult, at time.Time) ChangeBun
 		DryInputs:          imported.DryInputs,
 		WetManifestTargets: imported.WetManifestTargets,
 	}
+	bundle.BundleDigest = computeBundleDigest(bundle)
+	return bundle
 }
 
 // BuildBundle uses current UTC time for bundle generation.
@@ -120,4 +129,18 @@ func extractChangeID(imported gitopsflow.ImportFlowResult) string {
 		}
 	}
 	return ""
+}
+
+func computeBundleDigest(bundle ChangeBundle) string {
+	// Digest excludes digest fields so re-hashing published output is stable.
+	digestInput := bundle
+	digestInput.BundleDigest = ""
+	digestInput.DigestAlgorithm = ""
+
+	b, err := json.Marshal(digestInput)
+	if err != nil {
+		return ""
+	}
+	sum := sha256.Sum256(b)
+	return digestAlgorithm + ":" + hex.EncodeToString(sum[:])
 }

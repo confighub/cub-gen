@@ -40,6 +40,7 @@ func TestPublishGoldenFromImport(t *testing.T) {
 func normalizePublish(m map[string]any) {
 	replaceString(m, "generated_at", "<timestamp>")
 	replaceString(m, "change_id", "<change_id>")
+	replaceString(m, "bundle_digest", "<bundle_digest>")
 	replaceString(m, "target_path", "<target_path>")
 
 	for _, item := range asSlice(m["contracts"]) {
