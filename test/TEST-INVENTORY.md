@@ -6,7 +6,9 @@
 
 - `cmd/cub-gen/gitops_parity_test.go`
   - golden discover JSON
-  - golden import JSON
+  - golden import JSON (Helm)
+  - golden import JSON (Score)
+  - golden import JSON (Spring Boot)
   - golden cleanup JSON
   - golden discover/import table output
   - error mode coverage
@@ -21,6 +23,8 @@
 
 - `cmd/cub-gen/testdata/parity/gitops-discover.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-import.golden.json`
+- `cmd/cub-gen/testdata/parity/gitops-import-score.golden.json`
+- `cmd/cub-gen/testdata/parity/gitops-import-spring.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-cleanup.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
 - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`
