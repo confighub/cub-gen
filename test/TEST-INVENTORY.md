@@ -24,6 +24,8 @@
   - verify JSON path validated for Helm, Score, Spring bundles
 - `cmd/cub-gen/attest_command_test.go`
   - attest path validated for Helm, Score, Spring bundles
+- `cmd/cub-gen/verify_attestation_command_test.go`
+  - verify-attestation JSON and linked-bundle JSON paths validated for Helm, Score, Spring attestation records
 
 ### Internal logic tests
 

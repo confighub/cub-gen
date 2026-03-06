@@ -39,6 +39,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 - Automated path-mode smoke for Helm/Score/Spring in `cmd/cub-gen/examples_smoke_test.go`.
 - Automated path-mode bridge smoke (`publish -> verify -> attest -> verify-attestation`) for Helm/Score/Spring in `cmd/cub-gen/examples_bridge_smoke_test.go`.
 - Publish/verify/attest command tests include Helm/Score/Spring bundle flows.
+- Verify-attestation command tests include Helm/Score/Spring attestation flows (with and without linked bundle checks).
 
 ## Required commands
 
