@@ -1,0 +1,14 @@
+{
+  "attestation_digest": "\u003cattestation_digest\u003e",
+  "bundle_digest": "\u003cbundle_digest\u003e",
+  "change_id": "\u003cchange_id\u003e",
+  "digest_algorithm": "sha256",
+  "generated_at": "\u003ctimestamp\u003e",
+  "render_target_slug": "render-target",
+  "schema_version": "cub.confighub.io/attestation/v1",
+  "source": "cub-gen",
+  "space": "platform",
+  "status": "verified",
+  "target_slug": "helm",
+  "verifier": "ci-bot"
+}

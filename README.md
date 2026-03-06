@@ -95,6 +95,14 @@ Verify a bundle (file or stdin):
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas | ./cub-gen verify --in -
 ```
 
+Emit an attestation record from a verified bundle:
+
+```bash
+./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas \
+  | ./cub-gen attest --in - --verifier ci-bot \
+  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
+```
+
 ## Plain-English collaboration story
 
 A practical app-team/platform-team path in a Spring Boot repo:
