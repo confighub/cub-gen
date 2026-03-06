@@ -200,3 +200,42 @@ func TestGeneratorsGoldenHelp(t *testing.T) {
 	}
 	assertGoldenText(t, filepath.Join("testdata", "parity", "generators-help.stderr.golden.txt"), stderr)
 }
+
+func TestGeneratorsStrictFiltersUnknownKind(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--strict-filters", "--kind", "not-a-kind"})
+	if err == nil {
+		t.Fatalf("expected strict unknown kind error, got nil")
+	}
+	if strings.TrimSpace(out) != "" {
+		t.Fatalf("expected empty stdout, got: %q", out)
+	}
+	if !strings.Contains(err.Error(), "unknown kind filter value(s): not-a-kind") {
+		t.Fatalf("expected unknown kind message in error, got: %q (stderr=%q)", err.Error(), stderr)
+	}
+}
+
+func TestGeneratorsStrictFiltersUnknownProfile(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--strict-filters", "--profile", "not-a-profile"})
+	if err == nil {
+		t.Fatalf("expected strict unknown profile error, got nil")
+	}
+	if strings.TrimSpace(out) != "" {
+		t.Fatalf("expected empty stdout, got: %q", out)
+	}
+	if !strings.Contains(err.Error(), "unknown profile filter value(s): not-a-profile") {
+		t.Fatalf("expected unknown profile message in error, got: %q (stderr=%q)", err.Error(), stderr)
+	}
+}
+
+func TestGeneratorsStrictFiltersUnknownCapability(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--strict-filters", "--capability", "not-a-capability"})
+	if err == nil {
+		t.Fatalf("expected strict unknown capability error, got nil")
+	}
+	if strings.TrimSpace(out) != "" {
+		t.Fatalf("expected empty stdout, got: %q", out)
+	}
+	if !strings.Contains(err.Error(), "unknown capability filter value(s): not-a-capability") {
+		t.Fatalf("expected unknown capability message in error, got: %q (stderr=%q)", err.Error(), stderr)
+	}
+}

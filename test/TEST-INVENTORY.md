@@ -25,6 +25,7 @@
   - golden generator family filtered JSON contracts (single + multi-value filters for kind/capability + profile + combined + empty match)
   - golden generator family table contracts (full + single/multi filtered + empty match)
   - golden generators help output contract
+  - strict filter validation errors for unknown kind/profile/capability (`--strict-filters`)
 - `cmd/cub-gen/examples_smoke_test.go`
   - path-mode discover/import for Helm, Score, Spring, Backstage, Ably, Ops (`./examples/...` without alias config)
 - `cmd/cub-gen/examples_bridge_smoke_test.go`
