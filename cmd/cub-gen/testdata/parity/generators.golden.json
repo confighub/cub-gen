@@ -1,0 +1,71 @@
+{
+  "count": 6,
+  "families": [
+    {
+      "capabilities": [
+        "app-config-only",
+        "provider-config",
+        "inverse-provider-config-patch"
+      ],
+      "kind": "ably",
+      "profile": "ably-config",
+      "resource_kind": "ConfigMap",
+      "resource_type": "v1/ConfigMap"
+    },
+    {
+      "capabilities": [
+        "catalog-metadata",
+        "render-manifests",
+        "inverse-catalog-patch"
+      ],
+      "kind": "backstage",
+      "profile": "backstage-idp",
+      "resource_kind": "Component",
+      "resource_type": "backstage.io/v1alpha1/Component"
+    },
+    {
+      "capabilities": [
+        "render-manifests",
+        "values-overrides",
+        "inverse-values-patch"
+      ],
+      "kind": "helm",
+      "profile": "helm-paas",
+      "resource_kind": "HelmRelease",
+      "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease"
+    },
+    {
+      "capabilities": [
+        "workflow-plan",
+        "governed-execution-intent",
+        "inverse-workflow-patch"
+      ],
+      "kind": "opsworkflow",
+      "profile": "ops-workflow",
+      "resource_kind": "Workflow",
+      "resource_type": "argoproj.io/v1alpha1/Workflow"
+    },
+    {
+      "capabilities": [
+        "render-manifests",
+        "workload-spec",
+        "inverse-score-patch"
+      ],
+      "kind": "score",
+      "profile": "scoredev-paas",
+      "resource_kind": "Application",
+      "resource_type": "argoproj.io/v1alpha1/Application"
+    },
+    {
+      "capabilities": [
+        "render-app-config",
+        "profile-overrides",
+        "inverse-app-config-patch"
+      ],
+      "kind": "springboot",
+      "profile": "springboot-paas",
+      "resource_kind": "Kustomization",
+      "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization"
+    }
+  ]
+}

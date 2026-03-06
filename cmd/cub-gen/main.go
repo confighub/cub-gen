@@ -47,12 +47,77 @@ func run(args []string) error {
 		return runAttest(args[1:])
 	case "verify-attestation":
 		return runVerifyAttestation(args[1:])
+	case "generators":
+		return runGenerators(args[1:])
 	case "gitops":
 		return runGitOps(args[1:])
 	default:
 		printUsage(os.Stderr)
 		return fmt.Errorf("unknown command: %s", args[0])
 	}
+}
+
+type generatorFamilyRecord struct {
+	Kind         string   `json:"kind"`
+	Profile      string   `json:"profile"`
+	ResourceKind string   `json:"resource_kind"`
+	ResourceType string   `json:"resource_type"`
+	Capabilities []string `json:"capabilities"`
+}
+
+func runGenerators(args []string) error {
+	fs := flag.NewFlagSet("generators", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	jsonOut := fs.Bool("json", false, "Output JSON")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	if fs.NArg() != 0 {
+		return errors.New("usage: cub-gen generators [--json] [--pretty]")
+	}
+
+	records := listGeneratorFamilies()
+	if *jsonOut {
+		return writeJSON(os.Stdout, map[string]any{
+			"count":    len(records),
+			"families": records,
+		}, *pretty)
+	}
+
+	fmt.Println("Kind\tProfile\tResource Kind\tResource Type\tCapabilities")
+	for _, record := range records {
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\n",
+			record.Kind,
+			record.Profile,
+			record.ResourceKind,
+			record.ResourceType,
+			strings.Join(record.Capabilities, ","),
+		)
+	}
+	return nil
+}
+
+func listGeneratorFamilies() []generatorFamilyRecord {
+	kinds := registry.Kinds()
+	out := make([]generatorFamilyRecord, 0, len(kinds))
+	for _, kind := range kinds {
+		spec, ok := registry.Spec(kind)
+		if !ok {
+			continue
+		}
+		out = append(out, generatorFamilyRecord{
+			Kind:         string(spec.Kind),
+			Profile:      spec.Profile,
+			ResourceKind: spec.ResourceKind,
+			ResourceType: spec.ResourceType,
+			Capabilities: append([]string(nil), spec.Capabilities...),
+		})
+	}
+	return out
 }
 
 func runDetect(args []string) error {
@@ -544,6 +609,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen verify [--in FILE|-] [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen generators [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "GitOps parity examples:")
@@ -570,6 +636,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/ably-config ./examples/ably-config | cub-gen attest --in - --verifier ci-bot")
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen attest --in - --verifier ci-bot")
 	fmt.Fprintln(out, "  cub-gen verify-attestation --in attestation.json --bundle bundle.json")
+	fmt.Fprintln(out, "  cub-gen generators --json")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Note: gitops commands are local-only prototypes that mirror cub gitops stages.")
 }

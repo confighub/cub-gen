@@ -38,6 +38,11 @@ func TestTopLevelCommandGoldenHelp(t *testing.T) {
 			args:         []string{"verify-attestation", "--help"},
 			stderrGolden: filepath.Join("testdata", "parity", "verify-attestation-help.stderr.golden.txt"),
 		},
+		{
+			name:         "generators-help",
+			args:         []string{"generators", "--help"},
+			stderrGolden: filepath.Join("testdata", "parity", "generators-help.stderr.golden.txt"),
+		},
 	}
 
 	for _, tt := range tests {
@@ -91,6 +96,11 @@ func TestTopLevelCommandErrorModes(t *testing.T) {
 			name: "verify-attestation-extra-arg",
 			args: []string{"verify-attestation", "extra"},
 			sub:  "usage: cub-gen verify-attestation",
+		},
+		{
+			name: "generators-extra-arg",
+			args: []string{"generators", "extra"},
+			sub:  "usage: cub-gen generators",
 		},
 		{
 			name: "verify-attestation-invalid-json",

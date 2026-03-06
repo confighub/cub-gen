@@ -38,6 +38,7 @@ Implemented in this preview slice:
 20. Extended the family registry to own family-aware input schema resolution, removing importer-local schema switch logic.
 21. Updated `gitops` help to derive supported resource kinds from the family registry, avoiding manual help-text edits when families are added.
 22. Extended the family registry to own wet-manifest target templates, removing importer-local wet target switch logic.
+23. Added `cub-gen generators` command (table + JSON + help golden contracts) to expose registry-backed supported family inventory.
 
 ## v0.2 preview invariants
 
