@@ -74,6 +74,9 @@ func TestRegistryFallbacks(t *testing.T) {
 	if got := FieldOriginOverlayTransform(unknown); got != "generator-transform" {
 		t.Fatalf("expected field origin overlay transform fallback generator-transform, got %q", got)
 	}
+	if got := FieldOriginConfidenceFor(unknown, "image_tag", 0.42); got != 0.42 {
+		t.Fatalf("expected field origin confidence fallback 0.42, got %v", got)
+	}
 	if got := InversePatchReason(unknown, "image_tag", "fallback-reason"); got != "fallback-reason" {
 		t.Fatalf("expected inverse patch reason fallback fallback-reason, got %q", got)
 	}
@@ -201,6 +204,9 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := InversePatchReason(model.GeneratorAbly, "channels", "fallback"); got != "Channel mapping is app-level runtime behavior." {
 		t.Fatalf("expected ably channels inverse patch reason, got %q", got)
 	}
+	if got := FieldOriginConfidenceFor(model.GeneratorOpsFlow, "schedule_overlay", 0.0); got != 0.80 {
+		t.Fatalf("expected ops schedule overlay field origin confidence 0.80, got %v", got)
+	}
 	if got := InversePatchTemplateFor(model.GeneratorOpsFlow, "schedule", InversePatchTemplate{}); got.EditableBy != "platform-engineer" || got.Confidence != 0.84 || !got.RequiresReview {
 		t.Fatalf("expected ops schedule inverse patch template, got %+v", got)
 	}
@@ -227,6 +233,10 @@ func TestRegistryHintDefaults(t *testing.T) {
 	spec.InversePatchTemplates["env_var"] = InversePatchTemplate{EditableBy: "mutated", Confidence: 0.01, RequiresReview: true}
 	if got := InversePatchTemplateFor(model.GeneratorScore, "env_var", InversePatchTemplate{}); got.EditableBy != "app-team" || got.Confidence != 0.90 || got.RequiresReview {
 		t.Fatalf("expected immutable inverse patch templates, got %+v", got)
+	}
+	spec.FieldOriginConfidences["env_var"] = 0.01
+	if got := FieldOriginConfidenceFor(model.GeneratorScore, "env_var", 0.0); got != 0.90 {
+		t.Fatalf("expected immutable field origin confidences, got %v", got)
 	}
 	spec.InverseEditHints["env_var"] = "mutated hint"
 	if got := InverseEditHint(model.GeneratorScore, "env_var", "fallback"); got != "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}." {

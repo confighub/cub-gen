@@ -42,6 +42,7 @@ type FamilySpec struct {
 	InversePatchReasons         map[string]string
 	InverseEditHints            map[string]string
 	InversePatchTemplates       map[string]InversePatchTemplate
+	FieldOriginConfidences      map[string]float64
 	FieldOriginTransform        string
 	FieldOriginOverlayTransform string
 	InputRoleRules              []InputRoleRule
@@ -72,6 +73,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		InversePatchTemplates: map[string]InversePatchTemplate{
 			"image_tag": {EditableBy: "app-team", Confidence: 0.86, RequiresReview: false},
+		},
+		FieldOriginConfidences: map[string]float64{
+			"image_tag": 0.86,
 		},
 		FieldOriginTransform: "helm-template",
 		InputRoleRules: []InputRoleRule{
@@ -110,6 +114,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		InversePatchTemplates: map[string]InversePatchTemplate{
 			"env_var": {EditableBy: "app-team", Confidence: 0.90, RequiresReview: false},
+		},
+		FieldOriginConfidences: map[string]float64{
+			"image":   0.94,
+			"env_var": 0.90,
+			"port":    0.91,
 		},
 		FieldOriginTransform: "score-to-k8s",
 		InputRoleRules:       []InputRoleRule{{Role: "score-spec", ExactBasenames: []string{"score.yaml", "score.yml"}}},
@@ -150,6 +159,12 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"app_name":       {EditableBy: "app-team", Confidence: 0.88, RequiresReview: false},
 			"server_port":    {EditableBy: "app-team", Confidence: 0.91, RequiresReview: false},
 			"datasource_url": {EditableBy: "platform-engineer", Confidence: 0.78, RequiresReview: true},
+		},
+		FieldOriginConfidences: map[string]float64{
+			"app_name":            0.89,
+			"server_port_base":    0.92,
+			"server_port_overlay": 0.88,
+			"datasource_url":      0.78,
 		},
 		FieldOriginTransform:        "spring-config-to-manifest",
 		FieldOriginOverlayTransform: "spring-profile-overlay",
@@ -195,6 +210,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"identity":  {EditableBy: "platform-engineer", Confidence: 0.87, RequiresReview: false},
 			"lifecycle": {EditableBy: "platform-engineer", Confidence: 0.82, RequiresReview: true},
 		},
+		FieldOriginConfidences: map[string]float64{
+			"identity":  0.90,
+			"lifecycle": 0.82,
+		},
 		FieldOriginTransform: "backstage-component-to-application",
 		InputRoleRules: []InputRoleRule{
 			{Role: "catalog-spec", ExactBasenames: []string{"catalog-info.yaml", "catalog-info.yml"}},
@@ -233,6 +252,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		InversePatchTemplates: map[string]InversePatchTemplate{
 			"environment": {EditableBy: "app-team", Confidence: 0.90, RequiresReview: false},
 			"channels":    {EditableBy: "app-team", Confidence: 0.88, RequiresReview: false},
+		},
+		FieldOriginConfidences: map[string]float64{
+			"environment":      0.90,
+			"channels_base":    0.88,
+			"channels_overlay": 0.84,
 		},
 		FieldOriginTransform:        "ably-config-to-runtime",
 		FieldOriginOverlayTransform: "ably-overlay-merge",
@@ -273,6 +297,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"image_tag": {EditableBy: "platform-engineer", Confidence: 0.87, RequiresReview: true},
 			"schedule":  {EditableBy: "platform-engineer", Confidence: 0.84, RequiresReview: true},
 		},
+		FieldOriginConfidences: map[string]float64{
+			"image_tag":        0.87,
+			"schedule_base":    0.84,
+			"schedule_overlay": 0.80,
+		},
 		FieldOriginTransform:        "ops-workflow-to-argo-workflow",
 		FieldOriginOverlayTransform: "ops-workflow-overlay-merge",
 		InputRoleRules: []InputRoleRule{
@@ -304,6 +333,7 @@ func Spec(kind model.GeneratorKind) (FamilySpec, bool) {
 		InversePatchReasons:         copyInversePatchReasons(spec.InversePatchReasons),
 		InverseEditHints:            copyInverseEditHints(spec.InverseEditHints),
 		InversePatchTemplates:       copyInversePatchTemplates(spec.InversePatchTemplates),
+		FieldOriginConfidences:      copyFieldOriginConfidences(spec.FieldOriginConfidences),
 		FieldOriginTransform:        spec.FieldOriginTransform,
 		FieldOriginOverlayTransform: spec.FieldOriginOverlayTransform,
 		InputRoleRules:              copyInputRoleRules(spec.InputRoleRules),
@@ -410,6 +440,17 @@ func FieldOriginOverlayTransform(kind model.GeneratorKind) string {
 		return spec.FieldOriginOverlayTransform
 	}
 	return FieldOriginTransform(kind)
+}
+
+func FieldOriginConfidenceFor(kind model.GeneratorKind, key string, fallback float64) float64 {
+	spec, ok := Spec(kind)
+	if !ok {
+		return fallback
+	}
+	if v, ok := spec.FieldOriginConfidences[key]; ok {
+		return v
+	}
+	return fallback
 }
 
 func SchemaRef(kind model.GeneratorKind, inputPath string) string {
@@ -594,6 +635,17 @@ func copyInversePatchTemplates(in map[string]InversePatchTemplate) map[string]In
 		return nil
 	}
 	out := make(map[string]InversePatchTemplate, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func copyFieldOriginConfidences(in map[string]float64) map[string]float64 {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]float64, len(in))
 	for k, v := range in {
 		out[k] = v
 	}
