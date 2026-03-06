@@ -36,6 +36,18 @@ func TestRegistryHasSpecForAllKinds(t *testing.T) {
 			t.Fatalf("expected capabilities for kind %q", kind)
 		}
 	}
+
+	expectedResourceKinds := []string{
+		"Application",
+		"Component",
+		"ConfigMap",
+		"HelmRelease",
+		"Kustomization",
+		"Workflow",
+	}
+	if got := SupportedResourceKinds(); !reflect.DeepEqual(got, expectedResourceKinds) {
+		t.Fatalf("expected supported resource kinds %+v, got %+v", expectedResourceKinds, got)
+	}
 }
 
 func TestRegistryFallbacks(t *testing.T) {

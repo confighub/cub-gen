@@ -36,6 +36,7 @@ Implemented in this preview slice:
 18. Added a shared generator family registry (`internal/registry`) for cross-cutting metadata (profile/resource mapping/capabilities) to reduce multi-file switch edits.
 19. Extended the family registry to own DRY input role classification and role-owner mapping, removing importer-local switch logic for these semantics.
 20. Extended the family registry to own family-aware input schema resolution, removing importer-local schema switch logic.
+21. Updated `gitops` help to derive supported resource kinds from the family registry, avoiding manual help-text edits when families are added.
 
 ## v0.2 preview invariants
 

@@ -254,6 +254,21 @@ func Kinds() []model.GeneratorKind {
 	return out
 }
 
+func SupportedResourceKinds() []string {
+	kinds := make([]string, 0, len(familySpecs))
+	seen := map[string]struct{}{}
+	for _, kind := range Kinds() {
+		mapped := ResourceKind(kind)
+		if _, ok := seen[mapped]; ok {
+			continue
+		}
+		seen[mapped] = struct{}{}
+		kinds = append(kinds, mapped)
+	}
+	sort.Strings(kinds)
+	return kinds
+}
+
 func matchesInputRule(rule InputRoleRule, base, ext string) bool {
 	for _, exact := range rule.ExactBasenames {
 		if base == strings.ToLower(exact) {

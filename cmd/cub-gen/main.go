@@ -15,6 +15,7 @@ import (
 	gitopsflow "github.com/confighub/cub-gen/internal/gitops"
 	"github.com/confighub/cub-gen/internal/importer"
 	"github.com/confighub/cub-gen/internal/publish"
+	"github.com/confighub/cub-gen/internal/registry"
 )
 
 func main() {
@@ -574,6 +575,10 @@ func printUsage(out io.Writer) {
 }
 
 func printGitOpsUsage(out io.Writer) {
+	resourceKinds := registry.SupportedResourceKinds()
+	kindEq := renderKindEqualsClause(resourceKinds)
+	kindIn := quoteKindsWithDelimiter(resourceKinds, ",")
+
 	fmt.Fprintln(out, "cub-gen gitops: local parity commands for cub gitops pattern")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Usage:")
@@ -582,8 +587,8 @@ func printGitOpsUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen gitops cleanup [--space SPACE] [--json] <target-slug>")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Supported where-resource clauses:")
-	fmt.Fprintln(out, "  kind = 'HelmRelease' | kind = 'Application' | kind = 'Kustomization' | kind = 'Component' | kind = 'ConfigMap' | kind = 'Workflow'")
-	fmt.Fprintln(out, "  kind IN ('HelmRelease','Application','Component','ConfigMap','Workflow')")
+	fmt.Fprintf(out, "  kind = %s\n", kindEq)
+	fmt.Fprintf(out, "  kind IN (%s)\n", kindIn)
 	fmt.Fprintln(out, "  name = 'checkout-api' | resource_name LIKE '<contains-api>' | root LIKE '<contains-prod>'")
 	fmt.Fprintln(out, "  combine clauses with AND")
 	fmt.Fprintln(out)
@@ -597,4 +602,20 @@ func printGitOpsUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen gitops cleanup --space my-space ./examples/springboot-paas")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Tip: <target-slug> is a local repo path in this prototype.")
+}
+
+func quoteKindsWithDelimiter(kinds []string, delimiter string) string {
+	quoted := make([]string, 0, len(kinds))
+	for _, kind := range kinds {
+		quoted = append(quoted, fmt.Sprintf("'%s'", kind))
+	}
+	return strings.Join(quoted, delimiter)
+}
+
+func renderKindEqualsClause(kinds []string) string {
+	parts := make([]string, 0, len(kinds))
+	for _, kind := range kinds {
+		parts = append(parts, fmt.Sprintf("kind = '%s'", kind))
+	}
+	return strings.Join(parts, " | ")
 }
