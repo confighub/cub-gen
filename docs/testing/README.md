@@ -50,6 +50,12 @@ go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolde
 go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v
 ```
 
+## Updating goldens
+
+```bash
+make update-goldens
+```
+
 ## Rules
 
 1. Same input => same output.
