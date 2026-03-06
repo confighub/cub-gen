@@ -96,6 +96,8 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/attest.json.golden.json`
   - `cmd/cub-gen/testdata/parity/attest-tampered.stderr.golden.txt`
   - `cmd/cub-gen/testdata/parity/verify-attestation.json.golden.json`
+  - `cmd/cub-gen/testdata/parity/verify-attestation-linked-score.json.golden.json`
+  - `cmd/cub-gen/testdata/parity/verify-attestation-linked-spring.json.golden.json`
   - `cmd/cub-gen/testdata/parity/verify-attestation-tampered.stderr.golden.txt`
 - Error-mode tests:
   - `cmd/cub-gen/command_surface_parity_test.go`
