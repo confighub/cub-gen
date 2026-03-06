@@ -376,7 +376,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
 				SourcePath: "values.yaml",
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.86,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image_tag", 0.86),
 			},
 		}
 	case model.GeneratorScore:
@@ -387,21 +387,21 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/image", hints.ContainerName),
 				SourcePath: hints.SourcePath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.94,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image", 0.94),
 			},
 			{
 				DryPath:    fmt.Sprintf("containers.%s.variables.%s", hints.ContainerName, hints.VariableName),
 				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/env[name=%s]/value", hints.ContainerName, hints.VariableName),
 				SourcePath: hints.SourcePath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.90,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "env_var", 0.90),
 			},
 			{
 				DryPath:    fmt.Sprintf("service.ports.%s.port", hints.ServicePortName),
 				WetPath:    fmt.Sprintf("Service/spec/ports[name=%s]/port", hints.ServicePortName),
 				SourcePath: hints.SourcePath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.91,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "port", 0.91),
 			},
 		}
 	case model.GeneratorSpringBoot:
@@ -412,21 +412,21 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				WetPath:    "Deployment/metadata/labels[app.kubernetes.io/name]",
 				SourcePath: hints.BaseConfigPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.89,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "app_name", 0.89),
 			},
 			{
 				DryPath:    "server.port",
 				WetPath:    "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
 				SourcePath: hints.BaseConfigPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.92,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "server_port_base", 0.92),
 			},
 			{
 				DryPath:    "spring.datasource.url",
 				WetPath:    "ConfigMap/data/application.yaml:spring.datasource.url",
 				SourcePath: hints.BaseConfigPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.78,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "datasource_url", 0.78),
 			},
 		}
 		if hints.ProfileConfigPath != "" {
@@ -435,7 +435,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				WetPath:    "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
 				SourcePath: hints.ProfileConfigPath,
 				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
-				Confidence: 0.88,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "server_port_overlay", 0.88),
 			})
 		}
 		return origins
@@ -447,14 +447,14 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				WetPath:    "Application/metadata/name",
 				SourcePath: hints.CatalogPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.90,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "identity", 0.90),
 			},
 			{
 				DryPath:    "spec.lifecycle",
 				WetPath:    "Application/metadata/labels[lifecycle]",
 				SourcePath: hints.CatalogPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.82,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "lifecycle", 0.82),
 			},
 		}
 	case model.GeneratorAbly:
@@ -465,14 +465,14 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				WetPath:    "ConfigMap/data/ABLY_ENVIRONMENT",
 				SourcePath: hints.BaseConfigPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.90,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "environment", 0.90),
 			},
 			{
 				DryPath:    "channels.inbound",
 				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
 				SourcePath: hints.BaseConfigPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.88,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "channels_base", 0.88),
 			},
 		}
 		if hints.OverlayConfigPath != "" {
@@ -481,7 +481,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
 				SourcePath: hints.OverlayConfigPath,
 				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
-				Confidence: 0.84,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "channels_overlay", 0.84),
 			})
 		}
 		return origins
@@ -493,14 +493,14 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				WetPath:    "Workflow/spec/templates[name=deploy]/container/image",
 				SourcePath: hints.BaseSpecPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.87,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image_tag", 0.87),
 			},
 			{
 				DryPath:    "triggers.schedule",
 				WetPath:    "Workflow/spec/schedule",
 				SourcePath: hints.BaseSpecPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: 0.84,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "schedule_base", 0.84),
 			},
 		}
 		if hints.OverlaySpecPath != "" {
@@ -509,7 +509,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				WetPath:    "Workflow/spec/schedule",
 				SourcePath: hints.OverlaySpecPath,
 				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
-				Confidence: 0.80,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "schedule_overlay", 0.80),
 			})
 		}
 		return origins
