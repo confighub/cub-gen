@@ -76,6 +76,12 @@ Generate a ConfigHub-ready change bundle from import output:
 This emits a deterministic `change-bundle` JSON envelope you can upload later,
 without coupling the core flow to a running ConfigHub backend.
 
+Or run direct mode (import + bundle in one command):
+
+```bash
+./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas
+```
+
 ## Plain-English collaboration story
 
 A practical app-team/platform-team path in a Spring Boot repo:
