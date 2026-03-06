@@ -20,6 +20,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 
 - CLI output contract tests in `cmd/cub-gen/gitops_parity_test.go`.
 - Generator inventory contract tests in `cmd/cub-gen/generators_parity_test.go` (full list + JSON/table filter contracts for kind/profile/capability, including comma-separated multi-value filters, combined filters, empty-match behavior, and strict unknown-filter error modes).
+- Bridge symmetry matrix coverage gate in `cmd/cub-gen/examples_matrix_test.go` (fails if any registry generator kind is missing from `publish -> verify -> attest -> verify-attestation` family matrix).
 - Bridge publish golden locks in `cmd/cub-gen/publish_parity_test.go` (import/direct paths for helm/score/spring/backstage/ably/ops).
 - Verify command behavior tests in `cmd/cub-gen/verify_command_test.go`.
 - Verify command golden locks in `cmd/cub-gen/verify_parity_test.go`.
@@ -53,6 +54,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 go build ./cmd/cub-gen
 go test ./...
 go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v
+go test ./cmd/cub-gen -run '^(TestBridgeSymmetryMatrix|TestExamplesPathModeBridgeFlow)$' -count=1 -v
 go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v
 ```
 

@@ -8,49 +8,8 @@ import (
 )
 
 func TestExamplesPathModeDiscoverAndImport(t *testing.T) {
-	tests := []struct {
-		name            string
-		repoSuffix      string
-		expectedProfile string
-		expectedKind    string
-	}{
-		{
-			name:            "helm",
-			repoSuffix:      filepath.Join("examples", "helm-paas"),
-			expectedProfile: "helm-paas",
-			expectedKind:    "helm",
-		},
-		{
-			name:            "score",
-			repoSuffix:      filepath.Join("examples", "scoredev-paas"),
-			expectedProfile: "scoredev-paas",
-			expectedKind:    "score",
-		},
-		{
-			name:            "spring",
-			repoSuffix:      filepath.Join("examples", "springboot-paas"),
-			expectedProfile: "springboot-paas",
-			expectedKind:    "springboot",
-		},
-		{
-			name:            "backstage",
-			repoSuffix:      filepath.Join("examples", "backstage-idp"),
-			expectedProfile: "backstage-idp",
-			expectedKind:    "backstage",
-		},
-		{
-			name:            "ably",
-			repoSuffix:      filepath.Join("examples", "ably-config"),
-			expectedProfile: "ably-config",
-			expectedKind:    "ably",
-		},
-		{
-			name:            "ops",
-			repoSuffix:      filepath.Join("examples", "ops-workflow"),
-			expectedProfile: "ops-workflow",
-			expectedKind:    "opsworkflow",
-		},
-	}
+	tests := bridgeSymmetryMatrix()
+	assertBridgeSymmetryMatrixCoverage(t, tests)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
