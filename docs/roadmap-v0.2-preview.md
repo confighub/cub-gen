@@ -61,6 +61,7 @@ Implemented in this preview slice:
 43. Added a single 10-minute Flux/Argo/Helm adoption path in `README.md`, with copy/paste commands and explicit parity boundary (`matched|partial|deferred`) language.
 44. Cut release `v0.2-preview.1` from green `main` with release notes covering parity lock, supported families, boundaries, known limits, and adoption references.
 45. Added strict schema validation gates for `GeneratorContract`, `ProvenanceRecord`, and `InverseTransformPlan` with embedded JSON schemas and importer runtime enforcement.
+46. Enforced `no-triple-no-governed-import` gate with deterministic blocker errors for missing/cardiinality-mismatched contract triples and locked importer error output tests.
 
 ## v0.2 preview invariants
 

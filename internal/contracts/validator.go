@@ -3,7 +3,9 @@ package contracts
 import (
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -61,6 +63,24 @@ func ValidateTripleSet(contracts []model.GeneratorContract, provenance []model.P
 		if err := ValidateTriple(contracts[i], provenance[i], inversePlans[i]); err != nil {
 			return fmt.Errorf("contract triple index %d: %w", i, err)
 		}
+	}
+	return nil
+}
+
+// ValidateGovernedImportTriples enforces that governed import artifacts include
+// a complete contract triple for every detected generator.
+func ValidateGovernedImportTriples(detectedGenerators int, contracts []model.GeneratorContract, provenance []model.ProvenanceRecord, inversePlans []model.InverseTransformPlan) error {
+	if detectedGenerators <= 0 {
+		return nil
+	}
+	if len(contracts) == 0 || len(provenance) == 0 || len(inversePlans) == 0 {
+		return fmt.Errorf("governed import blocked: required contract triple missing (detected=%d contracts=%d provenance=%d inverse_plans=%d)", detectedGenerators, len(contracts), len(provenance), len(inversePlans))
+	}
+	if len(contracts) != detectedGenerators || len(provenance) != detectedGenerators || len(inversePlans) != detectedGenerators {
+		return fmt.Errorf("governed import blocked: contract triple cardinality mismatch (detected=%d contracts=%d provenance=%d inverse_plans=%d)", detectedGenerators, len(contracts), len(provenance), len(inversePlans))
+	}
+	if err := ValidateTripleSet(contracts, provenance, inversePlans); err != nil {
+		return fmt.Errorf("governed import blocked: %w", err)
 	}
 	return nil
 }
@@ -158,7 +178,36 @@ func toJSONAny(v any) (any, error) {
 }
 
 func normalizeValidationError(err error) string {
+	var validationErr *jsonschema.ValidationError
+	if errors.As(err, &validationErr) {
+		leaves := flattenValidationErrors(validationErr)
+		parts := make([]string, 0, len(leaves))
+		for _, leaf := range leaves {
+			location := strings.TrimSpace(leaf.InstanceLocation)
+			if location == "" {
+				location = "/"
+			}
+			parts = append(parts, fmt.Sprintf("%s: %s", location, strings.TrimSpace(leaf.Message)))
+		}
+		sort.Strings(parts)
+		return strings.Join(parts, "; ")
+	}
+
 	msg := strings.TrimSpace(err.Error())
 	msg = strings.Join(strings.Fields(msg), " ")
 	return msg
+}
+
+func flattenValidationErrors(err *jsonschema.ValidationError) []*jsonschema.ValidationError {
+	if err == nil {
+		return nil
+	}
+	if len(err.Causes) == 0 {
+		return []*jsonschema.ValidationError{err}
+	}
+	out := make([]*jsonschema.ValidationError, 0, len(err.Causes))
+	for _, cause := range err.Causes {
+		out = append(out, flattenValidationErrors(cause)...)
+	}
+	return out
 }
