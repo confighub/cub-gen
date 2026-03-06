@@ -62,6 +62,7 @@ Implemented in this preview slice:
 44. Cut release `v0.2-preview.1` from green `main` with release notes covering parity lock, supported families, boundaries, known limits, and adoption references.
 45. Added strict schema validation gates for `GeneratorContract`, `ProvenanceRecord`, and `InverseTransformPlan` with embedded JSON schemas and importer runtime enforcement.
 46. Enforced `no-triple-no-governed-import` gate with deterministic blocker errors for missing/cardiinality-mismatched contract triples and locked importer error output tests.
+47. Added cross-family triple conformance fixtures for Helm/Score/Spring/Backstage/Ably/Ops with deterministic re-run checks and registry-kind coverage enforcement.
 
 ## v0.2 preview invariants
 
