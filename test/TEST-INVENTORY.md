@@ -49,6 +49,7 @@
 - `cmd/cub-gen/testdata/parity/publish-direct-score.golden.json`
 - `cmd/cub-gen/testdata/parity/publish-direct-spring.golden.json`
 - `cmd/cub-gen/testdata/parity/verify-attestation.json.golden.json`
+- `cmd/cub-gen/testdata/parity/verify-attestation-linked-helm.json.golden.json`
 - `cmd/cub-gen/testdata/parity/verify-attestation-linked-score.json.golden.json`
 - `cmd/cub-gen/testdata/parity/verify-attestation-linked-spring.json.golden.json`
 
