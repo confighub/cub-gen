@@ -6,8 +6,8 @@ Usage:
   cub-gen gitops cleanup [--space SPACE] [--json] <target-slug>
 
 Supported where-resource clauses:
-  kind = 'HelmRelease' | kind = 'Application' | kind = 'Kustomization' | kind = 'Component' | kind = 'ConfigMap' | kind = 'Workflow'
-  kind IN ('HelmRelease','Application','Component','ConfigMap','Workflow')
+  kind = kind = 'Application' | kind = 'Component' | kind = 'ConfigMap' | kind = 'HelmRelease' | kind = 'Kustomization' | kind = 'Workflow'
+  kind IN ('Application','Component','ConfigMap','HelmRelease','Kustomization','Workflow')
   name = 'checkout-api' | resource_name LIKE '<contains-api>' | root LIKE '<contains-prod>'
   combine clauses with AND
 
