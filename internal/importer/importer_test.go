@@ -516,6 +516,35 @@ service:
 	}
 }
 
+func TestImportDetectionFailsOnInvalidContractTriple(t *testing.T) {
+	repo := t.TempDir()
+	detection := model.DetectionResult{
+		Repo: repo,
+		Ref:  "",
+		Generators: []model.GeneratorDetection{
+			{
+				ID:      "gen_invalid",
+				Kind:    model.GeneratorScore,
+				Profile: "scoredev-paas",
+				Name:    "invalid-score",
+				Root:    "",
+				Inputs:  []string{"score.yaml"},
+			},
+		},
+	}
+
+	_, err := ImportDetection(detection, "platform")
+	if err == nil {
+		t.Fatal("expected schema validation error, got nil")
+	}
+	if !strings.Contains(err.Error(), `validate contract triple for generator "gen_invalid" (score):`) {
+		t.Fatalf("expected generator-scoped contract triple error, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "generator_contract schema validation failed") {
+		t.Fatalf("expected contract schema validation failure, got: %v", err)
+	}
+}
+
 func fieldOriginHasDryPath(v []model.FieldOrigin, dryPath string) bool {
 	for _, item := range v {
 		if item.DryPath == dryPath {

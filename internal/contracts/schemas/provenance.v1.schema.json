@@ -1,0 +1,234 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "cub.confighub.io/schemas/provenance.v1",
+  "title": "Provenance Record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "provenance_id",
+    "change_id",
+    "generator_id",
+    "generator_name",
+    "generator_profile",
+    "version",
+    "input_digest",
+    "sources",
+    "outputs",
+    "field_origin_map",
+    "inverse_edit_pointers",
+    "rendered_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cub.confighub.io/provenance/v1"
+    },
+    "provenance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "change_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generator_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generator_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generator_profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "uri",
+          "revision",
+          "path"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uri": {
+            "type": "string",
+            "minLength": 1
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "uri",
+          "digest"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uri": {
+            "type": "string",
+            "minLength": 1
+          },
+          "digest": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "chart_path": {
+      "type": "string"
+    },
+    "values_paths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "rendered_object_lineage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "name"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "namespace": {
+            "type": "string"
+          },
+          "source_path": {
+            "type": "string"
+          },
+          "source_dry_path": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "field_origin_map": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dry_path",
+          "wet_path",
+          "source_path",
+          "transform",
+          "confidence"
+        ],
+        "properties": {
+          "dry_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "wet_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "transform": {
+            "type": "string",
+            "minLength": 1
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "inverse_edit_pointers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wet_path",
+          "dry_path",
+          "owner",
+          "edit_hint",
+          "confidence"
+        ],
+        "properties": {
+          "wet_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dry_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "edit_hint": {
+            "type": "string",
+            "minLength": 1
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "rendered_at": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
