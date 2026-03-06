@@ -1,0 +1,5 @@
+triggers:
+  schedule: "0 3 * * *"
+actions:
+  deploy:
+    image_tag: v1.2.3-prod

@@ -18,30 +18,31 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 ### Tier 2: parity/golden
 
 - CLI output contract tests in `cmd/cub-gen/gitops_parity_test.go`.
-- Bridge publish golden locks in `cmd/cub-gen/publish_parity_test.go` (import/direct paths for helm/score/spring/backstage/ably).
+- Bridge publish golden locks in `cmd/cub-gen/publish_parity_test.go` (import/direct paths for helm/score/spring/backstage/ably/ops).
 - Verify command behavior tests in `cmd/cub-gen/verify_command_test.go`.
 - Verify command golden locks in `cmd/cub-gen/verify_parity_test.go`.
 - Attest command behavior tests in `cmd/cub-gen/attest_command_test.go`.
 - Attest command golden locks in `cmd/cub-gen/attest_parity_test.go`.
 - Verify-attestation behavior tests in `cmd/cub-gen/verify_attestation_command_test.go`.
-- Verify-attestation golden locks in `cmd/cub-gen/verify_attestation_parity_test.go` (including linked helm/score/spring/backstage/ably JSON contracts).
+- Verify-attestation golden locks in `cmd/cub-gen/verify_attestation_parity_test.go` (including linked helm/score/spring/backstage/ably/ops JSON contracts).
 - Golden files under `cmd/cub-gen/testdata/parity/`.
 - Includes command help/usage goldens to lock human-facing CLI contract.
 - Helm example is covered across discover/import/cleanup parity paths.
-- Score, Spring Boot, Backstage IDP, and Ably app-config discover/import JSON contracts are golden-locked.
+- Score, Spring Boot, Backstage IDP, Ably app-config, and Ops workflow discover/import JSON contracts are golden-locked.
 - Score import JSON contract is golden-locked (`gitops-import-score.golden.json`).
 - Spring Boot import JSON contract is golden-locked (`gitops-import-spring.golden.json`).
 - Backstage import JSON contract is golden-locked (`gitops-import-backstage.golden.json`).
 - Ably import JSON contract is golden-locked (`gitops-import-ably.golden.json`).
+- Ops workflow import JSON contract is golden-locked (`gitops-import-ops.golden.json`).
 
 ### Tier 3: examples proof
 
 - Run at least one command per example for changed behavior.
 - For bridge changes, validate import -> publish pipeline output.
-- Automated path-mode smoke for Helm/Score/Spring/Backstage/Ably in `cmd/cub-gen/examples_smoke_test.go`.
-- Automated path-mode bridge smoke (`publish -> verify -> attest -> verify-attestation`) for Helm/Score/Spring/Backstage/Ably in `cmd/cub-gen/examples_bridge_smoke_test.go`.
-- Publish/verify/attest command tests include Helm/Score/Spring/Backstage/Ably bundle flows.
-- Verify-attestation command tests include Helm/Score/Spring/Backstage/Ably attestation flows (with and without linked bundle checks).
+- Automated path-mode smoke for Helm/Score/Spring/Backstage/Ably/Ops in `cmd/cub-gen/examples_smoke_test.go`.
+- Automated path-mode bridge smoke (`publish -> verify -> attest -> verify-attestation`) for Helm/Score/Spring/Backstage/Ably/Ops in `cmd/cub-gen/examples_bridge_smoke_test.go`.
+- Publish/verify/attest command tests include Helm/Score/Spring/Backstage/Ably/Ops bundle flows.
+- Verify-attestation command tests include Helm/Score/Spring/Backstage/Ably/Ops attestation flows (with and without linked bundle checks).
 
 ## Required commands
 

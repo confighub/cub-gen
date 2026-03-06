@@ -124,6 +124,29 @@ func TestGitOpsParityGoldenDiscoverAbly(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-ably.golden.json"), got)
 }
 
+func TestGitOpsParityGoldenDiscoverOps(t *testing.T) {
+	aliases := setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "ops"})
+	if err != nil {
+		t.Fatalf("run ops discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal ops discover json: %v\noutput=%s", err, out)
+	}
+	normalizeDiscover(got)
+
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("examples", "ops-workflow"))
+	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["ops"]), filepath.ToSlash(filepath.Join("examples", "ops-workflow")))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-ops.golden.json"), got)
+}
+
 func TestGitOpsParityGoldenImport(t *testing.T) {
 	setupAliases(t)
 
@@ -222,6 +245,26 @@ func TestGitOpsParityGoldenImportAbly(t *testing.T) {
 	normalizeImport(got)
 
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-ably.golden.json"), got)
+}
+
+func TestGitOpsParityGoldenImportOps(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "ops", "render-target"})
+	if err != nil {
+		t.Fatalf("run ops import returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal ops import json: %v\noutput=%s", err, out)
+	}
+	normalizeImport(got)
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-ops.golden.json"), got)
 }
 
 func TestGitOpsParityGoldenCleanup(t *testing.T) {
@@ -435,6 +478,10 @@ func setupAliases(t *testing.T) map[string]string {
 	if err != nil {
 		t.Fatalf("resolve ably path: %v", err)
 	}
+	opsAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "ops-workflow"))
+	if err != nil {
+		t.Fatalf("resolve ops path: %v", err)
+	}
 
 	cfgDir := t.TempDir()
 	cfgPath := filepath.Join(cfgDir, "targets.json")
@@ -446,6 +493,7 @@ func setupAliases(t *testing.T) map[string]string {
 			"spring":    springAbs,
 			"backstage": backstageAbs,
 			"ably":      ablyAbs,
+			"ops":       opsAbs,
 			"render-target": map[string]any{
 				"toolchain": "kubernetes/yaml",
 				"providers": []string{"fluxrenderer", "argocdrenderer"},
@@ -467,6 +515,7 @@ func setupAliases(t *testing.T) map[string]string {
 		"spring":    springAbs,
 		"backstage": backstageAbs,
 		"ably":      ablyAbs,
+		"ops":       opsAbs,
 	}
 }
 

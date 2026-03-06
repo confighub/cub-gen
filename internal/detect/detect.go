@@ -54,11 +54,16 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 	if err != nil {
 		return model.DetectionResult{}, err
 	}
+	opsDetections, err := detectOpsWorkflow(absRepo)
+	if err != nil {
+		return model.DetectionResult{}, err
+	}
 
 	all := append(helmDetections, scoreDetections...)
 	all = append(all, springDetections...)
 	all = append(all, backstageDetections...)
 	all = append(all, ablyDetections...)
+	all = append(all, opsDetections...)
 	sort.Slice(all, func(i, j int) bool {
 		if all[i].Kind != all[j].Kind {
 			return all[i].Kind < all[j].Kind
@@ -417,6 +422,80 @@ func detectAbly(repo string) ([]model.GeneratorDetection, error) {
 	return mapValuesSorted(detected), nil
 }
 
+func detectOpsWorkflow(repo string) ([]model.GeneratorDetection, error) {
+	detected := make(map[string]model.GeneratorDetection)
+	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() && shouldSkipDir(d.Name()) {
+			return filepath.SkipDir
+		}
+		if d.IsDir() {
+			return nil
+		}
+
+		name := strings.ToLower(d.Name())
+		if name != "operations.yaml" && name != "operations.yml" && name != "workflow.yaml" && name != "workflow.yml" {
+			return nil
+		}
+
+		b, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		content := strings.ToLower(string(b))
+		if !strings.Contains(content, "actions:") && !strings.Contains(content, "workflow:") {
+			return nil
+		}
+
+		root := filepath.Dir(path)
+		relRoot, err := filepath.Rel(repo, root)
+		if err != nil {
+			return err
+		}
+		if relRoot == "." {
+			relRoot = ""
+		}
+
+		inputs := []string{}
+		patterns := []string{"operations*.yaml", "operations*.yml", "workflow*.yaml", "workflow*.yml", "actions*.yaml", "actions*.yml"}
+		for _, pattern := range patterns {
+			matches, _ := filepath.Glob(filepath.Join(root, pattern))
+			for _, match := range matches {
+				rel, relErr := filepath.Rel(repo, match)
+				if relErr != nil {
+					continue
+				}
+				inputs = append(inputs, filepath.ToSlash(rel))
+			}
+		}
+		inputs = unique(inputs)
+		sort.Strings(inputs)
+		if len(inputs) == 0 {
+			relFile, relErr := filepath.Rel(repo, path)
+			if relErr == nil {
+				inputs = append(inputs, filepath.ToSlash(relFile))
+			}
+		}
+
+		detected["opsworkflow:"+relRoot] = model.GeneratorDetection{
+			ID:         "gen_" + shortID("opsworkflow:"+filepath.ToSlash(relRoot)),
+			Kind:       model.GeneratorOpsFlow,
+			Profile:    profileForKind(model.GeneratorOpsFlow),
+			Name:       filepath.Base(root),
+			Root:       filepath.ToSlash(relRoot),
+			Inputs:     inputs,
+			Confidence: 0.89,
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("detect ops workflow: %w", err)
+	}
+	return mapValuesSorted(detected), nil
+}
+
 func mapValuesSorted(m map[string]model.GeneratorDetection) []model.GeneratorDetection {
 	keys := make([]string, 0, len(m))
 	for k := range m {
@@ -476,6 +555,8 @@ func profileForKind(kind model.GeneratorKind) string {
 		return "backstage-idp"
 	case model.GeneratorAbly:
 		return "ably-config"
+	case model.GeneratorOpsFlow:
+		return "ops-workflow"
 	default:
 		return "generator"
 	}

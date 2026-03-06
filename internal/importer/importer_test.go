@@ -24,6 +24,7 @@ func TestImportRepoExamples(t *testing.T) {
 		{name: "springboot-paas", repoDir: "springboot-paas", expectedKind: model.GeneratorSpringBoot, expectedProfile: "springboot-paas"},
 		{name: "backstage-idp", repoDir: "backstage-idp", expectedKind: model.GeneratorBackstage, expectedProfile: "backstage-idp"},
 		{name: "ably-config", repoDir: "ably-config", expectedKind: model.GeneratorAbly, expectedProfile: "ably-config"},
+		{name: "ops-workflow", repoDir: "ops-workflow", expectedKind: model.GeneratorOpsFlow, expectedProfile: "ops-workflow"},
 	}
 
 	for _, tt := range tests {
@@ -147,6 +148,11 @@ func TestImportRepoGeneratorCapabilities(t *testing.T) {
 			name:                 "ably-config",
 			repoDir:              "ably-config",
 			expectedCapabilities: []string{"app-config-only", "provider-config", "inverse-provider-config-patch"},
+		},
+		{
+			name:                 "ops-workflow",
+			repoDir:              "ops-workflow",
+			expectedCapabilities: []string{"workflow-plan", "governed-execution-intent", "inverse-workflow-patch"},
 		},
 	}
 
@@ -347,6 +353,42 @@ func TestImportRepoAblyDryWetContract(t *testing.T) {
 	}
 	if !wetTargetHasKindOwner(result.WetManifestTargets, "Secret", "platform-runtime") {
 		t.Fatalf("expected Secret owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+}
+
+func TestImportRepoOpsWorkflowDryWetContract(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "ops-workflow")
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+	prov := result.Provenance[0]
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "actions.deploy.image_tag") {
+		t.Fatalf("expected actions.deploy.image_tag field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "triggers.schedule") {
+		t.Fatalf("expected triggers.schedule field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHasDryPath(prov.InverseEditPointers, "triggers.schedule") {
+		t.Fatalf("expected triggers.schedule inverse pointer, got %+v", prov.InverseEditPointers)
+	}
+
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "operations-base", "platform-engineer", "operations.yaml") {
+		t.Fatalf("expected operations-base owner to be platform-engineer, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "operations-overlay", "platform-engineer", "operations-prod.yaml") {
+		t.Fatalf("expected operations-overlay owner to be platform-engineer, got %+v", result.DryInputs)
+	}
+
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "Workflow", "platform-runtime") {
+		t.Fatalf("expected Workflow owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "Job", "platform-runtime") {
+		t.Fatalf("expected Job owner to be platform-runtime, got %+v", result.WetManifestTargets)
 	}
 }
 

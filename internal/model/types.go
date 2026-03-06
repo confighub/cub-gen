@@ -8,6 +8,7 @@ const (
 	GeneratorSpringBoot GeneratorKind = "springboot"
 	GeneratorBackstage  GeneratorKind = "backstage"
 	GeneratorAbly       GeneratorKind = "ably"
+	GeneratorOpsFlow    GeneratorKind = "opsworkflow"
 )
 
 type GeneratorDetection struct {

@@ -19,6 +19,7 @@ Contract lock means:
 - Spring Boot import contract includes explicit DRY ownership (`dry_inputs.owner`) and platform-owned WET targets (`wet_manifest_targets.owner`) with app-team inverse-edit hints
 - Backstage IDP import contract includes explicit catalog DRY ownership (`catalog-spec`) and platform-owned WET targets with inverse-edit hints for component metadata
 - Ably app-config import contract includes app-team DRY ownership (`provider-config-*`) and platform-owned WET targets with inverse-edit hints for runtime provider fields
+- Ops workflow import contract includes platform DRY ownership (`operations-*`) and platform-owned WET workflow/job targets with inverse-edit hints for execution intent fields
 
 ## Command contract parity
 
@@ -85,11 +86,13 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/gitops-discover-spring.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-discover-backstage.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-discover-ably.golden.json`
+  - `cmd/cub-gen/testdata/parity/gitops-discover-ops.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import-score.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import-spring.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import-backstage.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import-ably.golden.json`
+  - `cmd/cub-gen/testdata/parity/gitops-import-ops.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-cleanup.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`
@@ -98,11 +101,13 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/publish-from-import-spring.golden.json`
   - `cmd/cub-gen/testdata/parity/publish-from-import-backstage.golden.json`
   - `cmd/cub-gen/testdata/parity/publish-from-import-ably.golden.json`
+  - `cmd/cub-gen/testdata/parity/publish-from-import-ops.golden.json`
   - `cmd/cub-gen/testdata/parity/publish-direct-helm.golden.json`
   - `cmd/cub-gen/testdata/parity/publish-direct-score.golden.json`
   - `cmd/cub-gen/testdata/parity/publish-direct-spring.golden.json`
   - `cmd/cub-gen/testdata/parity/publish-direct-backstage.golden.json`
   - `cmd/cub-gen/testdata/parity/publish-direct-ably.golden.json`
+  - `cmd/cub-gen/testdata/parity/publish-direct-ops.golden.json`
   - `cmd/cub-gen/testdata/parity/verify.stdout.golden.txt`
   - `cmd/cub-gen/testdata/parity/verify.json.golden.json`
   - `cmd/cub-gen/testdata/parity/verify-tampered.stderr.golden.txt`
@@ -114,6 +119,7 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/verify-attestation-linked-spring.json.golden.json`
   - `cmd/cub-gen/testdata/parity/verify-attestation-linked-backstage.json.golden.json`
   - `cmd/cub-gen/testdata/parity/verify-attestation-linked-ably.json.golden.json`
+  - `cmd/cub-gen/testdata/parity/verify-attestation-linked-ops.json.golden.json`
   - `cmd/cub-gen/testdata/parity/verify-attestation-tampered.stderr.golden.txt`
 - Error-mode tests:
   - `cmd/cub-gen/command_surface_parity_test.go`

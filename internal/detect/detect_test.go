@@ -52,6 +52,13 @@ func TestScanRepoExamples(t *testing.T) {
 			expectedProfile: "ably-config",
 			expectedFile:    "ably.yaml",
 		},
+		{
+			name:            "ops-workflow",
+			repoDir:         "ops-workflow",
+			expectedKind:    model.GeneratorOpsFlow,
+			expectedProfile: "ops-workflow",
+			expectedFile:    "operations.yaml",
+		},
 	}
 
 	for _, tt := range tests {

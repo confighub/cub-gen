@@ -27,6 +27,10 @@ func TestPublishGoldenFromImportAbly(t *testing.T) {
 	assertPublishFromImportGolden(t, "ably", filepath.Join("testdata", "parity", "publish-from-import-ably.golden.json"))
 }
 
+func TestPublishGoldenFromImportOps(t *testing.T) {
+	assertPublishFromImportGolden(t, "ops", filepath.Join("testdata", "parity", "publish-from-import-ops.golden.json"))
+}
+
 func assertPublishFromImportGolden(t *testing.T, target, goldenPath string) {
 	t.Helper()
 	setupAliases(t)
@@ -76,6 +80,10 @@ func TestPublishGoldenDirectBackstage(t *testing.T) {
 
 func TestPublishGoldenDirectAbly(t *testing.T) {
 	assertPublishDirectGolden(t, "ably", filepath.Join("testdata", "parity", "publish-direct-ably.golden.json"))
+}
+
+func TestPublishGoldenDirectOps(t *testing.T) {
+	assertPublishDirectGolden(t, "ops", filepath.Join("testdata", "parity", "publish-direct-ops.golden.json"))
 }
 
 func assertPublishDirectGolden(t *testing.T, target, golden string) {
