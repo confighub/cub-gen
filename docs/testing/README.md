@@ -12,6 +12,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 
 - `go test ./...`
 - Core detection/import/flow logic tests in `internal/...`.
+- Bridge bundle tests in `internal/publish/...`.
 
 ### Tier 2: parity/golden
 
@@ -24,6 +25,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 ### Tier 3: examples proof
 
 - Run at least one command per example for changed behavior.
+- For bridge changes, validate import -> publish pipeline output.
 
 ## Required commands
 
