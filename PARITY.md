@@ -131,6 +131,8 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/generators-empty.golden.json`
   - `cmd/cub-gen/testdata/parity/generators.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/generators-kind-helm.table.golden.txt`
+  - `cmd/cub-gen/testdata/parity/generators-kind-helm-score.table.golden.txt`
+  - `cmd/cub-gen/testdata/parity/generators-capability-helm-score.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/generators-empty.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/generators-help.stderr.golden.txt`
   - `cmd/cub-gen/testdata/parity/verify-attestation-tampered.stderr.golden.txt`

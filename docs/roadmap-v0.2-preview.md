@@ -49,6 +49,7 @@ Implemented in this preview slice:
 31. Refactored inverse edit hint strings into registry-driven templates (`InverseEditHints`) with placeholder rendering for family path hints and overlay-specific messaging.
 32. Improved `generators --help` to render supported kind/profile/capability values directly from the registry for self-discoverable filter usage.
 33. Added comma-separated multi-value filtering support for `generators` (`--kind`, `--profile`, `--capability`) with parity contracts for multi-match outputs.
+34. Added table-mode multi-filter parity contracts for `generators` (kind and capability comma-list flows) to keep human-readable output locked alongside JSON.
 
 ## v0.2 preview invariants
 
