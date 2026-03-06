@@ -81,7 +81,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"chart": "https://json.schemastore.org/chart",
 		},
 		HintDefaults: map[string]string{
-			"chart_path": "Chart.yaml",
+			"chart_path":          "Chart.yaml",
+			"chart_role":          "chart",
+			"values_role":         "values",
+			"primary_values_path": "values.yaml",
 		},
 		InversePatchReasons: map[string]string{
 			"image_tag": "Container image tag maps cleanly to helm values.",

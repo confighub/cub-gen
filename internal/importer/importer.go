@@ -136,6 +136,7 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 	outputURI := fmt.Sprintf("oci://example.local/%s/%s:latest", space, sanitizeName(g.Name))
 	outputDigest := digestFor(strings.Join([]string{changeID, g.ID, outputURI}, "|"))
 	inputDigest := digestFor(strings.Join(g.Inputs, "|"))
+	helmPaths := helmProvenancePathsForGenerator(g)
 
 	return model.ProvenanceRecord{
 		SchemaVersion:    provenanceSchema,
@@ -152,8 +153,8 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 			URI:    outputURI,
 			Digest: outputDigest,
 		}},
-		ChartPath:           chartPathForGenerator(g),
-		ValuesPaths:         valuesPathsForGenerator(g),
+		ChartPath:           helmPaths.ChartPath,
+		ValuesPaths:         helmPaths.ValuesPaths,
 		RenderedLineage:     renderedLineageForGenerator(detection, g),
 		FieldOriginMap:      fieldOriginsForGenerator(detection, g),
 		InverseEditPointers: inversePointersForGenerator(detection, g),
@@ -370,11 +371,12 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 func fieldOriginsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.FieldOrigin {
 	switch g.Kind {
 	case model.GeneratorHelm:
+		hints := helmProvenancePathsForGenerator(g)
 		return []model.FieldOrigin{
 			{
 				DryPath:    "values.image.tag",
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
-				SourcePath: "values.yaml",
+				SourcePath: hints.PrimaryValuesPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image_tag", 0.86),
 			},
@@ -882,31 +884,75 @@ func renderTargetTemplate(template string, vars map[string]string) string {
 	return out
 }
 
-func chartPathForGenerator(g model.GeneratorDetection) string {
+type helmProvenancePaths struct {
+	ChartPath         string
+	ValuesPaths       []string
+	PrimaryValuesPath string
+}
+
+func helmProvenancePathsForGenerator(g model.GeneratorDetection) helmProvenancePaths {
 	if g.Kind != model.GeneratorHelm {
-		return ""
+		return helmProvenancePaths{}
 	}
-	for _, in := range g.Inputs {
-		if strings.EqualFold(filepath.Base(in), "chart.yaml") {
+
+	chartRole := strings.TrimSpace(registry.HintDefault(g.Kind, "chart_role", "chart"))
+	if chartRole == "" {
+		chartRole = "chart"
+	}
+	valuesRole := strings.TrimSpace(registry.HintDefault(g.Kind, "values_role", "values"))
+	if valuesRole == "" {
+		valuesRole = "values"
+	}
+	primaryValuesBase := strings.TrimSpace(registry.HintDefault(g.Kind, "primary_values_path", "values.yaml"))
+	if primaryValuesBase == "" {
+		primaryValuesBase = "values.yaml"
+	}
+
+	chartPath := firstInputPathForRole(g.Kind, g.Inputs, chartRole)
+	valuesPaths := inputPathsForRole(g.Kind, g.Inputs, valuesRole)
+	if len(valuesPaths) == 0 && chartPath != "" {
+		valuesPaths = []string{chartPath}
+	}
+
+	primaryValuesPath := primaryValuesBase
+	if selected := selectPreferredPathByBase(valuesPaths, primaryValuesBase); selected != "" {
+		primaryValuesPath = selected
+	}
+
+	return helmProvenancePaths{
+		ChartPath:         chartPath,
+		ValuesPaths:       valuesPaths,
+		PrimaryValuesPath: primaryValuesPath,
+	}
+}
+
+func firstInputPathForRole(kind model.GeneratorKind, inputs []string, role string) string {
+	for _, in := range inputs {
+		if registry.InputRole(kind, in) == role {
 			return in
 		}
 	}
 	return ""
 }
 
-func valuesPathsForGenerator(g model.GeneratorDetection) []string {
-	if g.Kind != model.GeneratorHelm {
-		return nil
-	}
-	out := make([]string, 0, len(g.Inputs))
-	for _, in := range g.Inputs {
-		base := strings.ToLower(filepath.Base(in))
-		if strings.HasPrefix(base, "values") && (strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml")) {
+func inputPathsForRole(kind model.GeneratorKind, inputs []string, role string) []string {
+	out := make([]string, 0, len(inputs))
+	for _, in := range inputs {
+		if registry.InputRole(kind, in) == role {
 			out = append(out, in)
 		}
 	}
 	sort.Strings(out)
 	return out
+}
+
+func selectPreferredPathByBase(paths []string, preferredBase string) string {
+	for _, p := range paths {
+		if strings.EqualFold(filepath.Base(p), preferredBase) {
+			return p
+		}
+	}
+	return ""
 }
 
 func renderedLineageForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.RenderedObjectLineage {
@@ -986,13 +1032,10 @@ func lineageTemplateContext(detection model.DetectionResult, g model.GeneratorDe
 
 	switch g.Kind {
 	case model.GeneratorHelm:
-		chart := chartPathForGenerator(g)
-		values := valuesPathsForGenerator(g)
-		if len(values) == 0 && chart != "" {
-			values = []string{chart}
-		}
-		singleHints["chart_path"] = chart
-		multiHints["values_paths"] = values
+		helmPaths := helmProvenancePathsForGenerator(g)
+		singleHints["chart_path"] = helmPaths.ChartPath
+		singleHints["primary_values_path"] = helmPaths.PrimaryValuesPath
+		multiHints["values_paths"] = helmPaths.ValuesPaths
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		singleHints["source_path"] = hints.SourcePath

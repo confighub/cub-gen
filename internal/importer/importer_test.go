@@ -195,11 +195,18 @@ func TestImportRepoHelmDryWetContract(t *testing.T) {
 	if !containsString(prov.ValuesPaths, "values.yaml") || !containsString(prov.ValuesPaths, "values-prod.yaml") {
 		t.Fatalf("expected values paths to include values.yaml and values-prod.yaml, got %+v", prov.ValuesPaths)
 	}
+	expectedValuesOrder := []string{"values-prod.yaml", "values.yaml"}
+	if !reflect.DeepEqual(prov.ValuesPaths, expectedValuesOrder) {
+		t.Fatalf("expected deterministic values path order %+v, got %+v", expectedValuesOrder, prov.ValuesPaths)
+	}
 	if !renderedLineageHasKind(prov.RenderedLineage, "Deployment") || !renderedLineageHasKind(prov.RenderedLineage, "Service") {
 		t.Fatalf("expected rendered lineage to include Deployment and Service, got %+v", prov.RenderedLineage)
 	}
 	if !renderedLineageHasSourcePath(prov.RenderedLineage, "values.yaml") || !renderedLineageHasSourcePath(prov.RenderedLineage, "values-prod.yaml") {
 		t.Fatalf("expected rendered lineage to include both Helm values source paths, got %+v", prov.RenderedLineage)
+	}
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "values.yaml") {
+		t.Fatalf("expected Helm field origin values.image.tag to resolve source_path values.yaml, got %+v", prov.FieldOriginMap)
 	}
 
 	if !dryInputHasRolePath(result.DryInputs, "chart", "Chart.yaml") {
@@ -512,6 +519,15 @@ service:
 func fieldOriginHasDryPath(v []model.FieldOrigin, dryPath string) bool {
 	for _, item := range v {
 		if item.DryPath == dryPath {
+			return true
+		}
+	}
+	return false
+}
+
+func fieldOriginHasDryPathSourcePath(v []model.FieldOrigin, dryPath, sourcePath string) bool {
+	for _, item := range v {
+		if item.DryPath == dryPath && item.SourcePath == sourcePath {
 			return true
 		}
 	}
