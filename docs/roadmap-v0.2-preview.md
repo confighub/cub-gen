@@ -46,6 +46,7 @@ Implemented in this preview slice:
 28. Refactored provenance `field_origin_map.transform` labels to be registry-driven (`FieldOriginTransform` / `FieldOriginOverlayTransform`) instead of importer string literals.
 29. Expanded `generators` table-mode parity contracts to lock deterministic filtered and empty-match outputs.
 30. Refactored inverse patch reason strings into registry-driven templates (`InversePatchReasons`) with placeholder rendering for family path hints.
+31. Refactored inverse edit hint strings into registry-driven templates (`InverseEditHints`) with placeholder rendering for family path hints and overlay-specific messaging.
 
 ## v0.2 preview invariants
 

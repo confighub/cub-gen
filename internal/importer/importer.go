@@ -493,111 +493,148 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
 				DryPath:    "values.image.tag",
 				Owner:      "app-team",
-				EditHint:   "Edit chart values file and keep chart template unchanged.",
+				EditHint:   registry.InverseEditHint(g.Kind, "image_tag", "Edit chart values file and keep chart template unchanged."),
 				Confidence: 0.86,
 			},
 		}
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
+		vars := map[string]string{
+			"source_path":       hints.SourcePath,
+			"container_name":    hints.ContainerName,
+			"variable_name":     hints.VariableName,
+			"service_port_name": hints.ServicePortName,
+		}
 		return []model.InverseEditPointer{
 			{
 				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/image", hints.ContainerName),
 				DryPath:    fmt.Sprintf("containers.%s.image", hints.ContainerName),
 				Owner:      "app-team",
-				EditHint:   fmt.Sprintf("Edit the Score container image in %s.", hints.SourcePath),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "image", "Edit the Score container image in {{source_path}}."), vars),
 				Confidence: 0.94,
 			},
 			{
 				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/env[name=%s]/value", hints.ContainerName, hints.VariableName),
 				DryPath:    fmt.Sprintf("containers.%s.variables.%s", hints.ContainerName, hints.VariableName),
 				Owner:      "app-team",
-				EditHint:   fmt.Sprintf("Edit %s under containers.%s.variables in %s.", hints.VariableName, hints.ContainerName, hints.SourcePath),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "env_var", "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}."), vars),
 				Confidence: 0.90,
 			},
 			{
 				WetPath:    fmt.Sprintf("Service/spec/ports[name=%s]/port", hints.ServicePortName),
 				DryPath:    fmt.Sprintf("service.ports.%s.port", hints.ServicePortName),
 				Owner:      "app-team",
-				EditHint:   fmt.Sprintf("Edit %s service port in %s.", hints.ServicePortName, hints.SourcePath),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "port", "Edit {{service_port_name}} service port in {{source_path}}."), vars),
 				Confidence: 0.91,
 			},
 		}
 	case model.GeneratorSpringBoot:
 		hints := springPathHintsFromInputs(g.Inputs)
+		vars := map[string]string{
+			"base_config_path":    hints.BaseConfigPath,
+			"profile_config_path": hints.ProfileConfigPath,
+		}
+		serverPortHintKey := "server_port_base"
+		serverPortHintFallback := "Edit server.port in {{base_config_path}}."
+		if hints.ProfileConfigPath != "" {
+			serverPortHintKey = "server_port_overlay"
+			serverPortHintFallback = "Edit server.port in {{profile_config_path}} for environment overrides; use {{base_config_path}} for the default."
+		}
 		return []model.InverseEditPointer{
 			{
 				WetPath:    "Deployment/metadata/labels[app.kubernetes.io/name]",
 				DryPath:    "spring.application.name",
 				Owner:      "app-team",
-				EditHint:   fmt.Sprintf("Edit spring.application.name in %s.", hints.BaseConfigPath),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "app_name", "Edit spring.application.name in {{base_config_path}}."), vars),
 				Confidence: 0.89,
 			},
 			{
 				WetPath:    "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
 				DryPath:    "server.port",
 				Owner:      "app-team",
-				EditHint:   springServerPortEditHint(hints),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, serverPortHintKey, serverPortHintFallback), vars),
 				Confidence: 0.91,
 			},
 			{
 				WetPath:    "ConfigMap/data/application.yaml:spring.datasource.url",
 				DryPath:    "spring.datasource.url",
 				Owner:      "platform-engineer",
-				EditHint:   fmt.Sprintf("Edit spring.datasource.url in %s and coordinate with platform ownership rules.", hints.BaseConfigPath),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "datasource_url", "Edit spring.datasource.url in {{base_config_path}} and coordinate with platform ownership rules."), vars),
 				Confidence: 0.78,
 			},
 		}
 	case model.GeneratorBackstage:
 		hints := backstagePathHintsFromInputs(g.Inputs)
+		vars := map[string]string{"catalog_path": hints.CatalogPath}
 		return []model.InverseEditPointer{
 			{
 				WetPath:    "Application/metadata/name",
 				DryPath:    "metadata.name",
 				Owner:      "platform-engineer",
-				EditHint:   fmt.Sprintf("Edit metadata.name in %s.", hints.CatalogPath),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "name", "Edit metadata.name in {{catalog_path}}."), vars),
 				Confidence: 0.90,
 			},
 			{
 				WetPath:    "Application/metadata/labels[lifecycle]",
 				DryPath:    "spec.lifecycle",
 				Owner:      "platform-engineer",
-				EditHint:   fmt.Sprintf("Edit spec.lifecycle in %s and coordinate rollout policy.", hints.CatalogPath),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "lifecycle", "Edit spec.lifecycle in {{catalog_path}} and coordinate rollout policy."), vars),
 				Confidence: 0.82,
 			},
 		}
 	case model.GeneratorAbly:
 		hints := ablyPathHintsFromInputs(g.Inputs)
+		vars := map[string]string{
+			"base_config_path":    hints.BaseConfigPath,
+			"overlay_config_path": hints.OverlayConfigPath,
+		}
+		channelsHintKey := "channels_base"
+		channelsHintFallback := "Edit channels.inbound in {{base_config_path}}."
+		if hints.OverlayConfigPath != "" {
+			channelsHintKey = "channels_overlay"
+			channelsHintFallback = "Edit channels.inbound in {{overlay_config_path}} for environment-specific behavior; use {{base_config_path}} for defaults."
+		}
 		return []model.InverseEditPointer{
 			{
 				WetPath:    "ConfigMap/data/ABLY_ENVIRONMENT",
 				DryPath:    "app.environment",
 				Owner:      "app-team",
-				EditHint:   fmt.Sprintf("Edit app.environment in %s.", hints.BaseConfigPath),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "environment", "Edit app.environment in {{base_config_path}}."), vars),
 				Confidence: 0.90,
 			},
 			{
 				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
 				DryPath:    "channels.inbound",
 				Owner:      "app-team",
-				EditHint:   ablyInboundChannelEditHint(hints),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, channelsHintKey, channelsHintFallback), vars),
 				Confidence: 0.88,
 			},
 		}
 	case model.GeneratorOpsFlow:
 		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
+		vars := map[string]string{
+			"base_spec_path":    hints.BaseSpecPath,
+			"overlay_spec_path": hints.OverlaySpecPath,
+		}
+		scheduleHintKey := "schedule_base"
+		scheduleHintFallback := "Edit triggers.schedule in {{base_spec_path}}."
+		if hints.OverlaySpecPath != "" {
+			scheduleHintKey = "schedule_overlay"
+			scheduleHintFallback = "Edit triggers.schedule in {{overlay_spec_path}} for environment-specific cadence; use {{base_spec_path}} for defaults."
+		}
 		return []model.InverseEditPointer{
 			{
 				WetPath:    "Workflow/spec/templates[name=deploy]/container/image",
 				DryPath:    "actions.deploy.image_tag",
 				Owner:      "platform-engineer",
-				EditHint:   fmt.Sprintf("Edit actions.deploy.image_tag in %s.", hints.BaseSpecPath),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "image_tag", "Edit actions.deploy.image_tag in {{base_spec_path}}."), vars),
 				Confidence: 0.87,
 			},
 			{
 				WetPath:    "Workflow/spec/schedule",
 				DryPath:    "triggers.schedule",
 				Owner:      "platform-engineer",
-				EditHint:   opsWorkflowScheduleEditHint(hints),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, scheduleHintKey, scheduleHintFallback), vars),
 				Confidence: 0.84,
 			},
 		}
@@ -921,13 +958,6 @@ func springPathHintsFromInputs(inputs []string) springHints {
 	return h
 }
 
-func springServerPortEditHint(h springHints) string {
-	if h.ProfileConfigPath != "" {
-		return fmt.Sprintf("Edit server.port in %s for environment overrides; use %s for the default.", h.ProfileConfigPath, h.BaseConfigPath)
-	}
-	return fmt.Sprintf("Edit server.port in %s.", h.BaseConfigPath)
-}
-
 type backstageHints struct {
 	CatalogPath   string
 	AppConfigPath string
@@ -974,13 +1004,6 @@ func ablyPathHintsFromInputs(inputs []string) ablyHints {
 	return h
 }
 
-func ablyInboundChannelEditHint(h ablyHints) string {
-	if h.OverlayConfigPath != "" {
-		return fmt.Sprintf("Edit channels.inbound in %s for environment-specific behavior; use %s for defaults.", h.OverlayConfigPath, h.BaseConfigPath)
-	}
-	return fmt.Sprintf("Edit channels.inbound in %s.", h.BaseConfigPath)
-}
-
 type opsWorkflowHints struct {
 	BaseSpecPath    string
 	OverlaySpecPath string
@@ -1003,13 +1026,6 @@ func opsWorkflowPathHintsFromInputs(inputs []string) opsWorkflowHints {
 		}
 	}
 	return h
-}
-
-func opsWorkflowScheduleEditHint(h opsWorkflowHints) string {
-	if h.OverlaySpecPath != "" {
-		return fmt.Sprintf("Edit triggers.schedule in %s for environment-specific cadence; use %s for defaults.", h.OverlaySpecPath, h.BaseSpecPath)
-	}
-	return fmt.Sprintf("Edit triggers.schedule in %s.", h.BaseSpecPath)
 }
 
 func inferInputSchema(kind model.GeneratorKind, inputPath string) string {
