@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/confighub/cub-gen/internal/model"
 	"github.com/confighub/cub-gen/internal/publish"
@@ -17,7 +18,10 @@ import (
 const (
 	ingestSchemaVersion = "cub.confighub.io/governed-wet-ingest/v1"
 	defaultEndpointPath = "/api/v1/governed-wet-artifacts:ingest"
+	defaultHTTPTimeout  = 30 * time.Second
 )
+
+var defaultHTTPClient = &http.Client{Timeout: defaultHTTPTimeout}
 
 // Client defines the endpoint and auth for bridge ingest.
 type Client struct {
@@ -130,7 +134,7 @@ func IngestBundle(ctx context.Context, client Client, bundle publish.ChangeBundl
 
 	httpClient := client.HTTPClient
 	if httpClient == nil {
-		httpClient = http.DefaultClient
+		httpClient = defaultHTTPClient
 	}
 
 	resp, err := httpClient.Do(req)

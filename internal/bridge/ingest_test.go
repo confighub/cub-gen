@@ -13,6 +13,15 @@ import (
 	"github.com/confighub/cub-gen/internal/publish"
 )
 
+func TestDefaultHTTPClientTimeout(t *testing.T) {
+	if defaultHTTPClient == nil {
+		t.Fatal("expected default HTTP client to be initialized")
+	}
+	if defaultHTTPClient.Timeout != defaultHTTPTimeout {
+		t.Fatalf("expected default HTTP timeout %s, got %s", defaultHTTPTimeout, defaultHTTPClient.Timeout)
+	}
+}
+
 func TestIngestBundleCreated(t *testing.T) {
 	bundle := sampleBundle("chg_1")
 	var gotPayload IngestPayload
