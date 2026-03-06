@@ -1,0 +1,43 @@
+{
+  "alias_path_suffix": "examples/springboot-paas",
+  "detections": [
+    {
+      "confidence": 0.93,
+      "id": "gen_73ed79c3c8b65360",
+      "inputs": [
+        "pom.xml",
+        "src/main/resources/application-prod.yaml",
+        "src/main/resources/application.yaml"
+      ],
+      "kind": "springboot",
+      "name": "springboot-paas",
+      "profile": "springboot-paas",
+      "root": ""
+    }
+  ],
+  "discover_file": "\u003cdiscover_file\u003e",
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
+  "discovered_at": "\u003ctimestamp\u003e",
+  "ref": "HEAD",
+  "resources": [
+    {
+      "generator_id": "gen_73ed79c3c8b65360",
+      "generator_kind": "springboot",
+      "generator_profile": "springboot-paas",
+      "inputs": [
+        "pom.xml",
+        "src/main/resources/application-prod.yaml",
+        "src/main/resources/application.yaml"
+      ],
+      "resource_body": "kind: Kustomization\nmetadata:\n  name: springboot-paas\nspec:\n  root: \n",
+      "resource_kind": "Kustomization",
+      "resource_name": "springboot-paas",
+      "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization",
+      "root": ""
+    }
+  ],
+  "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
+  "target_path_expected_suffix": "examples/springboot-paas",
+  "target_slug": "spring"
+}

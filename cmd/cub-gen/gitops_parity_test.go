@@ -32,6 +32,52 @@ func TestGitOpsParityGoldenDiscover(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover.golden.json"), got)
 }
 
+func TestGitOpsParityGoldenDiscoverScore(t *testing.T) {
+	aliases := setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "score"})
+	if err != nil {
+		t.Fatalf("run score discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal score discover json: %v\noutput=%s", err, out)
+	}
+	normalizeDiscover(got)
+
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("examples", "scoredev-paas"))
+	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["score"]), filepath.ToSlash(filepath.Join("examples", "scoredev-paas")))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-score.golden.json"), got)
+}
+
+func TestGitOpsParityGoldenDiscoverSpring(t *testing.T) {
+	aliases := setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "spring"})
+	if err != nil {
+		t.Fatalf("run spring discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal spring discover json: %v\noutput=%s", err, out)
+	}
+	normalizeDiscover(got)
+
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("examples", "springboot-paas"))
+	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["spring"]), filepath.ToSlash(filepath.Join("examples", "springboot-paas")))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-spring.golden.json"), got)
+}
+
 func TestGitOpsParityGoldenImport(t *testing.T) {
 	setupAliases(t)
 
