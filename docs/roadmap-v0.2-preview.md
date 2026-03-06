@@ -40,6 +40,7 @@ Implemented in this preview slice:
 22. Extended the family registry to own wet-manifest target templates, removing importer-local wet target switch logic.
 23. Added `cub-gen generators` command (table + JSON + help golden contracts) to expose registry-backed supported family inventory.
 24. Extended `cub-gen generators` with deterministic filters (`--kind`, `--profile`, `--capability`) and locked filtered output contracts.
+25. Refactored input schema inference to be registry-driven (`RoleSchemaRefs`) instead of importer-local switch logic, preserving existing schema outputs while reducing per-family branching.
 
 ## v0.2 preview invariants
 

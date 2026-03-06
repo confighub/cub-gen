@@ -31,6 +31,7 @@ type FamilySpec struct {
 	ResourceKind     string
 	ResourceType     string
 	Capabilities     []string
+	RoleSchemaRefs   map[string]string
 	InputRoleRules   []InputRoleRule
 	DefaultInputRole string
 	RoleOwners       map[string]string
@@ -45,6 +46,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		ResourceKind: "HelmRelease",
 		ResourceType: "helm.toolkit.fluxcd.io/v2/HelmRelease",
 		Capabilities: []string{"render-manifests", "values-overrides", "inverse-values-patch"},
+		RoleSchemaRefs: map[string]string{
+			"chart": "https://json.schemastore.org/chart",
+		},
 		InputRoleRules: []InputRoleRule{
 			{Role: "chart", ExactBasenames: []string{"chart.yaml"}},
 			{Role: "values", Prefixes: []string{"values"}, Extensions: []string{".yaml", ".yml"}},
@@ -64,6 +68,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		ResourceKind:     "Application",
 		ResourceType:     "argoproj.io/v1alpha1/Application",
 		Capabilities:     []string{"render-manifests", "workload-spec", "inverse-score-patch"},
+		RoleSchemaRefs:   map[string]string{"score-spec": "https://docs.score.dev/schemas/score-v1b1.json"},
 		InputRoleRules:   []InputRoleRule{{Role: "score-spec", ExactBasenames: []string{"score.yaml", "score.yml"}}},
 		DefaultInputRole: "score-input",
 		DefaultOwner:     "app-team",
@@ -79,6 +84,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		ResourceKind: "Kustomization",
 		ResourceType: "kustomize.toolkit.fluxcd.io/v1/Kustomization",
 		Capabilities: []string{"render-app-config", "profile-overrides", "inverse-app-config-patch"},
+		RoleSchemaRefs: map[string]string{
+			"app-config-base":    "https://json.schemastore.org/spring-configuration-metadata",
+			"app-config-profile": "https://json.schemastore.org/spring-configuration-metadata",
+		},
 		InputRoleRules: []InputRoleRule{
 			{Role: "build-config", ExactBasenames: []string{"pom.xml", "build.gradle", "build.gradle.kts"}},
 			{Role: "app-config-base", ExactBasenames: []string{"application.yaml", "application.yml"}},
@@ -102,6 +111,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		ResourceKind: "Component",
 		ResourceType: "backstage.io/v1alpha1/Component",
 		Capabilities: []string{"catalog-metadata", "render-manifests", "inverse-catalog-patch"},
+		RoleSchemaRefs: map[string]string{
+			"catalog-spec": "https://json.schemastore.org/backstage-catalog-info",
+			"app-config":   "https://json.schemastore.org/backstage-app-config",
+		},
 		InputRoleRules: []InputRoleRule{
 			{Role: "catalog-spec", ExactBasenames: []string{"catalog-info.yaml", "catalog-info.yml"}},
 			{Role: "app-config", ExactBasenames: []string{"app-config.yaml", "app-config.yml"}},
@@ -120,6 +133,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		ResourceKind: "ConfigMap",
 		ResourceType: "v1/ConfigMap",
 		Capabilities: []string{"app-config-only", "provider-config", "inverse-provider-config-patch"},
+		RoleSchemaRefs: map[string]string{
+			"provider-config-base":    "https://schema.confighub.dev/generators/ably-config-v1",
+			"provider-config-overlay": "https://schema.confighub.dev/generators/ably-config-v1",
+		},
 		InputRoleRules: []InputRoleRule{
 			{Role: "provider-config-base", ExactBasenames: []string{"ably.yaml", "ably.yml", "ably.json"}},
 			{Role: "provider-config-overlay", Prefixes: []string{"ably-"}, Extensions: []string{".yaml", ".yml", ".json"}},
@@ -137,6 +154,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		ResourceKind: "Workflow",
 		ResourceType: "argoproj.io/v1alpha1/Workflow",
 		Capabilities: []string{"workflow-plan", "governed-execution-intent", "inverse-workflow-patch"},
+		RoleSchemaRefs: map[string]string{
+			"operations-base":    "https://schema.confighub.dev/generators/ops-workflow-v1",
+			"operations-overlay": "https://schema.confighub.dev/generators/ops-workflow-v1",
+		},
 		InputRoleRules: []InputRoleRule{
 			{Role: "operations-base", ExactBasenames: []string{"operations.yaml", "operations.yml", "workflow.yaml", "workflow.yml"}},
 			{Role: "operations-overlay", Prefixes: []string{"operations-", "workflow-"}, Extensions: []string{".yaml", ".yml"}},
@@ -161,6 +182,7 @@ func Spec(kind model.GeneratorKind) (FamilySpec, bool) {
 		ResourceKind:     spec.ResourceKind,
 		ResourceType:     spec.ResourceType,
 		Capabilities:     append([]string(nil), spec.Capabilities...),
+		RoleSchemaRefs:   copyRoleSchemaRefs(spec.RoleSchemaRefs),
 		InputRoleRules:   copyInputRoleRules(spec.InputRoleRules),
 		DefaultInputRole: spec.DefaultInputRole,
 		RoleOwners:       copyRoleOwners(spec.RoleOwners),
@@ -204,44 +226,17 @@ func Capabilities(kind model.GeneratorKind) []string {
 func SchemaRef(kind model.GeneratorKind, inputPath string) string {
 	base := strings.ToLower(filepath.Base(inputPath))
 	ext := strings.ToLower(filepath.Ext(base))
-	role := InputRole(kind, inputPath)
 
 	switch ext {
 	case ".xml":
 		return "https://maven.apache.org/xsd/maven-4.0.0.xsd"
-	case ".yaml", ".yml":
-		switch kind {
-		case model.GeneratorHelm:
-			if role == "chart" {
-				return "https://json.schemastore.org/chart"
+	default:
+		spec, ok := Spec(kind)
+		if ok {
+			role := InputRole(kind, inputPath)
+			if schemaRef, found := spec.RoleSchemaRefs[role]; found && strings.TrimSpace(schemaRef) != "" {
+				return schemaRef
 			}
-		case model.GeneratorScore:
-			if role == "score-spec" {
-				return "https://docs.score.dev/schemas/score-v1b1.json"
-			}
-		case model.GeneratorSpringBoot:
-			if role == "app-config-base" || role == "app-config-profile" {
-				return "https://json.schemastore.org/spring-configuration-metadata"
-			}
-		case model.GeneratorBackstage:
-			if role == "catalog-spec" {
-				return "https://json.schemastore.org/backstage-catalog-info"
-			}
-			if role == "app-config" {
-				return "https://json.schemastore.org/backstage-app-config"
-			}
-		case model.GeneratorAbly:
-			if strings.HasPrefix(role, "provider-config") {
-				return "https://schema.confighub.dev/generators/ably-config-v1"
-			}
-		case model.GeneratorOpsFlow:
-			if strings.HasPrefix(role, "operations-") {
-				return "https://schema.confighub.dev/generators/ops-workflow-v1"
-			}
-		}
-	case ".json":
-		if kind == model.GeneratorAbly && strings.HasPrefix(role, "provider-config") {
-			return "https://schema.confighub.dev/generators/ably-config-v1"
 		}
 	}
 
@@ -351,6 +346,17 @@ func copyInputRoleRules(in []InputRoleRule) []InputRoleRule {
 }
 
 func copyRoleOwners(in map[string]string) map[string]string {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func copyRoleSchemaRefs(in map[string]string) map[string]string {
 	if in == nil {
 		return nil
 	}
