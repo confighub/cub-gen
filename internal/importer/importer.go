@@ -206,6 +206,8 @@ func capabilitiesForKind(kind model.GeneratorKind) []string {
 		return []string{"render-app-config", "profile-overrides", "inverse-app-config-patch"}
 	case model.GeneratorBackstage:
 		return []string{"catalog-metadata", "render-manifests", "inverse-catalog-patch"}
+	case model.GeneratorAbly:
+		return []string{"app-config-only", "provider-config", "inverse-provider-config-patch"}
 	default:
 		return []string{"render-manifests"}
 	}
@@ -284,6 +286,28 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Confidence:     0.82,
 				RequiresReview: true,
 				Reason:         "Lifecycle changes impact platform ownership and support policy.",
+			},
+		}
+	case model.GeneratorAbly:
+		hints := ablyPathHintsFromInputs(g.Inputs)
+		return []model.InversePatch{
+			{
+				Operation:      "replace",
+				DryPath:        "app.environment",
+				WetPath:        "ConfigMap/data/ABLY_ENVIRONMENT",
+				EditableBy:     "app-team",
+				Confidence:     0.90,
+				RequiresReview: false,
+				Reason:         fmt.Sprintf("Environment is sourced from %s.", hints.BaseConfigPath),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "channels.inbound",
+				WetPath:        "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				EditableBy:     "app-team",
+				Confidence:     0.88,
+				RequiresReview: false,
+				Reason:         "Channel mapping is app-level runtime behavior.",
 			},
 		}
 	default:
@@ -381,6 +405,34 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				Confidence: 0.82,
 			},
 		}
+	case model.GeneratorAbly:
+		hints := ablyPathHintsFromInputs(g.Inputs)
+		origins := []model.FieldOrigin{
+			{
+				DryPath:    "app.environment",
+				WetPath:    "ConfigMap/data/ABLY_ENVIRONMENT",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  "ably-config-to-runtime",
+				Confidence: 0.90,
+			},
+			{
+				DryPath:    "channels.inbound",
+				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  "ably-config-to-runtime",
+				Confidence: 0.88,
+			},
+		}
+		if hints.OverlayConfigPath != "" {
+			origins = append(origins, model.FieldOrigin{
+				DryPath:    "channels.inbound",
+				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				SourcePath: hints.OverlayConfigPath,
+				Transform:  "ably-overlay-merge",
+				Confidence: 0.84,
+			})
+		}
+		return origins
 	default:
 		return []model.FieldOrigin{}
 	}
@@ -464,6 +516,24 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				Owner:      "platform-engineer",
 				EditHint:   fmt.Sprintf("Edit spec.lifecycle in %s and coordinate rollout policy.", hints.CatalogPath),
 				Confidence: 0.82,
+			},
+		}
+	case model.GeneratorAbly:
+		hints := ablyPathHintsFromInputs(g.Inputs)
+		return []model.InverseEditPointer{
+			{
+				WetPath:    "ConfigMap/data/ABLY_ENVIRONMENT",
+				DryPath:    "app.environment",
+				Owner:      "app-team",
+				EditHint:   fmt.Sprintf("Edit app.environment in %s.", hints.BaseConfigPath),
+				Confidence: 0.90,
+			},
+			{
+				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				DryPath:    "channels.inbound",
+				Owner:      "app-team",
+				EditHint:   ablyInboundChannelEditHint(hints),
+				Confidence: 0.88,
 			},
 		}
 	default:
@@ -621,6 +691,11 @@ func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.Gen
 			{GeneratorID: g.ID, Kind: "Application", Name: g.Name, Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "metadata.name"},
 			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-catalog", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "spec.lifecycle"},
 		}
+	case model.GeneratorAbly:
+		return []model.WetManifestTarget{
+			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-ably", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "app.environment"},
+			{GeneratorID: g.ID, Kind: "Secret", Name: g.Name + "-ably-credentials", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "credentials.api_key_ref"},
+		}
 	default:
 		return []model.WetManifestTarget{}
 	}
@@ -662,6 +737,15 @@ func classifyDryInputRole(kind model.GeneratorKind, in string) string {
 			return "app-config"
 		}
 		return "backstage-input"
+	case model.GeneratorAbly:
+		switch {
+		case base == "ably.yaml" || base == "ably.yml" || base == "ably.json":
+			return "provider-config-base"
+		case strings.HasPrefix(base, "ably-"):
+			return "provider-config-overlay"
+		default:
+			return "provider-config"
+		}
 	default:
 		return "input"
 	}
@@ -686,6 +770,8 @@ func ownerForDryInput(kind model.GeneratorKind, role string) string {
 			return "app-team"
 		}
 		return "platform-engineer"
+	case model.GeneratorAbly:
+		return "app-team"
 	default:
 		return "platform-engineer"
 	}
@@ -769,6 +855,18 @@ func renderedLineageForGenerator(detection model.DetectionResult, g model.Genera
 			{Kind: "Application", Name: g.Name, Namespace: "apps", SourcePath: hints.CatalogPath, SourceDryPath: "metadata.name"},
 			{Kind: "ConfigMap", Name: g.Name + "-catalog", Namespace: "apps", SourcePath: hints.CatalogPath, SourceDryPath: "spec.lifecycle"},
 		}
+	case model.GeneratorAbly:
+		hints := ablyPathHintsFromInputs(g.Inputs)
+		lineage := []model.RenderedObjectLineage{
+			{Kind: "ConfigMap", Name: g.Name + "-ably", Namespace: "apps", SourcePath: hints.BaseConfigPath, SourceDryPath: "app.environment"},
+			{Kind: "Secret", Name: g.Name + "-ably-credentials", Namespace: "apps", SourcePath: hints.BaseConfigPath, SourceDryPath: "credentials.api_key_ref"},
+		}
+		if hints.OverlayConfigPath != "" {
+			lineage = append(lineage, model.RenderedObjectLineage{
+				Kind: "ConfigMap", Name: g.Name + "-ably", Namespace: "apps", SourcePath: hints.OverlayConfigPath, SourceDryPath: "channels.inbound",
+			})
+		}
+		return lineage
 	default:
 		return nil
 	}
@@ -844,6 +942,37 @@ func backstagePathHintsFromInputs(inputs []string) backstageHints {
 	return h
 }
 
+type ablyHints struct {
+	BaseConfigPath    string
+	OverlayConfigPath string
+}
+
+func ablyPathHintsFromInputs(inputs []string) ablyHints {
+	h := ablyHints{
+		BaseConfigPath: "ably.yaml",
+	}
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		base := strings.ToLower(filepath.Base(in))
+		switch {
+		case base == "ably.yaml" || base == "ably.yml" || base == "ably.json":
+			h.BaseConfigPath = p
+		case strings.HasPrefix(base, "ably-"):
+			if h.OverlayConfigPath == "" || p < h.OverlayConfigPath {
+				h.OverlayConfigPath = p
+			}
+		}
+	}
+	return h
+}
+
+func ablyInboundChannelEditHint(h ablyHints) string {
+	if h.OverlayConfigPath != "" {
+		return fmt.Sprintf("Edit channels.inbound in %s for environment-specific behavior; use %s for defaults.", h.OverlayConfigPath, h.BaseConfigPath)
+	}
+	return fmt.Sprintf("Edit channels.inbound in %s.", h.BaseConfigPath)
+}
+
 func inferInputSchema(kind model.GeneratorKind, inputPath string) string {
 	ext := strings.ToLower(filepath.Ext(inputPath))
 	switch {
@@ -865,6 +994,14 @@ func inferInputSchema(kind model.GeneratorKind, inputPath string) string {
 			if base == "app-config.yaml" || base == "app-config.yml" {
 				return "https://json.schemastore.org/backstage-app-config"
 			}
+		}
+		if kind == model.GeneratorAbly {
+			return "https://schema.confighub.dev/generators/ably-config-v1"
+		}
+		return "https://json-schema.org/draft/2020-12/schema"
+	case ext == ".json":
+		if kind == model.GeneratorAbly {
+			return "https://schema.confighub.dev/generators/ably-config-v1"
 		}
 		return "https://json-schema.org/draft/2020-12/schema"
 	case ext == ".xml":

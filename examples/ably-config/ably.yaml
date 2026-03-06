@@ -1,0 +1,9 @@
+service: ably
+app:
+  name: checkout-api
+  environment: production
+channels:
+  inbound: checkout.inbound
+  outbound: checkout.outbound
+credentials:
+  api_key_ref: ABLY_API_KEY

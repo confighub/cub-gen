@@ -48,10 +48,10 @@ func TestAttestFromStdin(t *testing.T) {
 	}
 }
 
-func TestAttestFromStdinFirstThreeTargets(t *testing.T) {
+func TestAttestFromStdinSupportedTargets(t *testing.T) {
 	setupAliases(t)
 
-	targets := []string{"helm", "score", "spring", "backstage"}
+	targets := []string{"helm", "score", "spring", "backstage", "ably"}
 	for _, target := range targets {
 		t.Run(target, func(t *testing.T) {
 			bundleJSON, err := generateBundleJSONForTarget(target)

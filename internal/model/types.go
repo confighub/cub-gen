@@ -7,6 +7,7 @@ const (
 	GeneratorScore      GeneratorKind = "score"
 	GeneratorSpringBoot GeneratorKind = "springboot"
 	GeneratorBackstage  GeneratorKind = "backstage"
+	GeneratorAbly       GeneratorKind = "ably"
 )
 
 type GeneratorDetection struct {

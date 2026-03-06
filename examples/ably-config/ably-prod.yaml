@@ -1,0 +1,4 @@
+app:
+  environment: production-eu
+channels:
+  inbound: checkout.inbound.eu

@@ -23,6 +23,7 @@ func TestImportRepoExamples(t *testing.T) {
 		{name: "scoredev-paas", repoDir: "scoredev-paas", expectedKind: model.GeneratorScore, expectedProfile: "scoredev-paas"},
 		{name: "springboot-paas", repoDir: "springboot-paas", expectedKind: model.GeneratorSpringBoot, expectedProfile: "springboot-paas"},
 		{name: "backstage-idp", repoDir: "backstage-idp", expectedKind: model.GeneratorBackstage, expectedProfile: "backstage-idp"},
+		{name: "ably-config", repoDir: "ably-config", expectedKind: model.GeneratorAbly, expectedProfile: "ably-config"},
 	}
 
 	for _, tt := range tests {
@@ -141,6 +142,11 @@ func TestImportRepoGeneratorCapabilities(t *testing.T) {
 			name:                 "backstage-idp",
 			repoDir:              "backstage-idp",
 			expectedCapabilities: []string{"catalog-metadata", "render-manifests", "inverse-catalog-patch"},
+		},
+		{
+			name:                 "ably-config",
+			repoDir:              "ably-config",
+			expectedCapabilities: []string{"app-config-only", "provider-config", "inverse-provider-config-patch"},
 		},
 	}
 
@@ -305,6 +311,42 @@ func TestImportRepoBackstageDryWetContract(t *testing.T) {
 	}
 	if !wetTargetHasKindOwner(result.WetManifestTargets, "ConfigMap", "platform-runtime") {
 		t.Fatalf("expected ConfigMap owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+}
+
+func TestImportRepoAblyDryWetContract(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "ably-config")
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+	prov := result.Provenance[0]
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "app.environment") {
+		t.Fatalf("expected app.environment field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "channels.inbound") {
+		t.Fatalf("expected channels.inbound field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHasDryPath(prov.InverseEditPointers, "channels.inbound") {
+		t.Fatalf("expected channels.inbound inverse pointer, got %+v", prov.InverseEditPointers)
+	}
+
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "provider-config-base", "app-team", "ably.yaml") {
+		t.Fatalf("expected provider-config-base owner to be app-team, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "provider-config-overlay", "app-team", "ably-prod.yaml") {
+		t.Fatalf("expected provider-config-overlay owner to be app-team, got %+v", result.DryInputs)
+	}
+
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "ConfigMap", "platform-runtime") {
+		t.Fatalf("expected ConfigMap owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "Secret", "platform-runtime") {
+		t.Fatalf("expected Secret owner to be platform-runtime, got %+v", result.WetManifestTargets)
 	}
 }
 

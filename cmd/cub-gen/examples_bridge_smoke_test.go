@@ -33,6 +33,11 @@ func TestExamplesPathModeBridgeFlow(t *testing.T) {
 			repoSuffix:      filepath.Join("examples", "backstage-idp"),
 			expectedProfile: "backstage-idp",
 		},
+		{
+			name:            "ably",
+			repoSuffix:      filepath.Join("examples", "ably-config"),
+			expectedProfile: "ably-config",
+		},
 	}
 
 	for _, tt := range tests {

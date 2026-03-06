@@ -45,6 +45,13 @@ func TestScanRepoExamples(t *testing.T) {
 			expectedProfile: "backstage-idp",
 			expectedFile:    "catalog-info.yaml",
 		},
+		{
+			name:            "ably-config",
+			repoDir:         "ably-config",
+			expectedKind:    model.GeneratorAbly,
+			expectedProfile: "ably-config",
+			expectedFile:    "ably.yaml",
+		},
 	}
 
 	for _, tt := range tests {

@@ -71,6 +71,14 @@ func TestVerifyAttestationGoldenLinkedSpringJSON(t *testing.T) {
 	assertVerifyAttestationLinkedGolden(t, "spring", "testdata/parity/verify-attestation-linked-spring.json.golden.json")
 }
 
+func TestVerifyAttestationGoldenLinkedBackstageJSON(t *testing.T) {
+	assertVerifyAttestationLinkedGolden(t, "backstage", "testdata/parity/verify-attestation-linked-backstage.json.golden.json")
+}
+
+func TestVerifyAttestationGoldenLinkedAblyJSON(t *testing.T) {
+	assertVerifyAttestationLinkedGolden(t, "ably", "testdata/parity/verify-attestation-linked-ably.json.golden.json")
+}
+
 func assertVerifyAttestationLinkedGolden(t *testing.T, target, goldenPath string) {
 	t.Helper()
 	setupAliases(t)
