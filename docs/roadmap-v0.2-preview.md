@@ -26,6 +26,13 @@ Implemented in this preview slice:
 10. Extended publish parity goldens to all supported families (Helm/Score/Spring/Backstage/Ably) in both from-import and direct modes.
 11. Extended verify-attestation linked parity goldens to include Backstage and Ably.
 12. Extended path-mode smoke and bridge smoke tests to include Ably.
+13. Added `ops-workflow` generator family (detect + import).
+14. Added example repo fixture at `examples/ops-workflow/`.
+15. Added gitops parity goldens for Ops workflow discover/import:
+   - `gitops-discover-ops.golden.json`
+   - `gitops-import-ops.golden.json`
+16. Extended publish parity goldens and verify-attestation linked goldens to include Ops workflow.
+17. Extended path-mode smoke and bridge smoke tests to include Ops workflow.
 
 ## v0.2 preview invariants
 
@@ -36,7 +43,6 @@ Implemented in this preview slice:
 
 ## Next slices toward v0.2
 
-1. Add one ops/workflow-style generator family.
-2. Define a stable extension surface for adding generator families without large switch edits.
-3. Keep generator-family capability metadata contract tests updated as families are added.
-4. Keep bridge artifacts (`publish/verify/attest`) symmetric across all supported families.
+1. Define a stable extension surface for adding generator families without large switch edits.
+2. Keep generator-family capability metadata contract tests updated as families are added.
+3. Keep bridge artifacts (`publish/verify/attest`) symmetric across all supported families.

@@ -1,0 +1,7 @@
+{
+  "attestation_digest": "\u003cattestation_digest\u003e",
+  "bundle_digest": "\u003cbundle_digest\u003e",
+  "change_id": "\u003cchange_id\u003e",
+  "linked_bundle_check": true,
+  "valid": true
+}

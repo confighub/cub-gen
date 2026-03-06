@@ -44,6 +44,12 @@ func TestExamplesPathModeDiscoverAndImport(t *testing.T) {
 			expectedProfile: "ably-config",
 			expectedKind:    "ably",
 		},
+		{
+			name:            "ops",
+			repoSuffix:      filepath.Join("examples", "ops-workflow"),
+			expectedProfile: "ops-workflow",
+			expectedKind:    "opsworkflow",
+		},
 	}
 
 	for _, tt := range tests {

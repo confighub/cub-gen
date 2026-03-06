@@ -1,0 +1,41 @@
+{
+  "alias_path_suffix": "examples/ops-workflow",
+  "detections": [
+    {
+      "confidence": 0.89,
+      "id": "gen_2242fb51feab67d2",
+      "inputs": [
+        "operations-prod.yaml",
+        "operations.yaml"
+      ],
+      "kind": "opsworkflow",
+      "name": "ops-workflow",
+      "profile": "ops-workflow",
+      "root": ""
+    }
+  ],
+  "discover_file": "\u003cdiscover_file\u003e",
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
+  "discovered_at": "\u003ctimestamp\u003e",
+  "ref": "HEAD",
+  "resources": [
+    {
+      "generator_id": "gen_2242fb51feab67d2",
+      "generator_kind": "opsworkflow",
+      "generator_profile": "ops-workflow",
+      "inputs": [
+        "operations-prod.yaml",
+        "operations.yaml"
+      ],
+      "resource_body": "kind: Workflow\nmetadata:\n  name: ops-workflow\nspec:\n  root: \n",
+      "resource_kind": "Workflow",
+      "resource_name": "ops-workflow",
+      "resource_type": "argoproj.io/v1alpha1/Workflow",
+      "root": ""
+    }
+  ],
+  "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
+  "target_path_expected_suffix": "examples/ops-workflow",
+  "target_slug": "ops"
+}

@@ -138,6 +138,11 @@ func TestPublishDirectTargetModeSupportedTargets(t *testing.T) {
 			target:          "ably",
 			expectedProfile: "ably-config",
 		},
+		{
+			name:            "ops",
+			target:          "ops",
+			expectedProfile: "ops-workflow",
+		},
 	}
 
 	for _, tt := range tests {

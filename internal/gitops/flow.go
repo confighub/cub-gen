@@ -796,6 +796,8 @@ func mappedResourceKind(kind model.GeneratorKind) string {
 		return "Component"
 	case model.GeneratorAbly:
 		return "ConfigMap"
+	case model.GeneratorOpsFlow:
+		return "Workflow"
 	default:
 		return "Resource"
 	}
@@ -813,6 +815,8 @@ func mappedResourceType(kind model.GeneratorKind) string {
 		return "backstage.io/v1alpha1/Component"
 	case model.GeneratorAbly:
 		return "v1/ConfigMap"
+	case model.GeneratorOpsFlow:
+		return "argoproj.io/v1alpha1/Workflow"
 	default:
 		return "v1/Resource"
 	}

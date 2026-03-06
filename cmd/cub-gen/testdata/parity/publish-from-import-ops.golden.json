@@ -1,0 +1,272 @@
+{
+  "bundle_digest": "\u003cbundle_digest\u003e",
+  "change_id": "\u003cchange_id\u003e",
+  "contracts": [
+    {
+      "capabilities": [
+        "workflow-plan",
+        "governed-execution-intent",
+        "inverse-workflow-patch"
+      ],
+      "deterministic": true,
+      "generator_id": "gen_2242fb51feab67d2",
+      "inputs": [
+        {
+          "name": "input_01",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/ops-workflow-v1"
+        },
+        {
+          "name": "input_02",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/ops-workflow-v1"
+        }
+      ],
+      "kind": "opsworkflow",
+      "name": "ops-workflow",
+      "output_format": "kubernetes/yaml",
+      "profile": "ops-workflow",
+      "schema_version": "cub.confighub.io/generator-contract/v1",
+      "source_path": "",
+      "source_ref": "HEAD",
+      "source_repo": "\u003ctarget_path\u003e",
+      "transport": "oci+git",
+      "version": "0.1.0"
+    }
+  ],
+  "digest_algorithm": "sha256",
+  "discovered": [
+    {
+      "generator_id": "gen_2242fb51feab67d2",
+      "generator_kind": "opsworkflow",
+      "generator_profile": "ops-workflow",
+      "inputs": [
+        "operations-prod.yaml",
+        "operations.yaml"
+      ],
+      "resource_body": "kind: Workflow\nmetadata:\n  name: ops-workflow\nspec:\n  root: \n",
+      "resource_kind": "Workflow",
+      "resource_name": "ops-workflow",
+      "resource_type": "argoproj.io/v1alpha1/Workflow",
+      "root": ""
+    }
+  ],
+  "dry_inputs": [
+    {
+      "generator_id": "gen_2242fb51feab67d2",
+      "owner": "platform-engineer",
+      "path": "operations.yaml",
+      "profile": "ops-workflow",
+      "required": true,
+      "role": "operations-base"
+    },
+    {
+      "generator_id": "gen_2242fb51feab67d2",
+      "owner": "platform-engineer",
+      "path": "operations-prod.yaml",
+      "profile": "ops-workflow",
+      "required": true,
+      "role": "operations-overlay"
+    }
+  ],
+  "dry_units": [
+    {
+      "id": "dry_e500da96b1bfb999",
+      "kind": "dry-unit",
+      "layer": "dry",
+      "name": "ops-workflow-dry"
+    }
+  ],
+  "generated_at": "\u003ctimestamp\u003e",
+  "generator_units": [
+    {
+      "id": "gen_b2380c3cc9d335bc",
+      "kind": "generator-unit",
+      "layer": "generator",
+      "name": "ops-workflow-generator"
+    }
+  ],
+  "inverse_transform_plans": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "created_at": "\u003ctimestamp\u003e",
+      "patches": [
+        {
+          "confidence": 0.87,
+          "dry_path": "actions.deploy.image_tag",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Deployment action image tag is sourced from operations.yaml.",
+          "requires_review": true,
+          "wet_path": "Workflow/spec/templates[name=deploy]/container/image"
+        },
+        {
+          "confidence": 0.84,
+          "dry_path": "triggers.schedule",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Schedule changes affect operational execution timing.",
+          "requires_review": true,
+          "wet_path": "Workflow/spec/schedule"
+        }
+      ],
+      "plan_id": "\u003cplan_id\u003e",
+      "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+      "source_kind": "opsworkflow",
+      "source_ref": "",
+      "status": "draft",
+      "target_unit_id": "dry_e500da96b1bfb999"
+    }
+  ],
+  "links": [
+    {
+      "dry_unit_id": "dry_e500da96b1bfb999",
+      "generator_unit_id": "gen_b2380c3cc9d335bc",
+      "wet_unit_id": "wet_3205fbba6ea72363"
+    }
+  ],
+  "provenance": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "field_origin_map": [
+        {
+          "confidence": 0.87,
+          "dry_path": "actions.deploy.image_tag",
+          "source_path": "operations.yaml",
+          "transform": "ops-workflow-to-argo-workflow",
+          "wet_path": "Workflow/spec/templates[name=deploy]/container/image"
+        },
+        {
+          "confidence": 0.84,
+          "dry_path": "triggers.schedule",
+          "source_path": "operations.yaml",
+          "transform": "ops-workflow-to-argo-workflow",
+          "wet_path": "Workflow/spec/schedule"
+        },
+        {
+          "confidence": 0.8,
+          "dry_path": "triggers.schedule",
+          "source_path": "operations-prod.yaml",
+          "transform": "ops-workflow-overlay-merge",
+          "wet_path": "Workflow/spec/schedule"
+        }
+      ],
+      "generator_id": "gen_2242fb51feab67d2",
+      "generator_name": "ops-workflow",
+      "generator_profile": "ops-workflow",
+      "input_digest": "sha256:6651184bdd55b30e94edbf3558a3d2e4b4fb4131846ff21c5e8e071b81a877bb",
+      "inverse_edit_pointers": [
+        {
+          "confidence": 0.87,
+          "dry_path": "actions.deploy.image_tag",
+          "edit_hint": "Edit actions.deploy.image_tag in operations.yaml.",
+          "owner": "platform-engineer",
+          "wet_path": "Workflow/spec/templates[name=deploy]/container/image"
+        },
+        {
+          "confidence": 0.84,
+          "dry_path": "triggers.schedule",
+          "edit_hint": "Edit triggers.schedule in operations-prod.yaml for environment-specific cadence; use operations.yaml for defaults.",
+          "owner": "platform-engineer",
+          "wet_path": "Workflow/spec/schedule"
+        }
+      ],
+      "outputs": [
+        {
+          "digest": "\u003cdigest\u003e",
+          "role": "rendered-manifests",
+          "uri": "oci://example.local/platform/ops-workflow:latest"
+        }
+      ],
+      "provenance_id": "\u003cprovenance_id\u003e",
+      "rendered_at": "\u003ctimestamp\u003e",
+      "rendered_object_lineage": [
+        {
+          "kind": "Workflow",
+          "name": "ops-workflow-workflow",
+          "namespace": "ops",
+          "source_dry_path": "actions.deploy.image_tag",
+          "source_path": "operations.yaml"
+        },
+        {
+          "kind": "Job",
+          "name": "ops-workflow-dry-run",
+          "namespace": "ops",
+          "source_dry_path": "triggers.schedule",
+          "source_path": "operations.yaml"
+        },
+        {
+          "kind": "Workflow",
+          "name": "ops-workflow-workflow",
+          "namespace": "ops",
+          "source_dry_path": "triggers.schedule",
+          "source_path": "operations-prod.yaml"
+        }
+      ],
+      "schema_version": "cub.confighub.io/provenance/v1",
+      "sources": [
+        {
+          "path": "operations-prod.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "operations.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        }
+      ],
+      "version": "0.1.0"
+    }
+  ],
+  "ref": "HEAD",
+  "render_target_slug": "render-target",
+  "schema_version": "cub.confighub.io/change-bundle/v1",
+  "source": "cub-gen",
+  "space": "platform",
+  "summary": {
+    "contracts": 1,
+    "discovered_resources": 1,
+    "dry_inputs": 2,
+    "dry_units": 1,
+    "generator_profiles": [
+      "ops-workflow"
+    ],
+    "generator_units": 1,
+    "inverse_transform_plans": 1,
+    "links": 1,
+    "provenance_records": 1,
+    "wet_manifest_targets": 2,
+    "wet_units": 1
+  },
+  "target_path": "\u003ctarget_path\u003e",
+  "target_slug": "ops",
+  "wet_manifest_targets": [
+    {
+      "generator_id": "gen_2242fb51feab67d2",
+      "kind": "Workflow",
+      "name": "ops-workflow-workflow",
+      "namespace": "ops",
+      "owner": "platform-runtime",
+      "source_dry_path": "actions.deploy.image_tag"
+    },
+    {
+      "generator_id": "gen_2242fb51feab67d2",
+      "kind": "Job",
+      "name": "ops-workflow-dry-run",
+      "namespace": "ops",
+      "owner": "platform-runtime",
+      "source_dry_path": "triggers.schedule"
+    }
+  ],
+  "wet_units": [
+    {
+      "id": "wet_3205fbba6ea72363",
+      "kind": "wet-unit",
+      "layer": "wet",
+      "name": "ops-workflow-wet"
+    }
+  ]
+}

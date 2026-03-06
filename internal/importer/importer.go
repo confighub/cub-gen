@@ -208,6 +208,8 @@ func capabilitiesForKind(kind model.GeneratorKind) []string {
 		return []string{"catalog-metadata", "render-manifests", "inverse-catalog-patch"}
 	case model.GeneratorAbly:
 		return []string{"app-config-only", "provider-config", "inverse-provider-config-patch"}
+	case model.GeneratorOpsFlow:
+		return []string{"workflow-plan", "governed-execution-intent", "inverse-workflow-patch"}
 	default:
 		return []string{"render-manifests"}
 	}
@@ -308,6 +310,28 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Confidence:     0.88,
 				RequiresReview: false,
 				Reason:         "Channel mapping is app-level runtime behavior.",
+			},
+		}
+	case model.GeneratorOpsFlow:
+		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
+		return []model.InversePatch{
+			{
+				Operation:      "replace",
+				DryPath:        "actions.deploy.image_tag",
+				WetPath:        "Workflow/spec/templates[name=deploy]/container/image",
+				EditableBy:     "platform-engineer",
+				Confidence:     0.87,
+				RequiresReview: true,
+				Reason:         fmt.Sprintf("Deployment action image tag is sourced from %s.", hints.BaseSpecPath),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "triggers.schedule",
+				WetPath:        "Workflow/spec/schedule",
+				EditableBy:     "platform-engineer",
+				Confidence:     0.84,
+				RequiresReview: true,
+				Reason:         "Schedule changes affect operational execution timing.",
 			},
 		}
 	default:
@@ -433,6 +457,34 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 			})
 		}
 		return origins
+	case model.GeneratorOpsFlow:
+		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
+		origins := []model.FieldOrigin{
+			{
+				DryPath:    "actions.deploy.image_tag",
+				WetPath:    "Workflow/spec/templates[name=deploy]/container/image",
+				SourcePath: hints.BaseSpecPath,
+				Transform:  "ops-workflow-to-argo-workflow",
+				Confidence: 0.87,
+			},
+			{
+				DryPath:    "triggers.schedule",
+				WetPath:    "Workflow/spec/schedule",
+				SourcePath: hints.BaseSpecPath,
+				Transform:  "ops-workflow-to-argo-workflow",
+				Confidence: 0.84,
+			},
+		}
+		if hints.OverlaySpecPath != "" {
+			origins = append(origins, model.FieldOrigin{
+				DryPath:    "triggers.schedule",
+				WetPath:    "Workflow/spec/schedule",
+				SourcePath: hints.OverlaySpecPath,
+				Transform:  "ops-workflow-overlay-merge",
+				Confidence: 0.80,
+			})
+		}
+		return origins
 	default:
 		return []model.FieldOrigin{}
 	}
@@ -534,6 +586,24 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				Owner:      "app-team",
 				EditHint:   ablyInboundChannelEditHint(hints),
 				Confidence: 0.88,
+			},
+		}
+	case model.GeneratorOpsFlow:
+		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
+		return []model.InverseEditPointer{
+			{
+				WetPath:    "Workflow/spec/templates[name=deploy]/container/image",
+				DryPath:    "actions.deploy.image_tag",
+				Owner:      "platform-engineer",
+				EditHint:   fmt.Sprintf("Edit actions.deploy.image_tag in %s.", hints.BaseSpecPath),
+				Confidence: 0.87,
+			},
+			{
+				WetPath:    "Workflow/spec/schedule",
+				DryPath:    "triggers.schedule",
+				Owner:      "platform-engineer",
+				EditHint:   opsWorkflowScheduleEditHint(hints),
+				Confidence: 0.84,
 			},
 		}
 	default:
@@ -696,6 +766,11 @@ func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.Gen
 			{GeneratorID: g.ID, Kind: "ConfigMap", Name: g.Name + "-ably", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "app.environment"},
 			{GeneratorID: g.ID, Kind: "Secret", Name: g.Name + "-ably-credentials", Owner: "platform-runtime", Namespace: "apps", SourceDryPath: "credentials.api_key_ref"},
 		}
+	case model.GeneratorOpsFlow:
+		return []model.WetManifestTarget{
+			{GeneratorID: g.ID, Kind: "Workflow", Name: g.Name + "-workflow", Owner: "platform-runtime", Namespace: "ops", SourceDryPath: "actions.deploy.image_tag"},
+			{GeneratorID: g.ID, Kind: "Job", Name: g.Name + "-dry-run", Owner: "platform-runtime", Namespace: "ops", SourceDryPath: "triggers.schedule"},
+		}
 	default:
 		return []model.WetManifestTarget{}
 	}
@@ -746,6 +821,15 @@ func classifyDryInputRole(kind model.GeneratorKind, in string) string {
 		default:
 			return "provider-config"
 		}
+	case model.GeneratorOpsFlow:
+		switch {
+		case base == "operations.yaml" || base == "operations.yml" || base == "workflow.yaml" || base == "workflow.yml":
+			return "operations-base"
+		case strings.HasPrefix(base, "operations-") || strings.HasPrefix(base, "workflow-"):
+			return "operations-overlay"
+		default:
+			return "operations-input"
+		}
 	default:
 		return "input"
 	}
@@ -772,6 +856,8 @@ func ownerForDryInput(kind model.GeneratorKind, role string) string {
 		return "platform-engineer"
 	case model.GeneratorAbly:
 		return "app-team"
+	case model.GeneratorOpsFlow:
+		return "platform-engineer"
 	default:
 		return "platform-engineer"
 	}
@@ -864,6 +950,18 @@ func renderedLineageForGenerator(detection model.DetectionResult, g model.Genera
 		if hints.OverlayConfigPath != "" {
 			lineage = append(lineage, model.RenderedObjectLineage{
 				Kind: "ConfigMap", Name: g.Name + "-ably", Namespace: "apps", SourcePath: hints.OverlayConfigPath, SourceDryPath: "channels.inbound",
+			})
+		}
+		return lineage
+	case model.GeneratorOpsFlow:
+		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
+		lineage := []model.RenderedObjectLineage{
+			{Kind: "Workflow", Name: g.Name + "-workflow", Namespace: "ops", SourcePath: hints.BaseSpecPath, SourceDryPath: "actions.deploy.image_tag"},
+			{Kind: "Job", Name: g.Name + "-dry-run", Namespace: "ops", SourcePath: hints.BaseSpecPath, SourceDryPath: "triggers.schedule"},
+		}
+		if hints.OverlaySpecPath != "" {
+			lineage = append(lineage, model.RenderedObjectLineage{
+				Kind: "Workflow", Name: g.Name + "-workflow", Namespace: "ops", SourcePath: hints.OverlaySpecPath, SourceDryPath: "triggers.schedule",
 			})
 		}
 		return lineage
@@ -973,6 +1071,37 @@ func ablyInboundChannelEditHint(h ablyHints) string {
 	return fmt.Sprintf("Edit channels.inbound in %s.", h.BaseConfigPath)
 }
 
+type opsWorkflowHints struct {
+	BaseSpecPath    string
+	OverlaySpecPath string
+}
+
+func opsWorkflowPathHintsFromInputs(inputs []string) opsWorkflowHints {
+	h := opsWorkflowHints{
+		BaseSpecPath: "operations.yaml",
+	}
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		base := strings.ToLower(filepath.Base(in))
+		switch {
+		case base == "operations.yaml" || base == "operations.yml" || base == "workflow.yaml" || base == "workflow.yml":
+			h.BaseSpecPath = p
+		case strings.HasPrefix(base, "operations-") || strings.HasPrefix(base, "workflow-"):
+			if h.OverlaySpecPath == "" || p < h.OverlaySpecPath {
+				h.OverlaySpecPath = p
+			}
+		}
+	}
+	return h
+}
+
+func opsWorkflowScheduleEditHint(h opsWorkflowHints) string {
+	if h.OverlaySpecPath != "" {
+		return fmt.Sprintf("Edit triggers.schedule in %s for environment-specific cadence; use %s for defaults.", h.OverlaySpecPath, h.BaseSpecPath)
+	}
+	return fmt.Sprintf("Edit triggers.schedule in %s.", h.BaseSpecPath)
+}
+
 func inferInputSchema(kind model.GeneratorKind, inputPath string) string {
 	ext := strings.ToLower(filepath.Ext(inputPath))
 	switch {
@@ -997,6 +1126,9 @@ func inferInputSchema(kind model.GeneratorKind, inputPath string) string {
 		}
 		if kind == model.GeneratorAbly {
 			return "https://schema.confighub.dev/generators/ably-config-v1"
+		}
+		if kind == model.GeneratorOpsFlow {
+			return "https://schema.confighub.dev/generators/ops-workflow-v1"
 		}
 		return "https://json-schema.org/draft/2020-12/schema"
 	case ext == ".json":

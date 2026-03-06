@@ -20,16 +20,19 @@ GitOps parity examples:
   cub-gen publish --space my-space ./examples/springboot-paas ./examples/springboot-paas
   cub-gen publish --space my-space ./examples/backstage-idp ./examples/backstage-idp
   cub-gen publish --space my-space ./examples/ably-config ./examples/ably-config
+  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow
   cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen verify --in -
   cub-gen publish --space my-space ./examples/scoredev-paas ./examples/scoredev-paas | cub-gen verify --in -
   cub-gen publish --space my-space ./examples/springboot-paas ./examples/springboot-paas | cub-gen verify --in -
   cub-gen publish --space my-space ./examples/backstage-idp ./examples/backstage-idp | cub-gen verify --in -
   cub-gen publish --space my-space ./examples/ably-config ./examples/ably-config | cub-gen verify --in -
+  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen verify --in -
   cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot
   cub-gen publish --space my-space ./examples/scoredev-paas ./examples/scoredev-paas | cub-gen attest --in - --verifier ci-bot
   cub-gen publish --space my-space ./examples/springboot-paas ./examples/springboot-paas | cub-gen attest --in - --verifier ci-bot
   cub-gen publish --space my-space ./examples/backstage-idp ./examples/backstage-idp | cub-gen attest --in - --verifier ci-bot
   cub-gen publish --space my-space ./examples/ably-config ./examples/ably-config | cub-gen attest --in - --verifier ci-bot
+  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen attest --in - --verifier ci-bot
   cub-gen verify-attestation --in attestation.json --bundle bundle.json
 
 Note: gitops commands are local-only prototypes that mirror cub gitops stages.
