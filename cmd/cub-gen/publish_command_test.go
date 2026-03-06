@@ -105,26 +105,64 @@ func TestPublishFromStdin(t *testing.T) {
 	}
 }
 
-func TestPublishDirectTargetMode(t *testing.T) {
+func TestPublishDirectTargetModeFirstThree(t *testing.T) {
 	setupAliases(t)
 
-	out, stderr, err := runWithCapturedIO([]string{"publish", "--space", "platform", "helm", "render-target"})
-	if err != nil {
-		t.Fatalf("publish direct mode returned error: %v\nstderr=%s", err, stderr)
-	}
-	if stderr != "" {
-		t.Fatalf("expected empty stderr from publish direct mode, got %q", stderr)
+	tests := []struct {
+		name            string
+		target          string
+		expectedProfile string
+	}{
+		{
+			name:            "helm",
+			target:          "helm",
+			expectedProfile: "helm-paas",
+		},
+		{
+			name:            "score",
+			target:          "score",
+			expectedProfile: "scoredev-paas",
+		},
+		{
+			name:            "spring",
+			target:          "spring",
+			expectedProfile: "springboot-paas",
+		},
 	}
 
-	var got map[string]any
-	if err := json.Unmarshal([]byte(out), &got); err != nil {
-		t.Fatalf("unmarshal publish direct output: %v\noutput=%s", err, out)
-	}
-	if got["schema_version"] != "cub.confighub.io/change-bundle/v1" {
-		t.Fatalf("unexpected schema_version: %v", got["schema_version"])
-	}
-	if got["target_slug"] != "helm" {
-		t.Fatalf("expected target_slug=helm, got %v", got["target_slug"])
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out, stderr, err := runWithCapturedIO([]string{"publish", "--space", "platform", tt.target, "render-target"})
+			if err != nil {
+				t.Fatalf("publish direct mode returned error: %v\nstderr=%s", err, stderr)
+			}
+			if stderr != "" {
+				t.Fatalf("expected empty stderr from publish direct mode, got %q", stderr)
+			}
+
+			var got map[string]any
+			if err := json.Unmarshal([]byte(out), &got); err != nil {
+				t.Fatalf("unmarshal publish direct output: %v\noutput=%s", err, out)
+			}
+			if got["schema_version"] != "cub.confighub.io/change-bundle/v1" {
+				t.Fatalf("unexpected schema_version: %v", got["schema_version"])
+			}
+			if got["target_slug"] != tt.target {
+				t.Fatalf("expected target_slug=%s, got %v", tt.target, got["target_slug"])
+			}
+
+			summary, ok := got["summary"].(map[string]any)
+			if !ok {
+				t.Fatalf("expected summary object, got %T", got["summary"])
+			}
+			profiles, ok := summary["generator_profiles"].([]any)
+			if !ok || len(profiles) != 1 {
+				t.Fatalf("expected single generator profile, got %#v", summary["generator_profiles"])
+			}
+			if profiles[0] != tt.expectedProfile {
+				t.Fatalf("expected generator profile %q, got %#v", tt.expectedProfile, profiles[0])
+			}
+		})
 	}
 }
 
