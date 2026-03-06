@@ -40,6 +40,9 @@
 - `cmd/cub-gen/testdata/parity/gitops-cleanup.golden.json`
 - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
 - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`
+- `cmd/cub-gen/testdata/parity/publish-from-import.golden.json`
+- `cmd/cub-gen/testdata/parity/publish-direct-score.golden.json`
+- `cmd/cub-gen/testdata/parity/publish-direct-spring.golden.json`
 
 ## Mandatory validation commands
 
