@@ -1,5 +1,6 @@
 Usage:
   cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--json] [--pretty]
+  (KIND/PROFILE/CAPABILITY support comma-separated values)
 
 Supported kinds: ably, backstage, helm, opsworkflow, score, springboot
 Supported profiles: ably-config, backstage-idp, helm-paas, ops-workflow, scoredev-paas, springboot-paas

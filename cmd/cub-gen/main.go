@@ -108,9 +108,9 @@ func runGenerators(args []string) error {
 }
 
 func listGeneratorFamilies(kindFilter, profileFilter, capabilityFilter string) []generatorFamilyRecord {
-	kindFilter = strings.TrimSpace(strings.ToLower(kindFilter))
-	profileFilter = strings.TrimSpace(strings.ToLower(profileFilter))
-	capabilityFilter = strings.TrimSpace(strings.ToLower(capabilityFilter))
+	kindFilters := parseFilterSet(kindFilter)
+	profileFilters := parseFilterSet(profileFilter)
+	capabilityFilters := parseFilterSet(capabilityFilter)
 
 	kinds := registry.Kinds()
 	out := make([]generatorFamilyRecord, 0, len(kinds))
@@ -127,16 +127,20 @@ func listGeneratorFamilies(kindFilter, profileFilter, capabilityFilter string) [
 			Capabilities: append([]string(nil), spec.Capabilities...),
 		}
 
-		if kindFilter != "" && strings.ToLower(record.Kind) != kindFilter {
-			continue
+		if len(kindFilters) > 0 {
+			if _, ok := kindFilters[strings.ToLower(record.Kind)]; !ok {
+				continue
+			}
 		}
-		if profileFilter != "" && strings.ToLower(record.Profile) != profileFilter {
-			continue
+		if len(profileFilters) > 0 {
+			if _, ok := profileFilters[strings.ToLower(record.Profile)]; !ok {
+				continue
+			}
 		}
-		if capabilityFilter != "" {
+		if len(capabilityFilters) > 0 {
 			matched := false
 			for _, capability := range record.Capabilities {
-				if strings.EqualFold(capability, capabilityFilter) {
+				if _, ok := capabilityFilters[strings.ToLower(capability)]; ok {
 					matched = true
 					break
 				}
@@ -157,9 +161,22 @@ func listGeneratorFamilies(kindFilter, profileFilter, capabilityFilter string) [
 	return out
 }
 
+func parseFilterSet(raw string) map[string]struct{} {
+	out := map[string]struct{}{}
+	for _, part := range strings.Split(raw, ",") {
+		value := strings.ToLower(strings.TrimSpace(part))
+		if value == "" {
+			continue
+		}
+		out[value] = struct{}{}
+	}
+	return out
+}
+
 func printGeneratorsUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--json] [--pretty]")
+	fmt.Fprintln(out, "  (KIND/PROFILE/CAPABILITY support comma-separated values)")
 	fmt.Fprintln(out)
 	fmt.Fprintf(out, "Supported kinds: %s\n", strings.Join(supportedGeneratorKinds(), ", "))
 	fmt.Fprintf(out, "Supported profiles: %s\n", strings.Join(supportedGeneratorProfiles(), ", "))

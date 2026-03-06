@@ -1,0 +1,27 @@
+{
+  "count": 2,
+  "families": [
+    {
+      "capabilities": [
+        "render-manifests",
+        "values-overrides",
+        "inverse-values-patch"
+      ],
+      "kind": "helm",
+      "profile": "helm-paas",
+      "resource_kind": "HelmRelease",
+      "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease"
+    },
+    {
+      "capabilities": [
+        "render-manifests",
+        "workload-spec",
+        "inverse-score-patch"
+      ],
+      "kind": "score",
+      "profile": "scoredev-paas",
+      "resource_kind": "Application",
+      "resource_type": "argoproj.io/v1alpha1/Application"
+    }
+  ]
+}

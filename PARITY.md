@@ -123,7 +123,9 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/verify-attestation-linked-ops.json.golden.json`
   - `cmd/cub-gen/testdata/parity/generators.golden.json`
   - `cmd/cub-gen/testdata/parity/generators-kind-helm.golden.json`
+  - `cmd/cub-gen/testdata/parity/generators-kind-helm-score.golden.json`
   - `cmd/cub-gen/testdata/parity/generators-capability-ops.golden.json`
+  - `cmd/cub-gen/testdata/parity/generators-capability-helm-score.golden.json`
   - `cmd/cub-gen/testdata/parity/generators-profile-spring.golden.json`
   - `cmd/cub-gen/testdata/parity/generators-combined-score.golden.json`
   - `cmd/cub-gen/testdata/parity/generators-empty.golden.json`
