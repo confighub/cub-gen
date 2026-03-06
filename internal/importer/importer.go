@@ -333,7 +333,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				DryPath:    "values.image.tag",
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
 				SourcePath: "values.yaml",
-				Transform:  "helm-template",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.86,
 			},
 		}
@@ -344,21 +344,21 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				DryPath:    fmt.Sprintf("containers.%s.image", hints.ContainerName),
 				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/image", hints.ContainerName),
 				SourcePath: hints.SourcePath,
-				Transform:  "score-to-k8s",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.94,
 			},
 			{
 				DryPath:    fmt.Sprintf("containers.%s.variables.%s", hints.ContainerName, hints.VariableName),
 				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/env[name=%s]/value", hints.ContainerName, hints.VariableName),
 				SourcePath: hints.SourcePath,
-				Transform:  "score-to-k8s",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.90,
 			},
 			{
 				DryPath:    fmt.Sprintf("service.ports.%s.port", hints.ServicePortName),
 				WetPath:    fmt.Sprintf("Service/spec/ports[name=%s]/port", hints.ServicePortName),
 				SourcePath: hints.SourcePath,
-				Transform:  "score-to-k8s",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.91,
 			},
 		}
@@ -369,21 +369,21 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				DryPath:    "spring.application.name",
 				WetPath:    "Deployment/metadata/labels[app.kubernetes.io/name]",
 				SourcePath: hints.BaseConfigPath,
-				Transform:  "spring-config-to-manifest",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.89,
 			},
 			{
 				DryPath:    "server.port",
 				WetPath:    "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
 				SourcePath: hints.BaseConfigPath,
-				Transform:  "spring-config-to-manifest",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.92,
 			},
 			{
 				DryPath:    "spring.datasource.url",
 				WetPath:    "ConfigMap/data/application.yaml:spring.datasource.url",
 				SourcePath: hints.BaseConfigPath,
-				Transform:  "spring-config-to-manifest",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.78,
 			},
 		}
@@ -392,7 +392,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				DryPath:    "server.port",
 				WetPath:    "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
 				SourcePath: hints.ProfileConfigPath,
-				Transform:  "spring-profile-overlay",
+				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
 				Confidence: 0.88,
 			})
 		}
@@ -404,14 +404,14 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				DryPath:    "metadata.name",
 				WetPath:    "Application/metadata/name",
 				SourcePath: hints.CatalogPath,
-				Transform:  "backstage-component-to-application",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.90,
 			},
 			{
 				DryPath:    "spec.lifecycle",
 				WetPath:    "Application/metadata/labels[lifecycle]",
 				SourcePath: hints.CatalogPath,
-				Transform:  "backstage-component-to-application",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.82,
 			},
 		}
@@ -422,14 +422,14 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				DryPath:    "app.environment",
 				WetPath:    "ConfigMap/data/ABLY_ENVIRONMENT",
 				SourcePath: hints.BaseConfigPath,
-				Transform:  "ably-config-to-runtime",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.90,
 			},
 			{
 				DryPath:    "channels.inbound",
 				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
 				SourcePath: hints.BaseConfigPath,
-				Transform:  "ably-config-to-runtime",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.88,
 			},
 		}
@@ -438,7 +438,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				DryPath:    "channels.inbound",
 				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
 				SourcePath: hints.OverlayConfigPath,
-				Transform:  "ably-overlay-merge",
+				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
 				Confidence: 0.84,
 			})
 		}
@@ -450,14 +450,14 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				DryPath:    "actions.deploy.image_tag",
 				WetPath:    "Workflow/spec/templates[name=deploy]/container/image",
 				SourcePath: hints.BaseSpecPath,
-				Transform:  "ops-workflow-to-argo-workflow",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.87,
 			},
 			{
 				DryPath:    "triggers.schedule",
 				WetPath:    "Workflow/spec/schedule",
 				SourcePath: hints.BaseSpecPath,
-				Transform:  "ops-workflow-to-argo-workflow",
+				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: 0.84,
 			},
 		}
@@ -466,7 +466,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				DryPath:    "triggers.schedule",
 				WetPath:    "Workflow/spec/schedule",
 				SourcePath: hints.OverlaySpecPath,
-				Transform:  "ops-workflow-overlay-merge",
+				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
 				Confidence: 0.80,
 			})
 		}
