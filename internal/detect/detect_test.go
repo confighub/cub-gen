@@ -38,6 +38,13 @@ func TestScanRepoExamples(t *testing.T) {
 			expectedProfile: "springboot-paas",
 			expectedFile:    "pom.xml",
 		},
+		{
+			name:            "backstage-idp",
+			repoDir:         "backstage-idp",
+			expectedKind:    model.GeneratorBackstage,
+			expectedProfile: "backstage-idp",
+			expectedFile:    "catalog-info.yaml",
+		},
 	}
 
 	for _, tt := range tests {

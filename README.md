@@ -4,13 +4,13 @@
 
 ## What cub-gen does today
 
-- Detects generator-style app sources in Git repos (`helm`, `score.dev`, `springboot`).
+- Detects generator-style app sources in Git repos (`helm`, `score.dev`, `springboot`, `backstage`).
 - Runs the same staged flow shape as `cub gitops`:
   - `gitops discover`
   - `gitops import`
   - `gitops cleanup`
 - Emits provenance and inverse-edit guidance ("what rendered field came from which DRY field").
-- Stays local and pre-sync in v0.1 (no cluster deploys, no ConfigHub backend required).
+- Stays local and pre-sync in v0.1 and v0.2 preview (no cluster deploys, no ConfigHub backend required).
 
 ## Where Flux/Argo/OCI fit
 
@@ -63,6 +63,14 @@ go build ./cmd/cub-gen
 ./cub-gen gitops cleanup --space platform ./examples/springboot-paas
 ```
 
+### Backstage IDP example
+
+```bash
+./cub-gen gitops discover --space platform ./examples/backstage-idp
+./cub-gen gitops import --space platform --json ./examples/backstage-idp ./examples/backstage-idp | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
+./cub-gen gitops cleanup --space platform ./examples/backstage-idp
+```
+
 ### Optional bridge artifact (local, no backend)
 
 Generate a ConfigHub-ready change bundle from import output:
@@ -82,6 +90,7 @@ Or run direct mode (import + bundle in one command):
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas
 ./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas
 ./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas
+./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp
 ```
 
 Bundle output includes:
@@ -97,6 +106,7 @@ Verify a bundle (file or stdin):
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas | ./cub-gen verify --in -
+./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp | ./cub-gen verify --in -
 ```
 
 Emit an attestation record from a verified bundle:
@@ -109,6 +119,9 @@ Emit an attestation record from a verified bundle:
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
 ./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas \
+  | ./cub-gen attest --in - --verifier ci-bot \
+  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
+./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp \
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
 ```
@@ -149,6 +162,12 @@ A practical app-team/platform-team path in a Spring Boot repo:
 - `dry_inputs.owner` separates app-team vs platform-engineer edit ownership
 - `wet_manifest_targets.owner` marks platform runtime ownership
 - inverse-edit paths include app-team edits (`spring.application.name`, `server.port`) and platform-governed edits (`spring.datasource.url`)
+
+### Backstage IDP (v0.2 preview)
+
+- `generator_profile: "backstage-idp"`
+- dry input ownership split (`catalog-spec` vs `app-config`)
+- inverse-edit paths for component metadata (`metadata.name`, `spec.lifecycle`)
 
 ## Quality model (inherited from cub-scout, adapted)
 

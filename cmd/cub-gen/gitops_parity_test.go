@@ -78,6 +78,29 @@ func TestGitOpsParityGoldenDiscoverSpring(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-spring.golden.json"), got)
 }
 
+func TestGitOpsParityGoldenDiscoverBackstage(t *testing.T) {
+	aliases := setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "backstage"})
+	if err != nil {
+		t.Fatalf("run backstage discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal backstage discover json: %v\noutput=%s", err, out)
+	}
+	normalizeDiscover(got)
+
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("examples", "backstage-idp"))
+	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["backstage"]), filepath.ToSlash(filepath.Join("examples", "backstage-idp")))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-backstage.golden.json"), got)
+}
+
 func TestGitOpsParityGoldenImport(t *testing.T) {
 	setupAliases(t)
 
@@ -136,6 +159,26 @@ func TestGitOpsParityGoldenImportScore(t *testing.T) {
 	normalizeImport(got)
 
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-score.golden.json"), got)
+}
+
+func TestGitOpsParityGoldenImportBackstage(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "backstage", "render-target"})
+	if err != nil {
+		t.Fatalf("run backstage import returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal backstage import json: %v\noutput=%s", err, out)
+	}
+	normalizeImport(got)
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-backstage.golden.json"), got)
 }
 
 func TestGitOpsParityGoldenCleanup(t *testing.T) {
@@ -341,15 +384,20 @@ func setupAliases(t *testing.T) map[string]string {
 	if err != nil {
 		t.Fatalf("resolve spring path: %v", err)
 	}
+	backstageAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "backstage-idp"))
+	if err != nil {
+		t.Fatalf("resolve backstage path: %v", err)
+	}
 
 	cfgDir := t.TempDir()
 	cfgPath := filepath.Join(cfgDir, "targets.json")
 	// Render target metadata (no repo path required in this prototype).
 	cfgAny := map[string]any{
 		"targets": map[string]any{
-			"helm":   helmAbs,
-			"score":  scoreAbs,
-			"spring": springAbs,
+			"helm":      helmAbs,
+			"score":     scoreAbs,
+			"spring":    springAbs,
+			"backstage": backstageAbs,
 			"render-target": map[string]any{
 				"toolchain": "kubernetes/yaml",
 				"providers": []string{"fluxrenderer", "argocdrenderer"},
@@ -366,9 +414,10 @@ func setupAliases(t *testing.T) map[string]string {
 	t.Setenv("CUB_GEN_TARGETS_FILE", cfgPath)
 
 	return map[string]string{
-		"helm":   helmAbs,
-		"score":  scoreAbs,
-		"spring": springAbs,
+		"helm":      helmAbs,
+		"score":     scoreAbs,
+		"spring":    springAbs,
+		"backstage": backstageAbs,
 	}
 }
 

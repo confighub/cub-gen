@@ -8,7 +8,7 @@ Status values:
 - `partial`: same contract shape, simplified implementation
 - `deferred`: intentionally not implemented yet
 
-Current lock level: `v0.1-parity-locked` (2026-03-06 expanded contract baseline)
+Current lock level: `v0.2-preview-parity-locked` (2026-03-06 expanded contract baseline)
 
 Contract lock means:
 - command names/arity for `discover|import|cleanup` are frozen for v0.1
@@ -17,6 +17,7 @@ Contract lock means:
 - unsupported behavior must fail explicitly (never silently degrade)
 - Helm import contract includes explicit DRY/WET surfaces (`dry_inputs`, `wet_manifest_targets`) and provenance lineage fields (`chart_path`, `values_paths`, `rendered_object_lineage`)
 - Spring Boot import contract includes explicit DRY ownership (`dry_inputs.owner`) and platform-owned WET targets (`wet_manifest_targets.owner`) with app-team inverse-edit hints
+- Backstage IDP import contract includes explicit catalog DRY ownership (`catalog-spec`) and platform-owned WET targets with inverse-edit hints for component metadata
 
 ## Command contract parity
 
@@ -81,9 +82,11 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/gitops-discover.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-discover-score.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-discover-spring.golden.json`
+  - `cmd/cub-gen/testdata/parity/gitops-discover-backstage.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import-score.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-import-spring.golden.json`
+  - `cmd/cub-gen/testdata/parity/gitops-import-backstage.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-cleanup.golden.json`
   - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`

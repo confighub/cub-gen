@@ -28,6 +28,11 @@ func TestExamplesPathModeBridgeFlow(t *testing.T) {
 			repoSuffix:      filepath.Join("examples", "springboot-paas"),
 			expectedProfile: "springboot-paas",
 		},
+		{
+			name:            "backstage",
+			repoSuffix:      filepath.Join("examples", "backstage-idp"),
+			expectedProfile: "backstage-idp",
+		},
 	}
 
 	for _, tt := range tests {

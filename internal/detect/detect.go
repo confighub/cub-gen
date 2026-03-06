@@ -46,9 +46,14 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 	if err != nil {
 		return model.DetectionResult{}, err
 	}
+	backstageDetections, err := detectBackstage(absRepo)
+	if err != nil {
+		return model.DetectionResult{}, err
+	}
 
 	all := append(helmDetections, scoreDetections...)
 	all = append(all, springDetections...)
+	all = append(all, backstageDetections...)
 	sort.Slice(all, func(i, j int) bool {
 		if all[i].Kind != all[j].Kind {
 			return all[i].Kind < all[j].Kind
@@ -263,6 +268,77 @@ func detectSpringBoot(repo string) ([]model.GeneratorDetection, error) {
 	return detected, nil
 }
 
+func detectBackstage(repo string) ([]model.GeneratorDetection, error) {
+	detected := make(map[string]model.GeneratorDetection)
+	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() && shouldSkipDir(d.Name()) {
+			return filepath.SkipDir
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if d.Name() != "catalog-info.yaml" && d.Name() != "catalog-info.yml" {
+			return nil
+		}
+
+		b, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		content := strings.ToLower(string(b))
+		if !strings.Contains(content, "backstage.io/") || !strings.Contains(content, "kind: component") {
+			return nil
+		}
+
+		root := filepath.Dir(path)
+		relRoot, err := filepath.Rel(repo, root)
+		if err != nil {
+			return err
+		}
+		if relRoot == "." {
+			relRoot = ""
+		}
+
+		relCatalog, err := filepath.Rel(repo, path)
+		if err != nil {
+			return err
+		}
+		inputs := []string{filepath.ToSlash(relCatalog)}
+
+		for _, candidate := range []string{"app-config.yaml", "app-config.yml"} {
+			candidatePath := filepath.Join(root, candidate)
+			if _, statErr := os.Stat(candidatePath); statErr == nil {
+				rel, relErr := filepath.Rel(repo, candidatePath)
+				if relErr == nil {
+					inputs = append(inputs, filepath.ToSlash(rel))
+				}
+			}
+		}
+		sort.Strings(inputs)
+
+		name := filepath.Base(root)
+		id := shortID("backstage:" + filepath.ToSlash(relRoot))
+		key := "backstage:" + relRoot
+		detected[key] = model.GeneratorDetection{
+			ID:         "gen_" + id,
+			Kind:       model.GeneratorBackstage,
+			Profile:    profileForKind(model.GeneratorBackstage),
+			Name:       name,
+			Root:       filepath.ToSlash(relRoot),
+			Inputs:     inputs,
+			Confidence: 0.91,
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("detect backstage: %w", err)
+	}
+	return mapValuesSorted(detected), nil
+}
+
 func mapValuesSorted(m map[string]model.GeneratorDetection) []model.GeneratorDetection {
 	keys := make([]string, 0, len(m))
 	for k := range m {
@@ -318,6 +394,8 @@ func profileForKind(kind model.GeneratorKind) string {
 		return "scoredev-paas"
 	case model.GeneratorSpringBoot:
 		return "springboot-paas"
+	case model.GeneratorBackstage:
+		return "backstage-idp"
 	default:
 		return "generator"
 	}
