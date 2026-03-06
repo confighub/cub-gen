@@ -19,14 +19,14 @@
 | Proof tier | Required? | Command(s) | Deterministic assertion |
 |---|---|---|---|
 | Unit | Yes | `go test ./...` | Core logic output is stable |
-| Parity/Golden | If CLI/JSON/table output changed | `go test ./cmd/cub-gen -run '^TestGitOpsParity' -count=1 -v` | Contract output is stable |
+| Parity/Golden | If CLI/JSON/table output changed | `go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v` | Contract output is stable |
 | Example proof | If user-visible flow changed | `go run ./cmd/cub-gen ...` | Docs/example output matches implementation |
 
 ## Commands Run
 
 - [ ] `go build ./cmd/cub-gen`
 - [ ] `go test ./...`
-- [ ] `go test ./cmd/cub-gen -run '^TestGitOpsParity' -count=1 -v`
+- [ ] `go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v`
 - Additional commands:
 
 ## Graceful Degradation / Error Behavior

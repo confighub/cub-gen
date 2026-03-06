@@ -43,7 +43,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 ```bash
 go build ./cmd/cub-gen
 go test ./...
-go test ./cmd/cub-gen -run '^TestGitOpsParity' -count=1 -v
+go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v
 ```
 
 ## Rules

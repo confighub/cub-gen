@@ -43,5 +43,5 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Run parity tests
-        run: go test ./cmd/cub-gen -run '^TestGitOpsParity' -count=1 -v
+      - name: Run contract tests
+        run: go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v

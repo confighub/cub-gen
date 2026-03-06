@@ -111,7 +111,7 @@ For each issue:
 Required commands:
 
 1. `go test ./...`
-2. `go test ./cmd/cub-gen -run '^TestGitOpsParity' -count=1 -v`
+2. `go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v`
 3. Example command for changed path (`discover` or `import`).
 
 ## Non-goals in v0.1
