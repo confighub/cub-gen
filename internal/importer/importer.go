@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/confighub/cub-gen/internal/contracts"
 	"github.com/confighub/cub-gen/internal/detect"
 	"github.com/confighub/cub-gen/internal/model"
 	"github.com/confighub/cub-gen/internal/registry"
@@ -47,7 +48,7 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 
 	units := make([]model.UnitRef, 0, len(detection.Generators)*3)
 	links := make([]model.UnitLink, 0, len(detection.Generators))
-	contracts := make([]model.GeneratorContract, 0, len(detection.Generators))
+	generatorContracts := make([]model.GeneratorContract, 0, len(detection.Generators))
 	provenance := make([]model.ProvenanceRecord, 0, len(detection.Generators))
 	inversePlans := make([]model.InverseTransformPlan, 0, len(detection.Generators))
 	dryInputs := make([]model.DryInputRef, 0, len(detection.Generators)*3)
@@ -70,11 +71,21 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 		})
 
 		contract := buildContract(detection, g)
-		contracts = append(contracts, contract)
-		provenance = append(provenance, buildProvenance(changeID, space, detection, g, importedAt))
-		inversePlans = append(inversePlans, buildInversePlan(changeID, dryUnitID, detection, g, importedAt))
+		provenanceRecord := buildProvenance(changeID, space, detection, g, importedAt)
+		inversePlan := buildInversePlan(changeID, dryUnitID, detection, g, importedAt)
+		if err := contracts.ValidateTriple(contract, provenanceRecord, inversePlan); err != nil {
+			return model.ImportResult{}, fmt.Errorf("validate contract triple for generator %q (%s): %w", g.ID, g.Kind, err)
+		}
+
+		generatorContracts = append(generatorContracts, contract)
+		provenance = append(provenance, provenanceRecord)
+		inversePlans = append(inversePlans, inversePlan)
 		dryInputs = append(dryInputs, dryInputsForGenerator(g)...)
 		wetTargets = append(wetTargets, wetManifestTargetsForGenerator(detection, g)...)
+	}
+
+	if err := contracts.ValidateTripleSet(generatorContracts, provenance, inversePlans); err != nil {
+		return model.ImportResult{}, fmt.Errorf("validate contract triple set: %w", err)
 	}
 
 	return model.ImportResult{
@@ -86,7 +97,7 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 		Detection:          detection,
 		Units:              units,
 		Links:              links,
-		GeneratorContracts: contracts,
+		GeneratorContracts: generatorContracts,
 		Provenance:         provenance,
 		InversePlans:       inversePlans,
 		DryInputs:          dryInputs,
