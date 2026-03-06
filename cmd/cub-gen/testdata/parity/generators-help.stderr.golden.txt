@@ -1,11 +1,6 @@
-Usage of generators:
-  -capability string
-    	Filter by capability
-  -json
-    	Output JSON
-  -kind string
-    	Filter by generator kind
-  -pretty
-    	Pretty-print JSON output (default true)
-  -profile string
-    	Filter by generator profile
+Usage:
+  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--json] [--pretty]
+
+Supported kinds: ably, backstage, helm, opsworkflow, score, springboot
+Supported profiles: ably-config, backstage-idp, helm-paas, ops-workflow, scoredev-paas, springboot-paas
+Supported capabilities: app-config-only, catalog-metadata, governed-execution-intent, inverse-app-config-patch, inverse-catalog-patch, inverse-provider-config-patch, inverse-score-patch, inverse-values-patch, inverse-workflow-patch, profile-overrides, provider-config, render-app-config, render-manifests, values-overrides, workflow-plan, workload-spec

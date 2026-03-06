@@ -68,6 +68,9 @@ type generatorFamilyRecord struct {
 func runGenerators(args []string) error {
 	fs := flag.NewFlagSet("generators", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
+	fs.Usage = func() {
+		printGeneratorsUsage(fs.Output())
+	}
 	kindFilter := fs.String("kind", "", "Filter by generator kind")
 	profileFilter := fs.String("profile", "", "Filter by generator profile")
 	capabilityFilter := fs.String("capability", "", "Filter by capability")
@@ -151,6 +154,66 @@ func listGeneratorFamilies(kindFilter, profileFilter, capabilityFilter string) [
 			Capabilities: record.Capabilities,
 		})
 	}
+	return out
+}
+
+func printGeneratorsUsage(out io.Writer) {
+	fmt.Fprintln(out, "Usage:")
+	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--json] [--pretty]")
+	fmt.Fprintln(out)
+	fmt.Fprintf(out, "Supported kinds: %s\n", strings.Join(supportedGeneratorKinds(), ", "))
+	fmt.Fprintf(out, "Supported profiles: %s\n", strings.Join(supportedGeneratorProfiles(), ", "))
+	fmt.Fprintf(out, "Supported capabilities: %s\n", strings.Join(supportedGeneratorCapabilities(), ", "))
+}
+
+func supportedGeneratorKinds() []string {
+	kinds := registry.Kinds()
+	out := make([]string, 0, len(kinds))
+	for _, kind := range kinds {
+		out = append(out, string(kind))
+	}
+	sort.Strings(out)
+	return out
+}
+
+func supportedGeneratorProfiles() []string {
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(registry.Kinds()))
+	for _, kind := range registry.Kinds() {
+		spec, ok := registry.Spec(kind)
+		if !ok || strings.TrimSpace(spec.Profile) == "" {
+			continue
+		}
+		if _, exists := seen[spec.Profile]; exists {
+			continue
+		}
+		seen[spec.Profile] = struct{}{}
+		out = append(out, spec.Profile)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func supportedGeneratorCapabilities() []string {
+	seen := map[string]struct{}{}
+	out := make([]string, 0, 16)
+	for _, kind := range registry.Kinds() {
+		spec, ok := registry.Spec(kind)
+		if !ok {
+			continue
+		}
+		for _, capability := range spec.Capabilities {
+			if strings.TrimSpace(capability) == "" {
+				continue
+			}
+			if _, exists := seen[capability]; exists {
+				continue
+			}
+			seen[capability] = struct{}{}
+			out = append(out, capability)
+		}
+	}
+	sort.Strings(out)
 	return out
 }
 
