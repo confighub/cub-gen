@@ -103,6 +103,12 @@ Emit an attestation record from a verified bundle:
   | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
 ```
 
+Verify an attestation (optionally linked against a bundle file):
+
+```bash
+./cub-gen verify-attestation --in attestation.json --bundle bundle.json
+```
+
 ## Plain-English collaboration story
 
 A practical app-team/platform-team path in a Spring Boot repo:

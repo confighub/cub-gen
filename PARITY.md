@@ -35,6 +35,7 @@ Contract lock means:
 | Bridge digest fields | N/A | `digest_algorithm` + `bundle_digest` | matched (local contract) | Deterministic bundle verification handle for attestation pipelines |
 | Optional verify command | N/A | `verify` (top-level) | matched (local contract) | Verifies schema + digest integrity; non-zero exit on mismatch |
 | Optional attest command | N/A | `attest` (top-level) | matched (local contract) | Emits attestation envelope only from valid verified bundles |
+| Optional verify-attestation command | N/A | `verify-attestation` (top-level) | matched (local contract) | Verifies attestation integrity and optional bundle linkage |
 
 ## Flow parity
 
@@ -78,6 +79,8 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/verify-tampered.stderr.golden.txt`
   - `cmd/cub-gen/testdata/parity/attest.json.golden.json`
   - `cmd/cub-gen/testdata/parity/attest-tampered.stderr.golden.txt`
+  - `cmd/cub-gen/testdata/parity/verify-attestation.json.golden.json`
+  - `cmd/cub-gen/testdata/parity/verify-attestation-tampered.stderr.golden.txt`
   - `cmd/cub-gen/testdata/parity/gitops-discover.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/gitops-import.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/gitops-help.stdout.golden.txt`

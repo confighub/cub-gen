@@ -60,3 +60,55 @@ func TestBuildAtRejectsInvalidBundle(t *testing.T) {
 		t.Fatal("expected BuildAt to fail for invalid bundle")
 	}
 }
+
+func TestVerifyRecord(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "helm-paas")
+	imported, err := gitopsflow.Import(repo, repo, "HEAD", "platform", "")
+	if err != nil {
+		t.Fatalf("Import returned error: %v", err)
+	}
+	bundle := publish.BuildBundleAt(imported, time.Date(2026, 3, 6, 0, 0, 0, 0, time.UTC))
+	rec, err := BuildAt(bundle, time.Date(2026, 3, 6, 1, 0, 0, 0, time.UTC), "ci-bot")
+	if err != nil {
+		t.Fatalf("BuildAt returned error: %v", err)
+	}
+
+	if err := VerifyRecord(rec); err != nil {
+		t.Fatalf("VerifyRecord returned error for valid record: %v", err)
+	}
+
+	tampered := rec
+	tampered.Status = "tampered"
+	if err := VerifyRecord(tampered); err == nil {
+		t.Fatal("expected VerifyRecord to fail for tampered status")
+	}
+
+	missingDigest := rec
+	missingDigest.AttestationDigest = ""
+	if err := VerifyRecord(missingDigest); err == nil || !strings.Contains(err.Error(), "missing attestation_digest") {
+		t.Fatalf("expected missing attestation digest error, got %v", err)
+	}
+}
+
+func TestVerifyRecordAgainstBundle(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "helm-paas")
+	imported, err := gitopsflow.Import(repo, repo, "HEAD", "platform", "")
+	if err != nil {
+		t.Fatalf("Import returned error: %v", err)
+	}
+	bundle := publish.BuildBundleAt(imported, time.Date(2026, 3, 6, 0, 0, 0, 0, time.UTC))
+	rec, err := BuildAt(bundle, time.Date(2026, 3, 6, 1, 0, 0, 0, time.UTC), "ci-bot")
+	if err != nil {
+		t.Fatalf("BuildAt returned error: %v", err)
+	}
+
+	if err := VerifyRecordAgainstBundle(rec, bundle); err != nil {
+		t.Fatalf("VerifyRecordAgainstBundle returned error for valid link: %v", err)
+	}
+
+	// Use a different generated_at to produce a different valid bundle digest.
+	mismatched := publish.BuildBundleAt(imported, time.Date(2026, 3, 6, 2, 0, 0, 0, time.UTC))
+	if err := VerifyRecordAgainstBundle(rec, mismatched); err == nil || !strings.Contains(err.Error(), "bundle digest link mismatch") {
+		t.Fatalf("expected bundle digest link mismatch, got %v", err)
+	}
+}

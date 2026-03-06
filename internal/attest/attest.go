@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/confighub/cub-gen/internal/publish"
@@ -73,4 +75,55 @@ func computeAttestationDigest(rec Record) string {
 	}
 	sum := sha256.Sum256(b)
 	return digestAlgorithm + ":" + hex.EncodeToString(sum[:])
+}
+
+// VerifyRecord validates attestation schema and digest integrity.
+func VerifyRecord(rec Record) error {
+	if rec.SchemaVersion != attestationSchema {
+		return fmt.Errorf("unsupported schema_version %q", rec.SchemaVersion)
+	}
+	if rec.Source != attestationSource {
+		return fmt.Errorf("unsupported source %q", rec.Source)
+	}
+	if rec.Status != "verified" {
+		return fmt.Errorf("unsupported status %q", rec.Status)
+	}
+	if rec.DigestAlgorithm == "" {
+		return fmt.Errorf("missing digest_algorithm")
+	}
+	if rec.DigestAlgorithm != digestAlgorithm {
+		return fmt.Errorf("unsupported digest_algorithm %q", rec.DigestAlgorithm)
+	}
+	if rec.BundleDigest == "" {
+		return fmt.Errorf("missing bundle_digest")
+	}
+	if !strings.HasPrefix(rec.BundleDigest, digestAlgorithm+":") {
+		return fmt.Errorf("bundle_digest must use %s prefix", digestAlgorithm)
+	}
+	if rec.AttestationDigest == "" {
+		return fmt.Errorf("missing attestation_digest")
+	}
+	expected := computeAttestationDigest(rec)
+	if rec.AttestationDigest != expected {
+		return fmt.Errorf("attestation digest mismatch: expected %s, got %s", expected, rec.AttestationDigest)
+	}
+	return nil
+}
+
+// VerifyRecordAgainstBundle validates both attestation and bundle integrity and
+// then checks their digest linkage.
+func VerifyRecordAgainstBundle(rec Record, bundle publish.ChangeBundle) error {
+	if err := VerifyRecord(rec); err != nil {
+		return err
+	}
+	if err := publish.VerifyBundle(bundle); err != nil {
+		return err
+	}
+	if rec.BundleDigest != bundle.BundleDigest {
+		return fmt.Errorf("bundle digest link mismatch: attestation=%s bundle=%s", rec.BundleDigest, bundle.BundleDigest)
+	}
+	if rec.ChangeID != "" && bundle.ChangeID != "" && rec.ChangeID != bundle.ChangeID {
+		return fmt.Errorf("change_id link mismatch: attestation=%s bundle=%s", rec.ChangeID, bundle.ChangeID)
+	}
+	return nil
 }

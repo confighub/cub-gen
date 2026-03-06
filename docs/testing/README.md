@@ -23,6 +23,8 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 - Verify command golden locks in `cmd/cub-gen/verify_parity_test.go`.
 - Attest command behavior tests in `cmd/cub-gen/attest_command_test.go`.
 - Attest command golden locks in `cmd/cub-gen/attest_parity_test.go`.
+- Verify-attestation behavior tests in `cmd/cub-gen/verify_attestation_command_test.go`.
+- Verify-attestation golden locks in `cmd/cub-gen/verify_attestation_parity_test.go`.
 - Golden files under `cmd/cub-gen/testdata/parity/`.
 - Includes command help/usage goldens to lock human-facing CLI contract.
 - Helm example is covered across discover/import/cleanup parity paths.
