@@ -14,6 +14,8 @@
   - golden cleanup JSON
   - golden discover/import table output
   - error mode coverage
+- `cmd/cub-gen/examples_smoke_test.go`
+  - path-mode discover/import for Helm, Score, Spring (`./examples/...` without alias config)
 
 ### Internal logic tests
 

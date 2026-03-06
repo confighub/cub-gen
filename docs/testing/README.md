@@ -36,6 +36,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 
 - Run at least one command per example for changed behavior.
 - For bridge changes, validate import -> publish pipeline output.
+- Automated path-mode smoke for Helm/Score/Spring in `cmd/cub-gen/examples_smoke_test.go`.
 
 ## Required commands
 
