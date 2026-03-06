@@ -239,3 +239,16 @@ func TestGeneratorsStrictFiltersUnknownCapability(t *testing.T) {
 		t.Fatalf("expected unknown capability message in error, got: %q (stderr=%q)", err.Error(), stderr)
 	}
 }
+
+func TestGeneratorsStrictFiltersUnknownKindMultiSorted(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--strict-filters", "--kind", "zzz,aaa"})
+	if err == nil {
+		t.Fatalf("expected strict unknown kind error, got nil")
+	}
+	if strings.TrimSpace(out) != "" {
+		t.Fatalf("expected empty stdout, got: %q", out)
+	}
+	if !strings.Contains(err.Error(), "unknown kind filter value(s): aaa, zzz") {
+		t.Fatalf("expected sorted unknown kind values in error, got: %q (stderr=%q)", err.Error(), stderr)
+	}
+}
