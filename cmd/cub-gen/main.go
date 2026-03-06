@@ -9,6 +9,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/confighub/cub-gen/internal/attest"
 	"github.com/confighub/cub-gen/internal/detect"
 	gitopsflow "github.com/confighub/cub-gen/internal/gitops"
 	"github.com/confighub/cub-gen/internal/importer"
@@ -40,6 +41,8 @@ func run(args []string) error {
 		return runPublish(args[1:])
 	case "verify":
 		return runVerify(args[1:])
+	case "attest":
+		return runAttest(args[1:])
 	case "gitops":
 		return runGitOps(args[1:])
 	default:
@@ -220,6 +223,59 @@ func runVerify(args []string) error {
 
 	fmt.Printf("Bundle verification OK: %s\n", bundle.BundleDigest)
 	return nil
+}
+
+func runAttest(args []string) error {
+	fs := flag.NewFlagSet("attest", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	in := fs.String("in", "-", "Bundle JSON input path, or '-' for stdin")
+	out := fs.String("out", "-", "Attestation JSON output path, or '-' for stdout")
+	verifier := fs.String("verifier", "cub-gen", "Verifier identity label")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	if fs.NArg() != 0 {
+		return errors.New("usage: cub-gen attest [flags]")
+	}
+
+	var inputBytes []byte
+	var err error
+	if *in == "-" {
+		inputBytes, err = io.ReadAll(os.Stdin)
+		if err != nil {
+			return fmt.Errorf("read stdin: %w", err)
+		}
+	} else {
+		inputBytes, err = os.ReadFile(*in)
+		if err != nil {
+			return fmt.Errorf("read input file: %w", err)
+		}
+	}
+
+	var bundle publish.ChangeBundle
+	if err := json.Unmarshal(inputBytes, &bundle); err != nil {
+		return fmt.Errorf("parse bundle json: %w", err)
+	}
+	rec, err := attest.Build(bundle, *verifier)
+	if err != nil {
+		return err
+	}
+
+	if *out == "-" {
+		return writeJSON(os.Stdout, rec, *pretty)
+	}
+	f, err := os.Create(*out)
+	if err != nil {
+		return fmt.Errorf("create output file: %w", err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	return writeJSON(f, rec, *pretty)
 }
 
 func runGitOps(args []string) error {
@@ -408,6 +464,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen publish [--in FILE|-] [--out FILE|-] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen verify [--in FILE|-] [--json] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "GitOps parity examples:")
@@ -417,6 +474,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen gitops import --space my-space --json ./examples/helm-paas local-renderer | cub-gen publish --in -")
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas")
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen verify --in -")
+	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Note: gitops commands are local-only prototypes that mirror cub gitops stages.")
 }
