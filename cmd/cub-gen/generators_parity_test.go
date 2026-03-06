@@ -157,6 +157,28 @@ func TestGeneratorsGoldenTableKindFilter(t *testing.T) {
 	assertGoldenText(t, filepath.Join("testdata", "parity", "generators-kind-helm.table.golden.txt"), out)
 }
 
+func TestGeneratorsGoldenTableKindMultiFilter(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--kind", "helm,score"})
+	if err != nil {
+		t.Fatalf("run generators --kind multi returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+	assertGoldenText(t, filepath.Join("testdata", "parity", "generators-kind-helm-score.table.golden.txt"), out)
+}
+
+func TestGeneratorsGoldenTableCapabilityMultiFilter(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--capability", "inverse-values-patch,inverse-score-patch"})
+	if err != nil {
+		t.Fatalf("run generators --capability multi returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+	assertGoldenText(t, filepath.Join("testdata", "parity", "generators-capability-helm-score.table.golden.txt"), out)
+}
+
 func TestGeneratorsGoldenTableNoMatches(t *testing.T) {
 	out, stderr, err := runWithCapturedIO([]string{"generators", "--profile", "non-existent-profile"})
 	if err != nil {

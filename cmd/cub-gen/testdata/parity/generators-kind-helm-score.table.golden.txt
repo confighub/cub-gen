@@ -1,0 +1,3 @@
+Kind	Profile	Resource Kind	Resource Type	Capabilities
+helm	helm-paas	HelmRelease	helm.toolkit.fluxcd.io/v2/HelmRelease	render-manifests,values-overrides,inverse-values-patch
+score	scoredev-paas	Application	argoproj.io/v1alpha1/Application	render-manifests,workload-spec,inverse-score-patch

@@ -23,7 +23,7 @@
 - `cmd/cub-gen/generators_parity_test.go`
   - golden generator family JSON contract
   - golden generator family filtered JSON contracts (single + multi-value filters for kind/capability + profile + combined + empty match)
-  - golden generator family table contracts (full + filtered + empty match)
+  - golden generator family table contracts (full + single/multi filtered + empty match)
   - golden generators help output contract
 - `cmd/cub-gen/examples_smoke_test.go`
   - path-mode discover/import for Helm, Score, Spring, Backstage, Ably, Ops (`./examples/...` without alias config)
@@ -92,6 +92,8 @@
 - `cmd/cub-gen/testdata/parity/generators.table.golden.txt`
 - `cmd/cub-gen/testdata/parity/generators-kind-helm.table.golden.txt`
 - `cmd/cub-gen/testdata/parity/generators-empty.table.golden.txt`
+- `cmd/cub-gen/testdata/parity/generators-kind-helm-score.table.golden.txt`
+- `cmd/cub-gen/testdata/parity/generators-capability-helm-score.table.golden.txt`
 - `cmd/cub-gen/testdata/parity/generators-help.stderr.golden.txt`
 
 ## Mandatory validation commands
