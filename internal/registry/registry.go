@@ -29,6 +29,11 @@ type InversePatchTemplate struct {
 	RequiresReview bool
 }
 
+type InversePointerTemplate struct {
+	Owner      string
+	Confidence float64
+}
+
 // FamilySpec captures cross-cutting generator-family metadata used by multiple
 // command/runtime layers.
 type FamilySpec struct {
@@ -42,6 +47,7 @@ type FamilySpec struct {
 	InversePatchReasons         map[string]string
 	InverseEditHints            map[string]string
 	InversePatchTemplates       map[string]InversePatchTemplate
+	InversePointerTemplates     map[string]InversePointerTemplate
 	FieldOriginConfidences      map[string]float64
 	FieldOriginTransform        string
 	FieldOriginOverlayTransform string
@@ -73,6 +79,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		InversePatchTemplates: map[string]InversePatchTemplate{
 			"image_tag": {EditableBy: "app-team", Confidence: 0.86, RequiresReview: false},
+		},
+		InversePointerTemplates: map[string]InversePointerTemplate{
+			"image_tag": {Owner: "app-team", Confidence: 0.86},
 		},
 		FieldOriginConfidences: map[string]float64{
 			"image_tag": 0.86,
@@ -114,6 +123,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		InversePatchTemplates: map[string]InversePatchTemplate{
 			"env_var": {EditableBy: "app-team", Confidence: 0.90, RequiresReview: false},
+		},
+		InversePointerTemplates: map[string]InversePointerTemplate{
+			"image":   {Owner: "app-team", Confidence: 0.94},
+			"env_var": {Owner: "app-team", Confidence: 0.90},
+			"port":    {Owner: "app-team", Confidence: 0.91},
 		},
 		FieldOriginConfidences: map[string]float64{
 			"image":   0.94,
@@ -159,6 +173,11 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"app_name":       {EditableBy: "app-team", Confidence: 0.88, RequiresReview: false},
 			"server_port":    {EditableBy: "app-team", Confidence: 0.91, RequiresReview: false},
 			"datasource_url": {EditableBy: "platform-engineer", Confidence: 0.78, RequiresReview: true},
+		},
+		InversePointerTemplates: map[string]InversePointerTemplate{
+			"app_name":       {Owner: "app-team", Confidence: 0.89},
+			"server_port":    {Owner: "app-team", Confidence: 0.91},
+			"datasource_url": {Owner: "platform-engineer", Confidence: 0.78},
 		},
 		FieldOriginConfidences: map[string]float64{
 			"app_name":            0.89,
@@ -210,6 +229,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"identity":  {EditableBy: "platform-engineer", Confidence: 0.87, RequiresReview: false},
 			"lifecycle": {EditableBy: "platform-engineer", Confidence: 0.82, RequiresReview: true},
 		},
+		InversePointerTemplates: map[string]InversePointerTemplate{
+			"name":      {Owner: "platform-engineer", Confidence: 0.90},
+			"lifecycle": {Owner: "platform-engineer", Confidence: 0.82},
+		},
 		FieldOriginConfidences: map[string]float64{
 			"identity":  0.90,
 			"lifecycle": 0.82,
@@ -252,6 +275,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		InversePatchTemplates: map[string]InversePatchTemplate{
 			"environment": {EditableBy: "app-team", Confidence: 0.90, RequiresReview: false},
 			"channels":    {EditableBy: "app-team", Confidence: 0.88, RequiresReview: false},
+		},
+		InversePointerTemplates: map[string]InversePointerTemplate{
+			"environment": {Owner: "app-team", Confidence: 0.90},
+			"channels":    {Owner: "app-team", Confidence: 0.88},
 		},
 		FieldOriginConfidences: map[string]float64{
 			"environment":      0.90,
@@ -297,6 +324,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"image_tag": {EditableBy: "platform-engineer", Confidence: 0.87, RequiresReview: true},
 			"schedule":  {EditableBy: "platform-engineer", Confidence: 0.84, RequiresReview: true},
 		},
+		InversePointerTemplates: map[string]InversePointerTemplate{
+			"image_tag": {Owner: "platform-engineer", Confidence: 0.87},
+			"schedule":  {Owner: "platform-engineer", Confidence: 0.84},
+		},
 		FieldOriginConfidences: map[string]float64{
 			"image_tag":        0.87,
 			"schedule_base":    0.84,
@@ -333,6 +364,7 @@ func Spec(kind model.GeneratorKind) (FamilySpec, bool) {
 		InversePatchReasons:         copyInversePatchReasons(spec.InversePatchReasons),
 		InverseEditHints:            copyInverseEditHints(spec.InverseEditHints),
 		InversePatchTemplates:       copyInversePatchTemplates(spec.InversePatchTemplates),
+		InversePointerTemplates:     copyInversePointerTemplates(spec.InversePointerTemplates),
 		FieldOriginConfidences:      copyFieldOriginConfidences(spec.FieldOriginConfidences),
 		FieldOriginTransform:        spec.FieldOriginTransform,
 		FieldOriginOverlayTransform: spec.FieldOriginOverlayTransform,
@@ -404,6 +436,17 @@ func InversePatchTemplateFor(kind model.GeneratorKind, key string, fallback Inve
 		return fallback
 	}
 	if v, ok := spec.InversePatchTemplates[key]; ok {
+		return v
+	}
+	return fallback
+}
+
+func InversePointerTemplateFor(kind model.GeneratorKind, key string, fallback InversePointerTemplate) InversePointerTemplate {
+	spec, ok := Spec(kind)
+	if !ok {
+		return fallback
+	}
+	if v, ok := spec.InversePointerTemplates[key]; ok {
 		return v
 	}
 	return fallback
@@ -635,6 +678,17 @@ func copyInversePatchTemplates(in map[string]InversePatchTemplate) map[string]In
 		return nil
 	}
 	out := make(map[string]InversePatchTemplate, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func copyInversePointerTemplates(in map[string]InversePointerTemplate) map[string]InversePointerTemplate {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]InversePointerTemplate, len(in))
 	for k, v := range in {
 		out[k] = v
 	}

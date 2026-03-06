@@ -85,6 +85,11 @@ func TestRegistryFallbacks(t *testing.T) {
 	}); got.EditableBy != "fallback-owner" || got.Confidence != 1.0 || !got.RequiresReview {
 		t.Fatalf("expected inverse patch template fallback to be returned, got %+v", got)
 	}
+	if got := InversePointerTemplateFor(unknown, "image_tag", InversePointerTemplate{
+		Owner: "fallback-owner", Confidence: 0.77,
+	}); got.Owner != "fallback-owner" || got.Confidence != 0.77 {
+		t.Fatalf("expected inverse pointer template fallback to be returned, got %+v", got)
+	}
 	if got := InverseEditHint(unknown, "image_tag", "fallback-hint"); got != "fallback-hint" {
 		t.Fatalf("expected inverse edit hint fallback fallback-hint, got %q", got)
 	}
@@ -210,6 +215,9 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := InversePatchTemplateFor(model.GeneratorOpsFlow, "schedule", InversePatchTemplate{}); got.EditableBy != "platform-engineer" || got.Confidence != 0.84 || !got.RequiresReview {
 		t.Fatalf("expected ops schedule inverse patch template, got %+v", got)
 	}
+	if got := InversePointerTemplateFor(model.GeneratorBackstage, "name", InversePointerTemplate{}); got.Owner != "platform-engineer" || got.Confidence != 0.90 {
+		t.Fatalf("expected backstage name inverse pointer template, got %+v", got)
+	}
 	if got := InverseEditHint(model.GeneratorScore, "env_var", "fallback"); got != "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}." {
 		t.Fatalf("expected score env_var inverse edit hint template, got %q", got)
 	}
@@ -233,6 +241,10 @@ func TestRegistryHintDefaults(t *testing.T) {
 	spec.InversePatchTemplates["env_var"] = InversePatchTemplate{EditableBy: "mutated", Confidence: 0.01, RequiresReview: true}
 	if got := InversePatchTemplateFor(model.GeneratorScore, "env_var", InversePatchTemplate{}); got.EditableBy != "app-team" || got.Confidence != 0.90 || got.RequiresReview {
 		t.Fatalf("expected immutable inverse patch templates, got %+v", got)
+	}
+	spec.InversePointerTemplates["env_var"] = InversePointerTemplate{Owner: "mutated", Confidence: 0.01}
+	if got := InversePointerTemplateFor(model.GeneratorScore, "env_var", InversePointerTemplate{}); got.Owner != "app-team" || got.Confidence != 0.90 {
+		t.Fatalf("expected immutable inverse pointer templates, got %+v", got)
 	}
 	spec.FieldOriginConfidences["env_var"] = 0.01
 	if got := FieldOriginConfidenceFor(model.GeneratorScore, "env_var", 0.0); got != 0.90 {

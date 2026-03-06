@@ -521,17 +521,29 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 func inversePointersForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.InverseEditPointer {
 	switch g.Kind {
 	case model.GeneratorHelm:
+		policy := registry.InversePointerTemplateFor(g.Kind, "image_tag", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.86,
+		})
 		return []model.InverseEditPointer{
 			{
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
 				DryPath:    "values.image.tag",
-				Owner:      "app-team",
+				Owner:      policy.Owner,
 				EditHint:   registry.InverseEditHint(g.Kind, "image_tag", "Edit chart values file and keep chart template unchanged."),
-				Confidence: 0.86,
+				Confidence: policy.Confidence,
 			},
 		}
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
+		imagePolicy := registry.InversePointerTemplateFor(g.Kind, "image", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.94,
+		})
+		envVarPolicy := registry.InversePointerTemplateFor(g.Kind, "env_var", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.90,
+		})
+		portPolicy := registry.InversePointerTemplateFor(g.Kind, "port", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.91,
+		})
 		vars := map[string]string{
 			"source_path":       hints.SourcePath,
 			"container_name":    hints.ContainerName,
@@ -542,27 +554,36 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			{
 				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/image", hints.ContainerName),
 				DryPath:    fmt.Sprintf("containers.%s.image", hints.ContainerName),
-				Owner:      "app-team",
+				Owner:      imagePolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "image", "Edit the Score container image in {{source_path}}."), vars),
-				Confidence: 0.94,
+				Confidence: imagePolicy.Confidence,
 			},
 			{
 				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/env[name=%s]/value", hints.ContainerName, hints.VariableName),
 				DryPath:    fmt.Sprintf("containers.%s.variables.%s", hints.ContainerName, hints.VariableName),
-				Owner:      "app-team",
+				Owner:      envVarPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "env_var", "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}."), vars),
-				Confidence: 0.90,
+				Confidence: envVarPolicy.Confidence,
 			},
 			{
 				WetPath:    fmt.Sprintf("Service/spec/ports[name=%s]/port", hints.ServicePortName),
 				DryPath:    fmt.Sprintf("service.ports.%s.port", hints.ServicePortName),
-				Owner:      "app-team",
+				Owner:      portPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "port", "Edit {{service_port_name}} service port in {{source_path}}."), vars),
-				Confidence: 0.91,
+				Confidence: portPolicy.Confidence,
 			},
 		}
 	case model.GeneratorSpringBoot:
 		hints := springPathHintsFromInputs(g.Inputs)
+		appNamePolicy := registry.InversePointerTemplateFor(g.Kind, "app_name", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.89,
+		})
+		serverPortPolicy := registry.InversePointerTemplateFor(g.Kind, "server_port", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.91,
+		})
+		datasourcePolicy := registry.InversePointerTemplateFor(g.Kind, "datasource_url", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.78,
+		})
 		vars := map[string]string{
 			"base_config_path":    hints.BaseConfigPath,
 			"profile_config_path": hints.ProfileConfigPath,
@@ -577,46 +598,58 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			{
 				WetPath:    "Deployment/metadata/labels[app.kubernetes.io/name]",
 				DryPath:    "spring.application.name",
-				Owner:      "app-team",
+				Owner:      appNamePolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "app_name", "Edit spring.application.name in {{base_config_path}}."), vars),
-				Confidence: 0.89,
+				Confidence: appNamePolicy.Confidence,
 			},
 			{
 				WetPath:    "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort",
 				DryPath:    "server.port",
-				Owner:      "app-team",
+				Owner:      serverPortPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, serverPortHintKey, serverPortHintFallback), vars),
-				Confidence: 0.91,
+				Confidence: serverPortPolicy.Confidence,
 			},
 			{
 				WetPath:    "ConfigMap/data/application.yaml:spring.datasource.url",
 				DryPath:    "spring.datasource.url",
-				Owner:      "platform-engineer",
+				Owner:      datasourcePolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "datasource_url", "Edit spring.datasource.url in {{base_config_path}} and coordinate with platform ownership rules."), vars),
-				Confidence: 0.78,
+				Confidence: datasourcePolicy.Confidence,
 			},
 		}
 	case model.GeneratorBackstage:
 		hints := backstagePathHintsFromInputs(g.Inputs)
+		namePolicy := registry.InversePointerTemplateFor(g.Kind, "name", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.90,
+		})
+		lifecyclePolicy := registry.InversePointerTemplateFor(g.Kind, "lifecycle", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.82,
+		})
 		vars := map[string]string{"catalog_path": hints.CatalogPath}
 		return []model.InverseEditPointer{
 			{
 				WetPath:    "Application/metadata/name",
 				DryPath:    "metadata.name",
-				Owner:      "platform-engineer",
+				Owner:      namePolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "name", "Edit metadata.name in {{catalog_path}}."), vars),
-				Confidence: 0.90,
+				Confidence: namePolicy.Confidence,
 			},
 			{
 				WetPath:    "Application/metadata/labels[lifecycle]",
 				DryPath:    "spec.lifecycle",
-				Owner:      "platform-engineer",
+				Owner:      lifecyclePolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "lifecycle", "Edit spec.lifecycle in {{catalog_path}} and coordinate rollout policy."), vars),
-				Confidence: 0.82,
+				Confidence: lifecyclePolicy.Confidence,
 			},
 		}
 	case model.GeneratorAbly:
 		hints := ablyPathHintsFromInputs(g.Inputs)
+		environmentPolicy := registry.InversePointerTemplateFor(g.Kind, "environment", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.90,
+		})
+		channelsPolicy := registry.InversePointerTemplateFor(g.Kind, "channels", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.88,
+		})
 		vars := map[string]string{
 			"base_config_path":    hints.BaseConfigPath,
 			"overlay_config_path": hints.OverlayConfigPath,
@@ -631,20 +664,26 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			{
 				WetPath:    "ConfigMap/data/ABLY_ENVIRONMENT",
 				DryPath:    "app.environment",
-				Owner:      "app-team",
+				Owner:      environmentPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "environment", "Edit app.environment in {{base_config_path}}."), vars),
-				Confidence: 0.90,
+				Confidence: environmentPolicy.Confidence,
 			},
 			{
 				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
 				DryPath:    "channels.inbound",
-				Owner:      "app-team",
+				Owner:      channelsPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, channelsHintKey, channelsHintFallback), vars),
-				Confidence: 0.88,
+				Confidence: channelsPolicy.Confidence,
 			},
 		}
 	case model.GeneratorOpsFlow:
 		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
+		imageTagPolicy := registry.InversePointerTemplateFor(g.Kind, "image_tag", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.87,
+		})
+		schedulePolicy := registry.InversePointerTemplateFor(g.Kind, "schedule", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.84,
+		})
 		vars := map[string]string{
 			"base_spec_path":    hints.BaseSpecPath,
 			"overlay_spec_path": hints.OverlaySpecPath,
@@ -659,16 +698,16 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			{
 				WetPath:    "Workflow/spec/templates[name=deploy]/container/image",
 				DryPath:    "actions.deploy.image_tag",
-				Owner:      "platform-engineer",
+				Owner:      imageTagPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "image_tag", "Edit actions.deploy.image_tag in {{base_spec_path}}."), vars),
-				Confidence: 0.87,
+				Confidence: imageTagPolicy.Confidence,
 			},
 			{
 				WetPath:    "Workflow/spec/schedule",
 				DryPath:    "triggers.schedule",
-				Owner:      "platform-engineer",
+				Owner:      schedulePolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, scheduleHintKey, scheduleHintFallback), vars),
-				Confidence: 0.84,
+				Confidence: schedulePolicy.Confidence,
 			},
 		}
 	default:
