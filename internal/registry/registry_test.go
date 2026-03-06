@@ -204,6 +204,15 @@ func TestRegistryWetTargetTemplates(t *testing.T) {
 }
 
 func TestRegistryHintDefaults(t *testing.T) {
+	if got := HintDefault(model.GeneratorHelm, "chart_role", "fallback-role"); got != "chart" {
+		t.Fatalf("expected helm chart_role hint default chart, got %q", got)
+	}
+	if got := HintDefault(model.GeneratorHelm, "values_role", "fallback-role"); got != "values" {
+		t.Fatalf("expected helm values_role hint default values, got %q", got)
+	}
+	if got := HintDefault(model.GeneratorHelm, "primary_values_path", "fallback.yaml"); got != "values.yaml" {
+		t.Fatalf("expected helm primary_values_path hint default values.yaml, got %q", got)
+	}
 	if got := HintDefault(model.GeneratorScore, "source_path", "fallback.yaml"); got != "score.yaml" {
 		t.Fatalf("expected score source_path hint default score.yaml, got %q", got)
 	}
