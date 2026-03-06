@@ -74,6 +74,7 @@ func runGenerators(args []string) error {
 	kindFilter := fs.String("kind", "", "Filter by generator kind")
 	profileFilter := fs.String("profile", "", "Filter by generator profile")
 	capabilityFilter := fs.String("capability", "", "Filter by capability")
+	strictFilters := fs.Bool("strict-filters", false, "Fail on unknown filter values")
 	jsonOut := fs.Bool("json", false, "Output JSON")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
 	if err := fs.Parse(args); err != nil {
@@ -84,6 +85,11 @@ func runGenerators(args []string) error {
 	}
 	if fs.NArg() != 0 {
 		return errors.New("usage: cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--json] [--pretty]")
+	}
+	if *strictFilters {
+		if err := validateGeneratorFilters(*kindFilter, *profileFilter, *capabilityFilter); err != nil {
+			return err
+		}
 	}
 
 	records := listGeneratorFamilies(*kindFilter, *profileFilter, *capabilityFilter)
@@ -177,6 +183,7 @@ func printGeneratorsUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--json] [--pretty]")
 	fmt.Fprintln(out, "  (KIND/PROFILE/CAPABILITY support comma-separated values)")
+	fmt.Fprintln(out, "  use --strict-filters to fail on unknown filter values")
 	fmt.Fprintln(out)
 	fmt.Fprintf(out, "Supported kinds: %s\n", strings.Join(supportedGeneratorKinds(), ", "))
 	fmt.Fprintf(out, "Supported profiles: %s\n", strings.Join(supportedGeneratorProfiles(), ", "))
@@ -231,6 +238,48 @@ func supportedGeneratorCapabilities() []string {
 		}
 	}
 	sort.Strings(out)
+	return out
+}
+
+func validateGeneratorFilters(kindFilter, profileFilter, capabilityFilter string) error {
+	unknownKinds := unknownFilterValues(kindFilter, stringSliceToSet(supportedGeneratorKinds()))
+	if len(unknownKinds) > 0 {
+		return fmt.Errorf("unknown kind filter value(s): %s (supported: %s)", strings.Join(unknownKinds, ", "), strings.Join(supportedGeneratorKinds(), ", "))
+	}
+
+	unknownProfiles := unknownFilterValues(profileFilter, stringSliceToSet(supportedGeneratorProfiles()))
+	if len(unknownProfiles) > 0 {
+		return fmt.Errorf("unknown profile filter value(s): %s (supported: %s)", strings.Join(unknownProfiles, ", "), strings.Join(supportedGeneratorProfiles(), ", "))
+	}
+
+	unknownCapabilities := unknownFilterValues(capabilityFilter, stringSliceToSet(supportedGeneratorCapabilities()))
+	if len(unknownCapabilities) > 0 {
+		return fmt.Errorf("unknown capability filter value(s): %s (supported: %s)", strings.Join(unknownCapabilities, ", "), strings.Join(supportedGeneratorCapabilities(), ", "))
+	}
+
+	return nil
+}
+
+func unknownFilterValues(raw string, supported map[string]struct{}) []string {
+	unknown := make([]string, 0)
+	for value := range parseFilterSet(raw) {
+		if _, ok := supported[value]; !ok {
+			unknown = append(unknown, value)
+		}
+	}
+	sort.Strings(unknown)
+	return unknown
+}
+
+func stringSliceToSet(values []string) map[string]struct{} {
+	out := make(map[string]struct{}, len(values))
+	for _, value := range values {
+		key := strings.ToLower(strings.TrimSpace(value))
+		if key == "" {
+			continue
+		}
+		out[key] = struct{}{}
+	}
 	return out
 }
 

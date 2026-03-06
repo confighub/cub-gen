@@ -50,6 +50,7 @@ Implemented in this preview slice:
 32. Improved `generators --help` to render supported kind/profile/capability values directly from the registry for self-discoverable filter usage.
 33. Added comma-separated multi-value filtering support for `generators` (`--kind`, `--profile`, `--capability`) with parity contracts for multi-match outputs.
 34. Added table-mode multi-filter parity contracts for `generators` (kind and capability comma-list flows) to keep human-readable output locked alongside JSON.
+35. Added optional strict filter validation (`--strict-filters`) for `generators` to fail fast on unknown kind/profile/capability values.
 
 ## v0.2 preview invariants
 
