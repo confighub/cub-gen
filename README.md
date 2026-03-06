@@ -263,6 +263,7 @@ See:
 
 - `CLAUDE.md`
 - `CONTRIBUTING.md`
+- `docs/contracts/canonical-triple-and-storage-boundary.md`
 - `docs/testing/README.md`
 - `docs/workflows/proof-first-delivery.md`
 - `PARITY.md`

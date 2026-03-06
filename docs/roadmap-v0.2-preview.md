@@ -64,6 +64,7 @@ Implemented in this preview slice:
 46. Enforced `no-triple-no-governed-import` gate with deterministic blocker errors for missing/cardiinality-mismatched contract triples and locked importer error output tests.
 47. Added cross-family triple conformance fixtures for Helm/Score/Spring/Backstage/Ably/Ops with deterministic re-run checks and registry-kind coverage enforcement.
 48. Added explicit bridge symmetry matrix gate in CI (`TestBridgeSymmetryMatrix` + `make test-bridge-symmetry`) to enforce `publish -> verify -> attest -> verify-attestation` family coverage across all registry kinds.
+49. Published canonical triple + storage boundary docs mapping schemas, runtime gates, and Git (DRY linkage) vs ConfigHub (WET governance) responsibilities.
 
 ## v0.2 preview invariants
 
