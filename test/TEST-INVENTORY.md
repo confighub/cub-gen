@@ -32,7 +32,7 @@
 ### Internal logic tests
 
 - `internal/detect/detect_test.go`
-- `internal/importer/importer_test.go`
+- `internal/importer/importer_test.go` (includes generator capability contract assertions)
 - `internal/gitops/flow_test.go`
 
 ## Golden artifacts

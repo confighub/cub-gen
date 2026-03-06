@@ -3,6 +3,7 @@ package importer
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -108,6 +109,58 @@ func TestImportRepoExamples(t *testing.T) {
 			}
 			if len(plan.Patches) == 0 {
 				t.Fatalf("expected at least one inverse patch; got %+v", plan)
+			}
+		})
+	}
+}
+
+func TestImportRepoGeneratorCapabilities(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                 string
+		repoDir              string
+		expectedCapabilities []string
+	}{
+		{
+			name:                 "helm-paas",
+			repoDir:              "helm-paas",
+			expectedCapabilities: []string{"render-manifests", "values-overrides", "inverse-values-patch"},
+		},
+		{
+			name:                 "scoredev-paas",
+			repoDir:              "scoredev-paas",
+			expectedCapabilities: []string{"render-manifests", "workload-spec", "inverse-score-patch"},
+		},
+		{
+			name:                 "springboot-paas",
+			repoDir:              "springboot-paas",
+			expectedCapabilities: []string{"render-app-config", "profile-overrides", "inverse-app-config-patch"},
+		},
+		{
+			name:                 "backstage-idp",
+			repoDir:              "backstage-idp",
+			expectedCapabilities: []string{"catalog-metadata", "render-manifests", "inverse-catalog-patch"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repo := filepath.Join("..", "..", "examples", tt.repoDir)
+			result, err := ImportRepo(repo, "main", "platform")
+			if err != nil {
+				t.Fatalf("ImportRepo returned error: %v", err)
+			}
+			if len(result.GeneratorContracts) != 1 {
+				t.Fatalf("expected 1 generator contract, got %d", len(result.GeneratorContracts))
+			}
+
+			got := result.GeneratorContracts[0].Capabilities
+			if !reflect.DeepEqual(got, tt.expectedCapabilities) {
+				t.Fatalf("expected capabilities %+v, got %+v", tt.expectedCapabilities, got)
 			}
 		})
 	}

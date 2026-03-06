@@ -17,6 +17,7 @@ Implemented in this preview slice:
    - `gitops-discover-backstage.golden.json`
    - `gitops-import-backstage.golden.json`
 5. Extended path-mode smoke and bridge smoke tests to include Backstage.
+6. Added generator capability contract tests across all supported families.
 
 ## v0.2 preview invariants
 
@@ -30,5 +31,5 @@ Implemented in this preview slice:
 1. Add one app-config-only generator family (e.g. config-provider style DRY source).
 2. Add one ops/workflow-style generator family.
 3. Define a stable extension surface for adding generator families without large switch edits.
-4. Add parity tests for generator-family capability metadata.
+4. Keep generator-family capability metadata contract tests updated as families are added.
 5. Keep bridge artifacts (`publish/verify/attest`) symmetric across all supported families.
