@@ -39,6 +39,22 @@ func TestGeneratorsGoldenJSONKindFilter(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "generators-kind-helm.golden.json"), got)
 }
 
+func TestGeneratorsGoldenJSONKindMultiFilter(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--json", "--kind", "helm,score"})
+	if err != nil {
+		t.Fatalf("run generators --json --kind multi returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal generators kind multi json: %v\noutput=%s", err, out)
+	}
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "generators-kind-helm-score.golden.json"), got)
+}
+
 func TestGeneratorsGoldenJSONCapabilityFilter(t *testing.T) {
 	out, stderr, err := runWithCapturedIO([]string{"generators", "--json", "--capability", "inverse-workflow-patch"})
 	if err != nil {
@@ -53,6 +69,22 @@ func TestGeneratorsGoldenJSONCapabilityFilter(t *testing.T) {
 		t.Fatalf("unmarshal generators capability json: %v\noutput=%s", err, out)
 	}
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "generators-capability-ops.golden.json"), got)
+}
+
+func TestGeneratorsGoldenJSONCapabilityMultiFilter(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--json", "--capability", "inverse-values-patch,inverse-score-patch"})
+	if err != nil {
+		t.Fatalf("run generators --json --capability multi returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal generators capability multi json: %v\noutput=%s", err, out)
+	}
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "generators-capability-helm-score.golden.json"), got)
 }
 
 func TestGeneratorsGoldenJSONProfileFilter(t *testing.T) {
