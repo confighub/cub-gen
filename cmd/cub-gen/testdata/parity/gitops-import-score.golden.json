@@ -1,0 +1,238 @@
+{
+  "contracts": [
+    {
+      "capabilities": [
+        "render-manifests",
+        "workload-spec",
+        "inverse-score-patch"
+      ],
+      "deterministic": true,
+      "generator_id": "gen_5813cd3820138512",
+      "inputs": [
+        {
+          "name": "input_01",
+          "required": true,
+          "schema_ref": "https://docs.score.dev/schemas/score-v1b1.json"
+        }
+      ],
+      "kind": "score",
+      "name": "scoredev-paas",
+      "output_format": "kubernetes/yaml",
+      "profile": "scoredev-paas",
+      "schema_version": "cub.confighub.io/generator-contract/v1",
+      "source_path": "",
+      "source_ref": "HEAD",
+      "source_repo": "\u003ctarget_path\u003e",
+      "transport": "oci+git",
+      "version": "0.1.0"
+    }
+  ],
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
+  "discovered": [
+    {
+      "generator_id": "gen_5813cd3820138512",
+      "generator_kind": "score",
+      "generator_profile": "scoredev-paas",
+      "inputs": [
+        "score.yaml"
+      ],
+      "resource_body": "kind: Application\nmetadata:\n  name: scoredev-paas\nspec:\n  root: \n",
+      "resource_kind": "Application",
+      "resource_name": "scoredev-paas",
+      "resource_type": "argoproj.io/v1alpha1/Application",
+      "root": ""
+    }
+  ],
+  "dry_inputs": [
+    {
+      "generator_id": "gen_5813cd3820138512",
+      "owner": "app-team",
+      "path": "score.yaml",
+      "profile": "scoredev-paas",
+      "required": true,
+      "role": "score-spec"
+    }
+  ],
+  "dry_units": [
+    {
+      "id": "dry_9a0407a761eadbab",
+      "kind": "dry-unit",
+      "layer": "dry",
+      "name": "scoredev-paas-dry"
+    }
+  ],
+  "generator_units": [
+    {
+      "id": "gen_9670efa074cb2d03",
+      "kind": "generator-unit",
+      "layer": "generator",
+      "name": "scoredev-paas-generator"
+    }
+  ],
+  "imported_at": "\u003ctimestamp\u003e",
+  "inverse_transform_plans": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "created_at": "\u003ctimestamp\u003e",
+      "patches": [
+        {
+          "confidence": 0.9,
+          "dry_path": "containers.main.variables.LOG_LEVEL",
+          "editable_by": "app-team",
+          "op": "replace",
+          "reason": "Score variable maps to a single Kubernetes env var.",
+          "requires_review": false,
+          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value"
+        }
+      ],
+      "plan_id": "\u003cplan_id\u003e",
+      "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+      "source_kind": "score",
+      "source_ref": "",
+      "status": "draft",
+      "target_unit_id": "dry_9a0407a761eadbab"
+    }
+  ],
+  "links": [
+    {
+      "dry_unit_id": "dry_9a0407a761eadbab",
+      "generator_unit_id": "gen_9670efa074cb2d03",
+      "wet_unit_id": "wet_3b630d8a9fb3502c"
+    }
+  ],
+  "provenance": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "field_origin_map": [
+        {
+          "confidence": 0.94,
+          "dry_path": "containers.main.image",
+          "source_path": "score.yaml",
+          "transform": "score-to-k8s",
+          "wet_path": "Deployment/spec/template/spec/containers[name=main]/image"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "containers.main.variables.LOG_LEVEL",
+          "source_path": "score.yaml",
+          "transform": "score-to-k8s",
+          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value"
+        },
+        {
+          "confidence": 0.91,
+          "dry_path": "service.ports.web.port",
+          "source_path": "score.yaml",
+          "transform": "score-to-k8s",
+          "wet_path": "Service/spec/ports[name=web]/port"
+        }
+      ],
+      "generator_id": "gen_5813cd3820138512",
+      "generator_name": "scoredev-paas",
+      "generator_profile": "scoredev-paas",
+      "input_digest": "sha256:d6046ef3f99c2542355019a1cc5932bd10e494ed8144d6e304625d93d5decd79",
+      "inverse_edit_pointers": [
+        {
+          "confidence": 0.94,
+          "dry_path": "containers.main.image",
+          "edit_hint": "Edit the Score container image in score.yaml.",
+          "owner": "app-team",
+          "wet_path": "Deployment/spec/template/spec/containers[name=main]/image"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "containers.main.variables.LOG_LEVEL",
+          "edit_hint": "Edit LOG_LEVEL under containers.main.variables in score.yaml.",
+          "owner": "app-team",
+          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value"
+        },
+        {
+          "confidence": 0.91,
+          "dry_path": "service.ports.web.port",
+          "edit_hint": "Edit web service port in score.yaml.",
+          "owner": "app-team",
+          "wet_path": "Service/spec/ports[name=web]/port"
+        }
+      ],
+      "outputs": [
+        {
+          "digest": "\u003cdigest\u003e",
+          "role": "rendered-manifests",
+          "uri": "oci://example.local/platform/scoredev-paas:latest"
+        }
+      ],
+      "provenance_id": "\u003cprovenance_id\u003e",
+      "rendered_at": "\u003ctimestamp\u003e",
+      "rendered_object_lineage": [
+        {
+          "kind": "Application",
+          "name": "scoredev-paas",
+          "namespace": "apps",
+          "source_dry_path": "metadata.name",
+          "source_path": "score.yaml"
+        },
+        {
+          "kind": "Deployment",
+          "name": "scoredev-paas",
+          "namespace": "apps",
+          "source_dry_path": "containers.main.image",
+          "source_path": "score.yaml"
+        },
+        {
+          "kind": "Service",
+          "name": "scoredev-paas",
+          "namespace": "apps",
+          "source_dry_path": "service.ports.web.port",
+          "source_path": "score.yaml"
+        }
+      ],
+      "schema_version": "cub.confighub.io/provenance/v1",
+      "sources": [
+        {
+          "path": "score.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        }
+      ],
+      "version": "0.1.0"
+    }
+  ],
+  "ref": "HEAD",
+  "render_target_slug": "render-target",
+  "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
+  "target_slug": "score",
+  "wet_manifest_targets": [
+    {
+      "generator_id": "gen_5813cd3820138512",
+      "kind": "Application",
+      "name": "scoredev-paas",
+      "namespace": "apps",
+      "owner": "platform-runtime"
+    },
+    {
+      "generator_id": "gen_5813cd3820138512",
+      "kind": "Deployment",
+      "name": "scoredev-paas",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "containers.main.image"
+    },
+    {
+      "generator_id": "gen_5813cd3820138512",
+      "kind": "Service",
+      "name": "scoredev-paas",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "service.ports.web.port"
+    }
+  ],
+  "wet_units": [
+    {
+      "id": "wet_3b630d8a9fb3502c",
+      "kind": "wet-unit",
+      "layer": "wet",
+      "name": "scoredev-paas-wet"
+    }
+  ]
+}
