@@ -10,6 +10,21 @@ Status values:
 
 Current lock level: `v0.2-preview-parity-locked` (2026-03-06 expanded contract baseline)
 
+## v0.2 closeout freeze
+
+As part of Sprint 1 closeout, the v0.2 parity baseline is now explicitly frozen.
+
+Freeze scope:
+
+1. `gitops discover|import|cleanup` command names and arity.
+2. `generators` flags and output contracts (table + JSON + `--details` JSON).
+3. Top-level help + subcommand help surfaces captured in parity goldens.
+4. Bridge command contracts (`publish`, `verify`, `attest`, `verify-attestation`) and golden outputs.
+
+When a change needs to modify any frozen contract, it must follow the contract drift checklist:
+
+1. `docs/testing/contract-drift-checklist.md`
+
 Contract lock means:
 - command names/arity for `discover|import|cleanup` are frozen for v0.1
 - JSON and table output contracts are golden-tested
@@ -132,10 +147,11 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/generators.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/generators-kind-helm.table.golden.txt`
   - `cmd/cub-gen/testdata/parity/generators-kind-helm-score.table.golden.txt`
-  - `cmd/cub-gen/testdata/parity/generators-capability-helm-score.table.golden.txt`
-  - `cmd/cub-gen/testdata/parity/generators-empty.table.golden.txt`
-  - `cmd/cub-gen/testdata/parity/generators-help.stderr.golden.txt`
-  - `cmd/cub-gen/testdata/parity/verify-attestation-tampered.stderr.golden.txt`
+- `cmd/cub-gen/testdata/parity/generators-capability-helm-score.table.golden.txt`
+- `cmd/cub-gen/testdata/parity/generators-empty.table.golden.txt`
+- `cmd/cub-gen/testdata/parity/generators-help.stderr.golden.txt`
+- `cmd/cub-gen/testdata/parity/generators-details.golden.json`
+- `cmd/cub-gen/testdata/parity/verify-attestation-tampered.stderr.golden.txt`
 - Error-mode tests:
   - `cmd/cub-gen/command_surface_parity_test.go`
   - `cmd/cub-gen/gitops_parity_test.go`
