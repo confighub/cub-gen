@@ -99,6 +99,41 @@ func TestPublishFromStdin(t *testing.T) {
 	}
 }
 
+func TestPublishDirectTargetMode(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"publish", "--space", "platform", "helm", "render-target"})
+	if err != nil {
+		t.Fatalf("publish direct mode returned error: %v\nstderr=%s", err, stderr)
+	}
+	if stderr != "" {
+		t.Fatalf("expected empty stderr from publish direct mode, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal publish direct output: %v\noutput=%s", err, out)
+	}
+	if got["schema_version"] != "cub.confighub.io/change-bundle/v1" {
+		t.Fatalf("unexpected schema_version: %v", got["schema_version"])
+	}
+	if got["target_slug"] != "helm" {
+		t.Fatalf("expected target_slug=helm, got %v", got["target_slug"])
+	}
+}
+
+func TestPublishRejectsMixedInAndDirectMode(t *testing.T) {
+	setupAliases(t)
+
+	_, _, err := runWithCapturedIO([]string{"publish", "--in", "some-file.json", "helm", "render-target"})
+	if err == nil {
+		t.Fatal("expected publish to reject mixed --in and direct mode")
+	}
+	if got := err.Error(); got == "" || !strings.Contains(got, "cannot combine --in with direct target mode") {
+		t.Fatalf("unexpected mixed mode error: %q", got)
+	}
+}
+
 func runWithCapturedIOAndStdin(args []string, stdin string) (stdout, stderr string, err error) {
 	oldOut := os.Stdout
 	oldErr := os.Stderr
