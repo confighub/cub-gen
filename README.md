@@ -106,6 +106,8 @@ without coupling the core flow to a running ConfigHub backend.
 ```bash
 ./cub-gen generators
 ./cub-gen generators --json | jq '.families[] | {kind, profile, resource_kind}'
+./cub-gen generators --kind helm
+./cub-gen generators --capability render-manifests
 ```
 
 Or run direct mode (import + bundle in one command):

@@ -39,6 +39,7 @@ Implemented in this preview slice:
 21. Updated `gitops` help to derive supported resource kinds from the family registry, avoiding manual help-text edits when families are added.
 22. Extended the family registry to own wet-manifest target templates, removing importer-local wet target switch logic.
 23. Added `cub-gen generators` command (table + JSON + help golden contracts) to expose registry-backed supported family inventory.
+24. Extended `cub-gen generators` with deterministic filters (`--kind`, `--profile`, `--capability`) and locked filtered output contracts.
 
 ## v0.2 preview invariants
 

@@ -68,6 +68,9 @@ type generatorFamilyRecord struct {
 func runGenerators(args []string) error {
 	fs := flag.NewFlagSet("generators", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
+	kindFilter := fs.String("kind", "", "Filter by generator kind")
+	profileFilter := fs.String("profile", "", "Filter by generator profile")
+	capabilityFilter := fs.String("capability", "", "Filter by capability")
 	jsonOut := fs.Bool("json", false, "Output JSON")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
 	if err := fs.Parse(args); err != nil {
@@ -77,10 +80,10 @@ func runGenerators(args []string) error {
 		return err
 	}
 	if fs.NArg() != 0 {
-		return errors.New("usage: cub-gen generators [--json] [--pretty]")
+		return errors.New("usage: cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--json] [--pretty]")
 	}
 
-	records := listGeneratorFamilies()
+	records := listGeneratorFamilies(*kindFilter, *profileFilter, *capabilityFilter)
 	if *jsonOut {
 		return writeJSON(os.Stdout, map[string]any{
 			"count":    len(records),
@@ -101,7 +104,11 @@ func runGenerators(args []string) error {
 	return nil
 }
 
-func listGeneratorFamilies() []generatorFamilyRecord {
+func listGeneratorFamilies(kindFilter, profileFilter, capabilityFilter string) []generatorFamilyRecord {
+	kindFilter = strings.TrimSpace(strings.ToLower(kindFilter))
+	profileFilter = strings.TrimSpace(strings.ToLower(profileFilter))
+	capabilityFilter = strings.TrimSpace(strings.ToLower(capabilityFilter))
+
 	kinds := registry.Kinds()
 	out := make([]generatorFamilyRecord, 0, len(kinds))
 	for _, kind := range kinds {
@@ -109,12 +116,39 @@ func listGeneratorFamilies() []generatorFamilyRecord {
 		if !ok {
 			continue
 		}
-		out = append(out, generatorFamilyRecord{
+		record := generatorFamilyRecord{
 			Kind:         string(spec.Kind),
 			Profile:      spec.Profile,
 			ResourceKind: spec.ResourceKind,
 			ResourceType: spec.ResourceType,
 			Capabilities: append([]string(nil), spec.Capabilities...),
+		}
+
+		if kindFilter != "" && strings.ToLower(record.Kind) != kindFilter {
+			continue
+		}
+		if profileFilter != "" && strings.ToLower(record.Profile) != profileFilter {
+			continue
+		}
+		if capabilityFilter != "" {
+			matched := false
+			for _, capability := range record.Capabilities {
+				if strings.EqualFold(capability, capabilityFilter) {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				continue
+			}
+		}
+
+		out = append(out, generatorFamilyRecord{
+			Kind:         record.Kind,
+			Profile:      record.Profile,
+			ResourceKind: record.ResourceKind,
+			ResourceType: record.ResourceType,
+			Capabilities: record.Capabilities,
 		})
 	}
 	return out
@@ -637,6 +671,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen attest --in - --verifier ci-bot")
 	fmt.Fprintln(out, "  cub-gen verify-attestation --in attestation.json --bundle bundle.json")
 	fmt.Fprintln(out, "  cub-gen generators --json")
+	fmt.Fprintln(out, "  cub-gen generators --capability render-manifests")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Note: gitops commands are local-only prototypes that mirror cub gitops stages.")
 }

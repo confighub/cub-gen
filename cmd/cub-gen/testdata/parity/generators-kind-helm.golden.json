@@ -1,0 +1,16 @@
+{
+  "count": 1,
+  "families": [
+    {
+      "capabilities": [
+        "render-manifests",
+        "values-overrides",
+        "inverse-values-patch"
+      ],
+      "kind": "helm",
+      "profile": "helm-paas",
+      "resource_kind": "HelmRelease",
+      "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease"
+    }
+  ]
+}

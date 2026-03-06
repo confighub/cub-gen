@@ -1,5 +1,11 @@
 Usage of generators:
+  -capability string
+    	Filter by capability
   -json
     	Output JSON
+  -kind string
+    	Filter by generator kind
   -pretty
     	Pretty-print JSON output (default true)
+  -profile string
+    	Filter by generator profile
