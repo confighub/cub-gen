@@ -1,0 +1,16 @@
+{
+  "count": 1,
+  "families": [
+    {
+      "capabilities": [
+        "workflow-plan",
+        "governed-execution-intent",
+        "inverse-workflow-patch"
+      ],
+      "kind": "opsworkflow",
+      "profile": "ops-workflow",
+      "resource_kind": "Workflow",
+      "resource_type": "argoproj.io/v1alpha1/Workflow"
+    }
+  ]
+}
