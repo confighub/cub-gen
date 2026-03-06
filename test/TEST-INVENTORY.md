@@ -20,6 +20,10 @@
   - golden cleanup JSON
   - golden discover/import table output
   - error mode coverage
+- `cmd/cub-gen/generators_parity_test.go`
+  - golden generator family JSON contract
+  - golden generator family table contract
+  - golden generators help output contract
 - `cmd/cub-gen/examples_smoke_test.go`
   - path-mode discover/import for Helm, Score, Spring, Backstage, Ably, Ops (`./examples/...` without alias config)
 - `cmd/cub-gen/examples_bridge_smoke_test.go`
@@ -75,6 +79,9 @@
 - `cmd/cub-gen/testdata/parity/verify-attestation-linked-backstage.json.golden.json`
 - `cmd/cub-gen/testdata/parity/verify-attestation-linked-ably.json.golden.json`
 - `cmd/cub-gen/testdata/parity/verify-attestation-linked-ops.json.golden.json`
+- `cmd/cub-gen/testdata/parity/generators.golden.json`
+- `cmd/cub-gen/testdata/parity/generators.table.golden.txt`
+- `cmd/cub-gen/testdata/parity/generators-help.stderr.golden.txt`
 
 ## Mandatory validation commands
 

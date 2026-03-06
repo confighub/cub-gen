@@ -18,6 +18,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 ### Tier 2: parity/golden
 
 - CLI output contract tests in `cmd/cub-gen/gitops_parity_test.go`.
+- Generator inventory contract tests in `cmd/cub-gen/generators_parity_test.go`.
 - Bridge publish golden locks in `cmd/cub-gen/publish_parity_test.go` (import/direct paths for helm/score/spring/backstage/ably/ops).
 - Verify command behavior tests in `cmd/cub-gen/verify_command_test.go`.
 - Verify command golden locks in `cmd/cub-gen/verify_parity_test.go`.
@@ -27,6 +28,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 - Verify-attestation golden locks in `cmd/cub-gen/verify_attestation_parity_test.go` (including linked helm/score/spring/backstage/ably/ops JSON contracts).
 - Golden files under `cmd/cub-gen/testdata/parity/`.
 - Includes command help/usage goldens to lock human-facing CLI contract.
+- Includes generator inventory table/JSON/help goldens.
 - Helm example is covered across discover/import/cleanup parity paths.
 - Score, Spring Boot, Backstage IDP, Ably app-config, and Ops workflow discover/import JSON contracts are golden-locked.
 - Score import JSON contract is golden-locked (`gitops-import-score.golden.json`).

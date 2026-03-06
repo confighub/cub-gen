@@ -11,6 +11,7 @@
   - `gitops cleanup`
 - Emits provenance and inverse-edit guidance ("what rendered field came from which DRY field").
 - Stays local and pre-sync in v0.1 and v0.2 preview (no cluster deploys, no ConfigHub backend required).
+- Exposes supported generator families via `cub-gen generators`.
 
 ## Where Flux/Argo/OCI fit
 
@@ -99,6 +100,13 @@ Generate a ConfigHub-ready change bundle from import output:
 
 This emits a deterministic `change-bundle` JSON envelope you can upload later,
 without coupling the core flow to a running ConfigHub backend.
+
+### List supported generator families
+
+```bash
+./cub-gen generators
+./cub-gen generators --json | jq '.families[] | {kind, profile, resource_kind}'
+```
 
 Or run direct mode (import + bundle in one command):
 

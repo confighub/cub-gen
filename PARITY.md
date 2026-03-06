@@ -39,6 +39,7 @@ Contract lock means:
 | Optional verify command | N/A | `verify` (top-level) | matched (local contract) | Verifies schema + digest integrity; non-zero exit on mismatch |
 | Optional attest command | N/A | `attest` (top-level) | matched (local contract) | Emits attestation envelope only from valid verified bundles |
 | Optional verify-attestation command | N/A | `verify-attestation` (top-level) | matched (local contract) | Verifies attestation integrity and optional bundle linkage |
+| Generator inventory command | N/A | `generators` (top-level) | matched (local contract) | Lists registry-backed supported generator families |
 
 ## Flow parity
 
@@ -120,6 +121,9 @@ Contract lock means:
   - `cmd/cub-gen/testdata/parity/verify-attestation-linked-backstage.json.golden.json`
   - `cmd/cub-gen/testdata/parity/verify-attestation-linked-ably.json.golden.json`
   - `cmd/cub-gen/testdata/parity/verify-attestation-linked-ops.json.golden.json`
+  - `cmd/cub-gen/testdata/parity/generators.golden.json`
+  - `cmd/cub-gen/testdata/parity/generators.table.golden.txt`
+  - `cmd/cub-gen/testdata/parity/generators-help.stderr.golden.txt`
   - `cmd/cub-gen/testdata/parity/verify-attestation-tampered.stderr.golden.txt`
 - Error-mode tests:
   - `cmd/cub-gen/command_surface_parity_test.go`
