@@ -24,6 +24,37 @@
 
 This means teams can add `cub-gen` to existing Flux/Argo repos today without changing runtime controllers.
 
+## 10-minute adoption path (Flux/Argo/Helm)
+
+Start with a Helm-based repo and keep your existing runtime model intact.
+
+What stays unchanged:
+
+- Flux/Argo remains the reconciler for WET -> LIVE.
+- Git/OCI remains the transport path.
+- Existing cluster/controller permissions and PR workflow stay in place.
+
+What you add:
+
+- `cub-gen gitops discover` to classify generator roots.
+- `cub-gen gitops import` to emit DRY/WET contracts + provenance/inverse pointers.
+- `cub-gen gitops cleanup` to clear local discover state.
+
+Copy/paste this path:
+
+```bash
+go build -o cub-gen ./cmd/cub-gen
+./cub-gen gitops discover --space platform ./examples/helm-paas
+./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, provenance: .provenance[0] | {chart_path, values_paths, rendered_object_lineage}}'
+./cub-gen gitops cleanup --space platform ./examples/helm-paas
+```
+
+Boundary language (aligned with `PARITY.md`):
+
+- `matched`: `gitops discover|import|cleanup` command shape and output contracts.
+- `partial`: local state/artifacts stand in for server-side units during this phase.
+- `deferred`: ConfigHub API bridge coupling and runtime reconcile execution.
+
 ## Terminology (locked for v0.1)
 
 | Term | Meaning in cub-gen |
@@ -34,7 +65,7 @@ This means teams can add `cub-gen` to existing Flux/Argo repos today without cha
 | Inverse map | Guidance from changed WET field -> where to edit DRY safely |
 | Pre-sync | `cub-gen` stops before WET->LIVE; Flux/Argo own reconciliation |
 
-## Quickstart (copy/paste)
+## Full quickstart examples (copy/paste)
 
 ```bash
 go build ./cmd/cub-gen
