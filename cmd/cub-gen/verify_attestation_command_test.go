@@ -86,6 +86,81 @@ func TestVerifyAttestationJSONOutput(t *testing.T) {
 	}
 }
 
+func TestVerifyAttestationJSONOutputFirstThreeTargets(t *testing.T) {
+	setupAliases(t)
+
+	targets := []string{"helm", "score", "spring"}
+	for _, target := range targets {
+		t.Run(target, func(t *testing.T) {
+			attJSON, _, err := generateAttestationJSONForTarget("ci-bot", target)
+			if err != nil {
+				t.Fatalf("generate attestation for target %q: %v", target, err)
+			}
+
+			out, stderr, err := runWithCapturedIOAndStdin([]string{"verify-attestation", "--json", "--in", "-"}, attJSON)
+			if err != nil {
+				t.Fatalf("verify-attestation --json returned error: %v\nstderr=%s", err, stderr)
+			}
+			if strings.TrimSpace(stderr) != "" {
+				t.Fatalf("expected empty stderr, got %q", stderr)
+			}
+
+			var got map[string]any
+			if err := json.Unmarshal([]byte(out), &got); err != nil {
+				t.Fatalf("unmarshal verify-attestation json: %v\noutput=%s", err, out)
+			}
+			if valid, ok := got["valid"].(bool); !ok || !valid {
+				t.Fatalf("expected valid=true for target %q, got %v", target, got["valid"])
+			}
+			if linked, ok := got["linked_bundle_check"].(bool); !ok || linked {
+				t.Fatalf("expected linked_bundle_check=false for target %q, got %v", target, got["linked_bundle_check"])
+			}
+		})
+	}
+}
+
+func TestVerifyAttestationLinkedJSONOutputFirstThreeTargets(t *testing.T) {
+	setupAliases(t)
+
+	targets := []string{"helm", "score", "spring"}
+	for _, target := range targets {
+		t.Run(target, func(t *testing.T) {
+			attJSON, bundleJSON, err := generateAttestationJSONForTarget("ci-bot", target)
+			if err != nil {
+				t.Fatalf("generate attestation for target %q: %v", target, err)
+			}
+
+			attPath := filepath.Join(t.TempDir(), "attestation.json")
+			bundlePath := filepath.Join(t.TempDir(), "bundle.json")
+			if err := os.WriteFile(attPath, []byte(attJSON), 0o644); err != nil {
+				t.Fatalf("write attestation file: %v", err)
+			}
+			if err := os.WriteFile(bundlePath, []byte(bundleJSON), 0o644); err != nil {
+				t.Fatalf("write bundle file: %v", err)
+			}
+
+			out, stderr, err := runWithCapturedIO([]string{"verify-attestation", "--json", "--in", attPath, "--bundle", bundlePath})
+			if err != nil {
+				t.Fatalf("verify-attestation --json linked returned error: %v\nstderr=%s", err, stderr)
+			}
+			if strings.TrimSpace(stderr) != "" {
+				t.Fatalf("expected empty stderr, got %q", stderr)
+			}
+
+			var got map[string]any
+			if err := json.Unmarshal([]byte(out), &got); err != nil {
+				t.Fatalf("unmarshal verify-attestation linked json: %v\noutput=%s", err, out)
+			}
+			if valid, ok := got["valid"].(bool); !ok || !valid {
+				t.Fatalf("expected valid=true for target %q, got %v", target, got["valid"])
+			}
+			if linked, ok := got["linked_bundle_check"].(bool); !ok || !linked {
+				t.Fatalf("expected linked_bundle_check=true for target %q, got %v", target, got["linked_bundle_check"])
+			}
+		})
+	}
+}
+
 func TestVerifyAttestationDetectsTamper(t *testing.T) {
 	setupAliases(t)
 
@@ -150,7 +225,11 @@ func TestVerifyAttestationDetectsBundleLinkMismatch(t *testing.T) {
 }
 
 func generateAttestationJSON(verifier string) (string, string, error) {
-	bundleJSON, err := generateBundleJSON()
+	return generateAttestationJSONForTarget(verifier, "helm")
+}
+
+func generateAttestationJSONForTarget(verifier, target string) (string, string, error) {
+	bundleJSON, err := generateBundleJSONForTarget(target)
 	if err != nil {
 		return "", "", err
 	}
