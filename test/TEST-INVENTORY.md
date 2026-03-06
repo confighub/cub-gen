@@ -16,6 +16,8 @@
   - error mode coverage
 - `cmd/cub-gen/examples_smoke_test.go`
   - path-mode discover/import for Helm, Score, Spring (`./examples/...` without alias config)
+- `cmd/cub-gen/examples_bridge_smoke_test.go`
+  - path-mode publish/verify/attest/verify-attestation flow for Helm, Score, Spring (no alias config)
 - `cmd/cub-gen/publish_command_test.go`
   - direct publish mode validated for Helm, Score, Spring
 - `cmd/cub-gen/verify_command_test.go`
