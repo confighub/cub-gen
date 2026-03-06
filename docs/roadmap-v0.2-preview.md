@@ -66,6 +66,7 @@ Implemented in this preview slice:
 48. Added explicit bridge symmetry matrix gate in CI (`TestBridgeSymmetryMatrix` + `make test-bridge-symmetry`) to enforce `publish -> verify -> attest -> verify-attestation` family coverage across all registry kinds.
 49. Published canonical triple + storage boundary docs mapping schemas, runtime gates, and Git (DRY linkage) vs ConfigHub (WET governance) responsibilities.
 50. Completed Sprint 2 Go/No-Go gate with documented `GO` outcome and opened post-gate bridge backlog issues (`#95`-`#97`).
+51. Added first bridge ingest path (`internal/bridge`) to map `change-bundle` artifacts into ConfigHub governed WET ingest payloads with idempotency (`change_id + bundle_digest`) and duplicate-safe HTTP `409` handling.
 
 ## v0.2 preview invariants
 
