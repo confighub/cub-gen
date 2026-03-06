@@ -32,6 +32,7 @@ Contract lock means:
 | `--json` output mode | structured output | structured output | matched | Golden-tested |
 | Default/table output mode | human-oriented command output | human-oriented command output | matched | Golden-tested for discover + import |
 | Optional bridge command | N/A | `publish` (top-level) | deferred/parity-safe | Added outside `gitops` contract so v0.1 parity surface remains stable |
+| Bridge digest fields | N/A | `digest_algorithm` + `bundle_digest` | matched (local contract) | Deterministic bundle verification handle for attestation pipelines |
 
 ## Flow parity
 

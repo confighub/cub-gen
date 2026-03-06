@@ -82,6 +82,13 @@ Or run direct mode (import + bundle in one command):
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas
 ```
 
+Bundle output includes:
+
+- `digest_algorithm` (currently `sha256`)
+- `bundle_digest` (deterministic digest over bundle content excluding digest fields)
+
+This gives you a simple verification handle for attestation pipelines.
+
 ## Plain-English collaboration story
 
 A practical app-team/platform-team path in a Spring Boot repo:

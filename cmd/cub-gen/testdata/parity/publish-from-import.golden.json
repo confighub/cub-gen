@@ -1,4 +1,5 @@
 {
+  "bundle_digest": "\u003cbundle_digest\u003e",
   "change_id": "\u003cchange_id\u003e",
   "contracts": [
     {
@@ -38,6 +39,7 @@
       "version": "0.1.0"
     }
   ],
+  "digest_algorithm": "sha256",
   "discovered": [
     {
       "generator_id": "gen_635643e45fbf3410",

@@ -2,6 +2,7 @@ package publish
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,6 +29,12 @@ func TestBuildBundleAtFromHelmImport(t *testing.T) {
 	if bundle.GeneratedAt != "2026-03-06T00:00:00Z" {
 		t.Fatalf("unexpected generated_at: %q", bundle.GeneratedAt)
 	}
+	if bundle.DigestAlgorithm != "sha256" {
+		t.Fatalf("unexpected digest_algorithm: %q", bundle.DigestAlgorithm)
+	}
+	if !strings.HasPrefix(bundle.BundleDigest, "sha256:") {
+		t.Fatalf("expected bundle_digest with sha256 prefix, got %q", bundle.BundleDigest)
+	}
 	if bundle.Space != "platform" {
 		t.Fatalf("expected space=platform, got %q", bundle.Space)
 	}
@@ -42,6 +49,11 @@ func TestBuildBundleAtFromHelmImport(t *testing.T) {
 	}
 	if len(bundle.Summary.GeneratorProfiles) != 1 || bundle.Summary.GeneratorProfiles[0] != "helm-paas" {
 		t.Fatalf("unexpected generator profiles: %+v", bundle.Summary.GeneratorProfiles)
+	}
+
+	again := BuildBundleAt(imported, at)
+	if bundle.BundleDigest != again.BundleDigest {
+		t.Fatalf("expected deterministic bundle_digest, got %q and %q", bundle.BundleDigest, again.BundleDigest)
 	}
 }
 

@@ -43,6 +43,12 @@ func TestPublishFromImportFile(t *testing.T) {
 	if got["source"] != "cub-gen" {
 		t.Fatalf("unexpected source: %v", got["source"])
 	}
+	if got["digest_algorithm"] != "sha256" {
+		t.Fatalf("unexpected digest_algorithm: %v", got["digest_algorithm"])
+	}
+	if v, ok := got["bundle_digest"].(string); !ok || !strings.HasPrefix(v, "sha256:") {
+		t.Fatalf("unexpected bundle_digest: %v", got["bundle_digest"])
+	}
 	if got["change_id"] == "" {
 		t.Fatalf("expected non-empty change_id: %v", got["change_id"])
 	}
