@@ -1,0 +1,2 @@
+Kind	Profile	Resource Kind	Resource Type	Capabilities
+helm	helm-paas	HelmRelease	helm.toolkit.fluxcd.io/v2/HelmRelease	render-manifests,values-overrides,inverse-values-patch

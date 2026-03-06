@@ -1,0 +1,1 @@
+Kind	Profile	Resource Kind	Resource Type	Capabilities

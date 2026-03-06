@@ -114,6 +114,28 @@ func TestGeneratorsGoldenTable(t *testing.T) {
 	assertGoldenText(t, filepath.Join("testdata", "parity", "generators.table.golden.txt"), out)
 }
 
+func TestGeneratorsGoldenTableKindFilter(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--kind", "helm"})
+	if err != nil {
+		t.Fatalf("run generators --kind returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+	assertGoldenText(t, filepath.Join("testdata", "parity", "generators-kind-helm.table.golden.txt"), out)
+}
+
+func TestGeneratorsGoldenTableNoMatches(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--profile", "non-existent-profile"})
+	if err != nil {
+		t.Fatalf("run generators --profile no matches returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+	assertGoldenText(t, filepath.Join("testdata", "parity", "generators-empty.table.golden.txt"), out)
+}
+
 func TestGeneratorsGoldenHelp(t *testing.T) {
 	stdout, stderr, err := runWithCapturedIO([]string{"generators", "--help"})
 	if err != nil {

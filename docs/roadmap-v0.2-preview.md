@@ -44,6 +44,7 @@ Implemented in this preview slice:
 26. Expanded `generators` parity contracts to lock profile-filter, combined-filter, and empty-match JSON outputs.
 27. Refactored generator hint default paths/labels into registry-driven `HintDefaults`, removing hardcoded importer defaults while preserving output behavior.
 28. Refactored provenance `field_origin_map.transform` labels to be registry-driven (`FieldOriginTransform` / `FieldOriginOverlayTransform`) instead of importer string literals.
+29. Expanded `generators` table-mode parity contracts to lock deterministic filtered and empty-match outputs.
 
 ## v0.2 preview invariants
 

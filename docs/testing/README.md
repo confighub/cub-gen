@@ -18,7 +18,7 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 ### Tier 2: parity/golden
 
 - CLI output contract tests in `cmd/cub-gen/gitops_parity_test.go`.
-- Generator inventory contract tests in `cmd/cub-gen/generators_parity_test.go` (full list + kind/profile/capability filters, combined filters, and empty-match behavior).
+- Generator inventory contract tests in `cmd/cub-gen/generators_parity_test.go` (full list + JSON/table filter contracts for kind/profile/capability, combined filters, and empty-match behavior).
 - Bridge publish golden locks in `cmd/cub-gen/publish_parity_test.go` (import/direct paths for helm/score/spring/backstage/ably/ops).
 - Verify command behavior tests in `cmd/cub-gen/verify_command_test.go`.
 - Verify command golden locks in `cmd/cub-gen/verify_parity_test.go`.
