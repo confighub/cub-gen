@@ -32,7 +32,7 @@ jobs:
         run: go test ./... -v
 
   parity:
-    name: CLI Contracts
+    name: CLI Parity
     runs-on: ubuntu-latest
     needs: unit
     steps:
