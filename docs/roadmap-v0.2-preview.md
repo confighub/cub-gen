@@ -63,6 +63,7 @@ Implemented in this preview slice:
 45. Added strict schema validation gates for `GeneratorContract`, `ProvenanceRecord`, and `InverseTransformPlan` with embedded JSON schemas and importer runtime enforcement.
 46. Enforced `no-triple-no-governed-import` gate with deterministic blocker errors for missing/cardiinality-mismatched contract triples and locked importer error output tests.
 47. Added cross-family triple conformance fixtures for Helm/Score/Spring/Backstage/Ably/Ops with deterministic re-run checks and registry-kind coverage enforcement.
+48. Added explicit bridge symmetry matrix gate in CI (`TestBridgeSymmetryMatrix` + `make test-bridge-symmetry`) to enforce `publish -> verify -> attest -> verify-attestation` family coverage across all registry kinds.
 
 ## v0.2 preview invariants
 

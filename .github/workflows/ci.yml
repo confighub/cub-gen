@@ -45,3 +45,6 @@ jobs:
 
       - name: Run contract tests
         run: make test-contracts
+
+      - name: Run bridge symmetry matrix
+        run: make test-bridge-symmetry

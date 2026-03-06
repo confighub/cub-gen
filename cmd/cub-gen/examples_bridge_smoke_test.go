@@ -8,42 +8,8 @@ import (
 )
 
 func TestExamplesPathModeBridgeFlow(t *testing.T) {
-	tests := []struct {
-		name            string
-		repoSuffix      string
-		expectedProfile string
-	}{
-		{
-			name:            "helm",
-			repoSuffix:      filepath.Join("examples", "helm-paas"),
-			expectedProfile: "helm-paas",
-		},
-		{
-			name:            "score",
-			repoSuffix:      filepath.Join("examples", "scoredev-paas"),
-			expectedProfile: "scoredev-paas",
-		},
-		{
-			name:            "spring",
-			repoSuffix:      filepath.Join("examples", "springboot-paas"),
-			expectedProfile: "springboot-paas",
-		},
-		{
-			name:            "backstage",
-			repoSuffix:      filepath.Join("examples", "backstage-idp"),
-			expectedProfile: "backstage-idp",
-		},
-		{
-			name:            "ably",
-			repoSuffix:      filepath.Join("examples", "ably-config"),
-			expectedProfile: "ably-config",
-		},
-		{
-			name:            "ops",
-			repoSuffix:      filepath.Join("examples", "ops-workflow"),
-			expectedProfile: "ops-workflow",
-		},
-	}
+	tests := bridgeSymmetryMatrix()
+	assertBridgeSymmetryMatrixCoverage(t, tests)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
