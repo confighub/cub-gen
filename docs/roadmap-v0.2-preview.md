@@ -68,3 +68,7 @@ Implemented in this preview slice:
 1. Extend the family registry pattern further to cover additional family-level semantics (for example hint strategies and provenance-field templates).
 2. Keep generator-family capability metadata contract tests updated as families are added.
 3. Keep bridge artifacts (`publish/verify/attest`) symmetric across all supported families.
+
+Execution board reference:
+
+1. See `docs/execution-board-sprint-1-and-2.md` for sequenced Sprint 1 and Sprint 2 issue plan and the mandatory Go/No-Go break gate.
