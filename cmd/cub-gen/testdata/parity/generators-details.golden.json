@@ -1,0 +1,242 @@
+{
+  "count": 6,
+  "families": [
+    {
+      "capabilities": [
+        "app-config-only",
+        "provider-config",
+        "inverse-provider-config-patch"
+      ],
+      "kind": "ably",
+      "policies": {
+        "field_origin_confidences": {
+          "channels_base": 0.88,
+          "channels_overlay": 0.84,
+          "environment": 0.9
+        },
+        "inverse_patch_templates": {
+          "channels": {
+            "confidence": 0.88,
+            "editable_by": "app-team",
+            "requires_review": false
+          },
+          "environment": {
+            "confidence": 0.9,
+            "editable_by": "app-team",
+            "requires_review": false
+          }
+        },
+        "inverse_pointer_templates": {
+          "channels": {
+            "confidence": 0.88,
+            "owner": "app-team"
+          },
+          "environment": {
+            "confidence": 0.9,
+            "owner": "app-team"
+          }
+        }
+      },
+      "profile": "ably-config",
+      "resource_kind": "ConfigMap",
+      "resource_type": "v1/ConfigMap"
+    },
+    {
+      "capabilities": [
+        "catalog-metadata",
+        "render-manifests",
+        "inverse-catalog-patch"
+      ],
+      "kind": "backstage",
+      "policies": {
+        "field_origin_confidences": {
+          "identity": 0.9,
+          "lifecycle": 0.82
+        },
+        "inverse_patch_templates": {
+          "identity": {
+            "confidence": 0.87,
+            "editable_by": "platform-engineer",
+            "requires_review": false
+          },
+          "lifecycle": {
+            "confidence": 0.82,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          }
+        },
+        "inverse_pointer_templates": {
+          "lifecycle": {
+            "confidence": 0.82,
+            "owner": "platform-engineer"
+          },
+          "name": {
+            "confidence": 0.9,
+            "owner": "platform-engineer"
+          }
+        }
+      },
+      "profile": "backstage-idp",
+      "resource_kind": "Component",
+      "resource_type": "backstage.io/v1alpha1/Component"
+    },
+    {
+      "capabilities": [
+        "render-manifests",
+        "values-overrides",
+        "inverse-values-patch"
+      ],
+      "kind": "helm",
+      "policies": {
+        "field_origin_confidences": {
+          "image_tag": 0.86
+        },
+        "inverse_patch_templates": {
+          "image_tag": {
+            "confidence": 0.86,
+            "editable_by": "app-team",
+            "requires_review": false
+          }
+        },
+        "inverse_pointer_templates": {
+          "image_tag": {
+            "confidence": 0.86,
+            "owner": "app-team"
+          }
+        }
+      },
+      "profile": "helm-paas",
+      "resource_kind": "HelmRelease",
+      "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease"
+    },
+    {
+      "capabilities": [
+        "workflow-plan",
+        "governed-execution-intent",
+        "inverse-workflow-patch"
+      ],
+      "kind": "opsworkflow",
+      "policies": {
+        "field_origin_confidences": {
+          "image_tag": 0.87,
+          "schedule_base": 0.84,
+          "schedule_overlay": 0.8
+        },
+        "inverse_patch_templates": {
+          "image_tag": {
+            "confidence": 0.87,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          },
+          "schedule": {
+            "confidence": 0.84,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          }
+        },
+        "inverse_pointer_templates": {
+          "image_tag": {
+            "confidence": 0.87,
+            "owner": "platform-engineer"
+          },
+          "schedule": {
+            "confidence": 0.84,
+            "owner": "platform-engineer"
+          }
+        }
+      },
+      "profile": "ops-workflow",
+      "resource_kind": "Workflow",
+      "resource_type": "argoproj.io/v1alpha1/Workflow"
+    },
+    {
+      "capabilities": [
+        "render-manifests",
+        "workload-spec",
+        "inverse-score-patch"
+      ],
+      "kind": "score",
+      "policies": {
+        "field_origin_confidences": {
+          "env_var": 0.9,
+          "image": 0.94,
+          "port": 0.91
+        },
+        "inverse_patch_templates": {
+          "env_var": {
+            "confidence": 0.9,
+            "editable_by": "app-team",
+            "requires_review": false
+          }
+        },
+        "inverse_pointer_templates": {
+          "env_var": {
+            "confidence": 0.9,
+            "owner": "app-team"
+          },
+          "image": {
+            "confidence": 0.94,
+            "owner": "app-team"
+          },
+          "port": {
+            "confidence": 0.91,
+            "owner": "app-team"
+          }
+        }
+      },
+      "profile": "scoredev-paas",
+      "resource_kind": "Application",
+      "resource_type": "argoproj.io/v1alpha1/Application"
+    },
+    {
+      "capabilities": [
+        "render-app-config",
+        "profile-overrides",
+        "inverse-app-config-patch"
+      ],
+      "kind": "springboot",
+      "policies": {
+        "field_origin_confidences": {
+          "app_name": 0.89,
+          "datasource_url": 0.78,
+          "server_port_base": 0.92,
+          "server_port_overlay": 0.88
+        },
+        "inverse_patch_templates": {
+          "app_name": {
+            "confidence": 0.88,
+            "editable_by": "app-team",
+            "requires_review": false
+          },
+          "datasource_url": {
+            "confidence": 0.78,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          },
+          "server_port": {
+            "confidence": 0.91,
+            "editable_by": "app-team",
+            "requires_review": false
+          }
+        },
+        "inverse_pointer_templates": {
+          "app_name": {
+            "confidence": 0.89,
+            "owner": "app-team"
+          },
+          "datasource_url": {
+            "confidence": 0.78,
+            "owner": "platform-engineer"
+          },
+          "server_port": {
+            "confidence": 0.91,
+            "owner": "app-team"
+          }
+        }
+      },
+      "profile": "springboot-paas",
+      "resource_kind": "Kustomization",
+      "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization"
+    }
+  ]
+}

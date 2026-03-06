@@ -8,7 +8,7 @@ Usage:
   cub-gen verify [--in FILE|-] [--json] [--pretty]
   cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]
   cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]
-  cub-gen generators [--json] [--pretty]
+  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json] [--details] [--pretty]
   cub-gen gitops <discover|import|cleanup> [flags]
 
 GitOps parity examples:
@@ -36,6 +36,7 @@ GitOps parity examples:
   cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen attest --in - --verifier ci-bot
   cub-gen verify-attestation --in attestation.json --bundle bundle.json
   cub-gen generators --json
+  cub-gen generators --json --details
   cub-gen generators --capability render-manifests
 
 Note: gitops commands are local-only prototypes that mirror cub gitops stages.
