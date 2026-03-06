@@ -67,6 +67,10 @@ Go/No-Go checklist in `#82` must include:
 4. Adoption clarity for Flux/Argo/Helm users.
 5. Git (DRY linkage) vs ConfigHub (WET governance) boundary clarity.
 
+Recorded outcome:
+
+1. `GO` documented in `docs/decisions/2026-03-06-sprint-2-go-no-go.md`.
+
 ## Proof Commands (Required for Done)
 
 1. `go test ./...`
