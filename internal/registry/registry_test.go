@@ -95,3 +95,31 @@ func TestRegistryInputRoleAndOwnerClassification(t *testing.T) {
 		})
 	}
 }
+
+func TestRegistrySchemaRef(t *testing.T) {
+	tests := []struct {
+		name     string
+		kind     model.GeneratorKind
+		path     string
+		expected string
+	}{
+		{name: "helm-chart", kind: model.GeneratorHelm, path: "Chart.yaml", expected: "https://json.schemastore.org/chart"},
+		{name: "score", kind: model.GeneratorScore, path: "score.yaml", expected: "https://docs.score.dev/schemas/score-v1b1.json"},
+		{name: "spring-app", kind: model.GeneratorSpringBoot, path: "application.yaml", expected: "https://json.schemastore.org/spring-configuration-metadata"},
+		{name: "backstage-catalog", kind: model.GeneratorBackstage, path: "catalog-info.yaml", expected: "https://json.schemastore.org/backstage-catalog-info"},
+		{name: "backstage-app-config", kind: model.GeneratorBackstage, path: "app-config.yaml", expected: "https://json.schemastore.org/backstage-app-config"},
+		{name: "ably-yaml", kind: model.GeneratorAbly, path: "ably.yaml", expected: "https://schema.confighub.dev/generators/ably-config-v1"},
+		{name: "ably-json", kind: model.GeneratorAbly, path: "ably-prod.json", expected: "https://schema.confighub.dev/generators/ably-config-v1"},
+		{name: "ops", kind: model.GeneratorOpsFlow, path: "operations.yaml", expected: "https://schema.confighub.dev/generators/ops-workflow-v1"},
+		{name: "xml-maven", kind: model.GeneratorSpringBoot, path: "pom.xml", expected: "https://maven.apache.org/xsd/maven-4.0.0.xsd"},
+		{name: "default", kind: model.GeneratorSpringBoot, path: "README.md", expected: "https://json-schema.org/draft/2020-12/schema"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := SchemaRef(tt.kind, tt.path); got != tt.expected {
+				t.Fatalf("expected schema %q, got %q", tt.expected, got)
+			}
+		})
+	}
+}
