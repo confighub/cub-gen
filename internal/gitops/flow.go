@@ -14,6 +14,7 @@ import (
 	"github.com/confighub/cub-gen/internal/detect"
 	"github.com/confighub/cub-gen/internal/importer"
 	"github.com/confighub/cub-gen/internal/model"
+	"github.com/confighub/cub-gen/internal/registry"
 )
 
 const (
@@ -785,39 +786,9 @@ func matchesLike(value, pattern string) bool {
 }
 
 func mappedResourceKind(kind model.GeneratorKind) string {
-	switch kind {
-	case model.GeneratorHelm:
-		return "HelmRelease"
-	case model.GeneratorScore:
-		return "Application"
-	case model.GeneratorSpringBoot:
-		return "Kustomization"
-	case model.GeneratorBackstage:
-		return "Component"
-	case model.GeneratorAbly:
-		return "ConfigMap"
-	case model.GeneratorOpsFlow:
-		return "Workflow"
-	default:
-		return "Resource"
-	}
+	return registry.ResourceKind(kind)
 }
 
 func mappedResourceType(kind model.GeneratorKind) string {
-	switch kind {
-	case model.GeneratorHelm:
-		return "helm.toolkit.fluxcd.io/v2/HelmRelease"
-	case model.GeneratorScore:
-		return "argoproj.io/v1alpha1/Application"
-	case model.GeneratorSpringBoot:
-		return "kustomize.toolkit.fluxcd.io/v1/Kustomization"
-	case model.GeneratorBackstage:
-		return "backstage.io/v1alpha1/Component"
-	case model.GeneratorAbly:
-		return "v1/ConfigMap"
-	case model.GeneratorOpsFlow:
-		return "argoproj.io/v1alpha1/Workflow"
-	default:
-		return "v1/Resource"
-	}
+	return registry.ResourceType(kind)
 }

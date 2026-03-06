@@ -13,6 +13,7 @@ import (
 
 	"github.com/confighub/cub-gen/internal/detect"
 	"github.com/confighub/cub-gen/internal/model"
+	"github.com/confighub/cub-gen/internal/registry"
 )
 
 const (
@@ -197,22 +198,7 @@ func stableChangeID(detection model.DetectionResult, space string) string {
 }
 
 func capabilitiesForKind(kind model.GeneratorKind) []string {
-	switch kind {
-	case model.GeneratorHelm:
-		return []string{"render-manifests", "values-overrides", "inverse-values-patch"}
-	case model.GeneratorScore:
-		return []string{"render-manifests", "workload-spec", "inverse-score-patch"}
-	case model.GeneratorSpringBoot:
-		return []string{"render-app-config", "profile-overrides", "inverse-app-config-patch"}
-	case model.GeneratorBackstage:
-		return []string{"catalog-metadata", "render-manifests", "inverse-catalog-patch"}
-	case model.GeneratorAbly:
-		return []string{"app-config-only", "provider-config", "inverse-provider-config-patch"}
-	case model.GeneratorOpsFlow:
-		return []string{"workflow-plan", "governed-execution-intent", "inverse-workflow-patch"}
-	default:
-		return []string{"render-manifests"}
-	}
+	return registry.Capabilities(kind)
 }
 
 func defaultPatchesForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.InversePatch {
