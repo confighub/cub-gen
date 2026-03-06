@@ -16,6 +16,12 @@
   - error mode coverage
 - `cmd/cub-gen/examples_smoke_test.go`
   - path-mode discover/import for Helm, Score, Spring (`./examples/...` without alias config)
+- `cmd/cub-gen/publish_command_test.go`
+  - direct publish mode validated for Helm, Score, Spring
+- `cmd/cub-gen/verify_command_test.go`
+  - verify JSON path validated for Helm, Score, Spring bundles
+- `cmd/cub-gen/attest_command_test.go`
+  - attest path validated for Helm, Score, Spring bundles
 
 ### Internal logic tests
 

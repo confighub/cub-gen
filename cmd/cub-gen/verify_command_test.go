@@ -62,6 +62,39 @@ func TestVerifyFromStdinJSONOutput(t *testing.T) {
 	}
 }
 
+func TestVerifyFromStdinJSONOutputFirstThreeTargets(t *testing.T) {
+	setupAliases(t)
+
+	targets := []string{"helm", "score", "spring"}
+	for _, target := range targets {
+		t.Run(target, func(t *testing.T) {
+			bundleJSON, err := generateBundleJSONForTarget(target)
+			if err != nil {
+				t.Fatalf("generate bundle for target %q: %v", target, err)
+			}
+
+			out, stderr, err := runWithCapturedIOAndStdin([]string{"verify", "--json", "--in", "-"}, bundleJSON)
+			if err != nil {
+				t.Fatalf("verify stdin returned error: %v\nstderr=%s", err, stderr)
+			}
+			if stderr != "" {
+				t.Fatalf("expected empty stderr, got %q", stderr)
+			}
+
+			var got map[string]any
+			if err := json.Unmarshal([]byte(out), &got); err != nil {
+				t.Fatalf("unmarshal verify output: %v\noutput=%s", err, out)
+			}
+			if valid, ok := got["valid"].(bool); !ok || !valid {
+				t.Fatalf("expected valid=true for target %q, got %v", target, got["valid"])
+			}
+			if got["digest_algorithm"] != "sha256" {
+				t.Fatalf("unexpected digest_algorithm for target %q: %v", target, got["digest_algorithm"])
+			}
+		})
+	}
+}
+
 func TestVerifyDetectsTamper(t *testing.T) {
 	setupAliases(t)
 
@@ -95,7 +128,11 @@ func TestVerifyDetectsTamper(t *testing.T) {
 }
 
 func generateBundleJSON() (string, error) {
-	importOut, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "helm", "render-target"})
+	return generateBundleJSONForTarget("helm")
+}
+
+func generateBundleJSONForTarget(target string) (string, error) {
+	importOut, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", target, "render-target"})
 	if err != nil {
 		return "", err
 	}
