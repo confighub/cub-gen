@@ -1,7 +1,8 @@
 Usage:
-  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--json] [--pretty]
+  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json] [--details] [--pretty]
   (KIND/PROFILE/CAPABILITY support comma-separated values)
   use --strict-filters to fail on unknown filter values
+  use --details with --json to include policy/provenance templates
 
 Supported kinds: ably, backstage, helm, opsworkflow, score, springboot
 Supported profiles: ably-config, backstage-idp, helm-paas, ops-workflow, scoredev-paas, springboot-paas

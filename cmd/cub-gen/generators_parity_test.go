@@ -135,6 +135,22 @@ func TestGeneratorsGoldenJSONNoMatches(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "generators-empty.golden.json"), got)
 }
 
+func TestGeneratorsGoldenJSONDetails(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--json", "--details"})
+	if err != nil {
+		t.Fatalf("run generators --json --details returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal generators details json: %v\noutput=%s", err, out)
+	}
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "generators-details.golden.json"), got)
+}
+
 func TestGeneratorsGoldenTable(t *testing.T) {
 	out, stderr, err := runWithCapturedIO([]string{"generators"})
 	if err != nil {
@@ -250,5 +266,18 @@ func TestGeneratorsStrictFiltersUnknownKindMultiSorted(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unknown kind filter value(s): aaa, zzz") {
 		t.Fatalf("expected sorted unknown kind values in error, got: %q (stderr=%q)", err.Error(), stderr)
+	}
+}
+
+func TestGeneratorsDetailsRequiresJSON(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--details"})
+	if err == nil {
+		t.Fatalf("expected details requires json error, got nil")
+	}
+	if strings.TrimSpace(out) != "" {
+		t.Fatalf("expected empty stdout, got: %q", out)
+	}
+	if !strings.Contains(err.Error(), "--details requires --json") {
+		t.Fatalf("expected details requires json message, got: %q (stderr=%q)", err.Error(), stderr)
 	}
 }

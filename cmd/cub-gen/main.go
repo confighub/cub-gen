@@ -58,11 +58,29 @@ func run(args []string) error {
 }
 
 type generatorFamilyRecord struct {
-	Kind         string   `json:"kind"`
-	Profile      string   `json:"profile"`
-	ResourceKind string   `json:"resource_kind"`
-	ResourceType string   `json:"resource_type"`
-	Capabilities []string `json:"capabilities"`
+	Kind         string                       `json:"kind"`
+	Profile      string                       `json:"profile"`
+	ResourceKind string                       `json:"resource_kind"`
+	ResourceType string                       `json:"resource_type"`
+	Capabilities []string                     `json:"capabilities"`
+	Policies     *generatorFamilyPolicyRecord `json:"policies,omitempty"`
+}
+
+type generatorFamilyPolicyRecord struct {
+	InversePatchTemplates   map[string]inversePatchTemplateRecord   `json:"inverse_patch_templates,omitempty"`
+	InversePointerTemplates map[string]inversePointerTemplateRecord `json:"inverse_pointer_templates,omitempty"`
+	FieldOriginConfidences  map[string]float64                      `json:"field_origin_confidences,omitempty"`
+}
+
+type inversePatchTemplateRecord struct {
+	EditableBy     string  `json:"editable_by"`
+	Confidence     float64 `json:"confidence"`
+	RequiresReview bool    `json:"requires_review"`
+}
+
+type inversePointerTemplateRecord struct {
+	Owner      string  `json:"owner"`
+	Confidence float64 `json:"confidence"`
 }
 
 func runGenerators(args []string) error {
@@ -76,6 +94,7 @@ func runGenerators(args []string) error {
 	capabilityFilter := fs.String("capability", "", "Filter by capability")
 	strictFilters := fs.Bool("strict-filters", false, "Fail on unknown filter values")
 	jsonOut := fs.Bool("json", false, "Output JSON")
+	details := fs.Bool("details", false, "Include policy/provenance template details in JSON output")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -84,7 +103,10 @@ func runGenerators(args []string) error {
 		return err
 	}
 	if fs.NArg() != 0 {
-		return errors.New("usage: cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--json] [--pretty]")
+		return errors.New("usage: cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json] [--details] [--pretty]")
+	}
+	if *details && !*jsonOut {
+		return errors.New("--details requires --json")
 	}
 	if *strictFilters {
 		if err := validateGeneratorFilters(*kindFilter, *profileFilter, *capabilityFilter); err != nil {
@@ -92,7 +114,7 @@ func runGenerators(args []string) error {
 		}
 	}
 
-	records := listGeneratorFamilies(*kindFilter, *profileFilter, *capabilityFilter)
+	records := listGeneratorFamilies(*kindFilter, *profileFilter, *capabilityFilter, *details)
 	if *jsonOut {
 		return writeJSON(os.Stdout, map[string]any{
 			"count":    len(records),
@@ -113,7 +135,7 @@ func runGenerators(args []string) error {
 	return nil
 }
 
-func listGeneratorFamilies(kindFilter, profileFilter, capabilityFilter string) []generatorFamilyRecord {
+func listGeneratorFamilies(kindFilter, profileFilter, capabilityFilter string, details bool) []generatorFamilyRecord {
 	kindFilters := parseFilterSet(kindFilter)
 	profileFilters := parseFilterSet(profileFilter)
 	capabilityFilters := parseFilterSet(capabilityFilter)
@@ -131,6 +153,9 @@ func listGeneratorFamilies(kindFilter, profileFilter, capabilityFilter string) [
 			ResourceKind: spec.ResourceKind,
 			ResourceType: spec.ResourceType,
 			Capabilities: append([]string(nil), spec.Capabilities...),
+		}
+		if details {
+			record.Policies = generatorPolicyRecord(spec)
 		}
 
 		if len(kindFilters) > 0 {
@@ -162,9 +187,44 @@ func listGeneratorFamilies(kindFilter, profileFilter, capabilityFilter string) [
 			ResourceKind: record.ResourceKind,
 			ResourceType: record.ResourceType,
 			Capabilities: record.Capabilities,
+			Policies:     record.Policies,
 		})
 	}
 	return out
+}
+
+func generatorPolicyRecord(spec registry.FamilySpec) *generatorFamilyPolicyRecord {
+	policies := &generatorFamilyPolicyRecord{
+		InversePatchTemplates:   map[string]inversePatchTemplateRecord{},
+		InversePointerTemplates: map[string]inversePointerTemplateRecord{},
+		FieldOriginConfidences:  map[string]float64{},
+	}
+	for key, tpl := range spec.InversePatchTemplates {
+		policies.InversePatchTemplates[key] = inversePatchTemplateRecord{
+			EditableBy:     tpl.EditableBy,
+			Confidence:     tpl.Confidence,
+			RequiresReview: tpl.RequiresReview,
+		}
+	}
+	for key, tpl := range spec.InversePointerTemplates {
+		policies.InversePointerTemplates[key] = inversePointerTemplateRecord{
+			Owner:      tpl.Owner,
+			Confidence: tpl.Confidence,
+		}
+	}
+	for key, confidence := range spec.FieldOriginConfidences {
+		policies.FieldOriginConfidences[key] = confidence
+	}
+	if len(policies.InversePatchTemplates) == 0 {
+		policies.InversePatchTemplates = nil
+	}
+	if len(policies.InversePointerTemplates) == 0 {
+		policies.InversePointerTemplates = nil
+	}
+	if len(policies.FieldOriginConfidences) == 0 {
+		policies.FieldOriginConfidences = nil
+	}
+	return policies
 }
 
 func parseFilterSet(raw string) map[string]struct{} {
@@ -181,9 +241,10 @@ func parseFilterSet(raw string) map[string]struct{} {
 
 func printGeneratorsUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage:")
-	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--json] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json] [--details] [--pretty]")
 	fmt.Fprintln(out, "  (KIND/PROFILE/CAPABILITY support comma-separated values)")
 	fmt.Fprintln(out, "  use --strict-filters to fail on unknown filter values")
+	fmt.Fprintln(out, "  use --details with --json to include policy/provenance templates")
 	fmt.Fprintln(out)
 	fmt.Fprintf(out, "Supported kinds: %s\n", strings.Join(supportedGeneratorKinds(), ", "))
 	fmt.Fprintf(out, "Supported profiles: %s\n", strings.Join(supportedGeneratorProfiles(), ", "))
@@ -772,7 +833,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen verify [--in FILE|-] [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen generators [--json] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json] [--details] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "GitOps parity examples:")
@@ -800,6 +861,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen attest --in - --verifier ci-bot")
 	fmt.Fprintln(out, "  cub-gen verify-attestation --in attestation.json --bundle bundle.json")
 	fmt.Fprintln(out, "  cub-gen generators --json")
+	fmt.Fprintln(out, "  cub-gen generators --json --details")
 	fmt.Fprintln(out, "  cub-gen generators --capability render-manifests")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Note: gitops commands are local-only prototypes that mirror cub gitops stages.")
