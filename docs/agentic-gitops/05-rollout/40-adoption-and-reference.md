@@ -2,7 +2,7 @@
 
 > How to adopt, what value each level delivers, worked examples, key concepts, and FAQ.
 
-**Part of:** [AI and GitOps v7 Document Set](GitOps7.md)
+**Part of:** [AI and GitOps v7 Document Set](/docs/agentic-gitops/00-index/00-gitops7-index.md)
 **Status:** Planning doc (v7)
 **Date:** 2026-02-28
 **Audience:** Decision makers, implementation teams
@@ -967,11 +967,11 @@ This document is part of an 8-document set for ConfigHub's agentic GitOps strate
 
 | Doc | Title | Focus |
 |-----|-------|-------|
-| [01](01-introducing-agentic-gitops.md) | Introducing Agentic GitOps | Why: classical gaps, agentic changes, invariants |
-| [02](02-generators-prd.md) | Generators and Provenance PRD | How: DRY->WET pipeline, maturity levels, generator contract |
-| [03](03-field-origin-maps-and-editing.md) | Field-Origin Maps and the Editing Experience | Tracing: field-origin maps, editing surface, DRY-source integrity |
-| [04](04-app-model-and-contracts.md) | ConfigHub App Model and Contracts | What: entities, operating boundary, constraints, operations |
-| [05](05-cub-track.md) | cub-track: Git-Native Mutation Ledger | Provenance: commit-linked mutation history, change interaction cards |
-| [06](06-governed-execution.md) | Governed Execution | Trust: two-loop model, evidence, attestation, write-back semantics |
-| [07](07-user-experience.md) | User Experience | Feel: four surfaces, two personas, import flow, AI tooling |
-| **[08](08-adoption-and-reference.md)** | **Adoption Path, Value Analysis, and Reference** | **This document** |
+| [01](/docs/agentic-gitops/01-vision/01-introducing-agentic-gitops.md) | Introducing Agentic GitOps | Why: classical gaps, agentic changes, invariants |
+| [02](/docs/agentic-gitops/02-design/10-generators-prd.md) | Generators and Provenance PRD | How: DRY->WET pipeline, maturity levels, generator contract |
+| [03](/docs/agentic-gitops/02-design/20-field-origin-maps-and-editing.md) | Field-Origin Maps and the Editing Experience | Tracing: field-origin maps, editing surface, DRY-source integrity |
+| [04](/docs/agentic-gitops/02-design/30-app-model-and-contracts.md) | ConfigHub App Model and Contracts | What: entities, operating boundary, constraints, operations |
+| [05](/docs/agentic-gitops/05-rollout/10-cub-track.md) | cub-track: Git-Native Mutation Ledger | Provenance: commit-linked mutation history, change interaction cards |
+| [06](/docs/agentic-gitops/02-design/40-governed-execution.md) | Governed Execution | Trust: two-loop model, evidence, attestation, write-back semantics |
+| [07](/docs/agentic-gitops/05-rollout/30-user-experience.md) | User Experience | Feel: four surfaces, two personas, import flow, AI tooling |
+| **[08](/docs/agentic-gitops/05-rollout/40-adoption-and-reference.md)** | **Adoption Path, Value Analysis, and Reference** | **This document** |

@@ -3,7 +3,7 @@
 > The field-origin map is the bridge between provenance and usability.
 > It turns "we know where this came from" into "we know where to change it."
 
-**Part of:** [AI and GitOps v7 Document Set](GitOps7.md)
+**Part of:** [AI and GitOps v7 Document Set](/docs/agentic-gitops/00-index/00-gitops7-index.md)
 **Status:** Planning doc (v7)
 **Date:** 2026-02-28
 **Audience:** Product team, platform engineers, app developers
@@ -70,7 +70,7 @@ The map is a generator output artifact. It is produced at render time, stored al
 
 ### Relationship to Provenance
 
-The field-origin map is complementary to the four provenance fields defined in the generator model ([02 -- Generators PRD](02-generators-prd.md)):
+The field-origin map is complementary to the four provenance fields defined in the generator model ([02 -- Generators PRD](/docs/agentic-gitops/02-design/10-generators-prd.md)):
 
 | Provenance field | What it answers | Granularity |
 |-----------------|----------------|-------------|
@@ -413,21 +413,21 @@ The user experience is: **edit in one place (ConfigHub), the system routes the c
 
 This document covers field-origin maps and the editing experience they enable. Related topics are covered in companion documents:
 
-- **[01 -- Introducing Agentic GitOps](01-introducing-agentic-gitops.md)** -- why agentic GitOps exists, classical GitOps gaps, the three invariants, and the generator concept
-- **[02 -- Generators PRD](02-generators-prd.md)** -- generator definition, maturity levels, provenance fields, authoring landscape, and GeneratorOutput envelope
-- **[04 -- App Model and Contracts](04-app-model-and-contracts.md)** -- entity definitions (App, Deployment, Unit, Variant), operating boundary, constraints, operations
-- **[05 -- cub-track](05-cub-track.md)** -- standalone mutation ledger, Change Interaction Cards, overlay drift detection, the explain and suggest commands
-- **[06 -- Governed Execution](06-governed-execution.md)** -- two-loop model, evidence bundles, trust tiers, attestation, write-back semantics
-- **[07 -- User Experience](07-user-experience.md)** -- four surfaces, two personas, import from Git flow, field-origin edit mockups, AI tooling
-- **[08 -- Adoption and Reference](08-adoption-and-reference.md)** -- adoption path, value-per-level table, pricing boundary, worked examples, FAQ
+- **[01 -- Introducing Agentic GitOps](/docs/agentic-gitops/01-vision/01-introducing-agentic-gitops.md)** -- why agentic GitOps exists, classical GitOps gaps, the three invariants, and the generator concept
+- **[02 -- Generators PRD](/docs/agentic-gitops/02-design/10-generators-prd.md)** -- generator definition, maturity levels, provenance fields, authoring landscape, and GeneratorOutput envelope
+- **[04 -- App Model and Contracts](/docs/agentic-gitops/02-design/30-app-model-and-contracts.md)** -- entity definitions (App, Deployment, Unit, Variant), operating boundary, constraints, operations
+- **[05 -- cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md)** -- standalone mutation ledger, Change Interaction Cards, overlay drift detection, the explain and suggest commands
+- **[06 -- Governed Execution](/docs/agentic-gitops/02-design/40-governed-execution.md)** -- two-loop model, evidence bundles, trust tiers, attestation, write-back semantics
+- **[07 -- User Experience](/docs/agentic-gitops/05-rollout/30-user-experience.md)** -- four surfaces, two personas, import from Git flow, field-origin edit mockups, AI tooling
+- **[08 -- Adoption and Reference](/docs/agentic-gitops/05-rollout/40-adoption-and-reference.md)** -- adoption path, value-per-level table, pricing boundary, worked examples, FAQ
 
 ### Key Dependencies
 
 | This document's concept | Depends on | Defined in |
 |------------------------|------------|------------|
-| Field-origin map schema | Generator model, provenance fields | [02 -- Generators PRD](02-generators-prd.md) |
-| ConfigHub editing surface | App, Deployment, Unit entities | [04 -- App Model and Contracts](04-app-model-and-contracts.md) |
-| cub-track redirection | Mutation ledger, Change Interaction Cards | [05 -- cub-track](05-cub-track.md) |
-| Trust tiers for edit approvals | Governed execution model | [06 -- Governed Execution](06-governed-execution.md) |
-| Edit UX mockups | Four surfaces, persona model | [07 -- User Experience](07-user-experience.md) |
-| Adoption ladder business case | Value analysis, pricing boundary | [08 -- Adoption and Reference](08-adoption-and-reference.md) |
+| Field-origin map schema | Generator model, provenance fields | [02 -- Generators PRD](/docs/agentic-gitops/02-design/10-generators-prd.md) |
+| ConfigHub editing surface | App, Deployment, Unit entities | [04 -- App Model and Contracts](/docs/agentic-gitops/02-design/30-app-model-and-contracts.md) |
+| cub-track redirection | Mutation ledger, Change Interaction Cards | [05 -- cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md) |
+| Trust tiers for edit approvals | Governed execution model | [06 -- Governed Execution](/docs/agentic-gitops/02-design/40-governed-execution.md) |
+| Edit UX mockups | Four surfaces, persona model | [07 -- User Experience](/docs/agentic-gitops/05-rollout/30-user-experience.md) |
+| Adoption ladder business case | Value analysis, pricing boundary | [08 -- Adoption and Reference](/docs/agentic-gitops/05-rollout/40-adoption-and-reference.md) |
