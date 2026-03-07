@@ -41,3 +41,9 @@ All examples assume:
 - Git + OCI transport
 - Flux or Argo reconciliation
 - ConfigHub governance and API layer on top
+
+## Docs and illustrations
+
+1. `docs/agentic-gitops/00-index/02-illustrated-cheat-sheet.md`
+2. `docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md`
+3. `docs/agentic-gitops/05-rollout/94-demo-illustration-pack.md`

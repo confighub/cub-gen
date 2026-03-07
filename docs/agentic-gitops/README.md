@@ -11,13 +11,16 @@ Hard naming rule:
 ## Reading order (core model)
 
 1. `00-index/00-gitops7-index.md`
-2. `01-vision/01-introducing-agentic-gitops.md`
-3. `01-vision/02-next-gen-gitops-ai-era.md`
-4. `02-design/00-agentic-gitops-design.md`
-5. `02-design/80-agentic-gitops-enforcement-matrix.md`
-6. `03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md`
-7. `03-worked-examples/02-traefik-helm-dry-wet-unit-worked-example.md`
-8. `05-rollout/40-adoption-and-reference.md`
+2. `00-index/02-illustrated-cheat-sheet.md`
+3. `01-vision/01-introducing-agentic-gitops.md`
+4. `01-vision/02-next-gen-gitops-ai-era.md`
+5. `02-design/00-agentic-gitops-design.md`
+6. `02-design/80-agentic-gitops-enforcement-matrix.md`
+7. `03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md`
+8. `03-worked-examples/02-traefik-helm-dry-wet-unit-worked-example.md`
+9. `03-worked-examples/04-eight-example-story-cards.md`
+10. `05-rollout/40-adoption-and-reference.md`
+11. `05-rollout/94-demo-illustration-pack.md`
 
 ## Reading order (blog + external feedback)
 

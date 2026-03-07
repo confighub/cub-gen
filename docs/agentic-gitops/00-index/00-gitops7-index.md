@@ -59,6 +59,12 @@ v6 had three parts (Narrative, Normative, Examples) in one file. v7 splits by
 08 Adoption      → Business case. "How do I start? What's the value?"
 ```
 
+### Illustrated companions
+
+1. `00-index/02-illustrated-cheat-sheet.md` for visual architecture and enforcement flows.
+2. `03-worked-examples/04-eight-example-story-cards.md` for the 2x4 example map and user-story alignment.
+3. `05-rollout/94-demo-illustration-pack.md` for reusable demo diagrams and talk tracks.
+
 ---
 
 ## The Central Claim
