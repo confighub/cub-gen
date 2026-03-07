@@ -1,0 +1,8 @@
+apiVersion: platform.confighub.io/v1alpha1
+kind: RuntimePolicy
+metadata:
+  name: inventory-api-defaults
+spec:
+  owner: platform-engineering
+  requireActuatorHealth: true
+  managedDatasource: postgres-shared

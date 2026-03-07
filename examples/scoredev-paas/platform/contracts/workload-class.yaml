@@ -1,0 +1,12 @@
+apiVersion: platform.confighub.io/v1alpha1
+kind: WorkloadClass
+metadata:
+  name: web-api-standard
+spec:
+  requiredProbes:
+    - readiness
+    - liveness
+  requiredResources:
+    requests:
+      cpu: 100m
+      memory: 128Mi

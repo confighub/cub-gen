@@ -41,6 +41,8 @@ Or run all modules in one pass:
 ./examples/demo/run-all-modules.sh
 ```
 
+Example repo narratives and ownership maps are documented in `/Users/alexis/Public/github-repos/cub-gen/examples/README.md`.
+
 ## 10-minute adoption path (Flux/Argo/Helm)
 
 Start with a Helm-based repo and keep your existing runtime model intact.

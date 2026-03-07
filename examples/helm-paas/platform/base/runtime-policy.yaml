@@ -1,0 +1,10 @@
+apiVersion: platform.confighub.io/v1alpha1
+kind: RuntimePolicy
+metadata:
+  name: payments-api-defaults
+spec:
+  owner: platform-engineering
+  requireReadinessProbe: true
+  requireResourceLimits: true
+  allowedNamespaces:
+    - apps
