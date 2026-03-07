@@ -68,6 +68,7 @@ Implemented in this preview slice:
 50. Completed Sprint 2 Go/No-Go gate with documented `GO` outcome and opened post-gate bridge backlog issues (`#95`-`#97`).
 51. Added first bridge ingest path (`internal/bridge`) to map `change-bundle` artifacts into ConfigHub governed WET ingest payloads with idempotency (`change_id + bundle_digest`) and duplicate-safe HTTP `409` handling.
 52. Added governed decision-state bridge contract and runtime transitions (`INGESTED -> ATTESTED -> ALLOW|ESCALATE|BLOCK`) with explicit authority gates, attestation linkage validation, and query-by-`change_id` support in `internal/bridge`.
+53. Added PR<->MR linkage and upstream DRY promotion guardrail state machine with explicit separate-review enforcement before protected platform-DRY merge.
 
 ## v0.2 preview invariants
 
