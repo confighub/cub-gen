@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://confighub.com/schemas/inverse-transform-plan.v1.schema.json",
+  "title": "InverseTransformPlan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "change_id",
+    "source_kind",
+    "target",
+    "patches",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "inverse-transform-plan.v1"
+    },
+    "plan_id": {
+      "type": "string",
+      "pattern": "^itp_[a-z0-9]{16}$"
+    },
+    "change_id": {
+      "type": "string",
+      "pattern": "^chg_[A-Za-z0-9_\\-]{8,}$"
+    },
+    "source_kind": {
+      "type": "string",
+      "enum": ["wet-diff", "live-observation", "ui-edit", "agent-proposal", "unknown"]
+    },
+    "source_ref": {
+      "type": "string"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit_ref"],
+      "properties": {
+        "unit_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repo": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "op",
+          "dry_path",
+          "wet_path",
+          "editable_by",
+          "confidence",
+          "requires_review"
+        ],
+        "properties": {
+          "op": {
+            "type": "string",
+            "enum": ["set", "remove", "append", "replace", "unknown"]
+          },
+          "dry_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "wet_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {},
+          "editable_by": {
+            "type": "string",
+            "enum": ["app-team", "platform-team", "read-only", "unknown"]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "requires_review": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "accepted", "rejected", "applied", "expired"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

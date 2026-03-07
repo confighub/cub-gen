@@ -1,0 +1,24 @@
+name: Lint Agentic GitOps Term Usage
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - 'scripts/lint-agentic-term.sh'
+      - '.github/workflows/lint-agentic-term.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - '**/*.md'
+      - 'scripts/lint-agentic-term.sh'
+      - '.github/workflows/lint-agentic-term.yml'
+
+jobs:
+  lint-agentic-term:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run term-usage lint
+        run: ./scripts/lint-agentic-term.sh .

@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://confighub.com/schemas/inverse-transform-plan.v1.schema.json",
+  "title": "InverseTransformPlan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "change_id",
+    "source_kind",
+    "target",
+    "ownership_map_ref",
+    "patches",
+    "replay_check",
+    "decision_gate",
+    "writeback",
+    "enforcement",
+    "verification",
+    "attestation_required_on_allow",
+    "ledger",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "inverse-transform-plan.v1"
+    },
+    "plan_id": {
+      "type": "string",
+      "pattern": "^itp_[a-z0-9]{16}$"
+    },
+    "change_id": {
+      "type": "string",
+      "pattern": "^chg_[A-Za-z0-9_\\-]{8,}$"
+    },
+    "source_kind": {
+      "type": "string",
+      "enum": ["wet-diff", "live-observation", "ui-edit", "agent-proposal", "unknown"]
+    },
+    "source_ref": {
+      "type": "string"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit_ref"],
+      "properties": {
+        "unit_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repo": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "ownership_map_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "patches": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "op",
+          "dry_path",
+          "wet_path",
+          "ownership_scope",
+          "editable_by",
+          "confidence",
+          "requires_review"
+        ],
+        "properties": {
+          "op": {
+            "type": "string",
+            "enum": ["set", "remove", "append", "replace", "unknown"]
+          },
+          "dry_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "wet_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ownership_scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {},
+          "editable_by": {
+            "type": "string",
+            "enum": ["app-team", "platform-team", "read-only", "unknown"]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "requires_review": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "replay_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "mismatch_action", "replay_digest"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["match", "mismatch", "not-run"]
+        },
+        "mismatch_action": {
+          "const": "ESCALATE"
+        },
+        "replay_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      }
+    },
+    "decision_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result"],
+      "properties": {
+        "result": {
+          "type": "string",
+          "enum": ["ALLOW", "ESCALATE", "BLOCK"]
+        }
+      }
+    },
+    "writeback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "protected_branch_only"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["pull-request", "merge-request", "pull-or-merge-request"]
+        },
+        "protected_branch_only": {
+          "const": true
+        }
+      }
+    },
+    "enforcement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["on_out_of_scope_write"],
+      "properties": {
+        "on_out_of_scope_write": {
+          "const": "BLOCK"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "on_failure"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pass", "fail", "pending"]
+        },
+        "on_failure": {
+          "const": "read-only-evidence"
+        }
+      }
+    },
+    "attestation_required_on_allow": {
+      "const": true
+    },
+    "ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["append_required"],
+      "properties": {
+        "append_required": {
+          "const": true
+        },
+        "ledger_ref": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "accepted", "rejected", "applied", "expired"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
