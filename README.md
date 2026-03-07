@@ -265,6 +265,7 @@ See:
 - `CONTRIBUTING.md`
 - `docs/contracts/canonical-triple-and-storage-boundary.md`
 - `docs/contracts/decision-and-attestation-state.md`
+- `docs/contracts/pr-mr-linkage-and-dry-promotion.md`
 - `docs/testing/README.md`
 - `docs/workflows/proof-first-delivery.md`
 - `PARITY.md`
