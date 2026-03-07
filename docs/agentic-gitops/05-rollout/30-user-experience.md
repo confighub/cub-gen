@@ -1,6 +1,6 @@
 # User Experience: Surfaces, Personas, and Workflows
 
-**Part of:** [AI and GitOps v7 Document Set](GitOps7.md)
+**Part of:** [AI and GitOps v7 Document Set](/docs/agentic-gitops/00-index/00-gitops7-index.md)
 **Status:** Planning doc (v7)
 **Date:** 2026-02-28
 **Audience:** Product team, UX designers, developer advocates
@@ -809,7 +809,7 @@ Loaded when working in any of the related repos. Knows: the two-loop model,
 operating boundary (who owns what), the DRY/WET split, field-origin maps,
 generator maturity levels, the invariants. When you ask "should cub-scout detect
 stale renders?" it can answer "no, that's ConfigHub's publishing pipeline — see
-[06 — Governed Execution](06-governed-execution.md#evidence-and-the-drift-loop)"
+[06 — Governed Execution](/docs/agentic-gitops/02-design/40-governed-execution.md#2-evidence-and-the-drift-loop)"
 without you having to remember.
 
 **3. Doc consistency skill**
@@ -826,14 +826,14 @@ When filing issues or writing PRs in cub-scout or cub-track, pre-fills the
 structure from CLAUDE.md (deterministic tests, graceful degradation, definition
 of done) and frames the work in terms of this strategy. "This PR adds
 `cub-track suggest` — the DRY-source redirection capability from
-[03 — Field-Origin Maps](03-field-origin-maps-and-editing.md#cub-track-as-the-redirection-layer)."
+[03 — Field-Origin Maps](/docs/agentic-gitops/02-design/20-field-origin-maps-and-editing.md#7-cub-track-as-the-redirection-layer)."
 
 **5. Cross-repo context skill**
 
 The hardest one. When you are in the cub-scout repo working on evidence bundles,
 it knows how that connects to cub-track's ChangeInteractionCards and ConfigHub's
 Units. When you are in cub-track adding the `suggest` command, it knows the
-field-origin map schema from [03 — Field-Origin Maps](03-field-origin-maps-and-editing.md#what-is-a-field-origin-map).
+field-origin map schema from [03 — Field-Origin Maps](/docs/agentic-gitops/02-design/20-field-origin-maps-and-editing.md#1-what-is-a-field-origin-map).
 
 ### AI Dialog Examples
 
@@ -1300,10 +1300,10 @@ Result: one fleet campaign with explicit governance and complete audit closure.
 
 | Document | Relationship |
 |----------|-------------|
-| [01-introducing-agentic-gitops.md](01-introducing-agentic-gitops.md) | The "why": invariants, classical GitOps gaps, agentic changes |
-| [02-generators-prd.md](02-generators-prd.md) | Generators PRD: DRY-to-WET pipeline, generator lifecycle, maturity levels |
-| [03-field-origin-maps-and-editing.md](03-field-origin-maps-and-editing.md) | Field-origin maps, editing model, authoring landscape |
-| [04-app-model-and-contracts.md](04-app-model-and-contracts.md) | Entity definitions, operating boundary, constraints, operations |
-| [05-cub-track.md](05-cub-track.md) | cub-track: mutation ledger, ChangeInteractionCards, governance |
-| [06-governed-execution.md](06-governed-execution.md) | Two-loop model, evidence, trust tiers, attestation |
-| [08-adoption-and-reference.md](08-adoption-and-reference.md) | Adoption path, value analysis, Day 2 scenarios, FAQ |
+| [01-introducing-agentic-gitops.md](/docs/agentic-gitops/01-vision/01-introducing-agentic-gitops.md) | The "why": invariants, classical GitOps gaps, agentic changes |
+| [02-generators-prd.md](/docs/agentic-gitops/02-design/10-generators-prd.md) | Generators PRD: DRY-to-WET pipeline, generator lifecycle, maturity levels |
+| [03-field-origin-maps-and-editing.md](/docs/agentic-gitops/02-design/20-field-origin-maps-and-editing.md) | Field-origin maps, editing model, authoring landscape |
+| [04-app-model-and-contracts.md](/docs/agentic-gitops/02-design/30-app-model-and-contracts.md) | Entity definitions, operating boundary, constraints, operations |
+| [05-cub-track.md](/docs/agentic-gitops/05-rollout/10-cub-track.md) | cub-track: mutation ledger, ChangeInteractionCards, governance |
+| [06-governed-execution.md](/docs/agentic-gitops/02-design/40-governed-execution.md) | Two-loop model, evidence, trust tiers, attestation |
+| [08-adoption-and-reference.md](/docs/agentic-gitops/05-rollout/40-adoption-and-reference.md) | Adoption path, value analysis, Day 2 scenarios, FAQ |

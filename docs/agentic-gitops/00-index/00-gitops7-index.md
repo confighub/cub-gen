@@ -27,7 +27,7 @@ format. Nothing from v6 is lost; everything is reorganized and expanded.
 | **Field-origin maps and editing as standalone doc** | Extracted from generators doc | 03-field-origin-maps-and-editing.md |
 | **Generators doc as PRD** (product requirements, acceptance criteria, milestones) | Rewritten from v6 | 02-generators-prd.md |
 | **Brian's DRY/WET concern addressed** | Conversation 2026-02-26 | 03-field-origin-maps-and-editing.md |
-| **Day 2 scenarios** (3am incident, fleet visibility, AI audit, config change) | Retained from GitOps6.md | [07-user-experience.md](07-user-experience.md#day-2-scenarios) |
+| **Day 2 scenarios** (3am incident, fleet visibility, AI audit, config change) | Retained from GitOps6.md | [07-user-experience.md](/docs/agentic-gitops/05-rollout/30-user-experience.md#11-day-2-scenarios) |
 | **Lock-in addressed head-on** | dry-wet-config-analysis.md gap analysis | 08-adoption-and-reference.md |
 
 ### Structural changes
@@ -192,14 +192,14 @@ ConfigHub (dry+wet Units; WET deployment contract) ----------+
 
 ## Document Set
 
-1. **[01-introducing-agentic-gitops.md](01-introducing-agentic-gitops.md)** — The problem, the claim, and the invariants
-2. **[02-generators-prd.md](02-generators-prd.md)** — Generator model, maturity levels, provenance requirements
-3. **[03-field-origin-maps-and-editing.md](03-field-origin-maps-and-editing.md)** — Field-origin maps, editing experience, adoption ladder
-4. **[04-app-model-and-contracts.md](04-app-model-and-contracts.md)** — Entities, operating boundary, constraints, operations
-5. **[05-cub-track.md](05-cub-track.md)** — Git-native mutation ledger, ChangeInteractionCard, trust tiers
-6. **[06-governed-execution.md](06-governed-execution.md)** — Two-loop model, evidence, write-back semantics
-7. **[07-user-experience.md](07-user-experience.md)** — Four surfaces, two personas, import flow, AI tooling
-8. **[08-adoption-and-reference.md](08-adoption-and-reference.md)** — Adoption path, value analysis, Day 2 scenarios, FAQ
+1. **[01-introducing-agentic-gitops.md](/docs/agentic-gitops/01-vision/01-introducing-agentic-gitops.md)** — The problem, the claim, and the invariants
+2. **[02-generators-prd.md](/docs/agentic-gitops/02-design/10-generators-prd.md)** — Generator model, maturity levels, provenance requirements
+3. **[03-field-origin-maps-and-editing.md](/docs/agentic-gitops/02-design/20-field-origin-maps-and-editing.md)** — Field-origin maps, editing experience, adoption ladder
+4. **[04-app-model-and-contracts.md](/docs/agentic-gitops/02-design/30-app-model-and-contracts.md)** — Entities, operating boundary, constraints, operations
+5. **[05-cub-track.md](/docs/agentic-gitops/05-rollout/10-cub-track.md)** — Git-native mutation ledger, ChangeInteractionCard, trust tiers
+6. **[06-governed-execution.md](/docs/agentic-gitops/02-design/40-governed-execution.md)** — Two-loop model, evidence, write-back semantics
+7. **[07-user-experience.md](/docs/agentic-gitops/05-rollout/30-user-experience.md)** — Four surfaces, two personas, import flow, AI tooling
+8. **[08-adoption-and-reference.md](/docs/agentic-gitops/05-rollout/40-adoption-and-reference.md)** — Adoption path, value analysis, Day 2 scenarios, FAQ
 
 ---
 
