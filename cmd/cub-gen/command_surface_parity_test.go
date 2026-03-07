@@ -43,6 +43,11 @@ func TestTopLevelCommandGoldenHelp(t *testing.T) {
 			args:         []string{"generators", "--help"},
 			stderrGolden: filepath.Join("testdata", "parity", "generators-help.stderr.golden.txt"),
 		},
+		{
+			name:         "bridge-help",
+			args:         []string{"bridge", "--help"},
+			stdoutGolden: filepath.Join("testdata", "parity", "bridge-help.stdout.golden.txt"),
+		},
 	}
 
 	for _, tt := range tests {
@@ -101,6 +106,26 @@ func TestTopLevelCommandErrorModes(t *testing.T) {
 			name: "generators-extra-arg",
 			args: []string{"generators", "extra"},
 			sub:  "usage: cub-gen generators",
+		},
+		{
+			name: "bridge-missing-subcommand",
+			args: []string{"bridge"},
+			sub:  "bridge subcommand required",
+		},
+		{
+			name: "bridge-ingest-missing-base-url",
+			args: []string{"bridge", "ingest"},
+			sub:  "bridge ingest requires --base-url",
+		},
+		{
+			name: "bridge-decision-missing-subcommand",
+			args: []string{"bridge", "decision"},
+			sub:  "bridge decision subcommand required",
+		},
+		{
+			name: "bridge-promote-missing-subcommand",
+			args: []string{"bridge", "promote"},
+			sub:  "bridge promote subcommand required",
 		},
 		{
 			name: "verify-attestation-invalid-json",

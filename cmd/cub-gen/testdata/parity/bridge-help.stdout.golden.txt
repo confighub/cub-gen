@@ -1,0 +1,14 @@
+cub-gen bridge: ConfigHub bridge flow commands (ingest, decision, promotion)
+
+Usage:
+  cub-gen bridge ingest [--in FILE|-] --base-url URL [--token TOKEN] [--endpoint PATH] [--json] [--pretty]
+  cub-gen bridge decision <create|attach|apply|query> [flags]
+  cub-gen bridge promote <init|govern|verify|open|approve|merge> [flags]
+
+Examples:
+  cub-gen bridge ingest --in bundle.json --base-url https://confighub.example
+  cub-gen bridge decision create --ingest ingest-result.json
+  cub-gen bridge decision attach --decision decision.json --attestation attestation.json
+  cub-gen bridge decision apply --decision decision.json --state ALLOW --approved-by platform-admin --reason "policy checks passed"
+  cub-gen bridge decision query --base-url https://confighub.example --change-id chg_123
+  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123
