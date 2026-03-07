@@ -24,6 +24,23 @@
 
 This means teams can add `cub-gen` to existing Flux/Argo repos today without changing runtime controllers.
 
+## Jump-in demo modules
+
+Run any module independently:
+
+```bash
+./examples/demo/module-1-helm-import.sh
+./examples/demo/module-2-score-field-map.sh
+./examples/demo/module-3-spring-ownership.sh
+./examples/demo/module-4-bridge-governance.sh
+```
+
+Or run all modules in one pass:
+
+```bash
+./examples/demo/run-all-modules.sh
+```
+
 ## 10-minute adoption path (Flux/Argo/Helm)
 
 Start with a Helm-based repo and keep your existing runtime model intact.
