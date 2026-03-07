@@ -33,6 +33,7 @@ Run any module independently:
 ./examples/demo/module-2-score-field-map.sh
 ./examples/demo/module-3-spring-ownership.sh
 ./examples/demo/module-4-bridge-governance.sh
+./examples/demo/module-5-ably-platform.sh
 ```
 
 Or run all modules in one pass:
@@ -42,6 +43,39 @@ Or run all modules in one pass:
 ```
 
 Example repo narratives and ownership maps are documented in `/Users/alexis/Public/github-repos/cub-gen/examples/README.md`.
+
+## Wizard Simulation (Repo-First)
+
+Simulate a future GUI discover/import wizard against any repo fixture:
+
+```bash
+./examples/demo/simulate-repo-wizard.sh ./examples/helm-paas ./examples/helm-paas auto
+./examples/demo/simulate-repo-wizard.sh ./examples/springboot-paas ./examples/springboot-paas springboot-paas
+```
+
+This script walks the same step sequence planned for the GUI:
+1. source selection
+2. discover preview
+3. import graph preview (DRY -> GEN -> WET)
+4. provenance/inverse hint preview
+5. import confirmation + bundle/verify/attest summary
+
+## AI Work Platform Demo Track
+
+Second demo track focused on AI-work platform scenarios:
+
+```bash
+./examples/demo/ai-work-platform/run-all.sh
+```
+
+Or run scenarios individually:
+
+```bash
+./examples/demo/ai-work-platform/scenario-1-jesper-ai-cloud.sh
+./examples/demo/ai-work-platform/scenario-2-swamp-project.sh
+./examples/demo/ai-work-platform/scenario-3-confighub-actions.sh
+./examples/demo/ai-work-platform/scenario-4-operations.sh
+```
 
 ## 10-minute adoption path (Flux/Argo/Helm)
 
