@@ -1,0 +1,9 @@
+apiVersion: platform.confighub.io/v1alpha1
+kind: RuntimeBaseline
+metadata:
+  name: payments-api-prod
+spec:
+  environment: prod
+  minReplicas: 3
+  maxReplicas: 12
+  targetCPUUtilizationPercentage: 65

@@ -1,6 +1,9 @@
 apiVersion: score.dev/v1b1
+kind: Workload
 metadata:
   name: checkout-api
+  annotations:
+    owner: app-team-checkout
 containers:
   main:
     image: ghcr.io/example/checkout-api:v1.0.0

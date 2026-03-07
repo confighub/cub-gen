@@ -2,3 +2,5 @@ apiVersion: v2
 name: payments-api
 version: 0.1.0
 appVersion: "1.0.0"
+description: Platform-managed chart contract for payments-api.
+type: application

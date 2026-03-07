@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: inventory-api
+  namespace: argocd
+spec:
+  project: platform-apps
+  source:
+    repoURL: oci://ghcr.io/example/platform-manifests
+    targetRevision: latest
+    path: inventory-api
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

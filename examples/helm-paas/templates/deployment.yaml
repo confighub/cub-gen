@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Chart.Name }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/part-of: commerce-platform
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -15,5 +18,13 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.port }}
+          env:
+            - name: LOG_LEVEL
+              value: "{{ .Values.appConfig.logLevel }}"
+            - name: FEATURE_FAST_CHECKOUT
+              value: "{{ .Values.appConfig.featureFlags.fastCheckout }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
