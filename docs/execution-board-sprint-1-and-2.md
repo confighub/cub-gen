@@ -71,6 +71,14 @@ Recorded outcome:
 
 1. `GO` documented in `docs/decisions/2026-03-06-sprint-2-go-no-go.md`.
 
+## Post-S2 Bridge Coupling (Completed)
+
+Post-gate bridge backlog from `#82` is now complete:
+
+1. `#95` closed via PR `#99`: change-bundle ingest mapping into governed WET artifacts with idempotency and duplicate-safe handling.
+2. `#96` closed via PR `#100`: governed decision + attestation state contract, explicit `ALLOW|ESCALATE|BLOCK` transition gates, and query-by-`change_id`.
+3. `#97` closed via PR `#101`: Git PR <-> ConfigHub MR linkage model and upstream DRY promotion flow with explicit separate-review guardrail.
+
 ## Proof Commands (Required for Done)
 
 1. `go test ./...`
