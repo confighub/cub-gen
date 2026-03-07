@@ -5,7 +5,7 @@
 > outcome was. It stores this as structured records linked to Git commits,
 > producing an audit trail that classical GitOps cannot.
 
-**Part of:** [AI and GitOps v7 Document Set](GitOps7.md)
+**Part of:** [AI and GitOps v7 Document Set](/docs/agentic-gitops/00-index/00-gitops7-index.md)
 **Status:** Planning doc (v7)
 **Date:** 2026-02-28
 
@@ -658,7 +658,7 @@ New writes always go to `cub/mutations/v1`; `cub/checkpoints/v1` remains a tempo
 
 ### How does cub-track relate to field-origin maps?
 
-Field-origin maps are produced by generators (see [02-generators-prd.md](02-generators-prd.md)).
+Field-origin maps are produced by generators (see [02-generators-prd.md](/docs/agentic-gitops/02-design/10-generators-prd.md)).
 They map each WET output field to its DRY input source (file, path, line,
 editable_by). cub-track uses field-origin maps in two commands:
 
@@ -689,10 +689,10 @@ would produce. They can coexist, and they require different responses.
 
 | Document | Relationship |
 |----------|-------------|
-| [01 — Introducing Agentic GitOps](01-introducing-agentic-gitops.md) | The "why": classical gaps and invariants that cub-track enforces |
-| [02 — Generators PRD](02-generators-prd.md) | Generator model and field-origin maps that cub-track uses for redirection |
-| [03 — Field-Origin Maps and Editing](03-field-origin-maps-and-editing.md) | The editing model and adoption ladder that cub-track supports |
-| [04 — App Model and Contracts](04-app-model-and-contracts.md) | Operating boundary: cub-track's role vs. ConfigHub, cub-scout, Flux/Argo |
-| [06 — Governed Execution](06-governed-execution.md) | The two-loop model, evidence bundles, and write-back semantics that cub-track feeds into |
-| [07 — User Experience](07-user-experience.md) | cub-track CLI examples, AI skill integration, Day 2 scenarios |
-| [08 — Adoption and Reference](08-adoption-and-reference.md) | Adoption path showing where cub-track fits in the overall journey |
+| [01 — Introducing Agentic GitOps](/docs/agentic-gitops/01-vision/01-introducing-agentic-gitops.md) | The "why": classical gaps and invariants that cub-track enforces |
+| [02 — Generators PRD](/docs/agentic-gitops/02-design/10-generators-prd.md) | Generator model and field-origin maps that cub-track uses for redirection |
+| [03 — Field-Origin Maps and Editing](/docs/agentic-gitops/02-design/20-field-origin-maps-and-editing.md) | The editing model and adoption ladder that cub-track supports |
+| [04 — App Model and Contracts](/docs/agentic-gitops/02-design/30-app-model-and-contracts.md) | Operating boundary: cub-track's role vs. ConfigHub, cub-scout, Flux/Argo |
+| [06 — Governed Execution](/docs/agentic-gitops/02-design/40-governed-execution.md) | The two-loop model, evidence bundles, and write-back semantics that cub-track feeds into |
+| [07 — User Experience](/docs/agentic-gitops/05-rollout/30-user-experience.md) | cub-track CLI examples, AI skill integration, Day 2 scenarios |
+| [08 — Adoption and Reference](/docs/agentic-gitops/05-rollout/40-adoption-and-reference.md) | Adoption path showing where cub-track fits in the overall journey |

@@ -2,7 +2,7 @@
 
 > Configuration is data. Generators are how you get there.
 
-**Part of:** [AI and GitOps v7 Document Set](GitOps7.md)
+**Part of:** [AI and GitOps v7 Document Set](/docs/agentic-gitops/00-index/00-gitops7-index.md)
 **Status:** Planning doc (v7)
 **Date:** 2026-02-28
 
@@ -176,10 +176,10 @@ This document establishes the "why" and the foundational principles. The remaini
 
 | If you want to understand... | Read |
 |-----|------|
-| The generator model and maturity levels | [02 — Generators PRD](02-generators-prd.md) |
-| Field-origin maps and the editing experience | [03 — Field-Origin Maps and Editing](03-field-origin-maps-and-editing.md) |
-| The ConfigHub data model | [04 — App Model and Contracts](04-app-model-and-contracts.md) |
-| cub-track, the mutation ledger | [05 — cub-track](05-cub-track.md) |
-| The governed execution architecture | [06 — Governed Execution](06-governed-execution.md) |
-| What it looks like to use | [07 — User Experience](07-user-experience.md) |
-| How to adopt and the business case | [08 — Adoption and Reference](08-adoption-and-reference.md) |
+| The generator model and maturity levels | [02 — Generators PRD](/docs/agentic-gitops/02-design/10-generators-prd.md) |
+| Field-origin maps and the editing experience | [03 — Field-Origin Maps and Editing](/docs/agentic-gitops/02-design/20-field-origin-maps-and-editing.md) |
+| The ConfigHub data model | [04 — App Model and Contracts](/docs/agentic-gitops/02-design/30-app-model-and-contracts.md) |
+| cub-track, the mutation ledger | [05 — cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md) |
+| The governed execution architecture | [06 — Governed Execution](/docs/agentic-gitops/02-design/40-governed-execution.md) |
+| What it looks like to use | [07 — User Experience](/docs/agentic-gitops/05-rollout/30-user-experience.md) |
+| How to adopt and the business case | [08 — Adoption and Reference](/docs/agentic-gitops/05-rollout/40-adoption-and-reference.md) |
