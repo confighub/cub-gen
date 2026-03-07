@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://confighub.com/schemas/generator-contract.v1.schema.json",
+  "title": "GeneratorContract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generator_id",
+    "name",
+    "kind",
+    "version",
+    "source",
+    "inputs",
+    "output",
+    "capabilities",
+    "deterministic"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "generator-contract.v1"
+    },
+    "generator_id": {
+      "type": "string",
+      "pattern": "^gen_[a-z0-9]{16}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["helm", "score", "springboot", "template", "custom", "unknown"]
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repo", "ref"],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "schema_ref", "required"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "schema_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "transport"],
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "kubernetes-yaml",
+            "helm-render",
+            "oci-artifact",
+            "mixed",
+            "unknown"
+          ]
+        },
+        "transport": {
+          "type": "string",
+          "enum": ["oci", "git", "both", "unknown"]
+        }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "forward-transform",
+          "provenance",
+          "field-origin-map",
+          "inverse-transform",
+          "risk-hints"
+        ]
+      }
+    },
+    "deterministic": {
+      "type": "boolean"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
