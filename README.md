@@ -203,6 +203,38 @@ Verify an attestation (optionally linked against a bundle file):
 ./cub-gen verify-attestation --in attestation.json --bundle bundle.json
 ```
 
+### Bridge flow quickstart (ConfigHub API path)
+
+Generate bundle + attestation, then run bridge flow commands:
+
+```bash
+# 1) Build bundle and attestation artifacts
+./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
+./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
+
+# 2) Ingest to ConfigHub bridge endpoint
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest-result.json
+
+# 3) Build decision state, attach attestation, apply explicit decision
+./cub-gen bridge decision create --ingest ingest-result.json > decision.json
+./cub-gen bridge decision attach --decision decision.json --attestation attestation.json > decision-attested.json
+./cub-gen bridge decision apply --decision decision-attested.json --state ALLOW --approved-by platform-owner --reason "policy checks passed" > decision-allow.json
+
+# 4) Query decision state by change_id from API
+./cub-gen bridge decision query --base-url https://confighub.example --change-id "$(jq -r .change_id decision-allow.json)"
+```
+
+Promotion guardrail flow (app PR -> CH MR -> platform DRY PR):
+
+```bash
+./cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123 > flow.json
+./cub-gen bridge promote govern --flow flow.json --state ALLOW --decision-ref decision_123 > flow-allow.json
+./cub-gen bridge promote verify --flow flow-allow.json > flow-verified.json
+./cub-gen bridge promote open --flow flow-verified.json --repo github.com/confighub/platform-dry --number 7 --url https://github.com/confighub/platform-dry/pull/7 > flow-open.json
+./cub-gen bridge promote approve --flow flow-open.json --by platform-owner > flow-approved.json
+./cub-gen bridge promote merge --flow flow-approved.json --by platform-owner > flow-promoted.json
+```
+
 ## Plain-English collaboration story
 
 A practical app-team/platform-team path in a Spring Boot repo:

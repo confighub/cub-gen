@@ -51,6 +51,8 @@ func run(args []string) error {
 		return runGenerators(args[1:])
 	case "gitops":
 		return runGitOps(args[1:])
+	case "bridge":
+		return runBridge(args[1:])
 	default:
 		printUsage(os.Stderr)
 		return fmt.Errorf("unknown command: %s", args[0])
@@ -835,6 +837,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json] [--details] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
+	fmt.Fprintln(out, "  cub-gen bridge <ingest|decision|promote> [flags]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "GitOps parity examples:")
 	fmt.Fprintln(out, "  cub-gen gitops discover --space my-space ./examples/helm-paas")
@@ -860,6 +863,9 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/ably-config ./examples/ably-config | cub-gen attest --in - --verifier ci-bot")
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen attest --in - --verifier ci-bot")
 	fmt.Fprintln(out, "  cub-gen verify-attestation --in attestation.json --bundle bundle.json")
+	fmt.Fprintln(out, "  cub-gen bridge ingest --in bundle.json --base-url https://confighub.example")
+	fmt.Fprintln(out, "  cub-gen bridge decision query --change-id chg_123 --base-url https://confighub.example")
+	fmt.Fprintln(out, "  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123")
 	fmt.Fprintln(out, "  cub-gen generators --json")
 	fmt.Fprintln(out, "  cub-gen generators --json --details")
 	fmt.Fprintln(out, "  cub-gen generators --capability render-manifests")
