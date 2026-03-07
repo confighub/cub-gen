@@ -1,0 +1,8 @@
+workflow:
+  name: confighub-actions-release-prod
+actions:
+  verify:
+    approvals:
+      required: 2
+  deploy:
+    window: business-hours

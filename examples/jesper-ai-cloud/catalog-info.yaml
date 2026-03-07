@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: jesper-ai-cloud
+  description: Internal AI cloud platform control-plane component
+  annotations:
+    owner: platform-ai
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-ai

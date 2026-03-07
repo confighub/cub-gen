@@ -1,0 +1,5 @@
+apiVersion: v2
+name: swamp-runtime
+version: 0.1.0
+appVersion: "0.1.0"
+description: Helm package for swamp project AI runtime.

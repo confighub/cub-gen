@@ -1,0 +1,11 @@
+workflow:
+  name: confighub-actions-release
+actions:
+  plan:
+    type: dry-run
+  verify:
+    type: policy-check
+  deploy:
+    type: apply
+triggers:
+  commit: true

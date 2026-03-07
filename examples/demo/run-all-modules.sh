@@ -8,4 +8,5 @@ cd "$ROOT_DIR"
 ./examples/demo/module-2-score-field-map.sh
 ./examples/demo/module-3-spring-ownership.sh
 ./examples/demo/module-4-bridge-governance.sh
+./examples/demo/module-5-ably-platform.sh
 
