@@ -1,0 +1,97 @@
+kind: "helm"
+profile: "helm-paas"
+resource_kind: "HelmRelease"
+resource_type: "helm.toolkit.fluxcd.io/v2/HelmRelease"
+capabilities:
+  - "render-manifests"
+  - "values-overrides"
+  - "inverse-values-patch"
+contract:
+  default_input_role: "helm-input"
+  default_owner: "platform-engineer"
+  input_role_rules:
+    - role: "chart"
+      exact_basenames:
+        - "chart.yaml"
+      prefixes:
+        []
+      extensions:
+        []
+    - role: "values"
+      exact_basenames:
+        []
+      prefixes:
+        - "values"
+      extensions:
+        - ".yaml"
+        - ".yml"
+  role_owners:
+    values: "app-team"
+  role_schema_refs:
+    chart: "https://json.schemastore.org/chart"
+  wet_targets:
+    - kind: "HelmRelease"
+      name_template: "{{name}}"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: ""
+    - kind: "Deployment"
+      name_template: "{{name}}"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "values.image.tag"
+    - kind: "Service"
+      name_template: "{{name}}"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "values.service.port"
+provenance:
+  field_origin_transform: "helm-template"
+  field_origin_overlay_transform: ""
+  field_origin_confidences:
+    image_tag: 0.86
+  rendered_lineage_templates:
+    - kind: "HelmRelease"
+      name_template: "{{name}}"
+      namespace: "apps"
+      source_path_hint: "chart_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "Chart.yaml"
+      optional: false
+    - kind: "Deployment"
+      name_template: "{{name}}"
+      namespace: "apps"
+      source_path_hint: "values_paths"
+      source_path_hint_fallback: "chart_path"
+      source_path_hint_multi: true
+      source_dry_path_template: "values.image.tag"
+      optional: false
+    - kind: "Service"
+      name_template: "{{name}}"
+      namespace: "apps"
+      source_path_hint: "values_paths"
+      source_path_hint_fallback: "chart_path"
+      source_path_hint_multi: true
+      source_dry_path_template: "values.service.port"
+      optional: false
+inverse:
+  inverse_patch_templates:
+    image_tag:
+      editable_by: "app-team"
+      confidence: 0.86
+      requires_review: false
+  inverse_pointer_templates:
+    image_tag:
+      owner: "app-team"
+      confidence: 0.86
+  inverse_patch_reasons:
+    image_tag: "Container image tag maps cleanly to helm values."
+  inverse_edit_hints:
+    image_tag: "Edit chart values file and keep chart template unchanged."
+hints:
+  defaults:
+    chart_path: "Chart.yaml"
+    chart_role: "chart"
+    primary_values_path: "values.yaml"
+    values_role: "values"

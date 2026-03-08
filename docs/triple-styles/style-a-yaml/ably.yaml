@@ -1,0 +1,105 @@
+kind: "ably"
+profile: "ably-config"
+resource_kind: "ConfigMap"
+resource_type: "v1/ConfigMap"
+capabilities:
+  - "app-config-only"
+  - "provider-config"
+  - "inverse-provider-config-patch"
+contract:
+  default_input_role: "provider-config"
+  default_owner: "app-team"
+  input_role_rules:
+    - role: "provider-config-base"
+      exact_basenames:
+        - "ably.yaml"
+        - "ably.yml"
+        - "ably.json"
+      prefixes:
+        []
+      extensions:
+        []
+    - role: "provider-config-overlay"
+      exact_basenames:
+        []
+      prefixes:
+        - "ably-"
+      extensions:
+        - ".yaml"
+        - ".yml"
+        - ".json"
+  role_owners:
+    {}
+  role_schema_refs:
+    provider-config-base: "https://schema.confighub.dev/generators/ably-config-v1"
+    provider-config-overlay: "https://schema.confighub.dev/generators/ably-config-v1"
+  wet_targets:
+    - kind: "ConfigMap"
+      name_template: "{{name}}-ably"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "app.environment"
+    - kind: "Secret"
+      name_template: "{{name}}-ably-credentials"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "credentials.api_key_ref"
+provenance:
+  field_origin_transform: "ably-config-to-runtime"
+  field_origin_overlay_transform: "ably-overlay-merge"
+  field_origin_confidences:
+    channels_base: 0.88
+    channels_overlay: 0.84
+    environment: 0.90
+  rendered_lineage_templates:
+    - kind: "ConfigMap"
+      name_template: "{{name}}-ably"
+      namespace: "apps"
+      source_path_hint: "base_config_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "app.environment"
+      optional: false
+    - kind: "Secret"
+      name_template: "{{name}}-ably-credentials"
+      namespace: "apps"
+      source_path_hint: "base_config_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "credentials.api_key_ref"
+      optional: false
+    - kind: "ConfigMap"
+      name_template: "{{name}}-ably"
+      namespace: "apps"
+      source_path_hint: "overlay_config_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "channels.inbound"
+      optional: true
+inverse:
+  inverse_patch_templates:
+    channels:
+      editable_by: "app-team"
+      confidence: 0.88
+      requires_review: false
+    environment:
+      editable_by: "app-team"
+      confidence: 0.90
+      requires_review: false
+  inverse_pointer_templates:
+    channels:
+      owner: "app-team"
+      confidence: 0.88
+    environment:
+      owner: "app-team"
+      confidence: 0.90
+  inverse_patch_reasons:
+    channels: "Channel mapping is app-level runtime behavior."
+    environment: "Environment is sourced from {{base_config_path}}."
+  inverse_edit_hints:
+    channels_base: "Edit channels.inbound in {{base_config_path}}."
+    channels_overlay: "Edit channels.inbound in {{overlay_config_path}} for environment-specific behavior; use {{base_config_path}} for defaults."
+    environment: "Edit app.environment in {{base_config_path}}."
+hints:
+  defaults:
+    base_config_path: "ably.yaml"

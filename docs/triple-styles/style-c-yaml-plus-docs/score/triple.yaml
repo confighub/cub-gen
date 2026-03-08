@@ -1,0 +1,100 @@
+kind: "score"
+profile: "scoredev-paas"
+resource_kind: "Application"
+resource_type: "argoproj.io/v1alpha1/Application"
+capabilities:
+  - "render-manifests"
+  - "workload-spec"
+  - "inverse-score-patch"
+contract:
+  default_input_role: "score-input"
+  default_owner: "app-team"
+  input_role_rules:
+    - role: "score-spec"
+      exact_basenames:
+        - "score.yaml"
+        - "score.yml"
+      prefixes:
+        []
+      extensions:
+        []
+  role_owners:
+    {}
+  role_schema_refs:
+    score-spec: "https://docs.score.dev/schemas/score-v1b1.json"
+  wet_targets:
+    - kind: "Application"
+      name_template: "{{name}}"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: ""
+    - kind: "Deployment"
+      name_template: "{{name}}"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "containers.{{container}}.image"
+    - kind: "Service"
+      name_template: "{{name}}"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "service.ports.{{service_port}}.port"
+provenance:
+  field_origin_transform: "score-to-k8s"
+  field_origin_overlay_transform: ""
+  field_origin_confidences:
+    env_var: 0.90
+    image: 0.94
+    port: 0.91
+  rendered_lineage_templates:
+    - kind: "Application"
+      name_template: "{{name}}"
+      namespace: "apps"
+      source_path_hint: "source_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "metadata.name"
+      optional: false
+    - kind: "Deployment"
+      name_template: "{{name}}"
+      namespace: "apps"
+      source_path_hint: "source_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "containers.{{container_name}}.image"
+      optional: false
+    - kind: "Service"
+      name_template: "{{name}}"
+      namespace: "apps"
+      source_path_hint: "source_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "service.ports.{{service_port_name}}.port"
+      optional: false
+inverse:
+  inverse_patch_templates:
+    env_var:
+      editable_by: "app-team"
+      confidence: 0.90
+      requires_review: false
+  inverse_pointer_templates:
+    env_var:
+      owner: "app-team"
+      confidence: 0.90
+    image:
+      owner: "app-team"
+      confidence: 0.94
+    port:
+      owner: "app-team"
+      confidence: 0.91
+  inverse_patch_reasons:
+    env_var: "Score variable maps to a single Kubernetes env var."
+  inverse_edit_hints:
+    env_var: "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}."
+    image: "Edit the Score container image in {{source_path}}."
+    port: "Edit {{service_port_name}} service port in {{source_path}}."
+hints:
+  defaults:
+    container_name: "main"
+    service_port_name: "web"
+    source_path: "score.yaml"
+    variable_name: "LOG_LEVEL"

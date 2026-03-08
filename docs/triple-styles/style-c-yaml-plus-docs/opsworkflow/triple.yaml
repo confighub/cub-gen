@@ -1,0 +1,106 @@
+kind: "opsworkflow"
+profile: "ops-workflow"
+resource_kind: "Workflow"
+resource_type: "argoproj.io/v1alpha1/Workflow"
+capabilities:
+  - "workflow-plan"
+  - "governed-execution-intent"
+  - "inverse-workflow-patch"
+contract:
+  default_input_role: "operations-input"
+  default_owner: "platform-engineer"
+  input_role_rules:
+    - role: "operations-base"
+      exact_basenames:
+        - "operations.yaml"
+        - "operations.yml"
+        - "workflow.yaml"
+        - "workflow.yml"
+      prefixes:
+        []
+      extensions:
+        []
+    - role: "operations-overlay"
+      exact_basenames:
+        []
+      prefixes:
+        - "operations-"
+        - "workflow-"
+      extensions:
+        - ".yaml"
+        - ".yml"
+  role_owners:
+    {}
+  role_schema_refs:
+    operations-base: "https://schema.confighub.dev/generators/ops-workflow-v1"
+    operations-overlay: "https://schema.confighub.dev/generators/ops-workflow-v1"
+  wet_targets:
+    - kind: "Workflow"
+      name_template: "{{name}}-workflow"
+      owner: "platform-runtime"
+      namespace: "ops"
+      source_dry_path_template: "actions.deploy.image_tag"
+    - kind: "Job"
+      name_template: "{{name}}-dry-run"
+      owner: "platform-runtime"
+      namespace: "ops"
+      source_dry_path_template: "triggers.schedule"
+provenance:
+  field_origin_transform: "ops-workflow-to-argo-workflow"
+  field_origin_overlay_transform: "ops-workflow-overlay-merge"
+  field_origin_confidences:
+    image_tag: 0.87
+    schedule_base: 0.84
+    schedule_overlay: 0.80
+  rendered_lineage_templates:
+    - kind: "Workflow"
+      name_template: "{{name}}-workflow"
+      namespace: "ops"
+      source_path_hint: "base_spec_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "actions.deploy.image_tag"
+      optional: false
+    - kind: "Job"
+      name_template: "{{name}}-dry-run"
+      namespace: "ops"
+      source_path_hint: "base_spec_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "triggers.schedule"
+      optional: false
+    - kind: "Workflow"
+      name_template: "{{name}}-workflow"
+      namespace: "ops"
+      source_path_hint: "overlay_spec_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "triggers.schedule"
+      optional: true
+inverse:
+  inverse_patch_templates:
+    image_tag:
+      editable_by: "platform-engineer"
+      confidence: 0.87
+      requires_review: true
+    schedule:
+      editable_by: "platform-engineer"
+      confidence: 0.84
+      requires_review: true
+  inverse_pointer_templates:
+    image_tag:
+      owner: "platform-engineer"
+      confidence: 0.87
+    schedule:
+      owner: "platform-engineer"
+      confidence: 0.84
+  inverse_patch_reasons:
+    image_tag: "Deployment action image tag is sourced from {{base_spec_path}}."
+    schedule: "Schedule changes affect operational execution timing."
+  inverse_edit_hints:
+    image_tag: "Edit actions.deploy.image_tag in {{base_spec_path}}."
+    schedule_base: "Edit triggers.schedule in {{base_spec_path}}."
+    schedule_overlay: "Edit triggers.schedule in {{overlay_spec_path}} for environment-specific cadence; use {{base_spec_path}} for defaults."
+hints:
+  defaults:
+    base_spec_path: "operations.yaml"

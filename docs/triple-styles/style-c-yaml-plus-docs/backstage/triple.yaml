@@ -1,0 +1,93 @@
+kind: "backstage"
+profile: "backstage-idp"
+resource_kind: "Component"
+resource_type: "backstage.io/v1alpha1/Component"
+capabilities:
+  - "catalog-metadata"
+  - "render-manifests"
+  - "inverse-catalog-patch"
+contract:
+  default_input_role: "backstage-input"
+  default_owner: "platform-engineer"
+  input_role_rules:
+    - role: "catalog-spec"
+      exact_basenames:
+        - "catalog-info.yaml"
+        - "catalog-info.yml"
+      prefixes:
+        []
+      extensions:
+        []
+    - role: "app-config"
+      exact_basenames:
+        - "app-config.yaml"
+        - "app-config.yml"
+      prefixes:
+        []
+      extensions:
+        []
+  role_owners:
+    app-config: "app-team"
+  role_schema_refs:
+    app-config: "https://json.schemastore.org/backstage-app-config"
+    catalog-spec: "https://json.schemastore.org/backstage-catalog-info"
+  wet_targets:
+    - kind: "Application"
+      name_template: "{{name}}"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "metadata.name"
+    - kind: "ConfigMap"
+      name_template: "{{name}}-catalog"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "spec.lifecycle"
+provenance:
+  field_origin_transform: "backstage-component-to-application"
+  field_origin_overlay_transform: ""
+  field_origin_confidences:
+    identity: 0.90
+    lifecycle: 0.82
+  rendered_lineage_templates:
+    - kind: "Application"
+      name_template: "{{name}}"
+      namespace: "apps"
+      source_path_hint: "catalog_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "metadata.name"
+      optional: false
+    - kind: "ConfigMap"
+      name_template: "{{name}}-catalog"
+      namespace: "apps"
+      source_path_hint: "catalog_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "spec.lifecycle"
+      optional: false
+inverse:
+  inverse_patch_templates:
+    identity:
+      editable_by: "platform-engineer"
+      confidence: 0.87
+      requires_review: false
+    lifecycle:
+      editable_by: "platform-engineer"
+      confidence: 0.82
+      requires_review: true
+  inverse_pointer_templates:
+    lifecycle:
+      owner: "platform-engineer"
+      confidence: 0.82
+    name:
+      owner: "platform-engineer"
+      confidence: 0.90
+  inverse_patch_reasons:
+    identity: "Backstage component identity is sourced from {{catalog_path}}."
+    lifecycle: "Lifecycle changes impact platform ownership and support policy."
+  inverse_edit_hints:
+    lifecycle: "Edit spec.lifecycle in {{catalog_path}} and coordinate rollout policy."
+    name: "Edit metadata.name in {{catalog_path}}."
+hints:
+  defaults:
+    catalog_path: "catalog-info.yaml"
