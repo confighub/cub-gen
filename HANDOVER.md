@@ -2,7 +2,7 @@
 
 **Date**: 2026-03-08
 **Repo**: `github.com/confighub/cub-gen`
-**Branch**: `main` (up to date, PRs #109 and #110 merged)
+**Branch**: `main` (up to date, PRs #109, #110, #112, and #113 merged)
 
 ---
 
@@ -38,6 +38,23 @@ Full implementation across all layers:
 
 **PR #110** — shipped and merged. CI green.
 
+### 3. Fixed swamp path semantics + expanded details payload + added Markdown introspection
+
+Delivered in two follow-up PRs:
+
+- **PR #112** (`fix(swamp)...` + details payload expansion):
+  - Corrected swamp model-binding dry path to `jobs[].steps[].task.modelIdOrName`.
+  - Added nested swamp workflow detection support (`workflow-*.yaml|yml` in child directories).
+  - Expanded `cub-gen generators --json --details` to include full policy/provenance templates (role rules/defaults, hint defaults, inverse reasons/hints, wet targets, lineage templates, transform labels).
+  - Updated parity goldens + docs (`README`, roadmap, release notes).
+- **PR #113** (`feat(generators): add markdown introspection output`):
+  - Added `cub-gen generators --markdown`.
+  - Added `cub-gen generators --markdown --details`.
+  - Added guardrails:
+    - `--markdown` cannot be combined with `--json`.
+    - `--details` requires `--json` or `--markdown`.
+  - Added parity tests + golden contracts for Markdown output.
+
 ---
 
 ## Current state of main
@@ -46,6 +63,9 @@ Full implementation across all layers:
 - All tests pass (`make ci` green)
 - All 4 AI work platform demo scenarios pass
 - Golden files generated for all generators
+- Platform-owner visibility now available via:
+  - `cub-gen generators --json --details`
+  - `cub-gen generators --markdown --details`
 
 ---
 
@@ -60,14 +80,14 @@ The generator "triple" (contract + provenance + inverse transform plan) is the c
 - Which changes need review
 - How to edit WET back to DRY
 
-**Today this is invisible.** The triples are embedded as Go struct literals in `internal/registry/registry.go`. Platform owners cannot see them without reading Go code or piping `--json` through `jq`.
+The triple source-of-truth is still Go struct literals in `internal/registry/registry.go`. Visibility is now much better (`--json --details` and `--markdown --details`), but authoring still requires Go edits.
 
 ### Two personas with different needs
 
 | Persona | Need | Current experience |
 |---|---|---|
-| **Platform owner** | See the mapping, check it, modify it, create new generators | Must read Go code or JSON blobs |
-| **Application owner** | "Magic, it just works" | Existing wizard + JSON pipeline is fine |
+| **Platform owner** | See the mapping, check it, modify it, create new generators | Can inspect rich Markdown/JSON details; still needs Go to author |
+| **Application owner** | "Magic, it just works" | Existing wizard + import/publish pipeline is fine |
 
 ### Three approaches were designed (see plan file)
 
@@ -91,9 +111,14 @@ The plan file at `.claude/plans/snappy-frolicking-blossom.md` contains concrete,
 - Docs auto-generated from YAML (Approach B)
 - ✅ Best of both, ⚠️ most implementation effort
 
-### User's decision
+### User's decision and where we are now
 
 The user approved the plan with all three approaches documented. They want to **evaluate all three with concrete examples** before choosing. The plan file contains full worked specimens of each approach.
+
+Status after PR #113:
+
+- We now have an operational slice of **Approach B** (readability/inspection).
+- We have not yet started **Approach A** (YAML-first authoring) or **Approach C** (YAML + generated docs).
 
 ---
 
@@ -170,8 +195,14 @@ go build -o ./cub-gen ./cmd/cub-gen
 # See all generators (table)
 ./cub-gen generators
 
-# See c3agent triple as JSON
-./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent | jq .
+# See all generator triples as JSON details
+./cub-gen generators --json --details | jq '.families[] | {kind, profile, policies}'
+
+# See all generator triples as Markdown details
+./cub-gen generators --markdown --details
+
+# See c3agent triple from import flow
+./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent | jq '{generator_kind: .discovered[0].generator_kind, contracts: .contracts[0], inverse_transform_plans: .inverse_transform_plans[0]}'
 
 # Run all demos
 ./examples/demo/ai-work-platform/run-all.sh
