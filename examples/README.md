@@ -22,8 +22,14 @@ These fixtures are intentionally small but realistic enough to demonstrate platf
 
 ## AI work platform scenarios
 
-5. `jesper-ai-cloud`
-6. `swamp-project`
+5. `c3agent`
+- AI agent fleet orchestration with native c3agent config surface.
+- Shows fleet/credential DRY config with inverse-edit mapping.
+
+6. `swamp-automation`
+- System Initiative Swamp AI-native workflow automation.
+- Shows workflow definition + vault config with model orchestration.
+
 7. `confighub-actions`
 8. `ops-workflow`
 

@@ -4,11 +4,11 @@ These demos simulate AI-work platform use cases while keeping the same local-fir
 
 Scenarios:
 
-1. Jesper's AI cloud (`backstage-idp`)  
-   `./examples/demo/ai-work-platform/scenario-1-jesper-ai-cloud.sh`
+1. C3 Agent (`c3agent`)
+   `./examples/demo/ai-work-platform/scenario-1-c3agent.sh`
 
-2. Swamp project (`helm-paas`)  
-   `./examples/demo/ai-work-platform/scenario-2-swamp-project.sh`
+2. Swamp Automation (`swamp`)
+   `./examples/demo/ai-work-platform/scenario-2-swamp.sh`
 
 3. ConfigHub Actions (`ops-workflow`)  
    `./examples/demo/ai-work-platform/scenario-3-confighub-actions.sh`

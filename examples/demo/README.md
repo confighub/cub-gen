@@ -15,8 +15,8 @@
 
 ## AI work platform track
 
-- `ai-work-platform/scenario-1-jesper-ai-cloud.sh`
-- `ai-work-platform/scenario-2-swamp-project.sh`
+- `ai-work-platform/scenario-1-c3agent.sh`
+- `ai-work-platform/scenario-2-swamp.sh`
 - `ai-work-platform/scenario-3-confighub-actions.sh`
 - `ai-work-platform/scenario-4-operations.sh`
 - `ai-work-platform/run-all.sh`
