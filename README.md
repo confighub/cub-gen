@@ -4,7 +4,7 @@
 
 ## What cub-gen does today
 
-- Detects generator-style app sources in Git repos (`helm`, `score.dev`, `springboot`, `backstage`, `ably-config`, `ops-workflow`).
+- Detects generator-style app sources in Git repos (`helm`, `score.dev`, `springboot`, `backstage`, `ably-config`, `ops-workflow`, `c3agent`, `swamp`).
 - Runs the same staged flow shape as `cub gitops`:
   - `gitops discover`
   - `gitops import`
@@ -71,8 +71,8 @@ Second demo track focused on AI-work platform scenarios:
 Or run scenarios individually:
 
 ```bash
-./examples/demo/ai-work-platform/scenario-1-jesper-ai-cloud.sh
-./examples/demo/ai-work-platform/scenario-2-swamp-project.sh
+./examples/demo/ai-work-platform/scenario-1-c3agent.sh
+./examples/demo/ai-work-platform/scenario-2-swamp.sh
 ./examples/demo/ai-work-platform/scenario-3-confighub-actions.sh
 ./examples/demo/ai-work-platform/scenario-4-operations.sh
 ```
@@ -172,6 +172,22 @@ go build ./cmd/cub-gen
 ./cub-gen gitops cleanup --space platform ./examples/ops-workflow
 ```
 
+### C3 Agent example
+
+```bash
+./cub-gen gitops discover --space platform ./examples/c3agent
+./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
+./cub-gen gitops cleanup --space platform ./examples/c3agent
+```
+
+### Swamp automation example
+
+```bash
+./cub-gen gitops discover --space platform ./examples/swamp-automation
+./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
+./cub-gen gitops cleanup --space platform ./examples/swamp-automation
+```
+
 ### Optional bridge artifact (local, no backend)
 
 Generate a ConfigHub-ready change bundle from import output:
@@ -207,6 +223,8 @@ Or run direct mode (import + bundle in one command):
 ./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp
 ./cub-gen publish --space platform ./examples/ably-config ./examples/ably-config
 ./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow
+./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent
+./cub-gen publish --space platform ./examples/swamp-automation ./examples/swamp-automation
 ```
 
 Bundle output includes:
@@ -225,6 +243,8 @@ Verify a bundle (file or stdin):
 ./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/ably-config ./examples/ably-config | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow | ./cub-gen verify --in -
+./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent | ./cub-gen verify --in -
+./cub-gen publish --space platform ./examples/swamp-automation ./examples/swamp-automation | ./cub-gen verify --in -
 ```
 
 Emit an attestation record from a verified bundle:
@@ -246,6 +266,12 @@ Emit an attestation record from a verified bundle:
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
 ./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow \
+  | ./cub-gen attest --in - --verifier ci-bot \
+  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
+./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent \
+  | ./cub-gen attest --in - --verifier ci-bot \
+  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
+./cub-gen publish --space platform ./examples/swamp-automation ./examples/swamp-automation \
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
 ```
@@ -336,6 +362,18 @@ A practical app-team/platform-team path in a Spring Boot repo:
 - `generator_profile: "ops-workflow"`
 - platform-engineer DRY ownership (`operations-base`, `operations-overlay`)
 - inverse-edit paths for workflow execution intent (`actions.deploy.image_tag`, `triggers.schedule`)
+
+### C3 Agent (v0.2 preview)
+
+- `generator_profile: "c3agent"`
+- app-team DRY ownership (`fleet-config-base`, `fleet-config-overlay`)
+- inverse-edit paths for fleet orchestration config (`fleet.agent_model`, `fleet.max_concurrent_tasks`, `credentials`)
+
+### Swamp automation (v0.2 preview)
+
+- `generator_profile: "swamp"`
+- app-team DRY ownership (`swamp-config-base`, `swamp-workflow`)
+- inverse-edit paths for workflow automation (`workflow_definition`, `vault_config`, `model_binding`)
 
 ## Quality model (inherited from cub-scout, adapted)
 

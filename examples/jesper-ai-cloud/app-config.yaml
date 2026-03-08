@@ -1,6 +1,0 @@
-app:
-  title: Jesper AI Cloud
-organization:
-  name: ConfigHub Platform
-backend:
-  baseUrl: https://ai-cloud.internal.example

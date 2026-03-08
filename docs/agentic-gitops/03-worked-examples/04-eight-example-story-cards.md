@@ -13,8 +13,8 @@ Use `Agentic GitOps` only when an active inner reconciliation loop (`WET -> LIVE
 | 2 | Score.dev PaaS | "Keep Score abstraction, gain provenance + field map." | DRY intent remains simple; WET is auditable. | `examples/demo/module-2-score-field-map.sh` |
 | 3 | Spring Boot PaaS | "App teams stay in framework config." | Framework config to governed WET with ownership routing. | `examples/demo/module-3-spring-ownership.sh` |
 | 4 | Ably config | "App-config platforms need same controls." | Non-K8s style config still fits DRY/WET + inverse mapping. | `examples/demo/module-5-ably-platform.sh` |
-| 5 | Jesper AI cloud | "AI platform requests need governed runtime path." | DRY work request to verifiable WET task flow. | `examples/demo/ai-work-platform/scenario-1-jesper-ai-cloud.sh` |
-| 6 | Swamp project | "Template-heavy AI project still needs provenance." | Generator + provenance + inverse write in mixed repos. | `examples/demo/ai-work-platform/scenario-2-swamp-project.sh` |
+| 5 | C3 Agent | "AI agent fleet config needs governed orchestration path." | Fleet DRY config to verifiable WET ConfigMap with credential governance. | `examples/demo/ai-work-platform/scenario-1-c3agent.sh` |
+| 6 | Swamp automation | "AI-native workflows need provenance and model binding governance." | Workflow definition + vault config with inverse-edit model orchestration. | `examples/demo/ai-work-platform/scenario-2-swamp.sh` |
 | 7 | ConfigHub Actions | "Execution must be tokened and attested." | Decision authority separated from execution runtime. | `examples/demo/ai-work-platform/scenario-3-confighub-actions.sh` |
 | 8 | Ops workflow | "Operational waves need one governed change identity." | Multi-target ALLOW/ESCALATE/BLOCK with evidence chain. | `examples/demo/ai-work-platform/scenario-4-operations.sh` |
 
@@ -27,7 +27,7 @@ flowchart LR
   end
 
   subgraph Track2["AI Work Platform"]
-    E5["Jesper"] --> E6["Swamp"] --> E7["Actions"] --> E8["Ops"]
+    E5["C3 Agent"] --> E6["Swamp"] --> E7["Actions"] --> E8["Ops"]
   end
 ```
 
