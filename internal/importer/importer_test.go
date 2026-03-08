@@ -25,6 +25,8 @@ func TestImportRepoExamples(t *testing.T) {
 		{name: "backstage-idp", repoDir: "backstage-idp", expectedKind: model.GeneratorBackstage, expectedProfile: "backstage-idp"},
 		{name: "ably-config", repoDir: "ably-config", expectedKind: model.GeneratorAbly, expectedProfile: "ably-config"},
 		{name: "ops-workflow", repoDir: "ops-workflow", expectedKind: model.GeneratorOpsFlow, expectedProfile: "ops-workflow"},
+		{name: "c3agent", repoDir: "c3agent", expectedKind: model.GeneratorC3Agent, expectedProfile: "c3agent"},
+		{name: "swamp-automation", repoDir: "swamp-automation", expectedKind: model.GeneratorSwamp, expectedProfile: "swamp"},
 	}
 
 	for _, tt := range tests {
@@ -153,6 +155,16 @@ func TestImportRepoGeneratorCapabilities(t *testing.T) {
 			name:                 "ops-workflow",
 			repoDir:              "ops-workflow",
 			expectedCapabilities: []string{"workflow-plan", "governed-execution-intent", "inverse-workflow-patch"},
+		},
+		{
+			name:                 "c3agent",
+			repoDir:              "c3agent",
+			expectedCapabilities: []string{"fleet-config", "agent-orchestration", "inverse-fleet-config-patch"},
+		},
+		{
+			name:                 "swamp-automation",
+			repoDir:              "swamp-automation",
+			expectedCapabilities: []string{"workflow-automation", "model-orchestration", "inverse-workflow-patch"},
 		},
 	}
 
@@ -399,6 +411,33 @@ func TestImportRepoOpsWorkflowDryWetContract(t *testing.T) {
 	}
 }
 
+func TestImportRepoSwampDryPathAndHint(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "swamp-automation")
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+	if len(result.InversePlans) != 1 {
+		t.Fatalf("expected single inverse plan, got %d", len(result.InversePlans))
+	}
+	prov := result.Provenance[0]
+	if !inversePointerHasDryPath(prov.InverseEditPointers, "jobs[].steps[].task.modelIdOrName") {
+		t.Fatalf("expected model binding inverse pointer dry path jobs[].steps[].task.modelIdOrName, got %+v", prov.InverseEditPointers)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "jobs[].steps[].task.modelIdOrName", "workflow-deploy.yaml") {
+		t.Fatalf("expected workflow-specific model binding hint to reference workflow-deploy.yaml, got %+v", prov.InverseEditPointers)
+	}
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "jobs[].steps[].task.modelIdOrName", "workflow-deploy.yaml") {
+		t.Fatalf("expected field origin model binding to resolve workflow-deploy.yaml source, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePatchHasDryPath(result.InversePlans[0].Patches, "jobs[].steps[].task.modelIdOrName") {
+		t.Fatalf("expected inverse patch dry path jobs[].steps[].task.modelIdOrName, got %+v", result.InversePlans[0].Patches)
+	}
+}
+
 func TestImportRepoDeterministicChangeIdentity(t *testing.T) {
 	repo := filepath.Join("..", "..", "examples", "helm-paas")
 
@@ -571,6 +610,15 @@ func inversePointerHasDryPath(v []model.InverseEditPointer, dryPath string) bool
 	return false
 }
 
+func inversePointerHintContains(v []model.InverseEditPointer, dryPath, needle string) bool {
+	for _, item := range v {
+		if item.DryPath == dryPath && strings.Contains(item.EditHint, needle) {
+			return true
+		}
+	}
+	return false
+}
+
 func containsString(v []string, needle string) bool {
 	for _, item := range v {
 		if item == needle {
@@ -610,6 +658,15 @@ func dryInputHasRolePath(v []model.DryInputRef, role, path string) bool {
 func dryInputHasRoleOwnerPath(v []model.DryInputRef, role, owner, path string) bool {
 	for _, item := range v {
 		if item.Role == role && item.Owner == owner && item.Path == path {
+			return true
+		}
+	}
+	return false
+}
+
+func inversePatchHasDryPath(v []model.InversePatch, dryPath string) bool {
+	for _, item := range v {
+		if item.DryPath == dryPath {
 			return true
 		}
 	}

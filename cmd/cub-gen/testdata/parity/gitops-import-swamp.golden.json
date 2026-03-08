@@ -109,7 +109,7 @@
         },
         {
           "confidence": 0.88,
-          "dry_path": "steps[].task.modelIdOrName",
+          "dry_path": "jobs[].steps[].task.modelIdOrName",
           "editable_by": "app-team",
           "op": "replace",
           "reason": "Model bindings define which automation models execute in workflows.",
@@ -159,7 +159,7 @@
         },
         {
           "confidence": 0.84,
-          "dry_path": "steps[].task.modelIdOrName",
+          "dry_path": "jobs[].steps[].task.modelIdOrName",
           "source_path": "workflow-deploy.yaml",
           "transform": "swamp-overlay-merge",
           "wet_path": "Workflow/spec/model_refs"
@@ -186,8 +186,8 @@
         },
         {
           "confidence": 0.88,
-          "dry_path": "steps[].task.modelIdOrName",
-          "edit_hint": "Edit steps[].task.modelIdOrName in .swamp.yaml.",
+          "dry_path": "jobs[].steps[].task.modelIdOrName",
+          "edit_hint": "Edit model method bindings in workflow-deploy.yaml for task-specific overrides.",
           "owner": "app-team",
           "wet_path": "Workflow/spec/model_refs"
         }

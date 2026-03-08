@@ -452,7 +452,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 			},
 			{
 				Operation:      "replace",
-				DryPath:        "steps[].task.modelIdOrName",
+				DryPath:        "jobs[].steps[].task.modelIdOrName",
 				WetPath:        "Workflow/spec/model_refs",
 				EditableBy:     modelBindingPolicy.EditableBy,
 				Confidence:     modelBindingPolicy.Confidence,
@@ -674,7 +674,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 		}
 		if hints.WorkflowPath != "" {
 			origins = append(origins, model.FieldOrigin{
-				DryPath:    "steps[].task.modelIdOrName",
+				DryPath:    "jobs[].steps[].task.modelIdOrName",
 				WetPath:    "Workflow/spec/model_refs",
 				SourcePath: hints.WorkflowPath,
 				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
@@ -932,6 +932,12 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			"base_config_path": hints.BaseConfigPath,
 			"workflow_path":    hints.WorkflowPath,
 		}
+		modelBindingHintKey := "model_binding_base"
+		modelBindingHintFallback := "Edit model references in {{base_config_path}}."
+		if hints.WorkflowPath != "" {
+			modelBindingHintKey = "model_binding_workflow"
+			modelBindingHintFallback = "Edit model method bindings in {{workflow_path}} for task-specific overrides."
+		}
 		return []model.InverseEditPointer{
 			{
 				WetPath:    "Workflow/spec/jobs",
@@ -949,9 +955,9 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			},
 			{
 				WetPath:    "Workflow/spec/model_refs",
-				DryPath:    "steps[].task.modelIdOrName",
+				DryPath:    "jobs[].steps[].task.modelIdOrName",
 				Owner:      modelBindingPolicy.Owner,
-				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "model_binding", "Edit steps[].task.modelIdOrName in {{base_config_path}}."), vars),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, modelBindingHintKey, modelBindingHintFallback), vars),
 				Confidence: modelBindingPolicy.Confidence,
 			},
 		}

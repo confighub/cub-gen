@@ -620,17 +620,30 @@ func detectSwamp(repo string) ([]model.GeneratorDetection, error) {
 		if relErr == nil {
 			inputs = append(inputs, filepath.ToSlash(relFile))
 		}
-		// Collect workflow files from sibling or child directories.
-		patterns := []string{"workflow-*.yaml", "workflow-*.yml"}
-		for _, pattern := range patterns {
-			matches, _ := filepath.Glob(filepath.Join(root, pattern))
-			for _, match := range matches {
-				rel, rErr := filepath.Rel(repo, match)
-				if rErr != nil {
-					continue
-				}
-				inputs = append(inputs, filepath.ToSlash(rel))
+		// Collect workflow files from sibling and child directories.
+		err = filepath.WalkDir(root, func(candidate string, entry fs.DirEntry, candidateErr error) error {
+			if candidateErr != nil {
+				return candidateErr
 			}
+			if entry.IsDir() {
+				if candidate != root && shouldSkipDir(entry.Name()) {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			base := strings.ToLower(entry.Name())
+			if !strings.HasPrefix(base, "workflow-") || !(strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml")) {
+				return nil
+			}
+			rel, rErr := filepath.Rel(repo, candidate)
+			if rErr != nil {
+				return nil
+			}
+			inputs = append(inputs, filepath.ToSlash(rel))
+			return nil
+		})
+		if err != nil {
+			return err
 		}
 		inputs = unique(inputs)
 		sort.Strings(inputs)

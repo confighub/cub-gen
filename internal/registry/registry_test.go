@@ -251,6 +251,9 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := InverseEditHint(model.GeneratorSpringBoot, "server_port_overlay", "fallback"); got != "Edit server.port in {{profile_config_path}} for environment overrides; use {{base_config_path}} for the default." {
 		t.Fatalf("expected spring server_port_overlay inverse edit hint template, got %q", got)
 	}
+	if got := InverseEditHint(model.GeneratorSwamp, "model_binding_workflow", "fallback"); got != "Edit model method bindings in {{workflow_path}} for task-specific overrides." {
+		t.Fatalf("expected swamp model_binding_workflow inverse edit hint template, got %q", got)
+	}
 
 	// Ensure returned specs are copies.
 	spec, ok := Spec(model.GeneratorScore)
