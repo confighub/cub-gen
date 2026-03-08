@@ -14,6 +14,7 @@ import (
 	"github.com/confighub/cub-gen/internal/detect"
 	gitopsflow "github.com/confighub/cub-gen/internal/gitops"
 	"github.com/confighub/cub-gen/internal/importer"
+	"github.com/confighub/cub-gen/internal/model"
 	"github.com/confighub/cub-gen/internal/publish"
 	"github.com/confighub/cub-gen/internal/registry"
 )
@@ -1056,12 +1057,7 @@ func runGitOpsImport(args []string) error {
 		return nil
 	}
 
-	fmt.Printf("Discovered %d GitOps resources, creating renderer units...\n", len(result.Discovered))
-	fmt.Printf("Created renderer units: %d\n", len(result.DryUnits))
-	fmt.Println("Rendering discovered resources...")
-	fmt.Printf("Created wet units: %d\n", len(result.WetUnits))
-	fmt.Printf("Created links: %d\n", len(result.Links))
-	fmt.Println("GitOps import complete")
+	printImportTable(result)
 	return nil
 }
 
@@ -1109,9 +1105,38 @@ func runGitOpsCleanup(args []string) error {
 }
 
 func printDiscoverTable(result gitopsflow.DiscoverResult) {
-	rows := make([][2]string, 0, len(result.Resources))
+	kindCapabilities := map[string]string{}
+	for _, kind := range registry.Kinds() {
+		spec, ok := registry.Spec(kind)
+		if !ok {
+			continue
+		}
+		kindCapabilities[string(kind)] = strings.Join(spec.Capabilities, ",")
+	}
+
+	confidenceByGeneratorID := map[string]float64{}
+	for _, d := range result.Detections {
+		confidenceByGeneratorID[d.ID] = d.Confidence
+	}
+
+	rows := make([][6]string, 0, len(result.Resources))
 	for _, r := range result.Resources {
-		rows = append(rows, [2]string{r.ResourceType, r.ResourceName})
+		confidence := "-"
+		if v, ok := confidenceByGeneratorID[r.GeneratorID]; ok {
+			confidence = fmt.Sprintf("%.2f", v)
+		}
+		capabilities := kindCapabilities[r.GeneratorKind]
+		if strings.TrimSpace(capabilities) == "" {
+			capabilities = "-"
+		}
+		rows = append(rows, [6]string{
+			r.ResourceType,
+			r.ResourceName,
+			r.GeneratorKind,
+			r.GeneratorProfile,
+			capabilities,
+			confidence,
+		})
 	}
 	sort.Slice(rows, func(i, j int) bool {
 		if rows[i][0] != rows[j][0] {
@@ -1120,9 +1145,132 @@ func printDiscoverTable(result gitopsflow.DiscoverResult) {
 		return rows[i][1] < rows[j][1]
 	})
 
-	fmt.Println("Resource Type\tResource Name")
+	fmt.Println("Resource Type\tResource Name\tGenerator Kind\tProfile\tCapabilities\tConfidence")
 	for _, row := range rows {
-		fmt.Printf("%s\t%s\n", row[0], row[1])
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\n", row[0], row[1], row[2], row[3], row[4], row[5])
+	}
+}
+
+func printImportTable(result gitopsflow.ImportFlowResult) {
+	fmt.Printf("Discovered %d GitOps resources, creating renderer units...\n", len(result.Discovered))
+	printImportDiscoveredTable(result)
+	fmt.Printf("Created renderer units: %d\n", len(result.DryUnits))
+	fmt.Println("Rendering discovered resources...")
+	fmt.Printf("Created wet units: %d\n", len(result.WetUnits))
+	fmt.Printf("Created links: %d\n", len(result.Links))
+	fmt.Printf("Generated contracts: %d\n", len(result.Contracts))
+	fmt.Printf("Generated provenance records: %d\n", len(result.Provenance))
+	fmt.Printf("Generated inverse transform plans: %d\n", len(result.InversePlans))
+	printImportTripleSummary(result)
+	fmt.Println("GitOps import complete")
+}
+
+func printImportDiscoveredTable(result gitopsflow.ImportFlowResult) {
+	kindCapabilities := map[string]string{}
+	for _, kind := range registry.Kinds() {
+		spec, ok := registry.Spec(kind)
+		if !ok {
+			continue
+		}
+		kindCapabilities[string(kind)] = strings.Join(spec.Capabilities, ",")
+	}
+
+	rows := make([][5]string, 0, len(result.Discovered))
+	for _, r := range result.Discovered {
+		capabilities := kindCapabilities[r.GeneratorKind]
+		if strings.TrimSpace(capabilities) == "" {
+			capabilities = "-"
+		}
+		rows = append(rows, [5]string{
+			r.ResourceType,
+			r.ResourceName,
+			r.GeneratorKind,
+			r.GeneratorProfile,
+			capabilities,
+		})
+	}
+	sort.Slice(rows, func(i, j int) bool {
+		if rows[i][0] != rows[j][0] {
+			return rows[i][0] < rows[j][0]
+		}
+		return rows[i][1] < rows[j][1]
+	})
+
+	fmt.Println("Resource Type\tResource Name\tGenerator Kind\tProfile\tCapabilities")
+	for _, row := range rows {
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", row[0], row[1], row[2], row[3], row[4])
+	}
+}
+
+func printImportTripleSummary(result gitopsflow.ImportFlowResult) {
+	if len(result.Contracts) == 0 {
+		return
+	}
+
+	dryInputsByGeneratorID := map[string]int{}
+	for _, dry := range result.DryInputs {
+		dryInputsByGeneratorID[dry.GeneratorID]++
+	}
+
+	wetTargetsByGeneratorID := map[string]int{}
+	for _, wet := range result.WetManifestTargets {
+		wetTargetsByGeneratorID[wet.GeneratorID]++
+	}
+
+	inversePatchesBySourceRef := map[string]int{}
+	reviewRequiredBySourceRef := map[string]int{}
+	editableByTotals := map[string]int{}
+	for _, plan := range result.InversePlans {
+		for _, patch := range plan.Patches {
+			inversePatchesBySourceRef[plan.SourceRef]++
+			if patch.RequiresReview {
+				reviewRequiredBySourceRef[plan.SourceRef]++
+			}
+			if owner := strings.TrimSpace(patch.EditableBy); owner != "" {
+				editableByTotals[owner]++
+			}
+		}
+	}
+
+	totalReviewRequired := 0
+	for _, v := range reviewRequiredBySourceRef {
+		totalReviewRequired += v
+	}
+
+	contracts := append([]model.GeneratorContract(nil), result.Contracts...)
+	sort.Slice(contracts, func(i, j int) bool {
+		if contracts[i].Kind != contracts[j].Kind {
+			return contracts[i].Kind < contracts[j].Kind
+		}
+		return contracts[i].GeneratorID < contracts[j].GeneratorID
+	})
+
+	fmt.Println("Generator Kind\tProfile\tCapabilities\tDry Inputs\tWet Targets\tInverse Patches\tReview Required")
+	for _, c := range contracts {
+		fmt.Printf("%s\t%s\t%s\t%d\t%d\t%d\t%d\n",
+			c.Kind,
+			c.Profile,
+			strings.Join(c.Capabilities, ","),
+			dryInputsByGeneratorID[c.GeneratorID],
+			wetTargetsByGeneratorID[c.GeneratorID],
+			inversePatchesBySourceRef[c.SourcePath],
+			reviewRequiredBySourceRef[c.SourcePath],
+		)
+	}
+
+	if len(editableByTotals) == 0 {
+		return
+	}
+	owners := make([]string, 0, len(editableByTotals))
+	for owner := range editableByTotals {
+		owners = append(owners, owner)
+	}
+	sort.Strings(owners)
+
+	fmt.Printf("Review required patches: %d\n", totalReviewRequired)
+	fmt.Println("Patch owner\tCount")
+	for _, owner := range owners {
+		fmt.Printf("%s\t%d\n", owner, editableByTotals[owner])
 	}
 }
 

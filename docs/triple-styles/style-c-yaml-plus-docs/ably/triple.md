@@ -6,7 +6,19 @@
 
 ```mermaid
 flowchart LR
-  dry["DRY Inputs"] --> gen["Generator"] --> wet["WET Targets"]
+  subgraph DRY["DRY Inputs"]
+    d1["provider-config-base: ably.yaml, ably.yml, ably.json<br/>owner: app-team"]
+    d2["provider-config-overlay: ably-*.yaml | ably-*.yml | ably-*.json<br/>owner: app-team"]
+  end
+  gen["ably (ably-config)<br/>capabilities: app-config-only, provider-config, inverse-provider-config-patch"]
+  subgraph WET["WET Targets"]
+    w1["ConfigMap {{name}}-ably<br/>owner: platform-runtime<br/>namespace: apps<br/>source: app.environment"]
+    w2["Secret {{name}}-ably-credentials<br/>owner: platform-runtime<br/>namespace: apps<br/>source: credentials.api_key_ref"]
+  end
+  d1 --> gen
+  d2 --> gen
+  gen --> w1
+  gen --> w2
 ```
 
 ## Contract

@@ -1,2 +1,2 @@
-Resource Type	Resource Name
-helm.toolkit.fluxcd.io/v2/HelmRelease	helm-paas
+Resource Type	Resource Name	Generator Kind	Profile	Capabilities	Confidence
+helm.toolkit.fluxcd.io/v2/HelmRelease	helm-paas	helm	helm-paas	render-manifests,values-overrides,inverse-values-patch	0.98

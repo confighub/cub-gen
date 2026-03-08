@@ -6,7 +6,21 @@
 
 ```mermaid
 flowchart LR
-  dry["DRY Inputs"] --> gen["Generator"] --> wet["WET Targets"]
+  subgraph DRY["DRY Inputs"]
+    d1["chart: chart.yaml<br/>owner: platform-engineer"]
+    d2["values: values*.yaml | values*.yml<br/>owner: app-team"]
+  end
+  gen["helm (helm-paas)<br/>capabilities: render-manifests, values-overrides, inverse-values-patch"]
+  subgraph WET["WET Targets"]
+    w1["HelmRelease {{name}}<br/>owner: platform-runtime<br/>namespace: apps"]
+    w2["Deployment {{name}}<br/>owner: platform-runtime<br/>namespace: apps<br/>source: values.image.tag"]
+    w3["Service {{name}}<br/>owner: platform-runtime<br/>namespace: apps<br/>source: values.service.port"]
+  end
+  d1 --> gen
+  d2 --> gen
+  gen --> w1
+  gen --> w2
+  gen --> w3
 ```
 
 ## Contract

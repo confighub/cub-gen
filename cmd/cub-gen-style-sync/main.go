@@ -184,77 +184,131 @@ func renderYAML(entry styleModel) string {
 	}
 
 	w.line(0, "contract:")
-	w.line(1, "default_input_role: %s", yamlQuote(entry.Contract.DefaultInputRole))
-	w.line(1, "default_owner: %s", yamlQuote(entry.Contract.DefaultOwner))
-
-	w.line(1, "input_role_rules:")
-	for _, rule := range entry.Contract.InputRoleRules {
-		w.line(2, "- role: %s", yamlQuote(rule.Role))
-		w.stringSlice(3, "exact_basenames", rule.ExactBasenames)
-		w.stringSlice(3, "prefixes", rule.Prefixes)
-		w.stringSlice(3, "extensions", rule.Extensions)
+	if strings.TrimSpace(entry.Contract.DefaultInputRole) != "" {
+		w.line(1, "default_input_role: %s", yamlQuote(entry.Contract.DefaultInputRole))
+	}
+	if strings.TrimSpace(entry.Contract.DefaultOwner) != "" {
+		w.line(1, "default_owner: %s", yamlQuote(entry.Contract.DefaultOwner))
 	}
 
-	w.line(1, "role_owners:")
-	writeMapStringString(&w, 2, entry.Contract.RoleOwners)
+	if len(entry.Contract.InputRoleRules) > 0 {
+		w.line(1, "input_role_rules:")
+		for _, rule := range entry.Contract.InputRoleRules {
+			w.line(2, "- role: %s", yamlQuote(rule.Role))
+			if len(rule.ExactBasenames) > 0 {
+				w.stringSlice(3, "exact_basenames", rule.ExactBasenames)
+			}
+			if len(rule.Prefixes) > 0 {
+				w.stringSlice(3, "prefixes", rule.Prefixes)
+			}
+			if len(rule.Extensions) > 0 {
+				w.stringSlice(3, "extensions", rule.Extensions)
+			}
+		}
+	}
 
-	w.line(1, "role_schema_refs:")
-	writeMapStringString(&w, 2, entry.Contract.RoleSchemaRefs)
+	if len(entry.Contract.RoleOwners) > 0 {
+		w.line(1, "role_owners:")
+		writeMapStringString(&w, 2, entry.Contract.RoleOwners)
+	}
 
-	w.line(1, "wet_targets:")
-	for _, target := range entry.Contract.WetTargets {
-		w.line(2, "- kind: %s", yamlQuote(target.Kind))
-		w.line(3, "name_template: %s", yamlQuote(target.NameTemplate))
-		w.line(3, "owner: %s", yamlQuote(target.Owner))
-		w.line(3, "namespace: %s", yamlQuote(target.Namespace))
-		w.line(3, "source_dry_path_template: %s", yamlQuote(target.SourceDryPathTemplate))
+	if len(entry.Contract.RoleSchemaRefs) > 0 {
+		w.line(1, "role_schema_refs:")
+		writeMapStringString(&w, 2, entry.Contract.RoleSchemaRefs)
+	}
+
+	if len(entry.Contract.WetTargets) > 0 {
+		w.line(1, "wet_targets:")
+		for _, target := range entry.Contract.WetTargets {
+			w.line(2, "- kind: %s", yamlQuote(target.Kind))
+			w.line(3, "name_template: %s", yamlQuote(target.NameTemplate))
+			w.line(3, "owner: %s", yamlQuote(target.Owner))
+			if strings.TrimSpace(target.Namespace) != "" {
+				w.line(3, "namespace: %s", yamlQuote(target.Namespace))
+			}
+			if strings.TrimSpace(target.SourceDryPathTemplate) != "" {
+				w.line(3, "source_dry_path_template: %s", yamlQuote(target.SourceDryPathTemplate))
+			}
+		}
 	}
 
 	w.line(0, "provenance:")
-	w.line(1, "field_origin_transform: %s", yamlQuote(entry.Provenance.FieldOriginTransform))
-	w.line(1, "field_origin_overlay_transform: %s", yamlQuote(entry.Provenance.FieldOriginOverlayTransform))
-	w.line(1, "field_origin_confidences:")
-	writeMapStringFloat(&w, 2, entry.Provenance.FieldOriginConfidences)
+	if strings.TrimSpace(entry.Provenance.FieldOriginTransform) != "" {
+		w.line(1, "field_origin_transform: %s", yamlQuote(entry.Provenance.FieldOriginTransform))
+	}
+	if strings.TrimSpace(entry.Provenance.FieldOriginOverlayTransform) != "" {
+		w.line(1, "field_origin_overlay_transform: %s", yamlQuote(entry.Provenance.FieldOriginOverlayTransform))
+	}
+	if len(entry.Provenance.FieldOriginConfidences) > 0 {
+		w.line(1, "field_origin_confidences:")
+		writeMapStringFloat(&w, 2, entry.Provenance.FieldOriginConfidences)
+	}
 
-	w.line(1, "rendered_lineage_templates:")
-	for _, tpl := range entry.Provenance.RenderedLineageTemplates {
-		w.line(2, "- kind: %s", yamlQuote(tpl.Kind))
-		w.line(3, "name_template: %s", yamlQuote(tpl.NameTemplate))
-		w.line(3, "namespace: %s", yamlQuote(tpl.Namespace))
-		w.line(3, "source_path_hint: %s", yamlQuote(tpl.SourcePathHint))
-		w.line(3, "source_path_hint_fallback: %s", yamlQuote(tpl.SourcePathHintFallback))
-		w.line(3, "source_path_hint_multi: %t", tpl.SourcePathHintMulti)
-		w.line(3, "source_dry_path_template: %s", yamlQuote(tpl.SourceDryPathTemplate))
-		w.line(3, "optional: %t", tpl.Optional)
+	if len(entry.Provenance.RenderedLineageTemplates) > 0 {
+		w.line(1, "rendered_lineage_templates:")
+		for _, tpl := range entry.Provenance.RenderedLineageTemplates {
+			w.line(2, "- kind: %s", yamlQuote(tpl.Kind))
+			w.line(3, "name_template: %s", yamlQuote(tpl.NameTemplate))
+			if strings.TrimSpace(tpl.Namespace) != "" {
+				w.line(3, "namespace: %s", yamlQuote(tpl.Namespace))
+			}
+			if strings.TrimSpace(tpl.SourcePathHint) != "" {
+				w.line(3, "source_path_hint: %s", yamlQuote(tpl.SourcePathHint))
+			}
+			if strings.TrimSpace(tpl.SourcePathHintFallback) != "" {
+				w.line(3, "source_path_hint_fallback: %s", yamlQuote(tpl.SourcePathHintFallback))
+			}
+			if tpl.SourcePathHintMulti {
+				w.line(3, "source_path_hint_multi: true")
+			}
+			if strings.TrimSpace(tpl.SourceDryPathTemplate) != "" {
+				w.line(3, "source_dry_path_template: %s", yamlQuote(tpl.SourceDryPathTemplate))
+			}
+			if tpl.Optional {
+				w.line(3, "optional: true")
+			}
+		}
 	}
 
 	w.line(0, "inverse:")
-	w.line(1, "inverse_patch_templates:")
-	for _, key := range sortedKeysPatch(entry.Inverse.InversePatchTemplates) {
-		tpl := entry.Inverse.InversePatchTemplates[key]
-		w.line(2, "%s:", key)
-		w.line(3, "editable_by: %s", yamlQuote(tpl.EditableBy))
-		w.line(3, "confidence: %.2f", tpl.Confidence)
-		w.line(3, "requires_review: %t", tpl.RequiresReview)
+	if len(entry.Inverse.InversePatchTemplates) > 0 {
+		w.line(1, "inverse_patch_templates:")
+		for _, key := range sortedKeysPatch(entry.Inverse.InversePatchTemplates) {
+			tpl := entry.Inverse.InversePatchTemplates[key]
+			w.line(2, "%s:", key)
+			w.line(3, "editable_by: %s", yamlQuote(tpl.EditableBy))
+			w.line(3, "confidence: %.2f", tpl.Confidence)
+			if tpl.RequiresReview {
+				w.line(3, "requires_review: true")
+			}
+		}
 	}
 
-	w.line(1, "inverse_pointer_templates:")
-	for _, key := range sortedKeysPointer(entry.Inverse.InversePointerTemplates) {
-		tpl := entry.Inverse.InversePointerTemplates[key]
-		w.line(2, "%s:", key)
-		w.line(3, "owner: %s", yamlQuote(tpl.Owner))
-		w.line(3, "confidence: %.2f", tpl.Confidence)
+	if len(entry.Inverse.InversePointerTemplates) > 0 {
+		w.line(1, "inverse_pointer_templates:")
+		for _, key := range sortedKeysPointer(entry.Inverse.InversePointerTemplates) {
+			tpl := entry.Inverse.InversePointerTemplates[key]
+			w.line(2, "%s:", key)
+			w.line(3, "owner: %s", yamlQuote(tpl.Owner))
+			w.line(3, "confidence: %.2f", tpl.Confidence)
+		}
 	}
 
-	w.line(1, "inverse_patch_reasons:")
-	writeMapStringString(&w, 2, entry.Inverse.InversePatchReasons)
+	if len(entry.Inverse.InversePatchReasons) > 0 {
+		w.line(1, "inverse_patch_reasons:")
+		writeMapStringString(&w, 2, entry.Inverse.InversePatchReasons)
+	}
 
-	w.line(1, "inverse_edit_hints:")
-	writeMapStringString(&w, 2, entry.Inverse.InverseEditHints)
+	if len(entry.Inverse.InverseEditHints) > 0 {
+		w.line(1, "inverse_edit_hints:")
+		writeMapStringString(&w, 2, entry.Inverse.InverseEditHints)
+	}
 
-	w.line(0, "hints:")
-	w.line(1, "defaults:")
-	writeMapStringString(&w, 2, entry.Hints)
+	if len(entry.Hints) > 0 {
+		w.line(0, "hints:")
+		w.line(1, "defaults:")
+		writeMapStringString(&w, 2, entry.Hints)
+	}
 
 	return b.String()
 }
@@ -266,10 +320,7 @@ func renderMarkdown(entry styleModel) string {
 	fmt.Fprintf(&b, "- Resource: `%s` (`%s`)\n", entry.ResourceKind, entry.ResourceType)
 	fmt.Fprintf(&b, "- Capabilities: %s\n\n", strings.Join(entry.Capabilities, ", "))
 
-	b.WriteString("```mermaid\n")
-	b.WriteString("flowchart LR\n")
-	b.WriteString("  dry[\"DRY Inputs\"] --> gen[\"Generator\"] --> wet[\"WET Targets\"]\n")
-	b.WriteString("```\n\n")
+	b.WriteString(renderMermaid(entry))
 
 	b.WriteString("## Contract\n\n")
 	fmt.Fprintf(&b, "- Default input role: `%s`\n", entry.Contract.DefaultInputRole)
@@ -379,6 +430,102 @@ func renderMarkdown(entry styleModel) string {
 	return b.String()
 }
 
+func renderMermaid(entry styleModel) string {
+	var b strings.Builder
+	b.WriteString("```mermaid\n")
+	b.WriteString("flowchart LR\n")
+	b.WriteString("  subgraph DRY[\"DRY Inputs\"]\n")
+	if len(entry.Contract.InputRoleRules) == 0 {
+		b.WriteString("    d0[\"No explicit DRY input rules\"]\n")
+	} else {
+		for i, rule := range entry.Contract.InputRoleRules {
+			roleOwner := ownerForRole(entry, rule.Role)
+			label := fmt.Sprintf("%s: %s", rule.Role, inputRulePattern(rule))
+			if roleOwner != "" {
+				label += fmt.Sprintf("<br/>owner: %s", roleOwner)
+			}
+			fmt.Fprintf(&b, "    d%d[\"%s\"]\n", i+1, mermaidLabel(label))
+		}
+	}
+	b.WriteString("  end\n")
+
+	genLabel := fmt.Sprintf("%s (%s)<br/>capabilities: %s", entry.Kind, entry.Profile, strings.Join(entry.Capabilities, ", "))
+	fmt.Fprintf(&b, "  gen[\"%s\"]\n", mermaidLabel(genLabel))
+
+	b.WriteString("  subgraph WET[\"WET Targets\"]\n")
+	if len(entry.Contract.WetTargets) == 0 {
+		b.WriteString("    w0[\"No explicit WET targets\"]\n")
+	} else {
+		for i, target := range entry.Contract.WetTargets {
+			label := fmt.Sprintf("%s %s<br/>owner: %s", target.Kind, target.NameTemplate, target.Owner)
+			if target.Namespace != "" {
+				label += fmt.Sprintf("<br/>namespace: %s", target.Namespace)
+			}
+			if target.SourceDryPathTemplate != "" {
+				label += fmt.Sprintf("<br/>source: %s", target.SourceDryPathTemplate)
+			}
+			fmt.Fprintf(&b, "    w%d[\"%s\"]\n", i+1, mermaidLabel(label))
+		}
+	}
+	b.WriteString("  end\n")
+
+	if len(entry.Contract.InputRoleRules) == 0 {
+		b.WriteString("  d0 --> gen\n")
+	} else {
+		for i := range entry.Contract.InputRoleRules {
+			fmt.Fprintf(&b, "  d%d --> gen\n", i+1)
+		}
+	}
+	if len(entry.Contract.WetTargets) == 0 {
+		b.WriteString("  gen --> w0\n")
+	} else {
+		for i := range entry.Contract.WetTargets {
+			fmt.Fprintf(&b, "  gen --> w%d\n", i+1)
+		}
+	}
+	b.WriteString("```\n\n")
+	return b.String()
+}
+
+func ownerForRole(entry styleModel, role string) string {
+	if owner, ok := entry.Contract.RoleOwners[role]; ok && strings.TrimSpace(owner) != "" {
+		return owner
+	}
+	return entry.Contract.DefaultOwner
+}
+
+func inputRulePattern(rule registry.InputRoleRule) string {
+	parts := make([]string, 0, len(rule.ExactBasenames)+len(rule.Prefixes))
+	if len(rule.ExactBasenames) > 0 {
+		parts = append(parts, strings.Join(rule.ExactBasenames, ", "))
+	}
+	if len(rule.Prefixes) > 0 && len(rule.Extensions) > 0 {
+		for _, prefix := range rule.Prefixes {
+			for _, ext := range rule.Extensions {
+				parts = append(parts, prefix+"*"+ext)
+			}
+		}
+	} else if len(rule.Prefixes) > 0 {
+		for _, prefix := range rule.Prefixes {
+			parts = append(parts, prefix+"*")
+		}
+	} else if len(rule.Extensions) > 0 {
+		for _, ext := range rule.Extensions {
+			parts = append(parts, "*"+ext)
+		}
+	}
+	if len(parts) == 0 {
+		return "pattern unspecified"
+	}
+	return strings.Join(parts, " | ")
+}
+
+func mermaidLabel(value string) string {
+	value = strings.ReplaceAll(value, `\`, `\\`)
+	value = strings.ReplaceAll(value, `"`, `\"`)
+	return value
+}
+
 type yamlWriter struct {
 	b *strings.Builder
 }
@@ -390,11 +537,10 @@ func (w yamlWriter) line(indent int, format string, args ...any) {
 }
 
 func (w yamlWriter) stringSlice(indent int, key string, values []string) {
-	w.line(indent, "%s:", key)
 	if len(values) == 0 {
-		w.line(indent+1, "[]")
 		return
 	}
+	w.line(indent, "%s:", key)
 	for _, value := range values {
 		w.line(indent+1, "- %s", yamlQuote(value))
 	}
@@ -402,10 +548,6 @@ func (w yamlWriter) stringSlice(indent int, key string, values []string) {
 
 func writeMapStringString(w *yamlWriter, indent int, values map[string]string) {
 	keys := sortedKeysString(values)
-	if len(keys) == 0 {
-		w.line(indent, "{}")
-		return
-	}
 	for _, key := range keys {
 		w.line(indent, "%s: %s", key, yamlQuote(values[key]))
 	}
@@ -413,10 +555,6 @@ func writeMapStringString(w *yamlWriter, indent int, values map[string]string) {
 
 func writeMapStringFloat(w *yamlWriter, indent int, values map[string]float64) {
 	keys := sortedKeysFloat(values)
-	if len(keys) == 0 {
-		w.line(indent, "{}")
-		return
-	}
 	for _, key := range keys {
 		w.line(indent, "%s: %.2f", key, values[key])
 	}

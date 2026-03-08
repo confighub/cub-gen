@@ -16,21 +16,13 @@ contract:
         - "operations.yml"
         - "workflow.yaml"
         - "workflow.yml"
-      prefixes:
-        []
-      extensions:
-        []
     - role: "operations-overlay"
-      exact_basenames:
-        []
       prefixes:
         - "operations-"
         - "workflow-"
       extensions:
         - ".yaml"
         - ".yml"
-  role_owners:
-    {}
   role_schema_refs:
     operations-base: "https://schema.confighub.dev/generators/ops-workflow-v1"
     operations-overlay: "https://schema.confighub.dev/generators/ops-workflow-v1"
@@ -57,24 +49,16 @@ provenance:
       name_template: "{{name}}-workflow"
       namespace: "ops"
       source_path_hint: "base_spec_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "actions.deploy.image_tag"
-      optional: false
     - kind: "Job"
       name_template: "{{name}}-dry-run"
       namespace: "ops"
       source_path_hint: "base_spec_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "triggers.schedule"
-      optional: false
     - kind: "Workflow"
       name_template: "{{name}}-workflow"
       namespace: "ops"
       source_path_hint: "overlay_spec_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "triggers.schedule"
       optional: true
 inverse:

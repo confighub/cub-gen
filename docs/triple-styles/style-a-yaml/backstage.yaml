@@ -14,18 +14,10 @@ contract:
       exact_basenames:
         - "catalog-info.yaml"
         - "catalog-info.yml"
-      prefixes:
-        []
-      extensions:
-        []
     - role: "app-config"
       exact_basenames:
         - "app-config.yaml"
         - "app-config.yml"
-      prefixes:
-        []
-      extensions:
-        []
   role_owners:
     app-config: "app-team"
   role_schema_refs:
@@ -44,7 +36,6 @@ contract:
       source_dry_path_template: "spec.lifecycle"
 provenance:
   field_origin_transform: "backstage-component-to-application"
-  field_origin_overlay_transform: ""
   field_origin_confidences:
     identity: 0.90
     lifecycle: 0.82
@@ -53,24 +44,17 @@ provenance:
       name_template: "{{name}}"
       namespace: "apps"
       source_path_hint: "catalog_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "metadata.name"
-      optional: false
     - kind: "ConfigMap"
       name_template: "{{name}}-catalog"
       namespace: "apps"
       source_path_hint: "catalog_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "spec.lifecycle"
-      optional: false
 inverse:
   inverse_patch_templates:
     identity:
       editable_by: "platform-engineer"
       confidence: 0.87
-      requires_review: false
     lifecycle:
       editable_by: "platform-engineer"
       confidence: 0.82

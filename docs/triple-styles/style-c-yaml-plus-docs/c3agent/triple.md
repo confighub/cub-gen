@@ -6,7 +6,19 @@
 
 ```mermaid
 flowchart LR
-  dry["DRY Inputs"] --> gen["Generator"] --> wet["WET Targets"]
+  subgraph DRY["DRY Inputs"]
+    d1["fleet-config-base: c3agent.yaml, c3agent.yml, c3agent.json<br/>owner: app-team"]
+    d2["fleet-config-overlay: c3agent-*.yaml | c3agent-*.yml | c3agent-*.json<br/>owner: app-team"]
+  end
+  gen["c3agent (c3agent)<br/>capabilities: fleet-config, agent-orchestration, inverse-fleet-config-patch"]
+  subgraph WET["WET Targets"]
+    w1["ConfigMap {{name}}-fleet-config<br/>owner: platform-runtime<br/>namespace: apps<br/>source: fleet.agent_model"]
+    w2["Secret {{name}}-fleet-credentials<br/>owner: platform-runtime<br/>namespace: apps<br/>source: credentials.anthropic_key_ref"]
+  end
+  d1 --> gen
+  d2 --> gen
+  gen --> w1
+  gen --> w2
 ```
 
 ## Contract

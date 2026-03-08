@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -76,6 +77,36 @@ func TestCheckedInTripleStylesAreInSync(t *testing.T) {
 		if got != want {
 			t.Fatalf("checked-in triple styles content drift at %s\nrun: go run ./cmd/cub-gen-style-sync", rel)
 		}
+	}
+}
+
+func TestGeneratedStylesAreReadable(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "triple-styles")
+	if err := syncStyles(root); err != nil {
+		t.Fatalf("syncStyles: %v", err)
+	}
+
+	kinds := registry.Kinds()
+	emptyListLineRe := regexp.MustCompile(`(?m)^\s*\[\]\s*$`)
+	for _, kind := range kinds {
+		name := string(kind)
+		t.Run(name+"-yaml-clean", func(t *testing.T) {
+			yaml := mustReadFile(t, filepath.Join(root, "style-a-yaml", name+".yaml"))
+			if emptyListLineRe.MatchString(yaml) {
+				t.Fatalf("yaml contains empty list placeholder for %s", name)
+			}
+			if strings.Contains(yaml, `: ""`) {
+				t.Fatalf("yaml contains empty quoted value for %s", name)
+			}
+		})
+		t.Run(name+"-markdown-mermaid", func(t *testing.T) {
+			md := mustReadFile(t, filepath.Join(root, "style-b-markdown", name+".md"))
+			if strings.Contains(md, `dry["DRY Inputs"] --> gen["Generator"] --> wet["WET Targets"]`) {
+				t.Fatalf("markdown contains generic mermaid stub for %s", name)
+			}
+			assertFileContains(t, filepath.Join(root, "style-b-markdown", name+".md"), "subgraph DRY")
+			assertFileContains(t, filepath.Join(root, "style-b-markdown", name+".md"), "subgraph WET")
+		})
 	}
 }
 

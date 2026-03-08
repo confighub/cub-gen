@@ -15,21 +15,13 @@ contract:
         - "c3agent.yaml"
         - "c3agent.yml"
         - "c3agent.json"
-      prefixes:
-        []
-      extensions:
-        []
     - role: "fleet-config-overlay"
-      exact_basenames:
-        []
       prefixes:
         - "c3agent-"
       extensions:
         - ".yaml"
         - ".yml"
         - ".json"
-  role_owners:
-    {}
   role_schema_refs:
     fleet-config-base: "https://schema.confighub.dev/generators/c3agent-v1"
     fleet-config-overlay: "https://schema.confighub.dev/generators/c3agent-v1"
@@ -57,24 +49,16 @@ provenance:
       name_template: "{{name}}-fleet-config"
       namespace: "apps"
       source_path_hint: "base_config_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "fleet.agent_model"
-      optional: false
     - kind: "Secret"
       name_template: "{{name}}-fleet-credentials"
       namespace: "apps"
       source_path_hint: "base_config_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "credentials.anthropic_key_ref"
-      optional: false
     - kind: "ConfigMap"
       name_template: "{{name}}-fleet-config"
       namespace: "apps"
       source_path_hint: "overlay_config_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "fleet.max_concurrent_tasks"
       optional: true
 inverse:
@@ -90,7 +74,6 @@ inverse:
     fleet_config:
       editable_by: "app-team"
       confidence: 0.91
-      requires_review: false
   inverse_pointer_templates:
     component_ports:
       owner: "platform-engineer"
