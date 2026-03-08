@@ -133,7 +133,8 @@ func runGenerators(args []string) error {
 	capabilityFilter := fs.String("capability", "", "Filter by capability")
 	strictFilters := fs.Bool("strict-filters", false, "Fail on unknown filter values")
 	jsonOut := fs.Bool("json", false, "Output JSON")
-	details := fs.Bool("details", false, "Include policy/provenance template details in JSON output")
+	markdownOut := fs.Bool("markdown", false, "Output Markdown")
+	details := fs.Bool("details", false, "Include policy/provenance template details in JSON or Markdown output")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -142,10 +143,13 @@ func runGenerators(args []string) error {
 		return err
 	}
 	if fs.NArg() != 0 {
-		return errors.New("usage: cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json] [--details] [--pretty]")
+		return errors.New("usage: cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]")
 	}
-	if *details && !*jsonOut {
-		return errors.New("--details requires --json")
+	if *jsonOut && *markdownOut {
+		return errors.New("--markdown cannot be combined with --json")
+	}
+	if *details && !*jsonOut && !*markdownOut {
+		return errors.New("--details requires --json or --markdown")
 	}
 	if *strictFilters {
 		if err := validateGeneratorFilters(*kindFilter, *profileFilter, *capabilityFilter); err != nil {
@@ -160,6 +164,9 @@ func runGenerators(args []string) error {
 			"families": records,
 		}, *pretty)
 	}
+	if *markdownOut {
+		return writeGeneratorsMarkdown(os.Stdout, records, *details)
+	}
 
 	fmt.Println("Kind\tProfile\tResource Kind\tResource Type\tCapabilities")
 	for _, record := range records {
@@ -172,6 +179,202 @@ func runGenerators(args []string) error {
 		)
 	}
 	return nil
+}
+
+func writeGeneratorsMarkdown(out io.Writer, records []generatorFamilyRecord, details bool) error {
+	fmt.Fprintln(out, "# Generator Families")
+	fmt.Fprintln(out)
+	fmt.Fprintf(out, "Total: %d\n\n", len(records))
+	fmt.Fprintln(out, "| Kind | Profile | Resource Kind | Resource Type | Capabilities |")
+	fmt.Fprintln(out, "| --- | --- | --- | --- | --- |")
+	for _, record := range records {
+		fmt.Fprintf(out, "| `%s` | `%s` | `%s` | `%s` | %s |\n",
+			markdownCell(record.Kind),
+			markdownCell(record.Profile),
+			markdownCell(record.ResourceKind),
+			markdownCell(record.ResourceType),
+			markdownCell(strings.Join(record.Capabilities, ", ")),
+		)
+	}
+
+	if !details {
+		return nil
+	}
+
+	for _, record := range records {
+		if record.Policies == nil {
+			continue
+		}
+		policies := record.Policies
+		fmt.Fprintln(out)
+		fmt.Fprintf(out, "## `%s`\n\n", markdownCell(record.Kind))
+		fmt.Fprintf(out, "- Profile: `%s`\n", markdownCell(record.Profile))
+		fmt.Fprintf(out, "- Resource: `%s` (`%s`)\n", markdownCell(record.ResourceKind), markdownCell(record.ResourceType))
+		fmt.Fprintf(out, "- Capabilities: %s\n", markdownCell(strings.Join(record.Capabilities, ", ")))
+		if policies.DefaultInputRole != "" {
+			fmt.Fprintf(out, "- Default input role: `%s`\n", markdownCell(policies.DefaultInputRole))
+		}
+		if policies.DefaultOwner != "" {
+			fmt.Fprintf(out, "- Default owner: `%s`\n", markdownCell(policies.DefaultOwner))
+		}
+		if policies.FieldOriginTransform != "" {
+			fmt.Fprintf(out, "- Field-origin transform: `%s`\n", markdownCell(policies.FieldOriginTransform))
+		}
+		if policies.FieldOriginOverlayTransform != "" {
+			fmt.Fprintf(out, "- Field-origin overlay transform: `%s`\n", markdownCell(policies.FieldOriginOverlayTransform))
+		}
+
+		if len(policies.InputRoleRules) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "### Input Role Rules")
+			fmt.Fprintln(out, "| Role | Exact basenames | Prefixes | Extensions |")
+			fmt.Fprintln(out, "| --- | --- | --- | --- |")
+			for _, rule := range policies.InputRoleRules {
+				fmt.Fprintf(out, "| `%s` | %s | %s | %s |\n",
+					markdownCell(rule.Role),
+					markdownCell(strings.Join(rule.ExactBasenames, ", ")),
+					markdownCell(strings.Join(rule.Prefixes, ", ")),
+					markdownCell(strings.Join(rule.Extensions, ", ")),
+				)
+			}
+		}
+
+		if len(policies.RoleOwners) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "### Role Owners")
+			fmt.Fprintln(out, "| Role | Owner |")
+			fmt.Fprintln(out, "| --- | --- |")
+			for _, key := range sortedMapKeys(policies.RoleOwners) {
+				fmt.Fprintf(out, "| `%s` | `%s` |\n", markdownCell(key), markdownCell(policies.RoleOwners[key]))
+			}
+		}
+
+		if len(policies.InversePatchTemplates) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "### Inverse Patch Templates")
+			fmt.Fprintln(out, "| Key | Editable by | Confidence | Requires review |")
+			fmt.Fprintln(out, "| --- | --- | --- | --- |")
+			for _, key := range sortedMapKeys(policies.InversePatchTemplates) {
+				tpl := policies.InversePatchTemplates[key]
+				fmt.Fprintf(out, "| `%s` | `%s` | %.2f | `%t` |\n",
+					markdownCell(key),
+					markdownCell(tpl.EditableBy),
+					tpl.Confidence,
+					tpl.RequiresReview,
+				)
+			}
+		}
+
+		if len(policies.InversePointerTemplates) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "### Inverse Pointer Templates")
+			fmt.Fprintln(out, "| Key | Owner | Confidence |")
+			fmt.Fprintln(out, "| --- | --- | --- |")
+			for _, key := range sortedMapKeys(policies.InversePointerTemplates) {
+				tpl := policies.InversePointerTemplates[key]
+				fmt.Fprintf(out, "| `%s` | `%s` | %.2f |\n",
+					markdownCell(key),
+					markdownCell(tpl.Owner),
+					tpl.Confidence,
+				)
+			}
+		}
+
+		if len(policies.FieldOriginConfidences) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "### Field Origin Confidences")
+			fmt.Fprintln(out, "| Key | Confidence |")
+			fmt.Fprintln(out, "| --- | --- |")
+			for _, key := range sortedMapKeys(policies.FieldOriginConfidences) {
+				fmt.Fprintf(out, "| `%s` | %.2f |\n", markdownCell(key), policies.FieldOriginConfidences[key])
+			}
+		}
+
+		if len(policies.HintDefaults) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "### Hint Defaults")
+			fmt.Fprintln(out, "| Key | Value |")
+			fmt.Fprintln(out, "| --- | --- |")
+			for _, key := range sortedMapKeys(policies.HintDefaults) {
+				fmt.Fprintf(out, "| `%s` | `%s` |\n", markdownCell(key), markdownCell(policies.HintDefaults[key]))
+			}
+		}
+
+		if len(policies.InversePatchReasons) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "### Inverse Patch Reasons")
+			fmt.Fprintln(out, "| Key | Reason |")
+			fmt.Fprintln(out, "| --- | --- |")
+			for _, key := range sortedMapKeys(policies.InversePatchReasons) {
+				fmt.Fprintf(out, "| `%s` | %s |\n", markdownCell(key), markdownCell(policies.InversePatchReasons[key]))
+			}
+		}
+
+		if len(policies.InverseEditHints) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "### Inverse Edit Hints")
+			fmt.Fprintln(out, "| Key | Hint |")
+			fmt.Fprintln(out, "| --- | --- |")
+			for _, key := range sortedMapKeys(policies.InverseEditHints) {
+				fmt.Fprintf(out, "| `%s` | %s |\n", markdownCell(key), markdownCell(policies.InverseEditHints[key]))
+			}
+		}
+
+		if len(policies.WetTargets) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "### WET Targets")
+			fmt.Fprintln(out, "| Kind | Name template | Owner | Namespace | Source DRY path template |")
+			fmt.Fprintln(out, "| --- | --- | --- | --- | --- |")
+			for _, target := range policies.WetTargets {
+				fmt.Fprintf(out, "| `%s` | `%s` | `%s` | `%s` | `%s` |\n",
+					markdownCell(target.Kind),
+					markdownCell(target.NameTemplate),
+					markdownCell(target.Owner),
+					markdownCell(target.Namespace),
+					markdownCell(target.SourceDryPathTemplate),
+				)
+			}
+		}
+
+		if len(policies.RenderedLineageTemplates) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "### Rendered Lineage Templates")
+			fmt.Fprintln(out, "| Kind | Name template | Namespace | Source path hint | Hint fallback | Multi hint | Source DRY path template | Optional |")
+			fmt.Fprintln(out, "| --- | --- | --- | --- | --- | --- | --- | --- |")
+			for _, tpl := range policies.RenderedLineageTemplates {
+				fmt.Fprintf(out, "| `%s` | `%s` | `%s` | `%s` | `%s` | `%t` | `%s` | `%t` |\n",
+					markdownCell(tpl.Kind),
+					markdownCell(tpl.NameTemplate),
+					markdownCell(tpl.Namespace),
+					markdownCell(tpl.SourcePathHint),
+					markdownCell(tpl.SourcePathHintFallback),
+					tpl.SourcePathHintMulti,
+					markdownCell(tpl.SourceDryPathTemplate),
+					tpl.Optional,
+				)
+			}
+		}
+	}
+
+	return nil
+}
+
+func markdownCell(value string) string {
+	value = strings.ReplaceAll(value, "|", "\\|")
+	value = strings.ReplaceAll(value, "\n", "<br/>")
+	if strings.TrimSpace(value) == "" {
+		return "-"
+	}
+	return value
+}
+
+func sortedMapKeys[T any](m map[string]T) []string {
+	keys := make([]string, 0, len(m))
+	for key := range m {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func listGeneratorFamilies(kindFilter, profileFilter, capabilityFilter string, details bool) []generatorFamilyRecord {
@@ -350,10 +553,10 @@ func parseFilterSet(raw string) map[string]struct{} {
 
 func printGeneratorsUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage:")
-	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json] [--details] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]")
 	fmt.Fprintln(out, "  (KIND/PROFILE/CAPABILITY support comma-separated values)")
 	fmt.Fprintln(out, "  use --strict-filters to fail on unknown filter values")
-	fmt.Fprintln(out, "  use --details with --json to include policy/provenance templates")
+	fmt.Fprintln(out, "  use --details with --json or --markdown to include policy/provenance templates")
 	fmt.Fprintln(out)
 	fmt.Fprintf(out, "Supported kinds: %s\n", strings.Join(supportedGeneratorKinds(), ", "))
 	fmt.Fprintf(out, "Supported profiles: %s\n", strings.Join(supportedGeneratorProfiles(), ", "))
@@ -942,7 +1145,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen verify [--in FILE|-] [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json] [--details] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out, "  cub-gen bridge <ingest|decision|promote> [flags]")
 	fmt.Fprintln(out)
@@ -975,6 +1178,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123")
 	fmt.Fprintln(out, "  cub-gen generators --json")
 	fmt.Fprintln(out, "  cub-gen generators --json --details")
+	fmt.Fprintln(out, "  cub-gen generators --markdown --details")
 	fmt.Fprintln(out, "  cub-gen generators --capability render-manifests")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Note: gitops commands are local-only prototypes that mirror cub gitops stages.")
