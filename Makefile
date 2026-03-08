@@ -1,4 +1,4 @@
-.PHONY: build test test-parity test-contracts test-bridge-symmetry test-examples update-goldens ci
+.PHONY: build test test-parity test-contracts test-bridge-symmetry test-examples update-goldens sync-triple-styles ci
 
 PARITY_TEST_PATTERN := ^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand|TestGeneratorsGolden)
 BRIDGE_SYMMETRY_PATTERN := ^(TestBridgeSymmetryMatrix|TestExamplesPathModeBridgeFlow)$
@@ -22,5 +22,8 @@ test-examples:
 
 update-goldens:
 	UPDATE_GOLDEN=1 go test ./cmd/cub-gen -run 'Golden' -count=1 -v
+
+sync-triple-styles:
+	go run ./cmd/cub-gen-style-sync
 
 ci: build test test-contracts test-bridge-symmetry test-examples

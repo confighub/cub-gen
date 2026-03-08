@@ -1,0 +1,113 @@
+kind: "swamp"
+profile: "swamp"
+resource_kind: "Workflow"
+resource_type: "swamp.dev/v1/Workflow"
+capabilities:
+  - "workflow-automation"
+  - "model-orchestration"
+  - "inverse-workflow-patch"
+contract:
+  default_input_role: "swamp-input"
+  default_owner: "app-team"
+  input_role_rules:
+    - role: "swamp-config-base"
+      exact_basenames:
+        - ".swamp.yaml"
+        - ".swamp.yml"
+      prefixes:
+        []
+      extensions:
+        []
+    - role: "swamp-workflow"
+      exact_basenames:
+        []
+      prefixes:
+        - "workflow-"
+      extensions:
+        - ".yaml"
+        - ".yml"
+  role_owners:
+    {}
+  role_schema_refs:
+    swamp-config-base: "https://schema.confighub.dev/generators/swamp-v1"
+    swamp-workflow: "https://schema.confighub.dev/generators/swamp-workflow-v1"
+  wet_targets:
+    - kind: "Workflow"
+      name_template: "{{name}}-workflow"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "jobs[].steps[].task"
+    - kind: "ConfigMap"
+      name_template: "{{name}}-swamp-config"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "swamp.version"
+provenance:
+  field_origin_transform: "swamp-workflow-to-execution"
+  field_origin_overlay_transform: "swamp-overlay-merge"
+  field_origin_confidences:
+    model_binding_base: 0.88
+    model_binding_workflow: 0.84
+    vault_config: 0.85
+    workflow_definition: 0.90
+  rendered_lineage_templates:
+    - kind: "Workflow"
+      name_template: "{{name}}-workflow"
+      namespace: "apps"
+      source_path_hint: "base_config_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "vaults.default.type"
+      optional: false
+    - kind: "ConfigMap"
+      name_template: "{{name}}-swamp-config"
+      namespace: "apps"
+      source_path_hint: "base_config_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "swamp.version"
+      optional: false
+    - kind: "Workflow"
+      name_template: "{{name}}-workflow"
+      namespace: "apps"
+      source_path_hint: "workflow_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "jobs[].steps[].task"
+      optional: true
+inverse:
+  inverse_patch_templates:
+    model_binding:
+      editable_by: "app-team"
+      confidence: 0.88
+      requires_review: false
+    vault_config:
+      editable_by: "platform-engineer"
+      confidence: 0.85
+      requires_review: true
+    workflow_definition:
+      editable_by: "app-team"
+      confidence: 0.90
+      requires_review: false
+  inverse_pointer_templates:
+    model_binding:
+      owner: "app-team"
+      confidence: 0.88
+    vault_config:
+      owner: "platform-engineer"
+      confidence: 0.85
+    workflow_definition:
+      owner: "app-team"
+      confidence: 0.90
+  inverse_patch_reasons:
+    model_binding: "Model bindings define which automation models execute in workflows."
+    vault_config: "Vault configuration impacts platform credential infrastructure."
+    workflow_definition: "Workflow job and step definitions are app-level automation intent."
+  inverse_edit_hints:
+    model_binding_base: "Edit model references in {{base_config_path}}."
+    model_binding_workflow: "Edit model method bindings in {{workflow_path}} for task-specific overrides."
+    vault_config: "Edit vaults section in {{base_config_path}} and coordinate with platform secret infrastructure."
+    workflow_definition: "Edit jobs and steps in the workflow YAML file."
+hints:
+  defaults:
+    base_config_path: ".swamp.yaml"

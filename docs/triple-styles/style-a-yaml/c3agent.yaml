@@ -1,0 +1,115 @@
+kind: "c3agent"
+profile: "c3agent"
+resource_kind: "ConfigMap"
+resource_type: "v1/ConfigMap"
+capabilities:
+  - "fleet-config"
+  - "agent-orchestration"
+  - "inverse-fleet-config-patch"
+contract:
+  default_input_role: "fleet-config"
+  default_owner: "app-team"
+  input_role_rules:
+    - role: "fleet-config-base"
+      exact_basenames:
+        - "c3agent.yaml"
+        - "c3agent.yml"
+        - "c3agent.json"
+      prefixes:
+        []
+      extensions:
+        []
+    - role: "fleet-config-overlay"
+      exact_basenames:
+        []
+      prefixes:
+        - "c3agent-"
+      extensions:
+        - ".yaml"
+        - ".yml"
+        - ".json"
+  role_owners:
+    {}
+  role_schema_refs:
+    fleet-config-base: "https://schema.confighub.dev/generators/c3agent-v1"
+    fleet-config-overlay: "https://schema.confighub.dev/generators/c3agent-v1"
+  wet_targets:
+    - kind: "ConfigMap"
+      name_template: "{{name}}-fleet-config"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "fleet.agent_model"
+    - kind: "Secret"
+      name_template: "{{name}}-fleet-credentials"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "credentials.anthropic_key_ref"
+provenance:
+  field_origin_transform: "c3agent-config-to-runtime"
+  field_origin_overlay_transform: "c3agent-overlay-merge"
+  field_origin_confidences:
+    component_ports_base: 0.84
+    component_ports_overlay: 0.80
+    credentials: 0.86
+    fleet_config: 0.91
+  rendered_lineage_templates:
+    - kind: "ConfigMap"
+      name_template: "{{name}}-fleet-config"
+      namespace: "apps"
+      source_path_hint: "base_config_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "fleet.agent_model"
+      optional: false
+    - kind: "Secret"
+      name_template: "{{name}}-fleet-credentials"
+      namespace: "apps"
+      source_path_hint: "base_config_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "credentials.anthropic_key_ref"
+      optional: false
+    - kind: "ConfigMap"
+      name_template: "{{name}}-fleet-config"
+      namespace: "apps"
+      source_path_hint: "overlay_config_path"
+      source_path_hint_fallback: ""
+      source_path_hint_multi: false
+      source_dry_path_template: "fleet.max_concurrent_tasks"
+      optional: true
+inverse:
+  inverse_patch_templates:
+    component_ports:
+      editable_by: "platform-engineer"
+      confidence: 0.84
+      requires_review: true
+    credentials:
+      editable_by: "platform-engineer"
+      confidence: 0.86
+      requires_review: true
+    fleet_config:
+      editable_by: "app-team"
+      confidence: 0.91
+      requires_review: false
+  inverse_pointer_templates:
+    component_ports:
+      owner: "platform-engineer"
+      confidence: 0.84
+    credentials:
+      owner: "platform-engineer"
+      confidence: 0.86
+    fleet_config:
+      owner: "app-team"
+      confidence: 0.91
+  inverse_patch_reasons:
+    component_ports: "Component port changes affect platform networking and service mesh."
+    credentials: "Credential references impact platform secret management."
+    fleet_config: "Fleet configuration (model, concurrency) is sourced from {{base_config_path}}."
+  inverse_edit_hints:
+    component_ports_base: "Edit components.controlplane.grpc_port in {{base_config_path}}."
+    component_ports_overlay: "Edit component ports in {{overlay_config_path}} for environment-specific values; use {{base_config_path}} for defaults."
+    credentials: "Edit credentials section in {{base_config_path}} and coordinate with platform secret management."
+    fleet_config: "Edit fleet.agent_model or fleet.max_concurrent_tasks in {{base_config_path}}."
+hints:
+  defaults:
+    base_config_path: "c3agent.yaml"

@@ -223,6 +223,26 @@ without coupling the core flow to a running ConfigHub backend.
 `role_owners`, `default_owner`, `wet_targets`, `rendered_lineage_templates`,
 `field_origin_transform`, and `field_origin_overlay_transform`.
 
+### Compare triple expression styles (all 8 generators)
+
+The repo also includes three full style projections for every generator kind:
+
+1. Style A YAML: `/docs/triple-styles/style-a-yaml/*.yaml`
+2. Style B Markdown: `/docs/triple-styles/style-b-markdown/*.md`
+3. Style C YAML+Markdown pair: `/docs/triple-styles/style-c-yaml-plus-docs/<kind>/`
+
+Index:
+
+1. `/docs/triple-styles/README.md`
+
+Regenerate these style projections:
+
+```bash
+make sync-triple-styles
+# or
+go run ./cmd/cub-gen-style-sync
+```
+
 Or run direct mode (import + bundle in one command):
 
 ```bash
