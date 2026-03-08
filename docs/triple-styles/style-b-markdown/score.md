@@ -6,7 +6,19 @@
 
 ```mermaid
 flowchart LR
-  dry["DRY Inputs"] --> gen["Generator"] --> wet["WET Targets"]
+  subgraph DRY["DRY Inputs"]
+    d1["score-spec: score.yaml, score.yml<br/>owner: app-team"]
+  end
+  gen["score (scoredev-paas)<br/>capabilities: render-manifests, workload-spec, inverse-score-patch"]
+  subgraph WET["WET Targets"]
+    w1["Application {{name}}<br/>owner: platform-runtime<br/>namespace: apps"]
+    w2["Deployment {{name}}<br/>owner: platform-runtime<br/>namespace: apps<br/>source: containers.{{container}}.image"]
+    w3["Service {{name}}<br/>owner: platform-runtime<br/>namespace: apps<br/>source: service.ports.{{service_port}}.port"]
+  end
+  d1 --> gen
+  gen --> w1
+  gen --> w2
+  gen --> w3
 ```
 
 ## Contract

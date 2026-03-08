@@ -6,7 +6,23 @@
 
 ```mermaid
 flowchart LR
-  dry["DRY Inputs"] --> gen["Generator"] --> wet["WET Targets"]
+  subgraph DRY["DRY Inputs"]
+    d1["build-config: pom.xml, build.gradle, build.gradle.kts<br/>owner: platform-engineer"]
+    d2["app-config-base: application.yaml, application.yml<br/>owner: app-team"]
+    d3["app-config-profile: application-*.yaml | application-*.yml<br/>owner: app-team"]
+  end
+  gen["springboot (springboot-paas)<br/>capabilities: render-app-config, profile-overrides, inverse-app-config-patch"]
+  subgraph WET["WET Targets"]
+    w1["Kustomization {{name}}<br/>owner: platform-runtime<br/>namespace: apps"]
+    w2["Deployment {{name}}<br/>owner: platform-runtime<br/>namespace: apps<br/>source: server.port"]
+    w3["ConfigMap {{name}}-config<br/>owner: platform-runtime<br/>namespace: apps<br/>source: spring.datasource.url"]
+  end
+  d1 --> gen
+  d2 --> gen
+  d3 --> gen
+  gen --> w1
+  gen --> w2
+  gen --> w3
 ```
 
 ## Contract

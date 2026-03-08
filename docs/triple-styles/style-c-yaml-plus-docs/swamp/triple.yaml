@@ -14,20 +14,12 @@ contract:
       exact_basenames:
         - ".swamp.yaml"
         - ".swamp.yml"
-      prefixes:
-        []
-      extensions:
-        []
     - role: "swamp-workflow"
-      exact_basenames:
-        []
       prefixes:
         - "workflow-"
       extensions:
         - ".yaml"
         - ".yml"
-  role_owners:
-    {}
   role_schema_refs:
     swamp-config-base: "https://schema.confighub.dev/generators/swamp-v1"
     swamp-workflow: "https://schema.confighub.dev/generators/swamp-workflow-v1"
@@ -55,24 +47,16 @@ provenance:
       name_template: "{{name}}-workflow"
       namespace: "apps"
       source_path_hint: "base_config_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "vaults.default.type"
-      optional: false
     - kind: "ConfigMap"
       name_template: "{{name}}-swamp-config"
       namespace: "apps"
       source_path_hint: "base_config_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "swamp.version"
-      optional: false
     - kind: "Workflow"
       name_template: "{{name}}-workflow"
       namespace: "apps"
       source_path_hint: "workflow_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "jobs[].steps[].task"
       optional: true
 inverse:
@@ -80,7 +64,6 @@ inverse:
     model_binding:
       editable_by: "app-team"
       confidence: 0.88
-      requires_review: false
     vault_config:
       editable_by: "platform-engineer"
       confidence: 0.85
@@ -88,7 +71,6 @@ inverse:
     workflow_definition:
       editable_by: "app-team"
       confidence: 0.90
-      requires_review: false
   inverse_pointer_templates:
     model_binding:
       owner: "app-team"

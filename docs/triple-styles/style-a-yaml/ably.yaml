@@ -15,21 +15,13 @@ contract:
         - "ably.yaml"
         - "ably.yml"
         - "ably.json"
-      prefixes:
-        []
-      extensions:
-        []
     - role: "provider-config-overlay"
-      exact_basenames:
-        []
       prefixes:
         - "ably-"
       extensions:
         - ".yaml"
         - ".yml"
         - ".json"
-  role_owners:
-    {}
   role_schema_refs:
     provider-config-base: "https://schema.confighub.dev/generators/ably-config-v1"
     provider-config-overlay: "https://schema.confighub.dev/generators/ably-config-v1"
@@ -56,24 +48,16 @@ provenance:
       name_template: "{{name}}-ably"
       namespace: "apps"
       source_path_hint: "base_config_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "app.environment"
-      optional: false
     - kind: "Secret"
       name_template: "{{name}}-ably-credentials"
       namespace: "apps"
       source_path_hint: "base_config_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "credentials.api_key_ref"
-      optional: false
     - kind: "ConfigMap"
       name_template: "{{name}}-ably"
       namespace: "apps"
       source_path_hint: "overlay_config_path"
-      source_path_hint_fallback: ""
-      source_path_hint_multi: false
       source_dry_path_template: "channels.inbound"
       optional: true
 inverse:
@@ -81,11 +65,9 @@ inverse:
     channels:
       editable_by: "app-team"
       confidence: 0.88
-      requires_review: false
     environment:
       editable_by: "app-team"
       confidence: 0.90
-      requires_review: false
   inverse_pointer_templates:
     channels:
       owner: "app-team"

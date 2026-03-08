@@ -6,7 +6,19 @@
 
 ```mermaid
 flowchart LR
-  dry["DRY Inputs"] --> gen["Generator"] --> wet["WET Targets"]
+  subgraph DRY["DRY Inputs"]
+    d1["operations-base: operations.yaml, operations.yml, workflow.yaml, workflow.yml<br/>owner: platform-engineer"]
+    d2["operations-overlay: operations-*.yaml | operations-*.yml | workflow-*.yaml | workflow-*.yml<br/>owner: platform-engineer"]
+  end
+  gen["opsworkflow (ops-workflow)<br/>capabilities: workflow-plan, governed-execution-intent, inverse-workflow-patch"]
+  subgraph WET["WET Targets"]
+    w1["Workflow {{name}}-workflow<br/>owner: platform-runtime<br/>namespace: ops<br/>source: actions.deploy.image_tag"]
+    w2["Job {{name}}-dry-run<br/>owner: platform-runtime<br/>namespace: ops<br/>source: triggers.schedule"]
+  end
+  d1 --> gen
+  d2 --> gen
+  gen --> w1
+  gen --> w2
 ```
 
 ## Contract

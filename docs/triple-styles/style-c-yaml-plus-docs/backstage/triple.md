@@ -6,7 +6,19 @@
 
 ```mermaid
 flowchart LR
-  dry["DRY Inputs"] --> gen["Generator"] --> wet["WET Targets"]
+  subgraph DRY["DRY Inputs"]
+    d1["catalog-spec: catalog-info.yaml, catalog-info.yml<br/>owner: platform-engineer"]
+    d2["app-config: app-config.yaml, app-config.yml<br/>owner: app-team"]
+  end
+  gen["backstage (backstage-idp)<br/>capabilities: catalog-metadata, render-manifests, inverse-catalog-patch"]
+  subgraph WET["WET Targets"]
+    w1["Application {{name}}<br/>owner: platform-runtime<br/>namespace: apps<br/>source: metadata.name"]
+    w2["ConfigMap {{name}}-catalog<br/>owner: platform-runtime<br/>namespace: apps<br/>source: spec.lifecycle"]
+  end
+  d1 --> gen
+  d2 --> gen
+  gen --> w1
+  gen --> w2
 ```
 
 ## Contract
