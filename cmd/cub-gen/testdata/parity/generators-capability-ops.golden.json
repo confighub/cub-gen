@@ -1,5 +1,5 @@
 {
-  "count": 1,
+  "count": 2,
   "families": [
     {
       "capabilities": [
@@ -11,6 +11,17 @@
       "profile": "ops-workflow",
       "resource_kind": "Workflow",
       "resource_type": "argoproj.io/v1alpha1/Workflow"
+    },
+    {
+      "capabilities": [
+        "workflow-automation",
+        "model-orchestration",
+        "inverse-workflow-patch"
+      ],
+      "kind": "swamp",
+      "profile": "swamp",
+      "resource_kind": "Workflow",
+      "resource_type": "swamp.dev/v1/Workflow"
     }
   ]
 }

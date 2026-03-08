@@ -1,5 +1,5 @@
 {
-  "count": 6,
+  "count": 8,
   "families": [
     {
       "capabilities": [
@@ -22,6 +22,17 @@
       "profile": "backstage-idp",
       "resource_kind": "Component",
       "resource_type": "backstage.io/v1alpha1/Component"
+    },
+    {
+      "capabilities": [
+        "fleet-config",
+        "agent-orchestration",
+        "inverse-fleet-config-patch"
+      ],
+      "kind": "c3agent",
+      "profile": "c3agent",
+      "resource_kind": "ConfigMap",
+      "resource_type": "v1/ConfigMap"
     },
     {
       "capabilities": [
@@ -66,6 +77,17 @@
       "profile": "springboot-paas",
       "resource_kind": "Kustomization",
       "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization"
+    },
+    {
+      "capabilities": [
+        "workflow-automation",
+        "model-orchestration",
+        "inverse-workflow-patch"
+      ],
+      "kind": "swamp",
+      "profile": "swamp",
+      "resource_kind": "Workflow",
+      "resource_type": "swamp.dev/v1/Workflow"
     }
   ]
 }

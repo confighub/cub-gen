@@ -1,0 +1,15 @@
+service: c3agent
+fleet:
+  name: coding-fleet
+  max_concurrent_tasks: 2
+  agent_model: claude-sonnet-4-20250514
+components:
+  controlplane:
+    grpc_port: 50050
+    http_port: 8080
+  gateway:
+    grpc_port: 50052
+credentials:
+  anthropic_key_ref: ANTHROPIC_API_KEY
+  slack_bot_token_ref: SLACK_BOT_TOKEN
+  github_token_ref: GH_TOKEN

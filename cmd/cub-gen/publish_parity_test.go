@@ -31,6 +31,14 @@ func TestPublishGoldenFromImportOps(t *testing.T) {
 	assertPublishFromImportGolden(t, "ops", filepath.Join("testdata", "parity", "publish-from-import-ops.golden.json"))
 }
 
+func TestPublishGoldenFromImportC3Agent(t *testing.T) {
+	assertPublishFromImportGolden(t, "c3agent", filepath.Join("testdata", "parity", "publish-from-import-c3agent.golden.json"))
+}
+
+func TestPublishGoldenFromImportSwamp(t *testing.T) {
+	assertPublishFromImportGolden(t, "swamp", filepath.Join("testdata", "parity", "publish-from-import-swamp.golden.json"))
+}
+
 func assertPublishFromImportGolden(t *testing.T, target, goldenPath string) {
 	t.Helper()
 	setupAliases(t)
@@ -84,6 +92,14 @@ func TestPublishGoldenDirectAbly(t *testing.T) {
 
 func TestPublishGoldenDirectOps(t *testing.T) {
 	assertPublishDirectGolden(t, "ops", filepath.Join("testdata", "parity", "publish-direct-ops.golden.json"))
+}
+
+func TestPublishGoldenDirectC3Agent(t *testing.T) {
+	assertPublishDirectGolden(t, "c3agent", filepath.Join("testdata", "parity", "publish-direct-c3agent.golden.json"))
+}
+
+func TestPublishGoldenDirectSwamp(t *testing.T) {
+	assertPublishDirectGolden(t, "swamp", filepath.Join("testdata", "parity", "publish-direct-swamp.golden.json"))
 }
 
 func assertPublishDirectGolden(t *testing.T, target, golden string) {

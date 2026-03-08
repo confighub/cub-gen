@@ -1,5 +1,5 @@
 {
-  "count": 6,
+  "count": 8,
   "families": [
     {
       "capabilities": [
@@ -79,6 +79,56 @@
       "profile": "backstage-idp",
       "resource_kind": "Component",
       "resource_type": "backstage.io/v1alpha1/Component"
+    },
+    {
+      "capabilities": [
+        "fleet-config",
+        "agent-orchestration",
+        "inverse-fleet-config-patch"
+      ],
+      "kind": "c3agent",
+      "policies": {
+        "field_origin_confidences": {
+          "component_ports_base": 0.84,
+          "component_ports_overlay": 0.8,
+          "credentials": 0.86,
+          "fleet_config": 0.91
+        },
+        "inverse_patch_templates": {
+          "component_ports": {
+            "confidence": 0.84,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          },
+          "credentials": {
+            "confidence": 0.86,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          },
+          "fleet_config": {
+            "confidence": 0.91,
+            "editable_by": "app-team",
+            "requires_review": false
+          }
+        },
+        "inverse_pointer_templates": {
+          "component_ports": {
+            "confidence": 0.84,
+            "owner": "platform-engineer"
+          },
+          "credentials": {
+            "confidence": 0.86,
+            "owner": "platform-engineer"
+          },
+          "fleet_config": {
+            "confidence": 0.91,
+            "owner": "app-team"
+          }
+        }
+      },
+      "profile": "c3agent",
+      "resource_kind": "ConfigMap",
+      "resource_type": "v1/ConfigMap"
     },
     {
       "capabilities": [
@@ -237,6 +287,56 @@
       "profile": "springboot-paas",
       "resource_kind": "Kustomization",
       "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization"
+    },
+    {
+      "capabilities": [
+        "workflow-automation",
+        "model-orchestration",
+        "inverse-workflow-patch"
+      ],
+      "kind": "swamp",
+      "policies": {
+        "field_origin_confidences": {
+          "model_binding_base": 0.88,
+          "model_binding_workflow": 0.84,
+          "vault_config": 0.85,
+          "workflow_definition": 0.9
+        },
+        "inverse_patch_templates": {
+          "model_binding": {
+            "confidence": 0.88,
+            "editable_by": "app-team",
+            "requires_review": false
+          },
+          "vault_config": {
+            "confidence": 0.85,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          },
+          "workflow_definition": {
+            "confidence": 0.9,
+            "editable_by": "app-team",
+            "requires_review": false
+          }
+        },
+        "inverse_pointer_templates": {
+          "model_binding": {
+            "confidence": 0.88,
+            "owner": "app-team"
+          },
+          "vault_config": {
+            "confidence": 0.85,
+            "owner": "platform-engineer"
+          },
+          "workflow_definition": {
+            "confidence": 0.9,
+            "owner": "app-team"
+          }
+        }
+      },
+      "profile": "swamp",
+      "resource_kind": "Workflow",
+      "resource_type": "swamp.dev/v1/Workflow"
     }
   ]
 }

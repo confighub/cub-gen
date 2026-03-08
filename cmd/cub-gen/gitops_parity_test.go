@@ -147,6 +147,52 @@ func TestGitOpsParityGoldenDiscoverOps(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-ops.golden.json"), got)
 }
 
+func TestGitOpsParityGoldenDiscoverC3Agent(t *testing.T) {
+	aliases := setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "c3agent"})
+	if err != nil {
+		t.Fatalf("run c3agent discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal c3agent discover json: %v\noutput=%s", err, out)
+	}
+	normalizeDiscover(got)
+
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("examples", "c3agent"))
+	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["c3agent"]), filepath.ToSlash(filepath.Join("examples", "c3agent")))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-c3agent.golden.json"), got)
+}
+
+func TestGitOpsParityGoldenDiscoverSwamp(t *testing.T) {
+	aliases := setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "swamp"})
+	if err != nil {
+		t.Fatalf("run swamp discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal swamp discover json: %v\noutput=%s", err, out)
+	}
+	normalizeDiscover(got)
+
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("examples", "swamp-automation"))
+	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["swamp"]), filepath.ToSlash(filepath.Join("examples", "swamp-automation")))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-swamp.golden.json"), got)
+}
+
 func TestGitOpsParityGoldenImport(t *testing.T) {
 	setupAliases(t)
 
@@ -265,6 +311,46 @@ func TestGitOpsParityGoldenImportOps(t *testing.T) {
 	normalizeImport(got)
 
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-ops.golden.json"), got)
+}
+
+func TestGitOpsParityGoldenImportC3Agent(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "c3agent", "render-target"})
+	if err != nil {
+		t.Fatalf("run c3agent import returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal c3agent import json: %v\noutput=%s", err, out)
+	}
+	normalizeImport(got)
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-c3agent.golden.json"), got)
+}
+
+func TestGitOpsParityGoldenImportSwamp(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "swamp", "render-target"})
+	if err != nil {
+		t.Fatalf("run swamp import returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal swamp import json: %v\noutput=%s", err, out)
+	}
+	normalizeImport(got)
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-swamp.golden.json"), got)
 }
 
 func TestGitOpsParityGoldenCleanup(t *testing.T) {
@@ -482,6 +568,14 @@ func setupAliases(t *testing.T) map[string]string {
 	if err != nil {
 		t.Fatalf("resolve ops path: %v", err)
 	}
+	c3agentAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "c3agent"))
+	if err != nil {
+		t.Fatalf("resolve c3agent path: %v", err)
+	}
+	swampAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "swamp-automation"))
+	if err != nil {
+		t.Fatalf("resolve swamp path: %v", err)
+	}
 
 	cfgDir := t.TempDir()
 	cfgPath := filepath.Join(cfgDir, "targets.json")
@@ -494,6 +588,8 @@ func setupAliases(t *testing.T) map[string]string {
 			"backstage": backstageAbs,
 			"ably":      ablyAbs,
 			"ops":       opsAbs,
+			"c3agent":   c3agentAbs,
+			"swamp":     swampAbs,
 			"render-target": map[string]any{
 				"toolchain": "kubernetes/yaml",
 				"providers": []string{"fluxrenderer", "argocdrenderer"},
@@ -516,6 +612,8 @@ func setupAliases(t *testing.T) map[string]string {
 		"backstage": backstageAbs,
 		"ably":      ablyAbs,
 		"ops":       opsAbs,
+		"c3agent":   c3agentAbs,
+		"swamp":     swampAbs,
 	}
 }
 

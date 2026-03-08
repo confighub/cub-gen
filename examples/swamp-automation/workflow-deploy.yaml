@@ -1,0 +1,15 @@
+id: deploy-app
+name: deploy-application
+jobs:
+  - name: deploy-flow
+    steps:
+      - name: validate
+        task:
+          type: model_method
+          modelIdOrName: app-validator
+          methodName: check
+      - name: apply
+        task:
+          type: model_method
+          modelIdOrName: app-deployer
+          methodName: apply

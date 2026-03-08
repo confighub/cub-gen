@@ -4,6 +4,6 @@ Usage:
   use --strict-filters to fail on unknown filter values
   use --details with --json to include policy/provenance templates
 
-Supported kinds: ably, backstage, helm, opsworkflow, score, springboot
-Supported profiles: ably-config, backstage-idp, helm-paas, ops-workflow, scoredev-paas, springboot-paas
-Supported capabilities: app-config-only, catalog-metadata, governed-execution-intent, inverse-app-config-patch, inverse-catalog-patch, inverse-provider-config-patch, inverse-score-patch, inverse-values-patch, inverse-workflow-patch, profile-overrides, provider-config, render-app-config, render-manifests, values-overrides, workflow-plan, workload-spec
+Supported kinds: ably, backstage, c3agent, helm, opsworkflow, score, springboot, swamp
+Supported profiles: ably-config, backstage-idp, c3agent, helm-paas, ops-workflow, scoredev-paas, springboot-paas, swamp
+Supported capabilities: agent-orchestration, app-config-only, catalog-metadata, fleet-config, governed-execution-intent, inverse-app-config-patch, inverse-catalog-patch, inverse-fleet-config-patch, inverse-provider-config-patch, inverse-score-patch, inverse-values-patch, inverse-workflow-patch, model-orchestration, profile-overrides, provider-config, render-app-config, render-manifests, values-overrides, workflow-automation, workflow-plan, workload-spec
