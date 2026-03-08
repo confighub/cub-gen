@@ -410,9 +410,9 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"component_ports": "Component port changes affect platform networking and service mesh.",
 		},
 		InverseEditHints: map[string]string{
-			"fleet_config":          "Edit fleet.agent_model or fleet.max_concurrent_tasks in {{base_config_path}}.",
-			"credentials":           "Edit credentials section in {{base_config_path}} and coordinate with platform secret management.",
-			"component_ports_base":  "Edit components.controlplane.grpc_port in {{base_config_path}}.",
+			"fleet_config":            "Edit fleet.agent_model or fleet.max_concurrent_tasks in {{base_config_path}}.",
+			"credentials":             "Edit credentials section in {{base_config_path}} and coordinate with platform secret management.",
+			"component_ports_base":    "Edit components.controlplane.grpc_port in {{base_config_path}}.",
 			"component_ports_overlay": "Edit component ports in {{overlay_config_path}} for environment-specific values; use {{base_config_path}} for defaults.",
 		},
 		InversePatchTemplates: map[string]InversePatchTemplate{
