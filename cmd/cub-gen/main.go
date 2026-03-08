@@ -69,9 +69,20 @@ type generatorFamilyRecord struct {
 }
 
 type generatorFamilyPolicyRecord struct {
-	InversePatchTemplates   map[string]inversePatchTemplateRecord   `json:"inverse_patch_templates,omitempty"`
-	InversePointerTemplates map[string]inversePointerTemplateRecord `json:"inverse_pointer_templates,omitempty"`
-	FieldOriginConfidences  map[string]float64                      `json:"field_origin_confidences,omitempty"`
+	InversePatchTemplates       map[string]inversePatchTemplateRecord   `json:"inverse_patch_templates,omitempty"`
+	InversePointerTemplates     map[string]inversePointerTemplateRecord `json:"inverse_pointer_templates,omitempty"`
+	FieldOriginConfidences      map[string]float64                      `json:"field_origin_confidences,omitempty"`
+	HintDefaults                map[string]string                       `json:"hint_defaults,omitempty"`
+	InversePatchReasons         map[string]string                       `json:"inverse_patch_reasons,omitempty"`
+	InverseEditHints            map[string]string                       `json:"inverse_edit_hints,omitempty"`
+	InputRoleRules              []inputRoleRuleRecord                   `json:"input_role_rules,omitempty"`
+	DefaultInputRole            string                                  `json:"default_input_role,omitempty"`
+	RoleOwners                  map[string]string                       `json:"role_owners,omitempty"`
+	DefaultOwner                string                                  `json:"default_owner,omitempty"`
+	WetTargets                  []wetTargetTemplateRecord               `json:"wet_targets,omitempty"`
+	RenderedLineageTemplates    []renderedLineageTemplateRecord         `json:"rendered_lineage_templates,omitempty"`
+	FieldOriginTransform        string                                  `json:"field_origin_transform,omitempty"`
+	FieldOriginOverlayTransform string                                  `json:"field_origin_overlay_transform,omitempty"`
 }
 
 type inversePatchTemplateRecord struct {
@@ -83,6 +94,32 @@ type inversePatchTemplateRecord struct {
 type inversePointerTemplateRecord struct {
 	Owner      string  `json:"owner"`
 	Confidence float64 `json:"confidence"`
+}
+
+type inputRoleRuleRecord struct {
+	Role           string   `json:"role"`
+	ExactBasenames []string `json:"exact_basenames,omitempty"`
+	Prefixes       []string `json:"prefixes,omitempty"`
+	Extensions     []string `json:"extensions,omitempty"`
+}
+
+type wetTargetTemplateRecord struct {
+	Kind                  string `json:"kind"`
+	NameTemplate          string `json:"name_template"`
+	Owner                 string `json:"owner"`
+	Namespace             string `json:"namespace,omitempty"`
+	SourceDryPathTemplate string `json:"source_dry_path_template,omitempty"`
+}
+
+type renderedLineageTemplateRecord struct {
+	Kind                   string `json:"kind"`
+	NameTemplate           string `json:"name_template"`
+	Namespace              string `json:"namespace,omitempty"`
+	SourcePathHint         string `json:"source_path_hint,omitempty"`
+	SourcePathHintFallback string `json:"source_path_hint_fallback,omitempty"`
+	SourcePathHintMulti    bool   `json:"source_path_hint_multi,omitempty"`
+	SourceDryPathTemplate  string `json:"source_dry_path_template,omitempty"`
+	Optional               bool   `json:"optional,omitempty"`
 }
 
 func runGenerators(args []string) error {
@@ -200,6 +237,10 @@ func generatorPolicyRecord(spec registry.FamilySpec) *generatorFamilyPolicyRecor
 		InversePatchTemplates:   map[string]inversePatchTemplateRecord{},
 		InversePointerTemplates: map[string]inversePointerTemplateRecord{},
 		FieldOriginConfidences:  map[string]float64{},
+		HintDefaults:            map[string]string{},
+		InversePatchReasons:     map[string]string{},
+		InverseEditHints:        map[string]string{},
+		RoleOwners:              map[string]string{},
 	}
 	for key, tpl := range spec.InversePatchTemplates {
 		policies.InversePatchTemplates[key] = inversePatchTemplateRecord{
@@ -217,6 +258,51 @@ func generatorPolicyRecord(spec registry.FamilySpec) *generatorFamilyPolicyRecor
 	for key, confidence := range spec.FieldOriginConfidences {
 		policies.FieldOriginConfidences[key] = confidence
 	}
+	for key, value := range spec.HintDefaults {
+		policies.HintDefaults[key] = value
+	}
+	for key, value := range spec.InversePatchReasons {
+		policies.InversePatchReasons[key] = value
+	}
+	for key, value := range spec.InverseEditHints {
+		policies.InverseEditHints[key] = value
+	}
+	for key, value := range spec.RoleOwners {
+		policies.RoleOwners[key] = value
+	}
+	policies.DefaultInputRole = spec.DefaultInputRole
+	policies.DefaultOwner = spec.DefaultOwner
+	policies.FieldOriginTransform = spec.FieldOriginTransform
+	policies.FieldOriginOverlayTransform = spec.FieldOriginOverlayTransform
+	for _, rule := range spec.InputRoleRules {
+		policies.InputRoleRules = append(policies.InputRoleRules, inputRoleRuleRecord{
+			Role:           rule.Role,
+			ExactBasenames: append([]string(nil), rule.ExactBasenames...),
+			Prefixes:       append([]string(nil), rule.Prefixes...),
+			Extensions:     append([]string(nil), rule.Extensions...),
+		})
+	}
+	for _, wet := range spec.WetTargets {
+		policies.WetTargets = append(policies.WetTargets, wetTargetTemplateRecord{
+			Kind:                  wet.Kind,
+			NameTemplate:          wet.NameTemplate,
+			Owner:                 wet.Owner,
+			Namespace:             wet.Namespace,
+			SourceDryPathTemplate: wet.SourceDryPathTemplate,
+		})
+	}
+	for _, lineage := range spec.RenderedLineageTemplates {
+		policies.RenderedLineageTemplates = append(policies.RenderedLineageTemplates, renderedLineageTemplateRecord{
+			Kind:                   lineage.Kind,
+			NameTemplate:           lineage.NameTemplate,
+			Namespace:              lineage.Namespace,
+			SourcePathHint:         lineage.SourcePathHint,
+			SourcePathHintFallback: lineage.SourcePathHintFallback,
+			SourcePathHintMulti:    lineage.SourcePathHintMulti,
+			SourceDryPathTemplate:  lineage.SourceDryPathTemplate,
+			Optional:               lineage.Optional,
+		})
+	}
 	if len(policies.InversePatchTemplates) == 0 {
 		policies.InversePatchTemplates = nil
 	}
@@ -225,6 +311,27 @@ func generatorPolicyRecord(spec registry.FamilySpec) *generatorFamilyPolicyRecor
 	}
 	if len(policies.FieldOriginConfidences) == 0 {
 		policies.FieldOriginConfidences = nil
+	}
+	if len(policies.HintDefaults) == 0 {
+		policies.HintDefaults = nil
+	}
+	if len(policies.InversePatchReasons) == 0 {
+		policies.InversePatchReasons = nil
+	}
+	if len(policies.InverseEditHints) == 0 {
+		policies.InverseEditHints = nil
+	}
+	if len(policies.InputRoleRules) == 0 {
+		policies.InputRoleRules = nil
+	}
+	if len(policies.RoleOwners) == 0 {
+		policies.RoleOwners = nil
+	}
+	if len(policies.WetTargets) == 0 {
+		policies.WetTargets = nil
+	}
+	if len(policies.RenderedLineageTemplates) == 0 {
+		policies.RenderedLineageTemplates = nil
 	}
 	return policies
 }

@@ -69,6 +69,7 @@ Implemented in this preview slice:
 51. Added first bridge ingest path (`internal/bridge`) to map `change-bundle` artifacts into ConfigHub governed WET ingest payloads with idempotency (`change_id + bundle_digest`) and duplicate-safe HTTP `409` handling.
 52. Added governed decision-state bridge contract and runtime transitions (`INGESTED -> ATTESTED -> ALLOW|ESCALATE|BLOCK`) with explicit authority gates, attestation linkage validation, and query-by-`change_id` support in `internal/bridge`.
 53. Added PR<->MR linkage and upstream DRY promotion guardrail state machine with explicit separate-review enforcement before protected platform-DRY merge.
+54. Expanded `cub-gen generators --json --details` with full policy/provenance template fields (`hint_defaults`, inverse reasons/hints, input role rules/defaults, role ownership defaults, wet target templates, rendered lineage templates, and field-origin transform labels) and updated parity golden contracts.
 
 ## v0.2 preview invariants
 
