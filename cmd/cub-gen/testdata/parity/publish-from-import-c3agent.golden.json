@@ -1,0 +1,295 @@
+{
+  "bundle_digest": "\u003cbundle_digest\u003e",
+  "change_id": "\u003cchange_id\u003e",
+  "contracts": [
+    {
+      "capabilities": [
+        "fleet-config",
+        "agent-orchestration",
+        "inverse-fleet-config-patch"
+      ],
+      "deterministic": true,
+      "generator_id": "gen_99a106ccc35809e5",
+      "inputs": [
+        {
+          "name": "input_01",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/c3agent-v1"
+        },
+        {
+          "name": "input_02",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/c3agent-v1"
+        }
+      ],
+      "kind": "c3agent",
+      "name": "c3agent",
+      "output_format": "kubernetes/yaml",
+      "profile": "c3agent",
+      "schema_version": "cub.confighub.io/generator-contract/v1",
+      "source_path": "",
+      "source_ref": "HEAD",
+      "source_repo": "\u003ctarget_path\u003e",
+      "transport": "oci+git",
+      "version": "0.1.0"
+    }
+  ],
+  "digest_algorithm": "sha256",
+  "discovered": [
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "generator_kind": "c3agent",
+      "generator_profile": "c3agent",
+      "inputs": [
+        "c3agent-prod.yaml",
+        "c3agent.yaml"
+      ],
+      "resource_body": "kind: ConfigMap\nmetadata:\n  name: c3agent\nspec:\n  root: \n",
+      "resource_kind": "ConfigMap",
+      "resource_name": "c3agent",
+      "resource_type": "v1/ConfigMap",
+      "root": ""
+    }
+  ],
+  "dry_inputs": [
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "owner": "app-team",
+      "path": "c3agent.yaml",
+      "profile": "c3agent",
+      "required": true,
+      "role": "fleet-config-base"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "owner": "app-team",
+      "path": "c3agent-prod.yaml",
+      "profile": "c3agent",
+      "required": true,
+      "role": "fleet-config-overlay"
+    }
+  ],
+  "dry_units": [
+    {
+      "id": "dry_18134f4a22d98974",
+      "kind": "dry-unit",
+      "layer": "dry",
+      "name": "c3agent-dry"
+    }
+  ],
+  "generated_at": "\u003ctimestamp\u003e",
+  "generator_units": [
+    {
+      "id": "gen_4f841e84e055451c",
+      "kind": "generator-unit",
+      "layer": "generator",
+      "name": "c3agent-generator"
+    }
+  ],
+  "inverse_transform_plans": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "created_at": "\u003ctimestamp\u003e",
+      "patches": [
+        {
+          "confidence": 0.91,
+          "dry_path": "fleet.agent_model",
+          "editable_by": "app-team",
+          "op": "replace",
+          "reason": "Fleet configuration (model, concurrency) is sourced from c3agent.yaml.",
+          "requires_review": false,
+          "wet_path": "ConfigMap/data/AGENT_MODEL"
+        },
+        {
+          "confidence": 0.86,
+          "dry_path": "credentials.anthropic_key_ref",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Credential references impact platform secret management.",
+          "requires_review": true,
+          "wet_path": "Secret/data/ANTHROPIC_API_KEY"
+        },
+        {
+          "confidence": 0.84,
+          "dry_path": "components.controlplane.grpc_port",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Component port changes affect platform networking and service mesh.",
+          "requires_review": true,
+          "wet_path": "ConfigMap/data/CP_GRPC_PORT"
+        }
+      ],
+      "plan_id": "\u003cplan_id\u003e",
+      "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+      "source_kind": "c3agent",
+      "source_ref": "",
+      "status": "draft",
+      "target_unit_id": "dry_18134f4a22d98974"
+    }
+  ],
+  "links": [
+    {
+      "dry_unit_id": "dry_18134f4a22d98974",
+      "generator_unit_id": "gen_4f841e84e055451c",
+      "wet_unit_id": "wet_ea7663e9658ea39e"
+    }
+  ],
+  "provenance": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "field_origin_map": [
+        {
+          "confidence": 0.91,
+          "dry_path": "fleet.agent_model",
+          "source_path": "c3agent.yaml",
+          "transform": "c3agent-config-to-runtime",
+          "wet_path": "ConfigMap/data/AGENT_MODEL"
+        },
+        {
+          "confidence": 0.86,
+          "dry_path": "credentials.anthropic_key_ref",
+          "source_path": "c3agent.yaml",
+          "transform": "c3agent-config-to-runtime",
+          "wet_path": "Secret/data/ANTHROPIC_API_KEY"
+        },
+        {
+          "confidence": 0.84,
+          "dry_path": "fleet.max_concurrent_tasks",
+          "source_path": "c3agent.yaml",
+          "transform": "c3agent-config-to-runtime",
+          "wet_path": "ConfigMap/data/MAX_CONCURRENT_TASKS"
+        },
+        {
+          "confidence": 0.8,
+          "dry_path": "fleet.max_concurrent_tasks",
+          "source_path": "c3agent-prod.yaml",
+          "transform": "c3agent-overlay-merge",
+          "wet_path": "ConfigMap/data/MAX_CONCURRENT_TASKS"
+        }
+      ],
+      "generator_id": "gen_99a106ccc35809e5",
+      "generator_name": "c3agent",
+      "generator_profile": "c3agent",
+      "input_digest": "sha256:82cc1147642aba922661d5fa2785089a1ed11ac45ff800cf9f069bea5f278f60",
+      "inverse_edit_pointers": [
+        {
+          "confidence": 0.91,
+          "dry_path": "fleet.agent_model",
+          "edit_hint": "Edit fleet.agent_model or fleet.max_concurrent_tasks in c3agent.yaml.",
+          "owner": "app-team",
+          "wet_path": "ConfigMap/data/AGENT_MODEL"
+        },
+        {
+          "confidence": 0.86,
+          "dry_path": "credentials.anthropic_key_ref",
+          "edit_hint": "Edit credentials section in c3agent.yaml and coordinate with platform secret management.",
+          "owner": "platform-engineer",
+          "wet_path": "Secret/data/ANTHROPIC_API_KEY"
+        },
+        {
+          "confidence": 0.84,
+          "dry_path": "components.controlplane.grpc_port",
+          "edit_hint": "Edit components.controlplane.grpc_port in c3agent.yaml.",
+          "owner": "platform-engineer",
+          "wet_path": "ConfigMap/data/CP_GRPC_PORT"
+        }
+      ],
+      "outputs": [
+        {
+          "digest": "\u003cdigest\u003e",
+          "role": "rendered-manifests",
+          "uri": "oci://example.local/platform/c3agent:latest"
+        }
+      ],
+      "provenance_id": "\u003cprovenance_id\u003e",
+      "rendered_at": "\u003ctimestamp\u003e",
+      "rendered_object_lineage": [
+        {
+          "kind": "ConfigMap",
+          "name": "c3agent-fleet-config",
+          "namespace": "apps",
+          "source_dry_path": "fleet.agent_model",
+          "source_path": "c3agent.yaml"
+        },
+        {
+          "kind": "Secret",
+          "name": "c3agent-fleet-credentials",
+          "namespace": "apps",
+          "source_dry_path": "credentials.anthropic_key_ref",
+          "source_path": "c3agent.yaml"
+        },
+        {
+          "kind": "ConfigMap",
+          "name": "c3agent-fleet-config",
+          "namespace": "apps",
+          "source_dry_path": "fleet.max_concurrent_tasks",
+          "source_path": "c3agent-prod.yaml"
+        }
+      ],
+      "schema_version": "cub.confighub.io/provenance/v1",
+      "sources": [
+        {
+          "path": "c3agent-prod.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "c3agent.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        }
+      ],
+      "version": "0.1.0"
+    }
+  ],
+  "ref": "HEAD",
+  "render_target_slug": "render-target",
+  "schema_version": "cub.confighub.io/change-bundle/v1",
+  "source": "cub-gen",
+  "space": "platform",
+  "summary": {
+    "contracts": 1,
+    "discovered_resources": 1,
+    "dry_inputs": 2,
+    "dry_units": 1,
+    "generator_profiles": [
+      "c3agent"
+    ],
+    "generator_units": 1,
+    "inverse_transform_plans": 1,
+    "links": 1,
+    "provenance_records": 1,
+    "wet_manifest_targets": 2,
+    "wet_units": 1
+  },
+  "target_path": "\u003ctarget_path\u003e",
+  "target_slug": "c3agent",
+  "wet_manifest_targets": [
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "ConfigMap",
+      "name": "c3agent-fleet-config",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "fleet.agent_model"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "Secret",
+      "name": "c3agent-fleet-credentials",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "credentials.anthropic_key_ref"
+    }
+  ],
+  "wet_units": [
+    {
+      "id": "wet_ea7663e9658ea39e",
+      "kind": "wet-unit",
+      "layer": "wet",
+      "name": "c3agent-wet"
+    }
+  ]
+}

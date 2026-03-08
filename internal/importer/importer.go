@@ -374,6 +374,92 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Reason:         registry.InversePatchReason(g.Kind, "schedule", "Schedule changes affect operational execution timing."),
 			},
 		}
+	case model.GeneratorC3Agent:
+		hints := c3agentPathHintsFromInputs(g.Inputs)
+		fleetConfigPolicy := registry.InversePatchTemplateFor(g.Kind, "fleet_config", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.91, RequiresReview: false,
+		})
+		credentialsPolicy := registry.InversePatchTemplateFor(g.Kind, "credentials", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.86, RequiresReview: true,
+		})
+		componentPortsPolicy := registry.InversePatchTemplateFor(g.Kind, "component_ports", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.84, RequiresReview: true,
+		})
+		return []model.InversePatch{
+			{
+				Operation:      "replace",
+				DryPath:        "fleet.agent_model",
+				WetPath:        "ConfigMap/data/AGENT_MODEL",
+				EditableBy:     fleetConfigPolicy.EditableBy,
+				Confidence:     fleetConfigPolicy.Confidence,
+				RequiresReview: fleetConfigPolicy.RequiresReview,
+				Reason: renderTargetTemplate(
+					registry.InversePatchReason(g.Kind, "fleet_config", "Fleet agent model is sourced from {{base_config_path}}."),
+					map[string]string{"base_config_path": hints.BaseConfigPath},
+				),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "credentials.anthropic_key_ref",
+				WetPath:        "Secret/data/ANTHROPIC_API_KEY",
+				EditableBy:     credentialsPolicy.EditableBy,
+				Confidence:     credentialsPolicy.Confidence,
+				RequiresReview: credentialsPolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "credentials", "Credential references impact secret management and platform security policy."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "components.controlplane.grpc_port",
+				WetPath:        "ConfigMap/data/CP_GRPC_PORT",
+				EditableBy:     componentPortsPolicy.EditableBy,
+				Confidence:     componentPortsPolicy.Confidence,
+				RequiresReview: componentPortsPolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "component_ports", "Control plane port changes affect service mesh connectivity."),
+			},
+		}
+	case model.GeneratorSwamp:
+		hints := swampPathHintsFromInputs(g.Inputs)
+		workflowDefinitionPolicy := registry.InversePatchTemplateFor(g.Kind, "workflow_definition", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.90, RequiresReview: false,
+		})
+		vaultConfigPolicy := registry.InversePatchTemplateFor(g.Kind, "vault_config", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.85, RequiresReview: true,
+		})
+		modelBindingPolicy := registry.InversePatchTemplateFor(g.Kind, "model_binding", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.88, RequiresReview: false,
+		})
+		return []model.InversePatch{
+			{
+				Operation:      "replace",
+				DryPath:        "jobs[].steps[].task",
+				WetPath:        "Workflow/spec/jobs",
+				EditableBy:     workflowDefinitionPolicy.EditableBy,
+				Confidence:     workflowDefinitionPolicy.Confidence,
+				RequiresReview: workflowDefinitionPolicy.RequiresReview,
+				Reason: renderTargetTemplate(
+					registry.InversePatchReason(g.Kind, "workflow_definition", "Workflow task definitions are sourced from {{base_config_path}}."),
+					map[string]string{"base_config_path": hints.BaseConfigPath},
+				),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "vaults.default.type",
+				WetPath:        "ConfigMap/data/VAULT_TYPE",
+				EditableBy:     vaultConfigPolicy.EditableBy,
+				Confidence:     vaultConfigPolicy.Confidence,
+				RequiresReview: vaultConfigPolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "vault_config", "Vault type changes affect secrets backend and platform security policy."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "steps[].task.modelIdOrName",
+				WetPath:        "Workflow/spec/model_refs",
+				EditableBy:     modelBindingPolicy.EditableBy,
+				Confidence:     modelBindingPolicy.Confidence,
+				RequiresReview: modelBindingPolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "model_binding", "Model binding maps task steps to execution model references."),
+			},
+		}
 	default:
 		return []model.InversePatch{}
 	}
@@ -523,6 +609,76 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				SourcePath: hints.OverlaySpecPath,
 				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "schedule_overlay", 0.80),
+			})
+		}
+		return origins
+	case model.GeneratorC3Agent:
+		hints := c3agentPathHintsFromInputs(g.Inputs)
+		origins := []model.FieldOrigin{
+			{
+				DryPath:    "fleet.agent_model",
+				WetPath:    "ConfigMap/data/AGENT_MODEL",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "fleet_config", 0.91),
+			},
+			{
+				DryPath:    "credentials.anthropic_key_ref",
+				WetPath:    "Secret/data/ANTHROPIC_API_KEY",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "credentials", 0.86),
+			},
+			{
+				DryPath:    "fleet.max_concurrent_tasks",
+				WetPath:    "ConfigMap/data/MAX_CONCURRENT_TASKS",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "max_concurrent_tasks_base", 0.84),
+			},
+		}
+		if hints.OverlayConfigPath != "" {
+			origins = append(origins, model.FieldOrigin{
+				DryPath:    "fleet.max_concurrent_tasks",
+				WetPath:    "ConfigMap/data/MAX_CONCURRENT_TASKS",
+				SourcePath: hints.OverlayConfigPath,
+				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "max_concurrent_tasks_overlay", 0.80),
+			})
+		}
+		return origins
+	case model.GeneratorSwamp:
+		hints := swampPathHintsFromInputs(g.Inputs)
+		origins := []model.FieldOrigin{
+			{
+				DryPath:    "vaults.default.type",
+				WetPath:    "ConfigMap/data/VAULT_TYPE",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "vault_config", 0.85),
+			},
+			{
+				DryPath:    "swamp.version",
+				WetPath:    "ConfigMap/data/SWAMP_VERSION",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "version", 0.90),
+			},
+			{
+				DryPath:    "jobs[].steps[].task",
+				WetPath:    "Workflow/spec/jobs",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "workflow_definition", 0.88),
+			},
+		}
+		if hints.WorkflowPath != "" {
+			origins = append(origins, model.FieldOrigin{
+				DryPath:    "steps[].task.modelIdOrName",
+				WetPath:    "Workflow/spec/model_refs",
+				SourcePath: hints.WorkflowPath,
+				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "model_binding_overlay", 0.84),
 			})
 		}
 		return origins
@@ -721,6 +877,82 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				Owner:      schedulePolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, scheduleHintKey, scheduleHintFallback), vars),
 				Confidence: schedulePolicy.Confidence,
+			},
+		}
+	case model.GeneratorC3Agent:
+		hints := c3agentPathHintsFromInputs(g.Inputs)
+		fleetConfigPolicy := registry.InversePointerTemplateFor(g.Kind, "fleet_config", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.91,
+		})
+		credentialsPolicy := registry.InversePointerTemplateFor(g.Kind, "credentials", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.86,
+		})
+		componentPortsPolicy := registry.InversePointerTemplateFor(g.Kind, "component_ports", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.84,
+		})
+		vars := map[string]string{
+			"base_config_path":    hints.BaseConfigPath,
+			"overlay_config_path": hints.OverlayConfigPath,
+		}
+		return []model.InverseEditPointer{
+			{
+				WetPath:    "ConfigMap/data/AGENT_MODEL",
+				DryPath:    "fleet.agent_model",
+				Owner:      fleetConfigPolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "fleet_config", "Edit fleet.agent_model in {{base_config_path}}."), vars),
+				Confidence: fleetConfigPolicy.Confidence,
+			},
+			{
+				WetPath:    "Secret/data/ANTHROPIC_API_KEY",
+				DryPath:    "credentials.anthropic_key_ref",
+				Owner:      credentialsPolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "credentials", "Edit credentials.anthropic_key_ref in {{base_config_path}} and coordinate with platform security policy."), vars),
+				Confidence: credentialsPolicy.Confidence,
+			},
+			{
+				WetPath:    "ConfigMap/data/CP_GRPC_PORT",
+				DryPath:    "components.controlplane.grpc_port",
+				Owner:      componentPortsPolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "component_ports", "Edit components.controlplane.grpc_port in {{base_config_path}}."), vars),
+				Confidence: componentPortsPolicy.Confidence,
+			},
+		}
+	case model.GeneratorSwamp:
+		hints := swampPathHintsFromInputs(g.Inputs)
+		workflowDefinitionPolicy := registry.InversePointerTemplateFor(g.Kind, "workflow_definition", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.90,
+		})
+		vaultConfigPolicy := registry.InversePointerTemplateFor(g.Kind, "vault_config", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.85,
+		})
+		modelBindingPolicy := registry.InversePointerTemplateFor(g.Kind, "model_binding", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.88,
+		})
+		vars := map[string]string{
+			"base_config_path": hints.BaseConfigPath,
+			"workflow_path":    hints.WorkflowPath,
+		}
+		return []model.InverseEditPointer{
+			{
+				WetPath:    "Workflow/spec/jobs",
+				DryPath:    "jobs[].steps[].task",
+				Owner:      workflowDefinitionPolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "workflow_definition", "Edit jobs[].steps[].task in {{base_config_path}}."), vars),
+				Confidence: workflowDefinitionPolicy.Confidence,
+			},
+			{
+				WetPath:    "ConfigMap/data/VAULT_TYPE",
+				DryPath:    "vaults.default.type",
+				Owner:      vaultConfigPolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "vault_config", "Edit vaults.default.type in {{base_config_path}} and coordinate with platform security policy."), vars),
+				Confidence: vaultConfigPolicy.Confidence,
+			},
+			{
+				WetPath:    "Workflow/spec/model_refs",
+				DryPath:    "steps[].task.modelIdOrName",
+				Owner:      modelBindingPolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "model_binding", "Edit steps[].task.modelIdOrName in {{base_config_path}}."), vars),
+				Confidence: modelBindingPolicy.Confidence,
 			},
 		}
 	default:
@@ -1068,6 +1300,14 @@ func lineageTemplateContext(detection model.DetectionResult, g model.GeneratorDe
 		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
 		singleHints["base_spec_path"] = hints.BaseSpecPath
 		singleHints["overlay_spec_path"] = hints.OverlaySpecPath
+	case model.GeneratorC3Agent:
+		hints := c3agentPathHintsFromInputs(g.Inputs)
+		singleHints["base_config_path"] = hints.BaseConfigPath
+		singleHints["overlay_config_path"] = hints.OverlayConfigPath
+	case model.GeneratorSwamp:
+		hints := swampPathHintsFromInputs(g.Inputs)
+		singleHints["base_config_path"] = hints.BaseConfigPath
+		singleHints["workflow_path"] = hints.WorkflowPath
 	}
 
 	return vars, singleHints, multiHints
@@ -1199,6 +1439,54 @@ func opsWorkflowPathHintsFromInputs(inputs []string) opsWorkflowHints {
 		case strings.HasPrefix(base, "operations-") || strings.HasPrefix(base, "workflow-"):
 			if h.OverlaySpecPath == "" || p < h.OverlaySpecPath {
 				h.OverlaySpecPath = p
+			}
+		}
+	}
+	return h
+}
+
+type c3agentHints struct {
+	BaseConfigPath    string
+	OverlayConfigPath string
+}
+
+func c3agentPathHintsFromInputs(inputs []string) c3agentHints {
+	h := c3agentHints{
+		BaseConfigPath: registry.HintDefault(model.GeneratorC3Agent, "base_config_path", "c3agent.yaml"),
+	}
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		base := strings.ToLower(filepath.Base(in))
+		switch {
+		case base == "c3agent.yaml" || base == "c3agent.yml" || base == "c3agent.json":
+			h.BaseConfigPath = p
+		case strings.HasPrefix(base, "c3agent-"):
+			if h.OverlayConfigPath == "" || p < h.OverlayConfigPath {
+				h.OverlayConfigPath = p
+			}
+		}
+	}
+	return h
+}
+
+type swampHints struct {
+	BaseConfigPath string
+	WorkflowPath   string
+}
+
+func swampPathHintsFromInputs(inputs []string) swampHints {
+	h := swampHints{
+		BaseConfigPath: registry.HintDefault(model.GeneratorSwamp, "base_config_path", ".swamp.yaml"),
+	}
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		base := strings.ToLower(filepath.Base(in))
+		switch {
+		case base == ".swamp.yaml" || base == ".swamp.yml" || base == ".swamp.json":
+			h.BaseConfigPath = p
+		case strings.HasPrefix(base, "workflow-"):
+			if h.WorkflowPath == "" || p < h.WorkflowPath {
+				h.WorkflowPath = p
 			}
 		}
 	}

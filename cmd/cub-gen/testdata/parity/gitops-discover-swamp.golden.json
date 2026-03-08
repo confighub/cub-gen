@@ -1,0 +1,41 @@
+{
+  "alias_path_suffix": "examples/swamp-automation",
+  "detections": [
+    {
+      "confidence": 0.89,
+      "id": "gen_124d7fbd01e19b49",
+      "inputs": [
+        ".swamp.yaml",
+        "workflow-deploy.yaml"
+      ],
+      "kind": "swamp",
+      "name": "swamp-automation",
+      "profile": "swamp",
+      "root": ""
+    }
+  ],
+  "discover_file": "\u003cdiscover_file\u003e",
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
+  "discovered_at": "\u003ctimestamp\u003e",
+  "ref": "HEAD",
+  "resources": [
+    {
+      "generator_id": "gen_124d7fbd01e19b49",
+      "generator_kind": "swamp",
+      "generator_profile": "swamp",
+      "inputs": [
+        ".swamp.yaml",
+        "workflow-deploy.yaml"
+      ],
+      "resource_body": "kind: Workflow\nmetadata:\n  name: swamp-automation\nspec:\n  root: \n",
+      "resource_kind": "Workflow",
+      "resource_name": "swamp-automation",
+      "resource_type": "swamp.dev/v1/Workflow",
+      "root": ""
+    }
+  ],
+  "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
+  "target_path_expected_suffix": "examples/swamp-automation",
+  "target_slug": "swamp"
+}

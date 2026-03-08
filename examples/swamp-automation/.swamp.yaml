@@ -1,0 +1,7 @@
+swamp:
+  version: "2026.03.01"
+  log_level: info
+vaults:
+  default:
+    type: local-encryption
+    key_ref: SWAMP_VAULT_KEY

@@ -391,6 +391,122 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			{Kind: "Job", NameTemplate: "{{name}}-dry-run", Owner: "platform-runtime", Namespace: "ops", SourceDryPathTemplate: "triggers.schedule"},
 		},
 	},
+	model.GeneratorC3Agent: {
+		Kind:         model.GeneratorC3Agent,
+		Profile:      "c3agent",
+		ResourceKind: "ConfigMap",
+		ResourceType: "v1/ConfigMap",
+		Capabilities: []string{"fleet-config", "agent-orchestration", "inverse-fleet-config-patch"},
+		RoleSchemaRefs: map[string]string{
+			"fleet-config-base":    "https://schema.confighub.dev/generators/c3agent-v1",
+			"fleet-config-overlay": "https://schema.confighub.dev/generators/c3agent-v1",
+		},
+		HintDefaults: map[string]string{
+			"base_config_path": "c3agent.yaml",
+		},
+		InversePatchReasons: map[string]string{
+			"fleet_config":    "Fleet configuration (model, concurrency) is sourced from {{base_config_path}}.",
+			"credentials":     "Credential references impact platform secret management.",
+			"component_ports": "Component port changes affect platform networking and service mesh.",
+		},
+		InverseEditHints: map[string]string{
+			"fleet_config":          "Edit fleet.agent_model or fleet.max_concurrent_tasks in {{base_config_path}}.",
+			"credentials":           "Edit credentials section in {{base_config_path}} and coordinate with platform secret management.",
+			"component_ports_base":  "Edit components.controlplane.grpc_port in {{base_config_path}}.",
+			"component_ports_overlay": "Edit component ports in {{overlay_config_path}} for environment-specific values; use {{base_config_path}} for defaults.",
+		},
+		InversePatchTemplates: map[string]InversePatchTemplate{
+			"fleet_config":    {EditableBy: "app-team", Confidence: 0.91, RequiresReview: false},
+			"credentials":     {EditableBy: "platform-engineer", Confidence: 0.86, RequiresReview: true},
+			"component_ports": {EditableBy: "platform-engineer", Confidence: 0.84, RequiresReview: true},
+		},
+		InversePointerTemplates: map[string]InversePointerTemplate{
+			"fleet_config":    {Owner: "app-team", Confidence: 0.91},
+			"credentials":     {Owner: "platform-engineer", Confidence: 0.86},
+			"component_ports": {Owner: "platform-engineer", Confidence: 0.84},
+		},
+		FieldOriginConfidences: map[string]float64{
+			"fleet_config":            0.91,
+			"credentials":             0.86,
+			"component_ports_base":    0.84,
+			"component_ports_overlay": 0.80,
+		},
+		RenderedLineageTemplates: []RenderedLineageTemplate{
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-fleet-config", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "fleet.agent_model"},
+			{Kind: "Secret", NameTemplate: "{{name}}-fleet-credentials", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "credentials.anthropic_key_ref"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-fleet-config", Namespace: "apps", SourcePathHint: "overlay_config_path", SourceDryPathTemplate: "fleet.max_concurrent_tasks", Optional: true},
+		},
+		FieldOriginTransform:        "c3agent-config-to-runtime",
+		FieldOriginOverlayTransform: "c3agent-overlay-merge",
+		InputRoleRules: []InputRoleRule{
+			{Role: "fleet-config-base", ExactBasenames: []string{"c3agent.yaml", "c3agent.yml", "c3agent.json"}},
+			{Role: "fleet-config-overlay", Prefixes: []string{"c3agent-"}, Extensions: []string{".yaml", ".yml", ".json"}},
+		},
+		DefaultInputRole: "fleet-config",
+		DefaultOwner:     "app-team",
+		WetTargets: []WetTargetTemplate{
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-fleet-config", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "fleet.agent_model"},
+			{Kind: "Secret", NameTemplate: "{{name}}-fleet-credentials", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "credentials.anthropic_key_ref"},
+		},
+	},
+	model.GeneratorSwamp: {
+		Kind:         model.GeneratorSwamp,
+		Profile:      "swamp",
+		ResourceKind: "Workflow",
+		ResourceType: "swamp.dev/v1/Workflow",
+		Capabilities: []string{"workflow-automation", "model-orchestration", "inverse-workflow-patch"},
+		RoleSchemaRefs: map[string]string{
+			"swamp-config-base": "https://schema.confighub.dev/generators/swamp-v1",
+			"swamp-workflow":    "https://schema.confighub.dev/generators/swamp-workflow-v1",
+		},
+		HintDefaults: map[string]string{
+			"base_config_path": ".swamp.yaml",
+		},
+		InversePatchReasons: map[string]string{
+			"workflow_definition": "Workflow job and step definitions are app-level automation intent.",
+			"vault_config":        "Vault configuration impacts platform credential infrastructure.",
+			"model_binding":       "Model bindings define which automation models execute in workflows.",
+		},
+		InverseEditHints: map[string]string{
+			"workflow_definition":    "Edit jobs and steps in the workflow YAML file.",
+			"vault_config":           "Edit vaults section in {{base_config_path}} and coordinate with platform secret infrastructure.",
+			"model_binding_base":     "Edit model references in the workflow definition.",
+			"model_binding_workflow": "Edit model method bindings in the workflow file for task-specific overrides.",
+		},
+		InversePatchTemplates: map[string]InversePatchTemplate{
+			"workflow_definition": {EditableBy: "app-team", Confidence: 0.90, RequiresReview: false},
+			"vault_config":        {EditableBy: "platform-engineer", Confidence: 0.85, RequiresReview: true},
+			"model_binding":       {EditableBy: "app-team", Confidence: 0.88, RequiresReview: false},
+		},
+		InversePointerTemplates: map[string]InversePointerTemplate{
+			"workflow_definition": {Owner: "app-team", Confidence: 0.90},
+			"vault_config":        {Owner: "platform-engineer", Confidence: 0.85},
+			"model_binding":       {Owner: "app-team", Confidence: 0.88},
+		},
+		FieldOriginConfidences: map[string]float64{
+			"workflow_definition":    0.90,
+			"vault_config":           0.85,
+			"model_binding_base":     0.88,
+			"model_binding_workflow": 0.84,
+		},
+		RenderedLineageTemplates: []RenderedLineageTemplate{
+			{Kind: "Workflow", NameTemplate: "{{name}}-workflow", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "vaults.default.type"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-swamp-config", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "swamp.version"},
+			{Kind: "Workflow", NameTemplate: "{{name}}-workflow", Namespace: "apps", SourcePathHint: "workflow_path", SourceDryPathTemplate: "jobs[].steps[].task", Optional: true},
+		},
+		FieldOriginTransform:        "swamp-workflow-to-execution",
+		FieldOriginOverlayTransform: "swamp-overlay-merge",
+		InputRoleRules: []InputRoleRule{
+			{Role: "swamp-config-base", ExactBasenames: []string{".swamp.yaml", ".swamp.yml"}},
+			{Role: "swamp-workflow", Prefixes: []string{"workflow-"}, Extensions: []string{".yaml", ".yml"}},
+		},
+		DefaultInputRole: "swamp-input",
+		DefaultOwner:     "app-team",
+		WetTargets: []WetTargetTemplate{
+			{Kind: "Workflow", NameTemplate: "{{name}}-workflow", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "jobs[].steps[].task"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-swamp-config", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "swamp.version"},
+		},
+	},
 }
 
 func Spec(kind model.GeneratorKind) (FamilySpec, bool) {

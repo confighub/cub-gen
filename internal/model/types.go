@@ -9,6 +9,8 @@ const (
 	GeneratorBackstage  GeneratorKind = "backstage"
 	GeneratorAbly       GeneratorKind = "ably"
 	GeneratorOpsFlow    GeneratorKind = "opsworkflow"
+	GeneratorC3Agent    GeneratorKind = "c3agent"
+	GeneratorSwamp      GeneratorKind = "swamp"
 )
 
 type GeneratorDetection struct {

@@ -11,10 +11,12 @@ func TestRegistryHasSpecForAllKinds(t *testing.T) {
 	expected := []model.GeneratorKind{
 		model.GeneratorAbly,
 		model.GeneratorBackstage,
+		model.GeneratorC3Agent,
 		model.GeneratorHelm,
 		model.GeneratorOpsFlow,
 		model.GeneratorScore,
 		model.GeneratorSpringBoot,
+		model.GeneratorSwamp,
 	}
 
 	if got := Kinds(); !reflect.DeepEqual(got, expected) {

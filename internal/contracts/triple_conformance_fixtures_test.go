@@ -92,6 +92,8 @@ func allFamilyFixtures() []familyFixture {
 		{Name: "backstage", RepoDir: "backstage-idp", Kind: model.GeneratorBackstage, Profile: "backstage-idp"},
 		{Name: "ably", RepoDir: "ably-config", Kind: model.GeneratorAbly, Profile: "ably-config"},
 		{Name: "ops", RepoDir: "ops-workflow", Kind: model.GeneratorOpsFlow, Profile: "ops-workflow"},
+		{Name: "c3agent", RepoDir: "c3agent", Kind: model.GeneratorC3Agent, Profile: "c3agent"},
+		{Name: "swamp", RepoDir: "swamp-automation", Kind: model.GeneratorSwamp, Profile: "swamp"},
 	}
 }
 

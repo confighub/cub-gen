@@ -1,0 +1,5 @@
+fleet:
+  max_concurrent_tasks: 5
+  agent_model: claude-sonnet-4-20250514
+credentials:
+  anthropic_key_ref: ANTHROPIC_API_KEY_PROD

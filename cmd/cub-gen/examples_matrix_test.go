@@ -54,6 +54,18 @@ func bridgeSymmetryMatrix() []exampleFamilyFixture {
 			expectedProfile: "ops-workflow",
 			expectedKind:    "opsworkflow",
 		},
+		{
+			name:            "c3agent",
+			repoSuffix:      filepath.Join("examples", "c3agent"),
+			expectedProfile: "c3agent",
+			expectedKind:    "c3agent",
+		},
+		{
+			name:            "swamp",
+			repoSuffix:      filepath.Join("examples", "swamp-automation"),
+			expectedProfile: "swamp",
+			expectedKind:    "swamp",
+		},
 	}
 }
 

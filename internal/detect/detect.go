@@ -59,12 +59,22 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 	if err != nil {
 		return model.DetectionResult{}, err
 	}
+	c3agentDetections, err := detectC3Agent(absRepo)
+	if err != nil {
+		return model.DetectionResult{}, err
+	}
+	swampDetections, err := detectSwamp(absRepo)
+	if err != nil {
+		return model.DetectionResult{}, err
+	}
 
 	all := append(helmDetections, scoreDetections...)
 	all = append(all, springDetections...)
 	all = append(all, backstageDetections...)
 	all = append(all, ablyDetections...)
 	all = append(all, opsDetections...)
+	all = append(all, c3agentDetections...)
+	all = append(all, swampDetections...)
 	sort.Slice(all, func(i, j int) bool {
 		if all[i].Kind != all[j].Kind {
 			return all[i].Kind < all[j].Kind
@@ -493,6 +503,151 @@ func detectOpsWorkflow(repo string) ([]model.GeneratorDetection, error) {
 	})
 	if err != nil {
 		return nil, fmt.Errorf("detect ops workflow: %w", err)
+	}
+	return mapValuesSorted(detected), nil
+}
+
+func detectC3Agent(repo string) ([]model.GeneratorDetection, error) {
+	detected := make(map[string]model.GeneratorDetection)
+	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() && shouldSkipDir(d.Name()) {
+			return filepath.SkipDir
+		}
+		if d.IsDir() {
+			return nil
+		}
+		name := strings.ToLower(d.Name())
+		if name != "c3agent.yaml" && name != "c3agent.yml" && name != "c3agent.json" {
+			return nil
+		}
+
+		b, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		content := strings.ToLower(string(b))
+		if !strings.Contains(content, "fleet:") && !strings.Contains(content, "agent") {
+			return nil
+		}
+
+		root := filepath.Dir(path)
+		relRoot, err := filepath.Rel(repo, root)
+		if err != nil {
+			return err
+		}
+		if relRoot == "." {
+			relRoot = ""
+		}
+
+		inputs := []string{}
+		patterns := []string{"c3agent*.yaml", "c3agent*.yml", "c3agent*.json"}
+		for _, pattern := range patterns {
+			matches, _ := filepath.Glob(filepath.Join(root, pattern))
+			for _, match := range matches {
+				rel, relErr := filepath.Rel(repo, match)
+				if relErr != nil {
+					continue
+				}
+				inputs = append(inputs, filepath.ToSlash(rel))
+			}
+		}
+		inputs = unique(inputs)
+		sort.Strings(inputs)
+		if len(inputs) == 0 {
+			relFile, relErr := filepath.Rel(repo, path)
+			if relErr == nil {
+				inputs = append(inputs, filepath.ToSlash(relFile))
+			}
+		}
+
+		detected["c3agent:"+relRoot] = model.GeneratorDetection{
+			ID:         "gen_" + shortID("c3agent:"+filepath.ToSlash(relRoot)),
+			Kind:       model.GeneratorC3Agent,
+			Profile:    profileForKind(model.GeneratorC3Agent),
+			Name:       filepath.Base(root),
+			Root:       filepath.ToSlash(relRoot),
+			Inputs:     inputs,
+			Confidence: 0.88,
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("detect c3agent: %w", err)
+	}
+	return mapValuesSorted(detected), nil
+}
+
+func detectSwamp(repo string) ([]model.GeneratorDetection, error) {
+	detected := make(map[string]model.GeneratorDetection)
+	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() && shouldSkipDir(d.Name()) {
+			return filepath.SkipDir
+		}
+		if d.IsDir() {
+			return nil
+		}
+		name := strings.ToLower(d.Name())
+		if name != ".swamp.yaml" && name != ".swamp.yml" {
+			return nil
+		}
+
+		b, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		content := strings.ToLower(string(b))
+		if !strings.Contains(content, "swamp") {
+			return nil
+		}
+
+		root := filepath.Dir(path)
+		relRoot, err := filepath.Rel(repo, root)
+		if err != nil {
+			return err
+		}
+		if relRoot == "." {
+			relRoot = ""
+		}
+
+		inputs := []string{}
+		relFile, relErr := filepath.Rel(repo, path)
+		if relErr == nil {
+			inputs = append(inputs, filepath.ToSlash(relFile))
+		}
+		// Collect workflow files from sibling or child directories.
+		patterns := []string{"workflow-*.yaml", "workflow-*.yml"}
+		for _, pattern := range patterns {
+			matches, _ := filepath.Glob(filepath.Join(root, pattern))
+			for _, match := range matches {
+				rel, rErr := filepath.Rel(repo, match)
+				if rErr != nil {
+					continue
+				}
+				inputs = append(inputs, filepath.ToSlash(rel))
+			}
+		}
+		inputs = unique(inputs)
+		sort.Strings(inputs)
+
+		detected["swamp:"+relRoot] = model.GeneratorDetection{
+			ID:         "gen_" + shortID("swamp:"+filepath.ToSlash(relRoot)),
+			Kind:       model.GeneratorSwamp,
+			Profile:    profileForKind(model.GeneratorSwamp),
+			Name:       filepath.Base(root),
+			Root:       filepath.ToSlash(relRoot),
+			Inputs:     inputs,
+			Confidence: 0.89,
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("detect swamp: %w", err)
 	}
 	return mapValuesSorted(detected), nil
 }

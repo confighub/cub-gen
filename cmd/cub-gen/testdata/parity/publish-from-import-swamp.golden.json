@@ -1,0 +1,295 @@
+{
+  "bundle_digest": "\u003cbundle_digest\u003e",
+  "change_id": "\u003cchange_id\u003e",
+  "contracts": [
+    {
+      "capabilities": [
+        "workflow-automation",
+        "model-orchestration",
+        "inverse-workflow-patch"
+      ],
+      "deterministic": true,
+      "generator_id": "gen_124d7fbd01e19b49",
+      "inputs": [
+        {
+          "name": "input_01",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/swamp-v1"
+        },
+        {
+          "name": "input_02",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/swamp-workflow-v1"
+        }
+      ],
+      "kind": "swamp",
+      "name": "swamp-automation",
+      "output_format": "kubernetes/yaml",
+      "profile": "swamp",
+      "schema_version": "cub.confighub.io/generator-contract/v1",
+      "source_path": "",
+      "source_ref": "HEAD",
+      "source_repo": "\u003ctarget_path\u003e",
+      "transport": "oci+git",
+      "version": "0.1.0"
+    }
+  ],
+  "digest_algorithm": "sha256",
+  "discovered": [
+    {
+      "generator_id": "gen_124d7fbd01e19b49",
+      "generator_kind": "swamp",
+      "generator_profile": "swamp",
+      "inputs": [
+        ".swamp.yaml",
+        "workflow-deploy.yaml"
+      ],
+      "resource_body": "kind: Workflow\nmetadata:\n  name: swamp-automation\nspec:\n  root: \n",
+      "resource_kind": "Workflow",
+      "resource_name": "swamp-automation",
+      "resource_type": "swamp.dev/v1/Workflow",
+      "root": ""
+    }
+  ],
+  "dry_inputs": [
+    {
+      "generator_id": "gen_124d7fbd01e19b49",
+      "owner": "app-team",
+      "path": ".swamp.yaml",
+      "profile": "swamp",
+      "required": true,
+      "role": "swamp-config-base"
+    },
+    {
+      "generator_id": "gen_124d7fbd01e19b49",
+      "owner": "app-team",
+      "path": "workflow-deploy.yaml",
+      "profile": "swamp",
+      "required": true,
+      "role": "swamp-workflow"
+    }
+  ],
+  "dry_units": [
+    {
+      "id": "dry_db79ecab95c27d37",
+      "kind": "dry-unit",
+      "layer": "dry",
+      "name": "swamp-automation-dry"
+    }
+  ],
+  "generated_at": "\u003ctimestamp\u003e",
+  "generator_units": [
+    {
+      "id": "gen_6e38eae428cdc6a6",
+      "kind": "generator-unit",
+      "layer": "generator",
+      "name": "swamp-automation-generator"
+    }
+  ],
+  "inverse_transform_plans": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "created_at": "\u003ctimestamp\u003e",
+      "patches": [
+        {
+          "confidence": 0.9,
+          "dry_path": "jobs[].steps[].task",
+          "editable_by": "app-team",
+          "op": "replace",
+          "reason": "Workflow job and step definitions are app-level automation intent.",
+          "requires_review": false,
+          "wet_path": "Workflow/spec/jobs"
+        },
+        {
+          "confidence": 0.85,
+          "dry_path": "vaults.default.type",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Vault configuration impacts platform credential infrastructure.",
+          "requires_review": true,
+          "wet_path": "ConfigMap/data/VAULT_TYPE"
+        },
+        {
+          "confidence": 0.88,
+          "dry_path": "steps[].task.modelIdOrName",
+          "editable_by": "app-team",
+          "op": "replace",
+          "reason": "Model bindings define which automation models execute in workflows.",
+          "requires_review": false,
+          "wet_path": "Workflow/spec/model_refs"
+        }
+      ],
+      "plan_id": "\u003cplan_id\u003e",
+      "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+      "source_kind": "swamp",
+      "source_ref": "",
+      "status": "draft",
+      "target_unit_id": "dry_db79ecab95c27d37"
+    }
+  ],
+  "links": [
+    {
+      "dry_unit_id": "dry_db79ecab95c27d37",
+      "generator_unit_id": "gen_6e38eae428cdc6a6",
+      "wet_unit_id": "wet_41e643da966997f2"
+    }
+  ],
+  "provenance": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "field_origin_map": [
+        {
+          "confidence": 0.85,
+          "dry_path": "vaults.default.type",
+          "source_path": ".swamp.yaml",
+          "transform": "swamp-workflow-to-execution",
+          "wet_path": "ConfigMap/data/VAULT_TYPE"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "swamp.version",
+          "source_path": ".swamp.yaml",
+          "transform": "swamp-workflow-to-execution",
+          "wet_path": "ConfigMap/data/SWAMP_VERSION"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "jobs[].steps[].task",
+          "source_path": ".swamp.yaml",
+          "transform": "swamp-workflow-to-execution",
+          "wet_path": "Workflow/spec/jobs"
+        },
+        {
+          "confidence": 0.84,
+          "dry_path": "steps[].task.modelIdOrName",
+          "source_path": "workflow-deploy.yaml",
+          "transform": "swamp-overlay-merge",
+          "wet_path": "Workflow/spec/model_refs"
+        }
+      ],
+      "generator_id": "gen_124d7fbd01e19b49",
+      "generator_name": "swamp-automation",
+      "generator_profile": "swamp",
+      "input_digest": "sha256:88342ced7e0cc9b402d6e6fa04e119b700d9565c5ba19dba0253165cac8f2b59",
+      "inverse_edit_pointers": [
+        {
+          "confidence": 0.9,
+          "dry_path": "jobs[].steps[].task",
+          "edit_hint": "Edit jobs and steps in the workflow YAML file.",
+          "owner": "app-team",
+          "wet_path": "Workflow/spec/jobs"
+        },
+        {
+          "confidence": 0.85,
+          "dry_path": "vaults.default.type",
+          "edit_hint": "Edit vaults section in .swamp.yaml and coordinate with platform secret infrastructure.",
+          "owner": "platform-engineer",
+          "wet_path": "ConfigMap/data/VAULT_TYPE"
+        },
+        {
+          "confidence": 0.88,
+          "dry_path": "steps[].task.modelIdOrName",
+          "edit_hint": "Edit steps[].task.modelIdOrName in .swamp.yaml.",
+          "owner": "app-team",
+          "wet_path": "Workflow/spec/model_refs"
+        }
+      ],
+      "outputs": [
+        {
+          "digest": "\u003cdigest\u003e",
+          "role": "rendered-manifests",
+          "uri": "oci://example.local/platform/swamp-automation:latest"
+        }
+      ],
+      "provenance_id": "\u003cprovenance_id\u003e",
+      "rendered_at": "\u003ctimestamp\u003e",
+      "rendered_object_lineage": [
+        {
+          "kind": "Workflow",
+          "name": "swamp-automation-workflow",
+          "namespace": "apps",
+          "source_dry_path": "vaults.default.type",
+          "source_path": ".swamp.yaml"
+        },
+        {
+          "kind": "ConfigMap",
+          "name": "swamp-automation-swamp-config",
+          "namespace": "apps",
+          "source_dry_path": "swamp.version",
+          "source_path": ".swamp.yaml"
+        },
+        {
+          "kind": "Workflow",
+          "name": "swamp-automation-workflow",
+          "namespace": "apps",
+          "source_dry_path": "jobs[].steps[].task",
+          "source_path": "workflow-deploy.yaml"
+        }
+      ],
+      "schema_version": "cub.confighub.io/provenance/v1",
+      "sources": [
+        {
+          "path": ".swamp.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "workflow-deploy.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        }
+      ],
+      "version": "0.1.0"
+    }
+  ],
+  "ref": "HEAD",
+  "render_target_slug": "render-target",
+  "schema_version": "cub.confighub.io/change-bundle/v1",
+  "source": "cub-gen",
+  "space": "platform",
+  "summary": {
+    "contracts": 1,
+    "discovered_resources": 1,
+    "dry_inputs": 2,
+    "dry_units": 1,
+    "generator_profiles": [
+      "swamp"
+    ],
+    "generator_units": 1,
+    "inverse_transform_plans": 1,
+    "links": 1,
+    "provenance_records": 1,
+    "wet_manifest_targets": 2,
+    "wet_units": 1
+  },
+  "target_path": "\u003ctarget_path\u003e",
+  "target_slug": "swamp",
+  "wet_manifest_targets": [
+    {
+      "generator_id": "gen_124d7fbd01e19b49",
+      "kind": "Workflow",
+      "name": "swamp-automation-workflow",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "jobs[].steps[].task"
+    },
+    {
+      "generator_id": "gen_124d7fbd01e19b49",
+      "kind": "ConfigMap",
+      "name": "swamp-automation-swamp-config",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "swamp.version"
+    }
+  ],
+  "wet_units": [
+    {
+      "id": "wet_41e643da966997f2",
+      "kind": "wet-unit",
+      "layer": "wet",
+      "name": "swamp-automation-wet"
+    }
+  ]
+}
