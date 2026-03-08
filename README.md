@@ -214,6 +214,13 @@ without coupling the core flow to a running ConfigHub backend.
 ./cub-gen generators --json --details | jq '.families[] | {kind, profile, policies}'
 ```
 
+`--details` exposes full family policy/provenance templates, including:
+`inverse_patch_templates`, `inverse_pointer_templates`,
+`field_origin_confidences`, `hint_defaults`, `inverse_patch_reasons`,
+`inverse_edit_hints`, `input_role_rules`, `default_input_role`,
+`role_owners`, `default_owner`, `wet_targets`, `rendered_lineage_templates`,
+`field_origin_transform`, and `field_origin_overlay_transform`.
+
 Or run direct mode (import + bundle in one command):
 
 ```bash

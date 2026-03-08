@@ -9,10 +9,47 @@
       ],
       "kind": "ably",
       "policies": {
+        "default_input_role": "provider-config",
+        "default_owner": "app-team",
         "field_origin_confidences": {
           "channels_base": 0.88,
           "channels_overlay": 0.84,
           "environment": 0.9
+        },
+        "field_origin_overlay_transform": "ably-overlay-merge",
+        "field_origin_transform": "ably-config-to-runtime",
+        "hint_defaults": {
+          "base_config_path": "ably.yaml"
+        },
+        "input_role_rules": [
+          {
+            "exact_basenames": [
+              "ably.yaml",
+              "ably.yml",
+              "ably.json"
+            ],
+            "role": "provider-config-base"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml",
+              ".json"
+            ],
+            "prefixes": [
+              "ably-"
+            ],
+            "role": "provider-config-overlay"
+          }
+        ],
+        "inverse_edit_hints": {
+          "channels_base": "Edit channels.inbound in {{base_config_path}}.",
+          "channels_overlay": "Edit channels.inbound in {{overlay_config_path}} for environment-specific behavior; use {{base_config_path}} for defaults.",
+          "environment": "Edit app.environment in {{base_config_path}}."
+        },
+        "inverse_patch_reasons": {
+          "channels": "Channel mapping is app-level runtime behavior.",
+          "environment": "Environment is sourced from {{base_config_path}}."
         },
         "inverse_patch_templates": {
           "channels": {
@@ -35,7 +72,47 @@
             "confidence": 0.9,
             "owner": "app-team"
           }
-        }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-ably",
+            "namespace": "apps",
+            "source_dry_path_template": "app.environment",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "Secret",
+            "name_template": "{{name}}-ably-credentials",
+            "namespace": "apps",
+            "source_dry_path_template": "credentials.api_key_ref",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-ably",
+            "namespace": "apps",
+            "optional": true,
+            "source_dry_path_template": "channels.inbound",
+            "source_path_hint": "overlay_config_path"
+          }
+        ],
+        "wet_targets": [
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-ably",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "app.environment"
+          },
+          {
+            "kind": "Secret",
+            "name_template": "{{name}}-ably-credentials",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "credentials.api_key_ref"
+          }
+        ]
       },
       "profile": "ably-config",
       "resource_kind": "ConfigMap",
@@ -49,9 +126,39 @@
       ],
       "kind": "backstage",
       "policies": {
+        "default_input_role": "backstage-input",
+        "default_owner": "platform-engineer",
         "field_origin_confidences": {
           "identity": 0.9,
           "lifecycle": 0.82
+        },
+        "field_origin_transform": "backstage-component-to-application",
+        "hint_defaults": {
+          "catalog_path": "catalog-info.yaml"
+        },
+        "input_role_rules": [
+          {
+            "exact_basenames": [
+              "catalog-info.yaml",
+              "catalog-info.yml"
+            ],
+            "role": "catalog-spec"
+          },
+          {
+            "exact_basenames": [
+              "app-config.yaml",
+              "app-config.yml"
+            ],
+            "role": "app-config"
+          }
+        ],
+        "inverse_edit_hints": {
+          "lifecycle": "Edit spec.lifecycle in {{catalog_path}} and coordinate rollout policy.",
+          "name": "Edit metadata.name in {{catalog_path}}."
+        },
+        "inverse_patch_reasons": {
+          "identity": "Backstage component identity is sourced from {{catalog_path}}.",
+          "lifecycle": "Lifecycle changes impact platform ownership and support policy."
         },
         "inverse_patch_templates": {
           "identity": {
@@ -74,7 +181,42 @@
             "confidence": 0.9,
             "owner": "platform-engineer"
           }
-        }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "Application",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "metadata.name",
+            "source_path_hint": "catalog_path"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-catalog",
+            "namespace": "apps",
+            "source_dry_path_template": "spec.lifecycle",
+            "source_path_hint": "catalog_path"
+          }
+        ],
+        "role_owners": {
+          "app-config": "app-team"
+        },
+        "wet_targets": [
+          {
+            "kind": "Application",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "metadata.name"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-catalog",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "spec.lifecycle"
+          }
+        ]
       },
       "profile": "backstage-idp",
       "resource_kind": "Component",
@@ -88,11 +230,50 @@
       ],
       "kind": "c3agent",
       "policies": {
+        "default_input_role": "fleet-config",
+        "default_owner": "app-team",
         "field_origin_confidences": {
           "component_ports_base": 0.84,
           "component_ports_overlay": 0.8,
           "credentials": 0.86,
           "fleet_config": 0.91
+        },
+        "field_origin_overlay_transform": "c3agent-overlay-merge",
+        "field_origin_transform": "c3agent-config-to-runtime",
+        "hint_defaults": {
+          "base_config_path": "c3agent.yaml"
+        },
+        "input_role_rules": [
+          {
+            "exact_basenames": [
+              "c3agent.yaml",
+              "c3agent.yml",
+              "c3agent.json"
+            ],
+            "role": "fleet-config-base"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml",
+              ".json"
+            ],
+            "prefixes": [
+              "c3agent-"
+            ],
+            "role": "fleet-config-overlay"
+          }
+        ],
+        "inverse_edit_hints": {
+          "component_ports_base": "Edit components.controlplane.grpc_port in {{base_config_path}}.",
+          "component_ports_overlay": "Edit component ports in {{overlay_config_path}} for environment-specific values; use {{base_config_path}} for defaults.",
+          "credentials": "Edit credentials section in {{base_config_path}} and coordinate with platform secret management.",
+          "fleet_config": "Edit fleet.agent_model or fleet.max_concurrent_tasks in {{base_config_path}}."
+        },
+        "inverse_patch_reasons": {
+          "component_ports": "Component port changes affect platform networking and service mesh.",
+          "credentials": "Credential references impact platform secret management.",
+          "fleet_config": "Fleet configuration (model, concurrency) is sourced from {{base_config_path}}."
         },
         "inverse_patch_templates": {
           "component_ports": {
@@ -124,7 +305,47 @@
             "confidence": 0.91,
             "owner": "app-team"
           }
-        }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-fleet-config",
+            "namespace": "apps",
+            "source_dry_path_template": "fleet.agent_model",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "Secret",
+            "name_template": "{{name}}-fleet-credentials",
+            "namespace": "apps",
+            "source_dry_path_template": "credentials.anthropic_key_ref",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-fleet-config",
+            "namespace": "apps",
+            "optional": true,
+            "source_dry_path_template": "fleet.max_concurrent_tasks",
+            "source_path_hint": "overlay_config_path"
+          }
+        ],
+        "wet_targets": [
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-fleet-config",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "fleet.agent_model"
+          },
+          {
+            "kind": "Secret",
+            "name_template": "{{name}}-fleet-credentials",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "credentials.anthropic_key_ref"
+          }
+        ]
       },
       "profile": "c3agent",
       "resource_kind": "ConfigMap",
@@ -138,8 +359,41 @@
       ],
       "kind": "helm",
       "policies": {
+        "default_input_role": "helm-input",
+        "default_owner": "platform-engineer",
         "field_origin_confidences": {
           "image_tag": 0.86
+        },
+        "field_origin_transform": "helm-template",
+        "hint_defaults": {
+          "chart_path": "Chart.yaml",
+          "chart_role": "chart",
+          "primary_values_path": "values.yaml",
+          "values_role": "values"
+        },
+        "input_role_rules": [
+          {
+            "exact_basenames": [
+              "chart.yaml"
+            ],
+            "role": "chart"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "values"
+            ],
+            "role": "values"
+          }
+        ],
+        "inverse_edit_hints": {
+          "image_tag": "Edit chart values file and keep chart template unchanged."
+        },
+        "inverse_patch_reasons": {
+          "image_tag": "Container image tag maps cleanly to helm values."
         },
         "inverse_patch_templates": {
           "image_tag": {
@@ -153,7 +407,59 @@
             "confidence": 0.86,
             "owner": "app-team"
           }
-        }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "HelmRelease",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "Chart.yaml",
+            "source_path_hint": "chart_path"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "values.image.tag",
+            "source_path_hint": "values_paths",
+            "source_path_hint_fallback": "chart_path",
+            "source_path_hint_multi": true
+          },
+          {
+            "kind": "Service",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "values.service.port",
+            "source_path_hint": "values_paths",
+            "source_path_hint_fallback": "chart_path",
+            "source_path_hint_multi": true
+          }
+        ],
+        "role_owners": {
+          "values": "app-team"
+        },
+        "wet_targets": [
+          {
+            "kind": "HelmRelease",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "values.image.tag"
+          },
+          {
+            "kind": "Service",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "values.service.port"
+          }
+        ]
       },
       "profile": "helm-paas",
       "resource_kind": "HelmRelease",
@@ -167,10 +473,48 @@
       ],
       "kind": "opsworkflow",
       "policies": {
+        "default_input_role": "operations-input",
+        "default_owner": "platform-engineer",
         "field_origin_confidences": {
           "image_tag": 0.87,
           "schedule_base": 0.84,
           "schedule_overlay": 0.8
+        },
+        "field_origin_overlay_transform": "ops-workflow-overlay-merge",
+        "field_origin_transform": "ops-workflow-to-argo-workflow",
+        "hint_defaults": {
+          "base_spec_path": "operations.yaml"
+        },
+        "input_role_rules": [
+          {
+            "exact_basenames": [
+              "operations.yaml",
+              "operations.yml",
+              "workflow.yaml",
+              "workflow.yml"
+            ],
+            "role": "operations-base"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "operations-",
+              "workflow-"
+            ],
+            "role": "operations-overlay"
+          }
+        ],
+        "inverse_edit_hints": {
+          "image_tag": "Edit actions.deploy.image_tag in {{base_spec_path}}.",
+          "schedule_base": "Edit triggers.schedule in {{base_spec_path}}.",
+          "schedule_overlay": "Edit triggers.schedule in {{overlay_spec_path}} for environment-specific cadence; use {{base_spec_path}} for defaults."
+        },
+        "inverse_patch_reasons": {
+          "image_tag": "Deployment action image tag is sourced from {{base_spec_path}}.",
+          "schedule": "Schedule changes affect operational execution timing."
         },
         "inverse_patch_templates": {
           "image_tag": {
@@ -193,7 +537,47 @@
             "confidence": 0.84,
             "owner": "platform-engineer"
           }
-        }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "Workflow",
+            "name_template": "{{name}}-workflow",
+            "namespace": "ops",
+            "source_dry_path_template": "actions.deploy.image_tag",
+            "source_path_hint": "base_spec_path"
+          },
+          {
+            "kind": "Job",
+            "name_template": "{{name}}-dry-run",
+            "namespace": "ops",
+            "source_dry_path_template": "triggers.schedule",
+            "source_path_hint": "base_spec_path"
+          },
+          {
+            "kind": "Workflow",
+            "name_template": "{{name}}-workflow",
+            "namespace": "ops",
+            "optional": true,
+            "source_dry_path_template": "triggers.schedule",
+            "source_path_hint": "overlay_spec_path"
+          }
+        ],
+        "wet_targets": [
+          {
+            "kind": "Workflow",
+            "name_template": "{{name}}-workflow",
+            "namespace": "ops",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "actions.deploy.image_tag"
+          },
+          {
+            "kind": "Job",
+            "name_template": "{{name}}-dry-run",
+            "namespace": "ops",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "triggers.schedule"
+          }
+        ]
       },
       "profile": "ops-workflow",
       "resource_kind": "Workflow",
@@ -207,10 +591,36 @@
       ],
       "kind": "score",
       "policies": {
+        "default_input_role": "score-input",
+        "default_owner": "app-team",
         "field_origin_confidences": {
           "env_var": 0.9,
           "image": 0.94,
           "port": 0.91
+        },
+        "field_origin_transform": "score-to-k8s",
+        "hint_defaults": {
+          "container_name": "main",
+          "service_port_name": "web",
+          "source_path": "score.yaml",
+          "variable_name": "LOG_LEVEL"
+        },
+        "input_role_rules": [
+          {
+            "exact_basenames": [
+              "score.yaml",
+              "score.yml"
+            ],
+            "role": "score-spec"
+          }
+        ],
+        "inverse_edit_hints": {
+          "env_var": "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}.",
+          "image": "Edit the Score container image in {{source_path}}.",
+          "port": "Edit {{service_port_name}} service port in {{source_path}}."
+        },
+        "inverse_patch_reasons": {
+          "env_var": "Score variable maps to a single Kubernetes env var."
         },
         "inverse_patch_templates": {
           "env_var": {
@@ -232,7 +642,52 @@
             "confidence": 0.91,
             "owner": "app-team"
           }
-        }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "Application",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "metadata.name",
+            "source_path_hint": "source_path"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "containers.{{container_name}}.image",
+            "source_path_hint": "source_path"
+          },
+          {
+            "kind": "Service",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "service.ports.{{service_port_name}}.port",
+            "source_path_hint": "source_path"
+          }
+        ],
+        "wet_targets": [
+          {
+            "kind": "Application",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "containers.{{container}}.image"
+          },
+          {
+            "kind": "Service",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "service.ports.{{service_port}}.port"
+          }
+        ]
       },
       "profile": "scoredev-paas",
       "resource_kind": "Application",
@@ -246,11 +701,57 @@
       ],
       "kind": "springboot",
       "policies": {
+        "default_input_role": "spring-input",
+        "default_owner": "platform-engineer",
         "field_origin_confidences": {
           "app_name": 0.89,
           "datasource_url": 0.78,
           "server_port_base": 0.92,
           "server_port_overlay": 0.88
+        },
+        "field_origin_overlay_transform": "spring-profile-overlay",
+        "field_origin_transform": "spring-config-to-manifest",
+        "hint_defaults": {
+          "base_config_path": "src/main/resources/application.yaml",
+          "build_config_path": "pom.xml"
+        },
+        "input_role_rules": [
+          {
+            "exact_basenames": [
+              "pom.xml",
+              "build.gradle",
+              "build.gradle.kts"
+            ],
+            "role": "build-config"
+          },
+          {
+            "exact_basenames": [
+              "application.yaml",
+              "application.yml"
+            ],
+            "role": "app-config-base"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "application-"
+            ],
+            "role": "app-config-profile"
+          }
+        ],
+        "inverse_edit_hints": {
+          "app_name": "Edit spring.application.name in {{base_config_path}}.",
+          "datasource_url": "Edit spring.datasource.url in {{base_config_path}} and coordinate with platform ownership rules.",
+          "server_port_base": "Edit server.port in {{base_config_path}}.",
+          "server_port_overlay": "Edit server.port in {{profile_config_path}} for environment overrides; use {{base_config_path}} for the default."
+        },
+        "inverse_patch_reasons": {
+          "app_name": "Application identity should be app-editable without platform escalation.",
+          "datasource_url": "Database connectivity impacts shared runtime dependencies.",
+          "server_port": "Application listener port is an app-level configuration concern."
         },
         "inverse_patch_templates": {
           "app_name": {
@@ -282,7 +783,64 @@
             "confidence": 0.91,
             "owner": "app-team"
           }
-        }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "Kustomization",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "build",
+            "source_path_hint": "build_config_path"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "spring.application.name",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-config",
+            "namespace": "apps",
+            "source_dry_path_template": "spring.datasource.url",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "server.port",
+            "source_path_hint": "profile_config_path",
+            "source_path_hint_fallback": "base_config_path"
+          }
+        ],
+        "role_owners": {
+          "app-config-base": "app-team",
+          "app-config-profile": "app-team"
+        },
+        "wet_targets": [
+          {
+            "kind": "Kustomization",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "server.port"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-config",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "spring.datasource.url"
+          }
+        ]
       },
       "profile": "springboot-paas",
       "resource_kind": "Kustomization",
@@ -296,11 +854,48 @@
       ],
       "kind": "swamp",
       "policies": {
+        "default_input_role": "swamp-input",
+        "default_owner": "app-team",
         "field_origin_confidences": {
           "model_binding_base": 0.88,
           "model_binding_workflow": 0.84,
           "vault_config": 0.85,
           "workflow_definition": 0.9
+        },
+        "field_origin_overlay_transform": "swamp-overlay-merge",
+        "field_origin_transform": "swamp-workflow-to-execution",
+        "hint_defaults": {
+          "base_config_path": ".swamp.yaml"
+        },
+        "input_role_rules": [
+          {
+            "exact_basenames": [
+              ".swamp.yaml",
+              ".swamp.yml"
+            ],
+            "role": "swamp-config-base"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "workflow-"
+            ],
+            "role": "swamp-workflow"
+          }
+        ],
+        "inverse_edit_hints": {
+          "model_binding_base": "Edit model references in {{base_config_path}}.",
+          "model_binding_workflow": "Edit model method bindings in {{workflow_path}} for task-specific overrides.",
+          "vault_config": "Edit vaults section in {{base_config_path}} and coordinate with platform secret infrastructure.",
+          "workflow_definition": "Edit jobs and steps in the workflow YAML file."
+        },
+        "inverse_patch_reasons": {
+          "model_binding": "Model bindings define which automation models execute in workflows.",
+          "vault_config": "Vault configuration impacts platform credential infrastructure.",
+          "workflow_definition": "Workflow job and step definitions are app-level automation intent."
         },
         "inverse_patch_templates": {
           "model_binding": {
@@ -332,7 +927,47 @@
             "confidence": 0.9,
             "owner": "app-team"
           }
-        }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "Workflow",
+            "name_template": "{{name}}-workflow",
+            "namespace": "apps",
+            "source_dry_path_template": "vaults.default.type",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-swamp-config",
+            "namespace": "apps",
+            "source_dry_path_template": "swamp.version",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "Workflow",
+            "name_template": "{{name}}-workflow",
+            "namespace": "apps",
+            "optional": true,
+            "source_dry_path_template": "jobs[].steps[].task",
+            "source_path_hint": "workflow_path"
+          }
+        ],
+        "wet_targets": [
+          {
+            "kind": "Workflow",
+            "name_template": "{{name}}-workflow",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "jobs[].steps[].task"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-swamp-config",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "swamp.version"
+          }
+        ]
       },
       "profile": "swamp",
       "resource_kind": "Workflow",

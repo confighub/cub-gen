@@ -1,7 +1,9 @@
 package detect
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/confighub/cub-gen/internal/model"
@@ -59,6 +61,20 @@ func TestScanRepoExamples(t *testing.T) {
 			expectedProfile: "ops-workflow",
 			expectedFile:    "operations.yaml",
 		},
+		{
+			name:            "c3agent",
+			repoDir:         "c3agent",
+			expectedKind:    model.GeneratorC3Agent,
+			expectedProfile: "c3agent",
+			expectedFile:    "c3agent.yaml",
+		},
+		{
+			name:            "swamp",
+			repoDir:         "swamp-automation",
+			expectedKind:    model.GeneratorSwamp,
+			expectedProfile: "swamp",
+			expectedFile:    ".swamp.yaml",
+		},
 	}
 
 	for _, tt := range tests {
@@ -96,9 +112,49 @@ func TestScanRepoExamples(t *testing.T) {
 	}
 }
 
+func TestScanRepoSwampIncludesNestedWorkflowInputs(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	if err := os.WriteFile(filepath.Join(repo, ".swamp.yaml"), []byte("swamp:\n  version: \"1\"\n"), 0o644); err != nil {
+		t.Fatalf("write .swamp.yaml: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(repo, "workflows"), 0o755); err != nil {
+		t.Fatalf("create workflows dir: %v", err)
+	}
+	nestedWorkflow := filepath.Join("workflows", "workflow-nightly.yaml")
+	if err := os.WriteFile(filepath.Join(repo, nestedWorkflow), []byte("jobs:\n  - name: nightly\n"), 0o644); err != nil {
+		t.Fatalf("write nested workflow: %v", err)
+	}
+
+	result, err := ScanRepo(repo, "main")
+	if err != nil {
+		t.Fatalf("ScanRepo returned error: %v", err)
+	}
+	if len(result.Generators) != 1 {
+		t.Fatalf("expected 1 generator, got %d", len(result.Generators))
+	}
+	g := result.Generators[0]
+	if g.Kind != model.GeneratorSwamp {
+		t.Fatalf("expected kind %q, got %q", model.GeneratorSwamp, g.Kind)
+	}
+	if !containsSuffix(g.Inputs, filepath.ToSlash(nestedWorkflow)) {
+		t.Fatalf("expected nested workflow input %q, got %v", nestedWorkflow, g.Inputs)
+	}
+}
+
 func contains(v []string, suffix string) bool {
 	for _, item := range v {
 		if filepath.Base(item) == suffix || item == suffix {
+			return true
+		}
+	}
+	return false
+}
+
+func containsSuffix(v []string, suffix string) bool {
+	for _, item := range v {
+		if strings.HasSuffix(filepath.ToSlash(item), filepath.ToSlash(suffix)) {
 			return true
 		}
 	}

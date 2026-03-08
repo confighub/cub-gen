@@ -470,8 +470,8 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		InverseEditHints: map[string]string{
 			"workflow_definition":    "Edit jobs and steps in the workflow YAML file.",
 			"vault_config":           "Edit vaults section in {{base_config_path}} and coordinate with platform secret infrastructure.",
-			"model_binding_base":     "Edit model references in the workflow definition.",
-			"model_binding_workflow": "Edit model method bindings in the workflow file for task-specific overrides.",
+			"model_binding_base":     "Edit model references in {{base_config_path}}.",
+			"model_binding_workflow": "Edit model method bindings in {{workflow_path}} for task-specific overrides.",
 		},
 		InversePatchTemplates: map[string]InversePatchTemplate{
 			"workflow_definition": {EditableBy: "app-team", Confidence: 0.90, RequiresReview: false},
