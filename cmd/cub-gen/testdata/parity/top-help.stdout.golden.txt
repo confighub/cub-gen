@@ -8,7 +8,7 @@ Usage:
   cub-gen verify [--in FILE|-] [--json] [--pretty]
   cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]
   cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]
-  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json] [--details] [--pretty]
+  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]
   cub-gen gitops <discover|import|cleanup> [flags]
   cub-gen bridge <ingest|decision|promote> [flags]
 
@@ -41,6 +41,7 @@ GitOps parity examples:
   cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123
   cub-gen generators --json
   cub-gen generators --json --details
+  cub-gen generators --markdown --details
   cub-gen generators --capability render-manifests
 
 Note: gitops commands are local-only prototypes that mirror cub gitops stages.

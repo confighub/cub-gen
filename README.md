@@ -212,6 +212,8 @@ without coupling the core flow to a running ConfigHub backend.
 ./cub-gen generators --capability inverse-values-patch,inverse-score-patch
 ./cub-gen generators --strict-filters --kind helm,score
 ./cub-gen generators --json --details | jq '.families[] | {kind, profile, policies}'
+./cub-gen generators --markdown
+./cub-gen generators --markdown --details
 ```
 
 `--details` exposes full family policy/provenance templates, including:

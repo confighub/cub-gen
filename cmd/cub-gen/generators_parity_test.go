@@ -206,6 +206,28 @@ func TestGeneratorsGoldenTableNoMatches(t *testing.T) {
 	assertGoldenText(t, filepath.Join("testdata", "parity", "generators-empty.table.golden.txt"), out)
 }
 
+func TestGeneratorsGoldenMarkdown(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--markdown"})
+	if err != nil {
+		t.Fatalf("run generators --markdown returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+	assertGoldenText(t, filepath.Join("testdata", "parity", "generators.markdown.golden.md"), out)
+}
+
+func TestGeneratorsGoldenMarkdownDetails(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--markdown", "--details"})
+	if err != nil {
+		t.Fatalf("run generators --markdown --details returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %q", stderr)
+	}
+	assertGoldenText(t, filepath.Join("testdata", "parity", "generators-details.markdown.golden.md"), out)
+}
+
 func TestGeneratorsGoldenHelp(t *testing.T) {
 	stdout, stderr, err := runWithCapturedIO([]string{"generators", "--help"})
 	if err != nil {
@@ -277,7 +299,20 @@ func TestGeneratorsDetailsRequiresJSON(t *testing.T) {
 	if strings.TrimSpace(out) != "" {
 		t.Fatalf("expected empty stdout, got: %q", out)
 	}
-	if !strings.Contains(err.Error(), "--details requires --json") {
+	if !strings.Contains(err.Error(), "--details requires --json or --markdown") {
 		t.Fatalf("expected details requires json message, got: %q (stderr=%q)", err.Error(), stderr)
+	}
+}
+
+func TestGeneratorsMarkdownCannotCombineJSON(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{"generators", "--json", "--markdown"})
+	if err == nil {
+		t.Fatalf("expected markdown/json conflict error, got nil")
+	}
+	if strings.TrimSpace(out) != "" {
+		t.Fatalf("expected empty stdout, got: %q", out)
+	}
+	if !strings.Contains(err.Error(), "--markdown cannot be combined with --json") {
+		t.Fatalf("expected markdown/json conflict message, got: %q (stderr=%q)", err.Error(), stderr)
 	}
 }
