@@ -7,4 +7,3 @@ resources:
   - service.yaml
 commonLabels:
   app.kubernetes.io/name: aiops-demo
-  demo.confighub.io/revision: v1
