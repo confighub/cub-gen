@@ -85,6 +85,41 @@ Each run shows:
    - Argo fixtures (`gitops/argo/*` when present)
    - cub-scout watchlist (derived from wet targets)
 
+## Complete Inventory And Coverage Check
+
+App demos:
+
+- `helm-paas` (`./examples/demo/module-1-helm-import.sh`)
+- `scoredev-paas` (`./examples/demo/module-2-score-field-map.sh`)
+- `springboot-paas` (`./examples/demo/module-3-spring-ownership.sh`)
+- `ably-config` (`./examples/demo/module-5-ably-platform.sh`)
+- `backstage-idp` (included in `./examples/demo/run-all-confighub-lifecycles.sh`)
+
+Platform demos:
+
+- Governance bridge path (`./examples/demo/module-4-bridge-governance.sh`)
+- AI work platform track (`./examples/demo/ai-work-platform/run-all.sh`)
+- AI Ops PaaS narrative demo (`./examples/ai-ops-paas/demo.sh`)
+- Full create -> governance/deploy path -> update matrix (`./examples/demo/run-all-confighub-lifecycles.sh`)
+
+Other things users may want to see:
+
+- Repo-first wizard simulation (`./examples/demo/simulate-repo-wizard.sh`)
+- Core module aggregator (`./examples/demo/run-all-modules.sh`)
+- Demo index and track entrypoints (`./examples/demo/README.md`)
+- Story-card matrix (`docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md`)
+
+Qualification caveat:
+Without a live `WET -> LIVE` reconciler loop shown end-to-end, this is `governed config automation`, not full `Agentic GitOps` (see `docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md` and `docs/agentic-gitops/02-design/10-generators-prd.md`).
+
+Have we solved all user stories?
+
+| Status | User stories | Notes |
+|---|---|---|
+| Met/strong in current demos | 2, 3, 4, 5, 6, 13 | Proven by current local-first examples and lifecycle flows. |
+| Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 9, 12 | Command shape and evidence model are present; backend/runtime coupling is still simulated. |
+| Deferred | 8, 10, 11 | Requires additional platform features and runtime-connected workflows. |
+
 ## AI Work Platform Demo Track
 
 Second demo track focused on AI-work platform scenarios:
