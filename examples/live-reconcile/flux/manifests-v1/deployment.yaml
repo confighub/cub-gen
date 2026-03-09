@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aiops-demo
+  namespace: demo-live
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aiops-demo
+  template:
+    metadata:
+      labels:
+        app: aiops-demo
+        demo.confighub.io/revision: v1
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27.0
+          ports:
+            - containerPort: 80
+          env:
+            - name: APP_REV
+              value: v1

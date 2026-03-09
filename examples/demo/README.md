@@ -29,6 +29,28 @@ This flow runs for each example:
    - Argo fixture files (if present)
    - cub-scout watchlist (from wet targets)
 
+Qualification caveat:
+Without a live `WET -> LIVE` reconciler loop shown end-to-end, this is `governed config automation`, not full `Agentic GitOps` (see `docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md` and `docs/agentic-gitops/02-design/10-generators-prd.md`).
+
+PRD user-story coverage snapshot:
+
+| Status | User stories |
+|---|---|
+| Met/strong in current demos | 2, 3, 4, 5, 6, 13 |
+| Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 9, 12 |
+| Deferred | 8, 10, 11 |
+
+## Live reconciler e2e (Flux + kind)
+
+- `e2e-live-reconcile-flux.sh`
+
+This optional script creates a local `kind` cluster, installs Flux, and proves
+real `WET -> LIVE` reconciliation:
+
+1. apply v1 desired state and wait for deployment availability,
+2. update to v2 desired state and wait for rollout,
+3. inject live drift (replicas), then verify Flux corrects it.
+
 ## AI work platform track
 
 - `ai-work-platform/scenario-1-c3agent.sh` (11-target c3agent metadata coverage)
