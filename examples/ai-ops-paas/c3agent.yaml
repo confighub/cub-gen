@@ -1,0 +1,42 @@
+# AI Ops PaaS — Fleet Request
+#
+# This is the DRY intent a team authors to request an AI agent fleet
+# from the platform. The platform's c3agent generator transforms this
+# into governed Kubernetes manifests (WET output).
+#
+# Pattern 5 (Ops Apps): SDK methods as DRY, governed manifests as WET.
+# See: docs.confighub.com/generators/patterns#ops-apps
+
+service: c3agent
+apiVersion: c3agent/v1
+
+fleet:
+  name: ml-review-fleet
+  max_concurrent_tasks: 3
+  agent_model: claude-sonnet-4-20250514
+  schedule_interval_secs: 5
+
+agent_runtime:
+  image: ghcr.io/acme-corp/ai-ops-agent:latest
+  max_budget_usd: 8.0
+  repo_cache_dir: /data/repos
+  session_dir: /data/claude
+
+components:
+  controlplane:
+    grpc_port: 50050
+    http_port: 8080
+    replicas: 1
+  gateway:
+    grpc_port: 50052
+    replicas: 1
+
+storage:
+  task_pvc: ml-review-taskdata
+  task_pvc_size: 50Gi
+
+credentials:
+  anthropic_key_ref: ANTHROPIC_API_KEY
+  github_token_ref: GH_TOKEN
+  slack_bot_token_ref: SLACK_BOT_TOKEN
+  slack_app_token_ref: SLACK_APP_TOKEN

@@ -1,0 +1,55 @@
+# AI Ops PaaS — Platform Constraints
+#
+# These constraints are referenced by the operations in registry.yaml.
+# They define what the platform enforces at publish time.
+#
+# Note: these are illustrative — constraint evaluation happens in
+# ConfigHub (paid side), not in cub-gen (OSS side).
+
+apiVersion: confighub.io/v1
+kind: ConstraintSet
+
+metadata:
+  name: ai-ops-paas-constraints
+  version: 1.0.0
+
+spec:
+  constraints:
+    - id: approved-models-only
+      description: "Only approved Claude models may be used"
+      enforcement: BLOCK
+      rule: "fleet.agent_model in ['claude-sonnet-4-20250514', 'claude-haiku-4-20250514']"
+
+    - id: approved-registries-only
+      description: "Agent images must be from approved container registries"
+      enforcement: BLOCK
+      rule: "agent_runtime.image.startsWith('ghcr.io/')"
+
+    - id: budget-ceiling-per-tier
+      description: "Per-task budget limits by environment tier"
+      enforcement: ESCALATE
+      rule: |
+        (labels.variant == 'prod' && agent_runtime.max_budget_usd <= 50) ||
+        (labels.variant != 'prod' && agent_runtime.max_budget_usd <= 15)
+
+    - id: min-2-replicas-prod
+      description: "Production components require at least 2 replicas for HA"
+      enforcement: BLOCK
+      rule: |
+        labels.variant != 'prod' ||
+        (components.controlplane.replicas >= 2 && components.gateway.replicas >= 2)
+
+    - id: no-plaintext-secrets
+      description: "Credential values must be references, never inline plaintext"
+      enforcement: BLOCK
+      rule: "all credential values end with _ref suffix (reference to external secret)"
+
+    - id: prod-credentials-separate
+      description: "Production must use separate credential refs from non-prod"
+      enforcement: ESCALATE
+      rule: "labels.variant != 'prod' || credentials.anthropic_key_ref contains 'PROD'"
+
+    - id: least-privilege-rbac
+      description: "Agent RBAC must follow least-privilege (no cluster-admin)"
+      enforcement: BLOCK
+      rule: "rbac roles scoped to namespace, no ClusterRole bindings"
