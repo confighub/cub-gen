@@ -40,6 +40,17 @@ PRD user-story coverage snapshot:
 | Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 9, 12 |
 | Deferred | 8, 10, 11 |
 
+## Live reconciler e2e (Flux + kind)
+
+- `e2e-live-reconcile-flux.sh`
+
+This optional script creates a local `kind` cluster, installs Flux, and proves
+real `WET -> LIVE` reconciliation:
+
+1. apply v1 desired state and wait for deployment availability,
+2. update to v2 desired state and wait for rollout,
+3. inject live drift (replicas), then verify Flux corrects it.
+
 ## AI work platform track
 
 - `ai-work-platform/scenario-1-c3agent.sh` (11-target c3agent metadata coverage)

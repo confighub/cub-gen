@@ -85,6 +85,15 @@ Each run shows:
    - Argo fixtures (`gitops/argo/*` when present)
    - cub-scout watchlist (derived from wet targets)
 
+Optional full live reconciliation proof (kind + Flux):
+
+```bash
+./examples/demo/e2e-live-reconcile-flux.sh
+```
+
+This script creates a local cluster, installs Flux controllers, and proves:
+create reconciliation, update reconciliation, and drift correction against LIVE resources.
+
 ## Complete Inventory And Coverage Check
 
 App demos:
@@ -106,11 +115,12 @@ Other things users may want to see:
 
 - Repo-first wizard simulation (`./examples/demo/simulate-repo-wizard.sh`)
 - Core module aggregator (`./examples/demo/run-all-modules.sh`)
+- Live reconciler e2e (`./examples/demo/e2e-live-reconcile-flux.sh`)
 - Demo index and track entrypoints (`./examples/demo/README.md`)
 - Story-card matrix (`docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md`)
 
 Qualification caveat:
-Without a live `WET -> LIVE` reconciler loop shown end-to-end, this is `governed config automation`, not full `Agentic GitOps` (see `docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md` and `docs/agentic-gitops/02-design/10-generators-prd.md`).
+Without live `WET -> LIVE` reconciler evidence, classify the flow as `governed config automation`, not full `Agentic GitOps` (see `docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md` and `docs/agentic-gitops/02-design/10-generators-prd.md`). Running `./examples/demo/e2e-live-reconcile-flux.sh` provides that evidence for the Flux path.
 
 Have we solved all user stories?
 
