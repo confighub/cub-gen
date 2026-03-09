@@ -190,6 +190,69 @@ func TestImportRepoGeneratorCapabilities(t *testing.T) {
 	}
 }
 
+func TestImportRepoCoreGeneratorCoverageGuardrails(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name               string
+		repoDir            string
+		minWetTargets      int
+		minRenderedLineage int
+		minInversePatches  int
+	}{
+		{
+			name:               "helm-paas",
+			repoDir:            "helm-paas",
+			minWetTargets:      3,
+			minRenderedLineage: 3,
+			minInversePatches:  1,
+		},
+		{
+			name:               "scoredev-paas",
+			repoDir:            "scoredev-paas",
+			minWetTargets:      3,
+			minRenderedLineage: 3,
+			minInversePatches:  1,
+		},
+		{
+			name:               "springboot-paas",
+			repoDir:            "springboot-paas",
+			minWetTargets:      3,
+			minRenderedLineage: 4,
+			minInversePatches:  2,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repo := filepath.Join("..", "..", "examples", tt.repoDir)
+			result, err := ImportRepo(repo, "main", "platform")
+			if err != nil {
+				t.Fatalf("ImportRepo returned error: %v", err)
+			}
+			if len(result.Provenance) != 1 {
+				t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+			}
+			if len(result.InversePlans) != 1 {
+				t.Fatalf("expected single inverse plan, got %d", len(result.InversePlans))
+			}
+
+			if got := len(result.WetManifestTargets); got < tt.minWetTargets {
+				t.Fatalf("expected at least %d wet manifest targets, got %d", tt.minWetTargets, got)
+			}
+			if got := len(result.Provenance[0].RenderedLineage); got < tt.minRenderedLineage {
+				t.Fatalf("expected at least %d rendered lineage entries, got %d", tt.minRenderedLineage, got)
+			}
+			if got := len(result.InversePlans[0].Patches); got < tt.minInversePatches {
+				t.Fatalf("expected at least %d inverse patches, got %d", tt.minInversePatches, got)
+			}
+		})
+	}
+}
+
 func TestImportRepoHelmDryWetContract(t *testing.T) {
 	repo := filepath.Join("..", "..", "examples", "helm-paas")
 	result, err := ImportRepo(repo, "main", "platform")
@@ -408,6 +471,69 @@ func TestImportRepoOpsWorkflowDryWetContract(t *testing.T) {
 	}
 	if !wetTargetHasKindOwner(result.WetManifestTargets, "Job", "platform-runtime") {
 		t.Fatalf("expected Job owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+}
+
+func TestImportRepoC3AgentDryWetContract(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "c3agent")
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+	prov := result.Provenance[0]
+	if len(prov.RenderedLineage) != 11 {
+		t.Fatalf("expected 11 rendered lineage entries, got %d (%+v)", len(prov.RenderedLineage), prov.RenderedLineage)
+	}
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "agent_runtime.image") {
+		t.Fatalf("expected agent_runtime.image field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "storage.task_pvc_size") {
+		t.Fatalf("expected storage.task_pvc_size field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "components.controlplane.replicas") {
+		t.Fatalf("expected components.controlplane.replicas field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !fieldOriginHasDryPath(prov.FieldOriginMap, "service") {
+		t.Fatalf("expected service field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHasDryPath(prov.InverseEditPointers, "storage.task_pvc_size") {
+		t.Fatalf("expected storage.task_pvc_size inverse pointer, got %+v", prov.InverseEditPointers)
+	}
+	if !inversePointerHasDryPath(prov.InverseEditPointers, "components.controlplane.replicas") {
+		t.Fatalf("expected components.controlplane.replicas inverse pointer, got %+v", prov.InverseEditPointers)
+	}
+
+	if len(result.InversePlans) != 1 {
+		t.Fatalf("expected single inverse plan, got %d", len(result.InversePlans))
+	}
+	if !inversePatchHasDryPath(result.InversePlans[0].Patches, "service") {
+		t.Fatalf("expected service inverse patch, got %+v", result.InversePlans[0].Patches)
+	}
+
+	if len(result.WetManifestTargets) != 11 {
+		t.Fatalf("expected 11 wet manifest targets, got %d (%+v)", len(result.WetManifestTargets), result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "Deployment", "platform-runtime") {
+		t.Fatalf("expected Deployment owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "Service", "platform-runtime") {
+		t.Fatalf("expected Service owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "ServiceAccount", "platform-runtime") {
+		t.Fatalf("expected ServiceAccount owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "ClusterRole", "platform-runtime") {
+		t.Fatalf("expected ClusterRole owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "ClusterRoleBinding", "platform-runtime") {
+		t.Fatalf("expected ClusterRoleBinding owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "PersistentVolumeClaim", "platform-runtime") {
+		t.Fatalf("expected PersistentVolumeClaim owner to be platform-runtime, got %+v", result.WetManifestTargets)
 	}
 }
 

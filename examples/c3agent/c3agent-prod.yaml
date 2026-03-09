@@ -1,5 +1,15 @@
 fleet:
   max_concurrent_tasks: 5
   agent_model: claude-sonnet-4-20250514
+  schedule_interval_secs: 10
+agent_runtime:
+  max_budget_usd: 12.5
+components:
+  controlplane:
+    replicas: 2
+  gateway:
+    replicas: 2
+storage:
+  task_pvc_size: 100Gi
 credentials:
   anthropic_key_ref: ANTHROPIC_API_KEY_PROD

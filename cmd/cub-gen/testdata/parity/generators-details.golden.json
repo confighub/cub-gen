@@ -233,10 +233,15 @@
         "default_input_role": "fleet-config",
         "default_owner": "app-team",
         "field_origin_confidences": {
+          "agent_runtime": 0.88,
           "component_ports_base": 0.84,
           "component_ports_overlay": 0.8,
           "credentials": 0.86,
-          "fleet_config": 0.91
+          "fleet_config": 0.91,
+          "rbac": 0.82,
+          "replicas_base": 0.89,
+          "replicas_overlay": 0.85,
+          "storage": 0.85
         },
         "field_origin_overlay_transform": "c3agent-overlay-merge",
         "field_origin_transform": "c3agent-config-to-runtime",
@@ -265,17 +270,31 @@
           }
         ],
         "inverse_edit_hints": {
-          "component_ports_base": "Edit components.controlplane.grpc_port in {{base_config_path}}.",
+          "agent_runtime": "Edit agent_runtime.image or agent_runtime.max_budget_usd in {{base_config_path}}.",
+          "component_ports_base": "Edit components.controlplane.grpc_port or components.gateway.grpc_port in {{base_config_path}}.",
           "component_ports_overlay": "Edit component ports in {{overlay_config_path}} for environment-specific values; use {{base_config_path}} for defaults.",
           "credentials": "Edit credentials section in {{base_config_path}} and coordinate with platform secret management.",
-          "fleet_config": "Edit fleet.agent_model or fleet.max_concurrent_tasks in {{base_config_path}}."
+          "fleet_config": "Edit fleet.agent_model or fleet.max_concurrent_tasks in {{base_config_path}}.",
+          "rbac": "Edit service identity in {{base_config_path}} and coordinate with platform security owners.",
+          "replicas_base": "Edit components.controlplane.replicas or components.gateway.replicas in {{base_config_path}}.",
+          "replicas_overlay": "Edit component replica counts in {{overlay_config_path}} for environment-specific values; use {{base_config_path}} for defaults.",
+          "storage": "Edit storage.task_pvc or storage.task_pvc_size in {{base_config_path}}."
         },
         "inverse_patch_reasons": {
+          "agent_runtime": "Agent runtime image and budget settings affect platform execution behavior.",
           "component_ports": "Component port changes affect platform networking and service mesh.",
           "credentials": "Credential references impact platform secret management.",
-          "fleet_config": "Fleet configuration (model, concurrency) is sourced from {{base_config_path}}."
+          "fleet_config": "Fleet configuration (model, concurrency) is sourced from {{base_config_path}}.",
+          "rbac": "RBAC resources are platform-governed and must align with security policy.",
+          "replicas": "Replica tuning affects fleet concurrency and runtime cost.",
+          "storage": "Storage sizing and binding affect persistent runtime state."
         },
         "inverse_patch_templates": {
+          "agent_runtime": {
+            "confidence": 0.88,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          },
           "component_ports": {
             "confidence": 0.84,
             "editable_by": "platform-engineer",
@@ -290,9 +309,28 @@
             "confidence": 0.91,
             "editable_by": "app-team",
             "requires_review": false
+          },
+          "rbac": {
+            "confidence": 0.82,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          },
+          "replicas": {
+            "confidence": 0.89,
+            "editable_by": "app-team",
+            "requires_review": false
+          },
+          "storage": {
+            "confidence": 0.85,
+            "editable_by": "platform-engineer",
+            "requires_review": true
           }
         },
         "inverse_pointer_templates": {
+          "agent_runtime": {
+            "confidence": 0.88,
+            "owner": "platform-engineer"
+          },
           "component_ports": {
             "confidence": 0.84,
             "owner": "platform-engineer"
@@ -304,6 +342,18 @@
           "fleet_config": {
             "confidence": 0.91,
             "owner": "app-team"
+          },
+          "rbac": {
+            "confidence": 0.82,
+            "owner": "platform-engineer"
+          },
+          "replicas": {
+            "confidence": 0.89,
+            "owner": "app-team"
+          },
+          "storage": {
+            "confidence": 0.85,
+            "owner": "platform-engineer"
           }
         },
         "rendered_lineage_templates": [
@@ -322,12 +372,65 @@
             "source_path_hint": "base_config_path"
           },
           {
-            "kind": "ConfigMap",
-            "name_template": "{{name}}-fleet-config",
+            "kind": "Deployment",
+            "name_template": "{{name}}-controlplane",
             "namespace": "apps",
-            "optional": true,
-            "source_dry_path_template": "fleet.max_concurrent_tasks",
-            "source_path_hint": "overlay_config_path"
+            "source_dry_path_template": "components.controlplane.replicas",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}-gateway",
+            "namespace": "apps",
+            "source_dry_path_template": "components.gateway.replicas",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "Service",
+            "name_template": "{{name}}-controlplane",
+            "namespace": "apps",
+            "source_dry_path_template": "components.controlplane.grpc_port",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "Service",
+            "name_template": "{{name}}-gateway",
+            "namespace": "apps",
+            "source_dry_path_template": "components.gateway.grpc_port",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "ServiceAccount",
+            "name_template": "{{name}}-agent",
+            "namespace": "apps",
+            "source_dry_path_template": "service",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "ClusterRole",
+            "name_template": "{{name}}-job-runner",
+            "source_dry_path_template": "service",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "ClusterRoleBinding",
+            "name_template": "{{name}}-job-runner",
+            "source_dry_path_template": "service",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "PersistentVolumeClaim",
+            "name_template": "{{name}}-taskdata",
+            "namespace": "apps",
+            "source_dry_path_template": "storage.task_pvc_size",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-job-template",
+            "namespace": "apps",
+            "source_dry_path_template": "agent_runtime.image",
+            "source_path_hint": "base_config_path"
           }
         ],
         "wet_targets": [
@@ -344,6 +447,67 @@
             "namespace": "apps",
             "owner": "platform-runtime",
             "source_dry_path_template": "credentials.anthropic_key_ref"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}-controlplane",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "components.controlplane.replicas"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}-gateway",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "components.gateway.replicas"
+          },
+          {
+            "kind": "Service",
+            "name_template": "{{name}}-controlplane",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "components.controlplane.grpc_port"
+          },
+          {
+            "kind": "Service",
+            "name_template": "{{name}}-gateway",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "components.gateway.grpc_port"
+          },
+          {
+            "kind": "ServiceAccount",
+            "name_template": "{{name}}-agent",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "service"
+          },
+          {
+            "kind": "ClusterRole",
+            "name_template": "{{name}}-job-runner",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "service"
+          },
+          {
+            "kind": "ClusterRoleBinding",
+            "name_template": "{{name}}-job-runner",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "service"
+          },
+          {
+            "kind": "PersistentVolumeClaim",
+            "name_template": "{{name}}-taskdata",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "storage.task_pvc_size"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-job-template",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "agent_runtime.image"
           }
         ]
       },

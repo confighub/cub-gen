@@ -3,6 +3,7 @@ package detect
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -528,9 +529,13 @@ func detectC3Agent(repo string) ([]model.GeneratorDetection, error) {
 		if readErr != nil {
 			return nil
 		}
-		content := strings.ToLower(string(b))
-		if !strings.Contains(content, "fleet:") && !strings.Contains(content, "agent") {
+		content := string(b)
+		if !hasC3AgentServiceSignature(content) {
 			return nil
+		}
+		confidence := 0.90
+		if hasC3AgentFleetSignal(content) {
+			confidence = 0.92
 		}
 
 		root := filepath.Dir(path)
@@ -570,7 +575,7 @@ func detectC3Agent(repo string) ([]model.GeneratorDetection, error) {
 			Name:       filepath.Base(root),
 			Root:       filepath.ToSlash(relRoot),
 			Inputs:     inputs,
-			Confidence: 0.88,
+			Confidence: confidence,
 		}
 		return nil
 	})
@@ -578,6 +583,91 @@ func detectC3Agent(repo string) ([]model.GeneratorDetection, error) {
 		return nil, fmt.Errorf("detect c3agent: %w", err)
 	}
 	return mapValuesSorted(detected), nil
+}
+
+func hasC3AgentServiceSignature(content string) bool {
+	if jsonObject := topLevelJSONMap(content); jsonObject != nil {
+		if service, ok := jsonObject["service"].(string); ok && strings.EqualFold(strings.TrimSpace(service), "c3agent") {
+			return true
+		}
+	}
+	service, ok := topLevelYAMLValue(content, "service")
+	return ok && strings.EqualFold(service, "c3agent")
+}
+
+func hasC3AgentFleetSignal(content string) bool {
+	if jsonObject := topLevelJSONMap(content); jsonObject != nil {
+		if _, ok := jsonObject["fleet"]; ok {
+			return true
+		}
+	}
+	_, ok := topLevelYAMLValue(content, "fleet")
+	return ok
+}
+
+func topLevelJSONMap(content string) map[string]any {
+	var obj map[string]any
+	if err := json.Unmarshal([]byte(content), &obj); err != nil {
+		return nil
+	}
+	return obj
+}
+
+func topLevelYAMLValue(content, key string) (string, bool) {
+	for _, rawLine := range strings.Split(content, "\n") {
+		line := strings.TrimRight(rawLine, "\r")
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") || trimmed == "---" || trimmed == "..." {
+			continue
+		}
+		if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
+			continue
+		}
+
+		sep := strings.Index(line, ":")
+		if sep <= 0 {
+			continue
+		}
+		candidate := strings.TrimSpace(line[:sep])
+		candidate = strings.Trim(candidate, `"'`)
+		if !strings.EqualFold(candidate, key) {
+			continue
+		}
+
+		value := strings.TrimSpace(stripYAMLInlineComment(line[sep+1:]))
+		value = strings.Trim(value, `"'`)
+		return value, true
+	}
+	return "", false
+}
+
+func stripYAMLInlineComment(value string) string {
+	inSingle := false
+	inDouble := false
+	for i, r := range value {
+		switch r {
+		case '\'':
+			if !inDouble {
+				inSingle = !inSingle
+			}
+		case '"':
+			if !inSingle {
+				inDouble = !inDouble
+			}
+		case '#':
+			if inSingle || inDouble {
+				continue
+			}
+			if i == 0 {
+				return ""
+			}
+			prev := rune(value[i-1])
+			if prev == ' ' || prev == '\t' {
+				return value[:i]
+			}
+		}
+	}
+	return value
 }
 
 func detectSwamp(repo string) ([]model.GeneratorDetection, error) {

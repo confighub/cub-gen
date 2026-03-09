@@ -165,24 +165,37 @@ Total: 8
 ### Inverse Patch Templates
 | Key | Editable by | Confidence | Requires review |
 | --- | --- | --- | --- |
+| `agent_runtime` | `platform-engineer` | 0.88 | `true` |
 | `component_ports` | `platform-engineer` | 0.84 | `true` |
 | `credentials` | `platform-engineer` | 0.86 | `true` |
 | `fleet_config` | `app-team` | 0.91 | `false` |
+| `rbac` | `platform-engineer` | 0.82 | `true` |
+| `replicas` | `app-team` | 0.89 | `false` |
+| `storage` | `platform-engineer` | 0.85 | `true` |
 
 ### Inverse Pointer Templates
 | Key | Owner | Confidence |
 | --- | --- | --- |
+| `agent_runtime` | `platform-engineer` | 0.88 |
 | `component_ports` | `platform-engineer` | 0.84 |
 | `credentials` | `platform-engineer` | 0.86 |
 | `fleet_config` | `app-team` | 0.91 |
+| `rbac` | `platform-engineer` | 0.82 |
+| `replicas` | `app-team` | 0.89 |
+| `storage` | `platform-engineer` | 0.85 |
 
 ### Field Origin Confidences
 | Key | Confidence |
 | --- | --- |
+| `agent_runtime` | 0.88 |
 | `component_ports_base` | 0.84 |
 | `component_ports_overlay` | 0.80 |
 | `credentials` | 0.86 |
 | `fleet_config` | 0.91 |
+| `rbac` | 0.82 |
+| `replicas_base` | 0.89 |
+| `replicas_overlay` | 0.85 |
+| `storage` | 0.85 |
 
 ### Hint Defaults
 | Key | Value |
@@ -192,30 +205,56 @@ Total: 8
 ### Inverse Patch Reasons
 | Key | Reason |
 | --- | --- |
+| `agent_runtime` | Agent runtime image and budget settings affect platform execution behavior. |
 | `component_ports` | Component port changes affect platform networking and service mesh. |
 | `credentials` | Credential references impact platform secret management. |
 | `fleet_config` | Fleet configuration (model, concurrency) is sourced from {{base_config_path}}. |
+| `rbac` | RBAC resources are platform-governed and must align with security policy. |
+| `replicas` | Replica tuning affects fleet concurrency and runtime cost. |
+| `storage` | Storage sizing and binding affect persistent runtime state. |
 
 ### Inverse Edit Hints
 | Key | Hint |
 | --- | --- |
-| `component_ports_base` | Edit components.controlplane.grpc_port in {{base_config_path}}. |
+| `agent_runtime` | Edit agent_runtime.image or agent_runtime.max_budget_usd in {{base_config_path}}. |
+| `component_ports_base` | Edit components.controlplane.grpc_port or components.gateway.grpc_port in {{base_config_path}}. |
 | `component_ports_overlay` | Edit component ports in {{overlay_config_path}} for environment-specific values; use {{base_config_path}} for defaults. |
 | `credentials` | Edit credentials section in {{base_config_path}} and coordinate with platform secret management. |
 | `fleet_config` | Edit fleet.agent_model or fleet.max_concurrent_tasks in {{base_config_path}}. |
+| `rbac` | Edit service identity in {{base_config_path}} and coordinate with platform security owners. |
+| `replicas_base` | Edit components.controlplane.replicas or components.gateway.replicas in {{base_config_path}}. |
+| `replicas_overlay` | Edit component replica counts in {{overlay_config_path}} for environment-specific values; use {{base_config_path}} for defaults. |
+| `storage` | Edit storage.task_pvc or storage.task_pvc_size in {{base_config_path}}. |
 
 ### WET Targets
 | Kind | Name template | Owner | Namespace | Source DRY path template |
 | --- | --- | --- | --- | --- |
 | `ConfigMap` | `{{name}}-fleet-config` | `platform-runtime` | `apps` | `fleet.agent_model` |
 | `Secret` | `{{name}}-fleet-credentials` | `platform-runtime` | `apps` | `credentials.anthropic_key_ref` |
+| `Deployment` | `{{name}}-controlplane` | `platform-runtime` | `apps` | `components.controlplane.replicas` |
+| `Deployment` | `{{name}}-gateway` | `platform-runtime` | `apps` | `components.gateway.replicas` |
+| `Service` | `{{name}}-controlplane` | `platform-runtime` | `apps` | `components.controlplane.grpc_port` |
+| `Service` | `{{name}}-gateway` | `platform-runtime` | `apps` | `components.gateway.grpc_port` |
+| `ServiceAccount` | `{{name}}-agent` | `platform-runtime` | `apps` | `service` |
+| `ClusterRole` | `{{name}}-job-runner` | `platform-runtime` | `-` | `service` |
+| `ClusterRoleBinding` | `{{name}}-job-runner` | `platform-runtime` | `-` | `service` |
+| `PersistentVolumeClaim` | `{{name}}-taskdata` | `platform-runtime` | `apps` | `storage.task_pvc_size` |
+| `ConfigMap` | `{{name}}-job-template` | `platform-runtime` | `apps` | `agent_runtime.image` |
 
 ### Rendered Lineage Templates
 | Kind | Name template | Namespace | Source path hint | Hint fallback | Multi hint | Source DRY path template | Optional |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ConfigMap` | `{{name}}-fleet-config` | `apps` | `base_config_path` | `-` | `false` | `fleet.agent_model` | `false` |
 | `Secret` | `{{name}}-fleet-credentials` | `apps` | `base_config_path` | `-` | `false` | `credentials.anthropic_key_ref` | `false` |
-| `ConfigMap` | `{{name}}-fleet-config` | `apps` | `overlay_config_path` | `-` | `false` | `fleet.max_concurrent_tasks` | `true` |
+| `Deployment` | `{{name}}-controlplane` | `apps` | `base_config_path` | `-` | `false` | `components.controlplane.replicas` | `false` |
+| `Deployment` | `{{name}}-gateway` | `apps` | `base_config_path` | `-` | `false` | `components.gateway.replicas` | `false` |
+| `Service` | `{{name}}-controlplane` | `apps` | `base_config_path` | `-` | `false` | `components.controlplane.grpc_port` | `false` |
+| `Service` | `{{name}}-gateway` | `apps` | `base_config_path` | `-` | `false` | `components.gateway.grpc_port` | `false` |
+| `ServiceAccount` | `{{name}}-agent` | `apps` | `base_config_path` | `-` | `false` | `service` | `false` |
+| `ClusterRole` | `{{name}}-job-runner` | `-` | `base_config_path` | `-` | `false` | `service` | `false` |
+| `ClusterRoleBinding` | `{{name}}-job-runner` | `-` | `base_config_path` | `-` | `false` | `service` | `false` |
+| `PersistentVolumeClaim` | `{{name}}-taskdata` | `apps` | `base_config_path` | `-` | `false` | `storage.task_pvc_size` | `false` |
+| `ConfigMap` | `{{name}}-job-template` | `apps` | `base_config_path` | `-` | `false` | `agent_runtime.image` | `false` |
 
 ## `helm`
 

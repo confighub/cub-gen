@@ -385,6 +385,18 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 		componentPortsPolicy := registry.InversePatchTemplateFor(g.Kind, "component_ports", registry.InversePatchTemplate{
 			EditableBy: "platform-engineer", Confidence: 0.84, RequiresReview: true,
 		})
+		agentRuntimePolicy := registry.InversePatchTemplateFor(g.Kind, "agent_runtime", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.88, RequiresReview: true,
+		})
+		storagePolicy := registry.InversePatchTemplateFor(g.Kind, "storage", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.85, RequiresReview: true,
+		})
+		replicasPolicy := registry.InversePatchTemplateFor(g.Kind, "replicas", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.89, RequiresReview: false,
+		})
+		rbacPolicy := registry.InversePatchTemplateFor(g.Kind, "rbac", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.82, RequiresReview: true,
+		})
 		return []model.InversePatch{
 			{
 				Operation:      "replace",
@@ -410,11 +422,47 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 			{
 				Operation:      "replace",
 				DryPath:        "components.controlplane.grpc_port",
-				WetPath:        "ConfigMap/data/CP_GRPC_PORT",
+				WetPath:        "Service/spec/ports[name=grpc]/port",
 				EditableBy:     componentPortsPolicy.EditableBy,
 				Confidence:     componentPortsPolicy.Confidence,
 				RequiresReview: componentPortsPolicy.RequiresReview,
 				Reason:         registry.InversePatchReason(g.Kind, "component_ports", "Control plane port changes affect service mesh connectivity."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "agent_runtime.image",
+				WetPath:        "ConfigMap/data/JOB_IMAGE",
+				EditableBy:     agentRuntimePolicy.EditableBy,
+				Confidence:     agentRuntimePolicy.Confidence,
+				RequiresReview: agentRuntimePolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "agent_runtime", "Agent runtime image and budget settings affect platform execution behavior."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "storage.task_pvc_size",
+				WetPath:        "PersistentVolumeClaim/spec/resources/requests/storage",
+				EditableBy:     storagePolicy.EditableBy,
+				Confidence:     storagePolicy.Confidence,
+				RequiresReview: storagePolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "storage", "Storage sizing and binding affect persistent runtime state."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "components.controlplane.replicas",
+				WetPath:        "Deployment/spec/replicas",
+				EditableBy:     replicasPolicy.EditableBy,
+				Confidence:     replicasPolicy.Confidence,
+				RequiresReview: replicasPolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "replicas", "Replica tuning affects fleet concurrency and runtime cost."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "service",
+				WetPath:        "ClusterRole/rules",
+				EditableBy:     rbacPolicy.EditableBy,
+				Confidence:     rbacPolicy.Confidence,
+				RequiresReview: rbacPolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "rbac", "RBAC resources are platform-governed and must align with security policy."),
 			},
 		}
 	case model.GeneratorSwamp:
@@ -630,21 +678,93 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "credentials", 0.86),
 			},
 			{
-				DryPath:    "fleet.max_concurrent_tasks",
-				WetPath:    "ConfigMap/data/MAX_CONCURRENT_TASKS",
+				DryPath:    "components.controlplane.grpc_port",
+				WetPath:    "Service/controlplane/spec/ports[name=grpc]/port",
 				SourcePath: hints.BaseConfigPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "max_concurrent_tasks_base", 0.84),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "component_ports_base", 0.84),
+			},
+			{
+				DryPath:    "components.gateway.grpc_port",
+				WetPath:    "Service/gateway/spec/ports[name=grpc]/port",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "component_ports_base", 0.84),
+			},
+			{
+				DryPath:    "agent_runtime.image",
+				WetPath:    "ConfigMap/data/JOB_IMAGE",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "agent_runtime", 0.88),
+			},
+			{
+				DryPath:    "storage.task_pvc_size",
+				WetPath:    "PersistentVolumeClaim/spec/resources/requests/storage",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "storage", 0.85),
+			},
+			{
+				DryPath:    "components.controlplane.replicas",
+				WetPath:    "Deployment/controlplane/spec/replicas",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "replicas_base", 0.89),
+			},
+			{
+				DryPath:    "components.gateway.replicas",
+				WetPath:    "Deployment/gateway/spec/replicas",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "replicas_base", 0.89),
+			},
+			{
+				DryPath:    "service",
+				WetPath:    "ClusterRole/rules",
+				SourcePath: hints.BaseConfigPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "rbac", 0.82),
 			},
 		}
 		if hints.OverlayConfigPath != "" {
-			origins = append(origins, model.FieldOrigin{
-				DryPath:    "fleet.max_concurrent_tasks",
-				WetPath:    "ConfigMap/data/MAX_CONCURRENT_TASKS",
-				SourcePath: hints.OverlayConfigPath,
-				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
-				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "max_concurrent_tasks_overlay", 0.80),
-			})
+			origins = append(origins,
+				model.FieldOrigin{
+					DryPath:    "components.controlplane.grpc_port",
+					WetPath:    "Service/controlplane/spec/ports[name=grpc]/port",
+					SourcePath: hints.OverlayConfigPath,
+					Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "component_ports_overlay", 0.80),
+				},
+				model.FieldOrigin{
+					DryPath:    "components.gateway.grpc_port",
+					WetPath:    "Service/gateway/spec/ports[name=grpc]/port",
+					SourcePath: hints.OverlayConfigPath,
+					Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "component_ports_overlay", 0.80),
+				},
+				model.FieldOrigin{
+					DryPath:    "components.controlplane.replicas",
+					WetPath:    "Deployment/controlplane/spec/replicas",
+					SourcePath: hints.OverlayConfigPath,
+					Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "replicas_overlay", 0.85),
+				},
+				model.FieldOrigin{
+					DryPath:    "components.gateway.replicas",
+					WetPath:    "Deployment/gateway/spec/replicas",
+					SourcePath: hints.OverlayConfigPath,
+					Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "replicas_overlay", 0.85),
+				},
+				model.FieldOrigin{
+					DryPath:    "storage.task_pvc_size",
+					WetPath:    "PersistentVolumeClaim/spec/resources/requests/storage",
+					SourcePath: hints.OverlayConfigPath,
+					Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "storage", 0.85),
+				},
+			)
 		}
 		return origins
 	case model.GeneratorSwamp:
@@ -890,9 +1010,31 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 		componentPortsPolicy := registry.InversePointerTemplateFor(g.Kind, "component_ports", registry.InversePointerTemplate{
 			Owner: "platform-engineer", Confidence: 0.84,
 		})
+		agentRuntimePolicy := registry.InversePointerTemplateFor(g.Kind, "agent_runtime", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.88,
+		})
+		storagePolicy := registry.InversePointerTemplateFor(g.Kind, "storage", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.85,
+		})
+		replicasPolicy := registry.InversePointerTemplateFor(g.Kind, "replicas", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.89,
+		})
+		rbacPolicy := registry.InversePointerTemplateFor(g.Kind, "rbac", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.82,
+		})
 		vars := map[string]string{
 			"base_config_path":    hints.BaseConfigPath,
 			"overlay_config_path": hints.OverlayConfigPath,
+		}
+		componentPortsHintKey := "component_ports_base"
+		componentPortsHintFallback := "Edit components.controlplane.grpc_port or components.gateway.grpc_port in {{base_config_path}}."
+		replicasHintKey := "replicas_base"
+		replicasHintFallback := "Edit components.controlplane.replicas or components.gateway.replicas in {{base_config_path}}."
+		if hints.OverlayConfigPath != "" {
+			componentPortsHintKey = "component_ports_overlay"
+			componentPortsHintFallback = "Edit component ports in {{overlay_config_path}} for environment-specific values; use {{base_config_path}} for defaults."
+			replicasHintKey = "replicas_overlay"
+			replicasHintFallback = "Edit component replica counts in {{overlay_config_path}} for environment-specific values; use {{base_config_path}} for defaults."
 		}
 		return []model.InverseEditPointer{
 			{
@@ -910,11 +1052,39 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				Confidence: credentialsPolicy.Confidence,
 			},
 			{
-				WetPath:    "ConfigMap/data/CP_GRPC_PORT",
+				WetPath:    "Service/spec/ports[name=grpc]/port",
 				DryPath:    "components.controlplane.grpc_port",
 				Owner:      componentPortsPolicy.Owner,
-				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "component_ports", "Edit components.controlplane.grpc_port in {{base_config_path}}."), vars),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, componentPortsHintKey, componentPortsHintFallback), vars),
 				Confidence: componentPortsPolicy.Confidence,
+			},
+			{
+				WetPath:    "ConfigMap/data/JOB_IMAGE",
+				DryPath:    "agent_runtime.image",
+				Owner:      agentRuntimePolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "agent_runtime", "Edit agent_runtime.image in {{base_config_path}}."), vars),
+				Confidence: agentRuntimePolicy.Confidence,
+			},
+			{
+				WetPath:    "PersistentVolumeClaim/spec/resources/requests/storage",
+				DryPath:    "storage.task_pvc_size",
+				Owner:      storagePolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "storage", "Edit storage.task_pvc_size in {{base_config_path}}."), vars),
+				Confidence: storagePolicy.Confidence,
+			},
+			{
+				WetPath:    "Deployment/spec/replicas",
+				DryPath:    "components.controlplane.replicas",
+				Owner:      replicasPolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, replicasHintKey, replicasHintFallback), vars),
+				Confidence: replicasPolicy.Confidence,
+			},
+			{
+				WetPath:    "ClusterRole/rules",
+				DryPath:    "service",
+				Owner:      rbacPolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "rbac", "Edit service identity in {{base_config_path}} and coordinate with platform security owners."), vars),
+				Confidence: rbacPolicy.Confidence,
 			},
 		}
 	case model.GeneratorSwamp:
