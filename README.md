@@ -2,6 +2,25 @@
 
 `cub-gen` is a local-first prototype for deterministic DRY -> WET generator import, modeled on `cub gitops` command flow.
 
+## Start here (intro + demos)
+
+If you are new, use this path first:
+
+1. Plain-English platform story:
+   [`docs/workflows/build-your-own-heroku-in-a-weekend.md`](docs/workflows/build-your-own-heroku-in-a-weekend.md)
+2. Example catalog and narratives:
+   [`examples/README.md`](examples/README.md)
+3. Demo track index:
+   [`examples/demo/README.md`](examples/demo/README.md)
+
+Fast demo entry points:
+
+- Core module walkthrough (all modules): `./examples/demo/run-all-modules.sh`
+- AI work platform scenarios: `./examples/demo/ai-work-platform/run-all.sh`
+- AI Ops PaaS narrative demo: `./examples/ai-ops-paas/demo.sh`
+- Full lifecycle matrix (create -> govern -> update): `./examples/demo/run-all-confighub-lifecycles.sh`
+- Live Flux reconciliation proof (kind + Flux): `./examples/demo/e2e-live-reconcile-flux.sh`
+
 ## What cub-gen does today
 
 - Detects generator-style app sources in Git repos (`helm`, `score.dev`, `springboot`, `backstage`, `ably-config`, `ops-workflow`, `c3agent`, `swamp`).
@@ -23,6 +42,39 @@
 4. Flux/Argo continue to reconcile WET -> LIVE.
 
 This means teams can add `cub-gen` to existing Flux/Argo repos today without changing runtime controllers.
+
+## One platform, different workload adapters
+
+`cub-gen` models one platform pattern that supports many workload types.
+
+It is not "one PaaS for Spring Boot" and a different one for Helm or AI agents.
+It is one governance layer with workload adapters:
+
+- Spring Boot adapter reads `application.yaml` conventions.
+- Helm adapter reads `Chart.yaml` + `values.yaml`.
+- score.dev adapter reads `score.yaml`.
+- c3agent adapter reads `c3agent.yaml`.
+
+Same flow every time:
+
+1. Team pushes workload config to Git.
+2. `cub-gen` discovers/imports and emits provenance + inverse edit guidance.
+3. Flux/Argo reconciles rendered manifests.
+
+### Who does what
+
+- Platform team: defines adapters, defaults, and guardrails once.
+- App team: writes app config and code (the files they already use).
+
+### Which comes first in practice
+
+Most orgs start with existing repos and drifted manifests.
+
+1. Path 1 (most common): import what already exists to get visibility and governance first.
+2. Path 2 (next step): standardize clean self-service contracts after visibility is in place.
+
+For a plain-English narrative and team responsibilities, see
+[`docs/workflows/build-your-own-heroku-in-a-weekend.md`](docs/workflows/build-your-own-heroku-in-a-weekend.md).
 
 ## Jump-in demo modules
 
