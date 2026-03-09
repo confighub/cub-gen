@@ -97,6 +97,6 @@ That gives teams a gradual path, not a rewrite.
 
 ## Related Docs
 
-1. `docs/reference/agentic-gitops-design.md`
-2. `docs/reference/next-gen-gitops-ai-era.md`
-3. `docs/reference/dual-approval-gitops-gh-pr-and-ch-mr.md`
+1. `agentic-gitops-design.md`
+2. `next-gen-gitops-ai-era.md`
+3. `dual-approval-gitops-gh-pr-and-ch-mr.md`

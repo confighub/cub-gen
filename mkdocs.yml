@@ -1,0 +1,184 @@
+site_name: cub-gen
+site_url: https://confighub.github.io/cub-gen/
+site_description: Deterministic Git-native generator importer with command-shape parity to cub gitops
+repo_url: https://github.com/confighub/cub-gen
+repo_name: confighub/cub-gen
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+
+# Files not listed in nav are still built but hidden from navigation.
+# To fully exclude internal docs from the build, add patterns here.
+# Note: mkdocs-exclude plugin is not used due to MkDocs version compatibility.
+exclude_docs: |
+  agentic-gitops/agentic-gitops-design.md
+  agentic-gitops/next-gen-gitops-ai-era.md
+  agentic-gitops/scoredev-dry-wet-unit-worked-example.md
+  agentic-gitops/traefik-helm-dry-wet-unit-worked-example.md
+  agentic-gitops/dual-approval-gitops-gh-pr-and-ch-mr.md
+  agentic-gitops/stored-in-git-vs-confighub.md
+  agentic-gitops/gitops-checkpoint-schemas.md
+  agentic-gitops/cub-track-internal-decision-memo.md
+  agentic-gitops/2026-gitops6-in-full-do-not-archive.md
+  agentic-gitops/schemas/
+  agentic-gitops/scripts/
+  agentic-gitops/.github/
+  agentic-gitops/05-rollout/20-cub-track-internal-decision-memo.md
+  agentic-gitops/05-rollout/90-today-demo-plan.md
+  agentic-gitops/05-rollout/91-speaker-sheet-today.md
+  agentic-gitops/05-rollout/92-two-minute-modules.md
+  agentic-gitops/05-rollout/93-live-run-checklist.md
+  agentic-gitops/00-index/01-new-inputs-and-feedback.md
+  execution-board-sprint-1-and-2.md
+  roadmap-v0.1-first-3-examples.md
+  roadmap-v0.2-preview.md
+  plans/
+  spec-yaml-generator-bundles.md
+  workflows/persona-value-playbook.md
+  *.pdf
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path:
+        - .
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/confighub/cub-gen
+
+nav:
+  - Home:
+      - index.md
+      - "What is Agentic GitOps?": agentic-gitops/01-vision/01-introducing-agentic-gitops.md
+      - "GitOps in the AI Era": agentic-gitops/01-vision/02-next-gen-gitops-ai-era.md
+      - "Plain English Summary": agentic-gitops/app-and-ai-gitops-plain-english.md
+      - "Illustrated Cheat Sheet": agentic-gitops/00-index/02-illustrated-cheat-sheet.md
+
+  - Getting Started:
+      - getting-started.md
+      - "CLI Reference": cli-reference.md
+      - "Adoption Path & FAQ": agentic-gitops/05-rollout/40-adoption-and-reference.md
+
+  - Architecture:
+      - "Design Overview": agentic-gitops/02-design/00-agentic-gitops-design.md
+      - "Generators PRD": agentic-gitops/02-design/10-generators-prd.md
+      - "Generator Naming": agentic-gitops/02-design/11-confighub-generator-naming-concepts.md
+      - "Field-Origin Maps": agentic-gitops/02-design/20-field-origin-maps-and-editing.md
+      - "App Model & Contracts": agentic-gitops/02-design/30-app-model-and-contracts.md
+      - "Governed Execution": agentic-gitops/02-design/40-governed-execution.md
+      - "Dual Approval (PR + MR)": agentic-gitops/02-design/50-dual-approval-gitops-gh-pr-and-ch-mr.md
+      - "Storage Boundary": agentic-gitops/02-design/60-stored-in-git-vs-confighub.md
+      - "DRY/WET Analysis": agentic-gitops/02-design/70-dry-wet-config-analysis.md
+      - "Enforcement Matrix": agentic-gitops/02-design/80-agentic-gitops-enforcement-matrix.md
+
+  - Contracts:
+      - "Canonical Triple & Storage": contracts/canonical-triple-and-storage-boundary.md
+      - "Decision & Attestation State": contracts/decision-and-attestation-state.md
+      - "PR/MR Linkage & Promotion": contracts/pr-mr-linkage-and-dry-promotion.md
+      - "Checkpoint Schemas": agentic-gitops/04-schemas/00-gitops-checkpoint-schemas.md
+      - "Command Parity": parity.md
+
+  - Generators:
+      - "Overview": triple-styles/README.md
+      - Style B (Markdown):
+          - "Helm": triple-styles/style-b-markdown/helm.md
+          - "Score.dev": triple-styles/style-b-markdown/score.md
+          - "Spring Boot": triple-styles/style-b-markdown/springboot.md
+          - "Backstage IDP": triple-styles/style-b-markdown/backstage.md
+          - "Ably Config": triple-styles/style-b-markdown/ably.md
+          - "Ops Workflow": triple-styles/style-b-markdown/opsworkflow.md
+          - "C3 Agent": triple-styles/style-b-markdown/c3agent.md
+          - "Swamp": triple-styles/style-b-markdown/swamp.md
+      - Style C (YAML + Docs):
+          - "Helm": triple-styles/style-c-yaml-plus-docs/helm/triple.md
+          - "Score.dev": triple-styles/style-c-yaml-plus-docs/score/triple.md
+          - "Spring Boot": triple-styles/style-c-yaml-plus-docs/springboot/triple.md
+          - "Backstage IDP": triple-styles/style-c-yaml-plus-docs/backstage/triple.md
+          - "Ably Config": triple-styles/style-c-yaml-plus-docs/ably/triple.md
+          - "Ops Workflow": triple-styles/style-c-yaml-plus-docs/opsworkflow/triple.md
+          - "C3 Agent": triple-styles/style-c-yaml-plus-docs/c3agent/triple.md
+          - "Swamp": triple-styles/style-c-yaml-plus-docs/swamp/triple.md
+
+  - Examples:
+      - "Score.dev": agentic-gitops/03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md
+      - "Traefik Helm": agentic-gitops/03-worked-examples/02-traefik-helm-dry-wet-unit-worked-example.md
+      - "Spring Boot": agentic-gitops/03-worked-examples/03-spring-boot-dry-wet-unit-worked-example.md
+      - "Story Card Catalog": agentic-gitops/03-worked-examples/04-eight-example-story-cards.md
+
+  - User Experience:
+      - "Day 2 Scenarios": agentic-gitops/05-rollout/30-user-experience.md
+      - "Four Surfaces, Two Personas": agentic-gitops/05-rollout/50-ux-four-surfaces-two-personas.md
+      - "Import & Generator UX": agentic-gitops/05-rollout/60-ux-import-and-generators-for-brian-jesper.md
+      - "cub-track Ledger": agentic-gitops/05-rollout/10-cub-track.md
+      - "Illustration Pack": agentic-gitops/05-rollout/94-demo-illustration-pack.md
+
+  - Blog:
+      - "Agentic GitOps": agentic-gitops/06-blog/01-agentic-gitops-blog-v2.md
+      - "Technical Deep Dive": agentic-gitops/06-blog/02-agentic-gitops-blog-v2-technical.md
+      - "LinkedIn Version": agentic-gitops/06-blog/03-agentic-gitops-blog-v2-linkedin.md
+      - "Community Feedback": agentic-gitops/06-blog/04-agentic-gitops-blog-v2-feedback.md
+      - "IITS Whitepaper": agentic-gitops/07-external-input/01-iits-whitepaper-contribution-agentic-gitops.md
+
+  - Contributing:
+      - "How to Contribute": contributing-guide.md
+      - "Proof-First Delivery": workflows/proof-first-delivery.md
+      - "Testing Strategy": testing/README.md
+      - "Contract Drift Checklist": testing/contract-drift-checklist.md
+      - "Release Notes (v0.2-preview.1)": releases/v0.2-preview.1.md
+      - Decisions:
+          - "Sprint 2 Go/No-Go": decisions/2026-03-06-sprint-2-go-no-go.md
+          - "Generator Triple Visibility": decisions/2026-03-08-generator-triple-visibility-options.md
+          - "Markdown Visibility Surface": decisions/2026-03-08-generator-visibility-markdown-surface.md
+          - "Go Canonical Triples": decisions/2026-03-08-go-canonical-generator-triples.md
+          - "Swamp/C3Agent Corrections": decisions/2026-03-08-swamp-c3agent-corrections.md
