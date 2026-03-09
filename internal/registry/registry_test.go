@@ -203,6 +203,28 @@ func TestRegistryWetTargetTemplates(t *testing.T) {
 	if againLineage[0].Kind != "Kustomization" {
 		t.Fatalf("expected immutable rendered lineage template copy, got %+v", againLineage[0])
 	}
+
+	c3agent := WetTargetTemplates(model.GeneratorC3Agent)
+	if len(c3agent) != 11 {
+		t.Fatalf("expected 11 c3agent wet target templates, got %d", len(c3agent))
+	}
+	if c3agent[0].Kind != "ConfigMap" || c3agent[0].NameTemplate != "{{name}}-fleet-config" {
+		t.Fatalf("unexpected c3agent template[0]: %+v", c3agent[0])
+	}
+	if c3agent[10].Kind != "ConfigMap" || c3agent[10].NameTemplate != "{{name}}-job-template" {
+		t.Fatalf("unexpected c3agent template[10]: %+v", c3agent[10])
+	}
+
+	c3agentLineage := RenderedLineageTemplates(model.GeneratorC3Agent)
+	if len(c3agentLineage) != 11 {
+		t.Fatalf("expected 11 c3agent rendered lineage templates, got %d", len(c3agentLineage))
+	}
+	if c3agentLineage[2].Kind != "Deployment" || c3agentLineage[2].NameTemplate != "{{name}}-controlplane" || c3agentLineage[2].SourceDryPathTemplate != "components.controlplane.replicas" {
+		t.Fatalf("unexpected c3agent lineage template[2]: %+v", c3agentLineage[2])
+	}
+	if c3agentLineage[10].Kind != "ConfigMap" || c3agentLineage[10].NameTemplate != "{{name}}-job-template" || c3agentLineage[10].SourceDryPathTemplate != "agent_runtime.image" {
+		t.Fatalf("unexpected c3agent lineage template[10]: %+v", c3agentLineage[10])
+	}
 }
 
 func TestRegistryHintDefaults(t *testing.T) {
@@ -253,6 +275,15 @@ func TestRegistryHintDefaults(t *testing.T) {
 	}
 	if got := InverseEditHint(model.GeneratorSwamp, "model_binding_workflow", "fallback"); got != "Edit model method bindings in {{workflow_path}} for task-specific overrides." {
 		t.Fatalf("expected swamp model_binding_workflow inverse edit hint template, got %q", got)
+	}
+	if got := InversePatchTemplateFor(model.GeneratorC3Agent, "rbac", InversePatchTemplate{}); got.EditableBy != "platform-engineer" || got.Confidence != 0.82 || !got.RequiresReview {
+		t.Fatalf("expected c3agent rbac inverse patch template, got %+v", got)
+	}
+	if got := InversePointerTemplateFor(model.GeneratorC3Agent, "replicas", InversePointerTemplate{}); got.Owner != "app-team" || got.Confidence != 0.89 {
+		t.Fatalf("expected c3agent replicas inverse pointer template, got %+v", got)
+	}
+	if got := FieldOriginConfidenceFor(model.GeneratorC3Agent, "storage", 0.0); got != 0.85 {
+		t.Fatalf("expected c3agent storage field origin confidence 0.85, got %v", got)
 	}
 
 	// Ensure returned specs are copies.

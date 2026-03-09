@@ -116,7 +116,43 @@
           "op": "replace",
           "reason": "Component port changes affect platform networking and service mesh.",
           "requires_review": true,
-          "wet_path": "ConfigMap/data/CP_GRPC_PORT"
+          "wet_path": "Service/spec/ports[name=grpc]/port"
+        },
+        {
+          "confidence": 0.88,
+          "dry_path": "agent_runtime.image",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Agent runtime image and budget settings affect platform execution behavior.",
+          "requires_review": true,
+          "wet_path": "ConfigMap/data/JOB_IMAGE"
+        },
+        {
+          "confidence": 0.85,
+          "dry_path": "storage.task_pvc_size",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Storage sizing and binding affect persistent runtime state.",
+          "requires_review": true,
+          "wet_path": "PersistentVolumeClaim/spec/resources/requests/storage"
+        },
+        {
+          "confidence": 0.89,
+          "dry_path": "components.controlplane.replicas",
+          "editable_by": "app-team",
+          "op": "replace",
+          "reason": "Replica tuning affects fleet concurrency and runtime cost.",
+          "requires_review": false,
+          "wet_path": "Deployment/spec/replicas"
+        },
+        {
+          "confidence": 0.82,
+          "dry_path": "service",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "RBAC resources are platform-governed and must align with security policy.",
+          "requires_review": true,
+          "wet_path": "ClusterRole/rules"
         }
       ],
       "plan_id": "\u003cplan_id\u003e",
@@ -154,17 +190,87 @@
         },
         {
           "confidence": 0.84,
-          "dry_path": "fleet.max_concurrent_tasks",
+          "dry_path": "components.controlplane.grpc_port",
           "source_path": "c3agent.yaml",
           "transform": "c3agent-config-to-runtime",
-          "wet_path": "ConfigMap/data/MAX_CONCURRENT_TASKS"
+          "wet_path": "Service/controlplane/spec/ports[name=grpc]/port"
+        },
+        {
+          "confidence": 0.84,
+          "dry_path": "components.gateway.grpc_port",
+          "source_path": "c3agent.yaml",
+          "transform": "c3agent-config-to-runtime",
+          "wet_path": "Service/gateway/spec/ports[name=grpc]/port"
+        },
+        {
+          "confidence": 0.88,
+          "dry_path": "agent_runtime.image",
+          "source_path": "c3agent.yaml",
+          "transform": "c3agent-config-to-runtime",
+          "wet_path": "ConfigMap/data/JOB_IMAGE"
+        },
+        {
+          "confidence": 0.85,
+          "dry_path": "storage.task_pvc_size",
+          "source_path": "c3agent.yaml",
+          "transform": "c3agent-config-to-runtime",
+          "wet_path": "PersistentVolumeClaim/spec/resources/requests/storage"
+        },
+        {
+          "confidence": 0.89,
+          "dry_path": "components.controlplane.replicas",
+          "source_path": "c3agent.yaml",
+          "transform": "c3agent-config-to-runtime",
+          "wet_path": "Deployment/controlplane/spec/replicas"
+        },
+        {
+          "confidence": 0.89,
+          "dry_path": "components.gateway.replicas",
+          "source_path": "c3agent.yaml",
+          "transform": "c3agent-config-to-runtime",
+          "wet_path": "Deployment/gateway/spec/replicas"
+        },
+        {
+          "confidence": 0.82,
+          "dry_path": "service",
+          "source_path": "c3agent.yaml",
+          "transform": "c3agent-config-to-runtime",
+          "wet_path": "ClusterRole/rules"
         },
         {
           "confidence": 0.8,
-          "dry_path": "fleet.max_concurrent_tasks",
+          "dry_path": "components.controlplane.grpc_port",
           "source_path": "c3agent-prod.yaml",
           "transform": "c3agent-overlay-merge",
-          "wet_path": "ConfigMap/data/MAX_CONCURRENT_TASKS"
+          "wet_path": "Service/controlplane/spec/ports[name=grpc]/port"
+        },
+        {
+          "confidence": 0.8,
+          "dry_path": "components.gateway.grpc_port",
+          "source_path": "c3agent-prod.yaml",
+          "transform": "c3agent-overlay-merge",
+          "wet_path": "Service/gateway/spec/ports[name=grpc]/port"
+        },
+        {
+          "confidence": 0.85,
+          "dry_path": "components.controlplane.replicas",
+          "source_path": "c3agent-prod.yaml",
+          "transform": "c3agent-overlay-merge",
+          "wet_path": "Deployment/controlplane/spec/replicas"
+        },
+        {
+          "confidence": 0.85,
+          "dry_path": "components.gateway.replicas",
+          "source_path": "c3agent-prod.yaml",
+          "transform": "c3agent-overlay-merge",
+          "wet_path": "Deployment/gateway/spec/replicas"
+        },
+        {
+          "confidence": 0.85,
+          "dry_path": "storage.task_pvc_size",
+          "source_path": "c3agent-prod.yaml",
+          "transform": "c3agent-overlay-merge",
+          "wet_path": "PersistentVolumeClaim/spec/resources/requests/storage"
         }
       ],
       "generator_id": "gen_99a106ccc35809e5",
@@ -189,9 +295,37 @@
         {
           "confidence": 0.84,
           "dry_path": "components.controlplane.grpc_port",
-          "edit_hint": "Edit components.controlplane.grpc_port in c3agent.yaml.",
+          "edit_hint": "Edit component ports in c3agent-prod.yaml for environment-specific values; use c3agent.yaml for defaults.",
           "owner": "platform-engineer",
-          "wet_path": "ConfigMap/data/CP_GRPC_PORT"
+          "wet_path": "Service/spec/ports[name=grpc]/port"
+        },
+        {
+          "confidence": 0.88,
+          "dry_path": "agent_runtime.image",
+          "edit_hint": "Edit agent_runtime.image or agent_runtime.max_budget_usd in c3agent.yaml.",
+          "owner": "platform-engineer",
+          "wet_path": "ConfigMap/data/JOB_IMAGE"
+        },
+        {
+          "confidence": 0.85,
+          "dry_path": "storage.task_pvc_size",
+          "edit_hint": "Edit storage.task_pvc or storage.task_pvc_size in c3agent.yaml.",
+          "owner": "platform-engineer",
+          "wet_path": "PersistentVolumeClaim/spec/resources/requests/storage"
+        },
+        {
+          "confidence": 0.89,
+          "dry_path": "components.controlplane.replicas",
+          "edit_hint": "Edit component replica counts in c3agent-prod.yaml for environment-specific values; use c3agent.yaml for defaults.",
+          "owner": "app-team",
+          "wet_path": "Deployment/spec/replicas"
+        },
+        {
+          "confidence": 0.82,
+          "dry_path": "service",
+          "edit_hint": "Edit service identity in c3agent.yaml and coordinate with platform security owners.",
+          "owner": "platform-engineer",
+          "wet_path": "ClusterRole/rules"
         }
       ],
       "outputs": [
@@ -219,11 +353,65 @@
           "source_path": "c3agent.yaml"
         },
         {
-          "kind": "ConfigMap",
-          "name": "c3agent-fleet-config",
+          "kind": "Deployment",
+          "name": "c3agent-controlplane",
           "namespace": "apps",
-          "source_dry_path": "fleet.max_concurrent_tasks",
-          "source_path": "c3agent-prod.yaml"
+          "source_dry_path": "components.controlplane.replicas",
+          "source_path": "c3agent.yaml"
+        },
+        {
+          "kind": "Deployment",
+          "name": "c3agent-gateway",
+          "namespace": "apps",
+          "source_dry_path": "components.gateway.replicas",
+          "source_path": "c3agent.yaml"
+        },
+        {
+          "kind": "Service",
+          "name": "c3agent-controlplane",
+          "namespace": "apps",
+          "source_dry_path": "components.controlplane.grpc_port",
+          "source_path": "c3agent.yaml"
+        },
+        {
+          "kind": "Service",
+          "name": "c3agent-gateway",
+          "namespace": "apps",
+          "source_dry_path": "components.gateway.grpc_port",
+          "source_path": "c3agent.yaml"
+        },
+        {
+          "kind": "ServiceAccount",
+          "name": "c3agent-agent",
+          "namespace": "apps",
+          "source_dry_path": "service",
+          "source_path": "c3agent.yaml"
+        },
+        {
+          "kind": "ClusterRole",
+          "name": "c3agent-job-runner",
+          "source_dry_path": "service",
+          "source_path": "c3agent.yaml"
+        },
+        {
+          "kind": "ClusterRoleBinding",
+          "name": "c3agent-job-runner",
+          "source_dry_path": "service",
+          "source_path": "c3agent.yaml"
+        },
+        {
+          "kind": "PersistentVolumeClaim",
+          "name": "c3agent-taskdata",
+          "namespace": "apps",
+          "source_dry_path": "storage.task_pvc_size",
+          "source_path": "c3agent.yaml"
+        },
+        {
+          "kind": "ConfigMap",
+          "name": "c3agent-job-template",
+          "namespace": "apps",
+          "source_dry_path": "agent_runtime.image",
+          "source_path": "c3agent.yaml"
         }
       ],
       "schema_version": "cub.confighub.io/provenance/v1",
@@ -261,7 +449,7 @@
     "inverse_transform_plans": 1,
     "links": 1,
     "provenance_records": 1,
-    "wet_manifest_targets": 2,
+    "wet_manifest_targets": 11,
     "wet_units": 1
   },
   "target_path": "\u003ctarget_path\u003e",
@@ -282,6 +470,76 @@
       "namespace": "apps",
       "owner": "platform-runtime",
       "source_dry_path": "credentials.anthropic_key_ref"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "Deployment",
+      "name": "c3agent-controlplane",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "components.controlplane.replicas"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "Deployment",
+      "name": "c3agent-gateway",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "components.gateway.replicas"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "Service",
+      "name": "c3agent-controlplane",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "components.controlplane.grpc_port"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "Service",
+      "name": "c3agent-gateway",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "components.gateway.grpc_port"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "ServiceAccount",
+      "name": "c3agent-agent",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "service"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "ClusterRole",
+      "name": "c3agent-job-runner",
+      "owner": "platform-runtime",
+      "source_dry_path": "service"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "ClusterRoleBinding",
+      "name": "c3agent-job-runner",
+      "owner": "platform-runtime",
+      "source_dry_path": "service"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "PersistentVolumeClaim",
+      "name": "c3agent-taskdata",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "storage.task_pvc_size"
+    },
+    {
+      "generator_id": "gen_99a106ccc35809e5",
+      "kind": "ConfigMap",
+      "name": "c3agent-job-template",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "agent_runtime.image"
     }
   ],
   "wet_units": [

@@ -143,6 +143,152 @@ func TestScanRepoSwampIncludesNestedWorkflowInputs(t *testing.T) {
 	}
 }
 
+func TestScanRepoC3AgentStructuralDetection(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		configFile     string
+		content        string
+		expectedMatch  bool
+		expectedScore  float64
+		expectedSource string
+	}{
+		{
+			name:       "accepts c3agent service signature",
+			configFile: "c3agent.yaml",
+			content: `service: c3agent
+fleet:
+  agent_model: claude-3-opus
+`,
+			expectedMatch:  true,
+			expectedScore:  0.92,
+			expectedSource: "c3agent.yaml",
+		},
+		{
+			name:       "accepts c3agent service without fleet at lower confidence",
+			configFile: "c3agent.yaml",
+			content: `service: c3agent
+`,
+			expectedMatch:  true,
+			expectedScore:  0.90,
+			expectedSource: "c3agent.yaml",
+		},
+		{
+			name:       "accepts quoted yaml service key",
+			configFile: "c3agent.yaml",
+			content: `"service": "c3agent"
+fleet:
+  agent_model: claude-3-opus
+`,
+			expectedMatch:  true,
+			expectedScore:  0.92,
+			expectedSource: "c3agent.yaml",
+		},
+		{
+			name:       "accepts c3agent json signature",
+			configFile: "c3agent.json",
+			content: `{
+  "service": "c3agent",
+  "fleet": {"agent_model": "claude-3-opus"}
+}
+`,
+			expectedMatch:  true,
+			expectedScore:  0.92,
+			expectedSource: "c3agent.json",
+		},
+		{
+			name:       "rejects generic agent",
+			configFile: "c3agent.yaml",
+			content: `service: agent
+fleet:
+  agent_model: claude-3-opus
+`,
+			expectedMatch: false,
+		},
+		{
+			name:       "rejects datadog-style agent config",
+			configFile: "c3agent.yaml",
+			content: `api_key: ${DD_API_KEY}
+agent:
+  apm_enabled: true
+`,
+			expectedMatch: false,
+		},
+		{
+			name:       "rejects argo pool config",
+			configFile: "c3agent.yaml",
+			content: `service: argo
+agent_pool:
+  name: primary
+`,
+			expectedMatch: false,
+		},
+		{
+			name:       "rejects nested service key",
+			configFile: "c3agent.yaml",
+			content: `metadata:
+  service: c3agent
+fleet:
+  agent_model: claude-3-opus
+`,
+			expectedMatch: false,
+		},
+		{
+			name:       "rejects embedded json snippet in yaml value",
+			configFile: "c3agent.yaml",
+			content: `description: '"service": "c3agent"'
+fleet:
+  agent_model: claude-3-opus
+`,
+			expectedMatch: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repo := t.TempDir()
+			configFile := tt.configFile
+			if configFile == "" {
+				configFile = "c3agent.yaml"
+			}
+			if err := os.WriteFile(filepath.Join(repo, configFile), []byte(tt.content), 0o644); err != nil {
+				t.Fatalf("write c3agent config: %v", err)
+			}
+
+			result, err := ScanRepo(repo, "main")
+			if err != nil {
+				t.Fatalf("ScanRepo returned error: %v", err)
+			}
+
+			if !tt.expectedMatch {
+				if len(result.Generators) != 0 {
+					t.Fatalf("expected no detections, got %+v", result.Generators)
+				}
+				return
+			}
+
+			if len(result.Generators) != 1 {
+				t.Fatalf("expected one detection, got %d", len(result.Generators))
+			}
+
+			g := result.Generators[0]
+			if g.Kind != model.GeneratorC3Agent {
+				t.Fatalf("expected c3agent kind, got %q", g.Kind)
+			}
+			if g.Confidence != tt.expectedScore {
+				t.Fatalf("expected confidence %.2f, got %.2f", tt.expectedScore, g.Confidence)
+			}
+			if !contains(g.Inputs, tt.expectedSource) {
+				t.Fatalf("expected inputs to contain %q, got %v", tt.expectedSource, g.Inputs)
+			}
+		})
+	}
+}
+
 func contains(v []string, suffix string) bool {
 	for _, item := range v {
 		if filepath.Base(item) == suffix || item == suffix {
