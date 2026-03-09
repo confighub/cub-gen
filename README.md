@@ -64,6 +64,13 @@ If you are new, use this path:
 3. Demo index:
    [`examples/demo/README.md`](examples/demo/README.md)
 
+Delivery plans and issue seeds:
+
+- User-story completion plan: [`docs/plans/user-story-completion-plan.md`](docs/plans/user-story-completion-plan.md)
+- New-user challenge plan: [`docs/plans/new-user-challenges-plan.md`](docs/plans/new-user-challenges-plan.md)
+- Ready-to-file issue seeds: [`docs/plans/issue-seeds.md`](docs/plans/issue-seeds.md)
+- Claude red-team prompt: [`docs/plans/claude-confused-user-red-team-prompt.md`](docs/plans/claude-confused-user-red-team-prompt.md)
+
 Fast demo entry points:
 
 - Core module walkthrough (all modules): `./examples/demo/run-all-modules.sh`
