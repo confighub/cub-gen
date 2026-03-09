@@ -83,3 +83,40 @@ Use these as ready-to-file GitHub issues.
   - [ ] metric definitions frozen
   - [ ] baseline measured
   - [ ] weekly report cadence set
+
+## C. Feedback-triage follow-up issues (2026-03-09)
+
+1. `[DX] Remove absolute/local path references from active docs and mark archive docs`
+- Labels: `enhancement`, `area:docs`, `challenge:new-user`
+- Checklist:
+  - [ ] absolute/local links removed from active docs
+  - [ ] archive docs labeled as non-entrypoint
+  - [ ] top-level docs map points to current sources of truth
+
+2. `[E2E] Add Argo live reconciliation end-to-end entrypoint`
+- Labels: `enhancement`, `area:demo`, `area:gitops`
+- Checklist:
+  - [ ] Argo live e2e script added
+  - [ ] create/update/drift-correction proof included
+  - [ ] docs and caveat matrix updated
+
+3. `[E2E] Add per-example cub-gen render -> live reconcile proof path`
+- Labels: `enhancement`, `area:demo`, `story:9`
+- Checklist:
+  - [ ] at least one example rendered by cub-gen in live e2e
+  - [ ] evidence links change_id -> rendered artifacts -> live state
+  - [ ] docs updated with command path and caveats
+
+4. `[Detect] Replace heuristic strings.Contains branches with structural detection`
+- Labels: `enhancement`, `area:adapter`, `story:1`
+- Checklist:
+  - [ ] each family has structural detection rules
+  - [ ] false-positive regression tests added
+  - [ ] confidence outputs documented
+
+5. `[Catalog] Clarify c3agent multi-target resource-kind semantics`
+- Labels: `enhancement`, `area:docs`, `area:adapter`
+- Checklist:
+  - [ ] clarify catalog output for multi-target generators
+  - [ ] adjust metadata model if needed
+  - [ ] parity tests updated if contract changes

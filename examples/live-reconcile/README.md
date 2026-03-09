@@ -15,3 +15,8 @@ proves:
 1. create reconciliation (`v1` applied to LIVE),
 2. update reconciliation (`v2` rolled out to LIVE),
 3. drift correction (manual LIVE drift reconciled back to desired state).
+
+## Scope caveats
+
+1. This is Flux-only today; there is no Argo live e2e entrypoint in this repo yet.
+2. These are static fixtures, not manifests rendered per example by `cub-gen` during the e2e run.

@@ -1,52 +1,53 @@
-# Example repos for demo narratives
+# Example Repos For Demo Narratives
 
 These fixtures are intentionally small but realistic enough to demonstrate platform + app collaboration and governance turns.
 
-## Core examples (MVP demos)
+## Lifecycle matrix fixtures (current: 10)
 
-1. `helm-paas`
-- Platform-owned chart contract + app-owned values overlays.
-- Shows DRY value edits, env rollout, and guarded promotion.
+The lifecycle aggregator (`examples/demo/run-all-confighub-lifecycles.sh`) runs these 10 examples:
 
-2. `scoredev-paas`
-- App-first workload intent with platform contracts/policies.
-- Shows field-origin and inverse-edit mapping.
+| Example | What it demonstrates |
+|---|---|
+| `helm-paas` | Helm import/govern path with values ownership and inverse guidance |
+| `scoredev-paas` | score.dev abstraction with field-origin and inverse mapping |
+| `springboot-paas` | Framework config ownership split (app vs platform) |
+| `backstage-idp` | Backstage-style IDP config in the same contract model |
+| `ably-config` | App-config style governance path |
+| `ops-workflow` | Governed operational workflow config |
+| `c3agent` | AI fleet config to governed multi-resource runtime model |
+| `ai-ops-paas` | AI Ops PaaS narrative path with platform constraints |
+| `swamp-automation` | AI-native workflow automation with governed config |
+| `confighub-actions` | Tokened execution/decision path illustration |
 
-3. `springboot-paas`
-- Application code + app config + platform runtime policy split.
-- Shows app/team ownership boundaries in inverse pointers.
+Run all lifecycle fixtures:
 
-4. `ably-config`
-- App-config style platform integration with explicit inverse edit guidance.
-- Included in the core PaaS demo path alongside Spring.
+```bash
+./examples/demo/run-all-confighub-lifecycles.sh
+```
 
-## AI work platform scenarios
+## Other entry paths
 
-5. `c3agent`
-- AI agent fleet orchestration with native c3agent config surface.
-- Shows fleet/credential DRY config with inverse-edit mapping.
+Core module walkthrough:
 
-6. `swamp-automation`
-- System Initiative Swamp AI-native workflow automation.
-- Shows workflow definition + vault config with model orchestration.
+```bash
+./examples/demo/run-all-modules.sh
+```
 
-7. `confighub-actions`
-8. `ops-workflow`
+AI work platform track:
 
-Run the AI track scripts under:
-- `examples/demo/ai-work-platform/`
+```bash
+./examples/demo/ai-work-platform/run-all.sh
+```
 
-## Additional preview examples
+## Live reconciliation caveat
 
-9. `backstage-idp`
+The live end-to-end reconciler proof today is Flux-only via:
 
-## Demo rule
+```bash
+./examples/demo/e2e-live-reconcile-flux.sh
+```
 
-All examples assume:
-- Kubernetes runtime
-- Git + OCI transport
-- Flux or Argo reconciliation
-- ConfigHub governance and API layer on top
+This live proof uses `examples/live-reconcile/flux/manifests-v1|v2` fixtures.
 
 ## Docs and illustrations
 

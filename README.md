@@ -70,6 +70,7 @@ Delivery plans and issue seeds:
 - New-user challenge plan: [`docs/plans/new-user-challenges-plan.md`](docs/plans/new-user-challenges-plan.md)
 - Ready-to-file issue seeds: [`docs/plans/issue-seeds.md`](docs/plans/issue-seeds.md)
 - Claude red-team prompt: [`docs/plans/claude-confused-user-red-team-prompt.md`](docs/plans/claude-confused-user-red-team-prompt.md)
+- Latest feedback triage: [`docs/plans/feedback-triage-2026-03-09.md`](docs/plans/feedback-triage-2026-03-09.md)
 
 Fast demo entry points:
 
@@ -116,7 +117,7 @@ Or run all modules in one pass:
 ./examples/demo/run-all-modules.sh
 ```
 
-Example repo narratives and ownership maps are documented in `/Users/alexis/Public/github-repos/cub-gen/examples/README.md`.
+Example repo narratives and ownership maps are documented in `examples/README.md`.
 
 ## Wizard Simulation (Repo-First)
 
@@ -148,6 +149,11 @@ Run all current platform examples (10 fixtures):
 ./examples/demo/run-all-confighub-lifecycles.sh
 ```
 
+Current caveat:
+
+- This lifecycle path is local-first and uses simulated bridge/governance data in the demo scripts.
+- It is a governed-config automation proof path, not a full backend-connected ConfigHub deployment path.
+
 Each run shows:
 
 1. Create path (`discover -> import -> publish -> verify -> attest`)
@@ -164,6 +170,11 @@ Optional full live reconciliation proof (kind + Flux):
 ```bash
 ./examples/demo/e2e-live-reconcile-flux.sh
 ```
+
+Current caveat:
+
+- Live e2e proof is Flux-only today.
+- The script uses static live-reconcile fixtures (`examples/live-reconcile/flux/manifests-v1|v2`), not per-example `cub-gen` rendered output.
 
 This script creates a local cluster, installs Flux controllers, and proves:
 create reconciliation, update reconciliation, and drift correction against LIVE resources.
