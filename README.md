@@ -37,8 +37,8 @@ Fast demo entry points:
 Full documentation is published at **https://confighub.github.io/cub-gen/**
 
 - [Getting Started](https://confighub.github.io/cub-gen/getting-started/) — build and run your first import in 10 minutes
-- [Architecture](https://confighub.github.io/cub-gen/architecture/) — DRY/WET model, field-origin maps, governed execution
-- [Generator Reference](https://confighub.github.io/cub-gen/generators/) — contract triples for all 8 generator kinds
+- [Architecture](https://confighub.github.io/cub-gen/agentic-gitops/02-design/00-agentic-gitops-design/) — DRY/WET model, field-origin maps, governed execution
+- [Generator Reference](https://confighub.github.io/cub-gen/triple-styles/) — contract triples for all 8 generator kinds
 - [CLI Reference](https://confighub.github.io/cub-gen/cli-reference/) — full command and flag documentation
 - [Contributing](https://confighub.github.io/cub-gen/contributing-guide/) — proof-first delivery, test-backed PRs
 
