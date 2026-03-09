@@ -14,6 +14,16 @@ This keeps intent in repos, keeps GitOps reconciliation in Flux/Argo, and adds p
 
 `cub-gen` provides a framework for config generators: functions that turn app config into platform config, plus governance and attestation artifacts.
 
+## Connected mode (ConfigHub backend)
+
+ConfigHub backend exists and has a backend-connected GitOps import path via `cub` CLI.
+
+- Use `cub gitops discover/import/cleanup` for server-connected workflows (spaces, targets, units, mutations).
+- Use `cub-gen` for local-first contract/provenance parity and demo surfaces.
+
+Connected workflow guide:
+[`docs/workflows/confighub-backend-connected-loop.md`](docs/workflows/confighub-backend-connected-loop.md)
+
 ## Read this first: how it works in practice
 
 ### Who does what
@@ -63,6 +73,8 @@ If you are new, use this path:
    [`examples/README.md`](examples/README.md)
 3. Demo index:
    [`examples/demo/README.md`](examples/demo/README.md)
+4. Backend-connected loop:
+   [`docs/workflows/confighub-backend-connected-loop.md`](docs/workflows/confighub-backend-connected-loop.md)
 
 Delivery plans and issue seeds:
 
@@ -85,7 +97,7 @@ Fast demo entry points:
 - Detects generator-style app sources in Git repos (`helm`, `score.dev`, `springboot`, `backstage`, `ably-config`, `ops-workflow`, `c3agent`, `swamp`).
 - Runs the same staged flow shape as `cub gitops`: `gitops discover`, `gitops import`, `gitops cleanup`.
 - Emits provenance and inverse-edit guidance ("what rendered field came from which source field").
-- Stays local and pre-sync in v0.1 and v0.2 preview (no cluster deploys, no ConfigHub backend required).
+- Stays local and pre-sync in v0.1 and v0.2 preview (no cluster deploys, no backend dependency for the `cub-gen` flow itself).
 - Exposes supported generator families via `cub-gen generators`.
 
 ## Where Flux/Argo/OCI fit
@@ -153,6 +165,7 @@ Current caveat:
 
 - This lifecycle path is local-first and uses simulated bridge/governance data in the demo scripts.
 - It is a governed-config automation proof path, not a full backend-connected ConfigHub deployment path.
+- For backend-connected GitOps import today, use the `cub` flow documented in `docs/workflows/confighub-backend-connected-loop.md`.
 
 Each run shows:
 

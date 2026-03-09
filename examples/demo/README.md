@@ -13,6 +13,22 @@
 
 - `simulate-repo-wizard.sh <repo-path> <render-target-path> [profile-hint]`
 
+## ConfigHub backend-connected GitOps (real server path)
+
+- `confighub-connected-gitops.sh` (uses `cub gitops discover/import/cleanup` against a real ConfigHub backend)
+
+Run with:
+
+```bash
+SPACE=<space-slug> \
+DISCOVERY_TARGET=<discovery-target-slug> \
+RENDER_TARGET=<renderer-target-slug> \
+./examples/demo/confighub-connected-gitops.sh
+```
+
+Guide:
+- `docs/workflows/confighub-backend-connected-loop.md`
+
 ## ConfigHub lifecycle simulation
 
 - `simulate-confighub-lifecycle.sh <repo-path> <render-target-path> [example-slug]`
@@ -39,6 +55,10 @@ PRD user-story coverage snapshot:
 | Met/strong in current demos | 2, 3, 4, 5, 6, 13 |
 | Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 9, 12 |
 | Deferred | 8, 10, 11 |
+
+Note:
+- This table is for `cub-gen` local-first demo coverage.
+- Backend-connected GitOps import exists via `cub` CLI and is documented in `docs/workflows/confighub-backend-connected-loop.md`.
 
 ## Live reconciler e2e (Flux + kind)
 

@@ -39,6 +39,14 @@ AI work platform track:
 ./examples/demo/ai-work-platform/run-all.sh
 ```
 
+ConfigHub backend-connected GitOps loop:
+
+```bash
+SPACE=<space-slug> DISCOVERY_TARGET=<target-slug> RENDER_TARGET=<target-slug> ./examples/demo/confighub-connected-gitops.sh
+```
+
+See guide: `docs/workflows/confighub-backend-connected-loop.md`
+
 ## Live reconciliation caveat
 
 The live end-to-end reconciler proof today is Flux-only via:
