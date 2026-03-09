@@ -5,6 +5,7 @@ These demos simulate AI-work platform use cases while keeping the same local-fir
 Scenarios:
 
 1. C3 Agent (`c3agent`)
+   - Demonstrates 11-target manifest-set metadata coverage with inverse ownership routing
    `./examples/demo/ai-work-platform/scenario-1-c3agent.sh`
 
 2. Swamp Automation (`swamp`)

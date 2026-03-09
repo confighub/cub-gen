@@ -107,6 +107,7 @@ Boundary language (aligned with `PARITY.md`):
 - `matched`: `gitops discover|import|cleanup` command shape and output contracts.
 - `partial`: local state/artifacts stand in for server-side units during this phase.
 - `deferred`: ConfigHub API bridge coupling and runtime reconcile execution.
+- `deferred`: YAML bundle registry migration (Go remains canonical source of truth in current releases).
 
 ## Terminology (locked for v0.1)
 
@@ -176,7 +177,7 @@ go build ./cmd/cub-gen
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/c3agent
-./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
+./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets_count: (.wet_manifest_targets|length), inverse_patches_count: (.inverse_transform_plans[0].patches|length), inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
 ./cub-gen gitops cleanup --space platform ./examples/c3agent
 ```
 
@@ -396,7 +397,8 @@ A practical app-team/platform-team path in a Spring Boot repo:
 
 - `generator_profile: "c3agent"`
 - app-team DRY ownership (`fleet-config-base`, `fleet-config-overlay`)
-- inverse-edit paths for fleet orchestration config (`fleet.agent_model`, `fleet.max_concurrent_tasks`, `credentials`)
+- manifest-set metadata expansion to 11 WET targets (Deployments, Services, RBAC, PVC, ConfigMap, Secret)
+- inverse-edit coverage expanded to runtime/storage/replicas/rbac in addition to fleet and credentials
 
 ### Swamp automation (v0.2 preview)
 
