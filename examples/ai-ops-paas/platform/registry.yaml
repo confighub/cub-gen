@@ -227,7 +227,7 @@ spec:
             description: "Allow agents to specify node selectors"
             default: false
       outputs:
-        resources: [ServiceAccount, Role, RoleBinding]
+        resources: [ServiceAccount, ClusterRole, ClusterRoleBinding]
       constraints:
         - least-privilege-rbac
       validation:
@@ -252,5 +252,5 @@ spec:
     - Secret
     - PersistentVolumeClaim
     - ServiceAccount
-    - Role
-    - RoleBinding
+    - ClusterRole
+    - ClusterRoleBinding

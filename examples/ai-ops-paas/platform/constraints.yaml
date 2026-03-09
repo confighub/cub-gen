@@ -50,6 +50,9 @@ spec:
       rule: "labels.variant != 'prod' || credentials.anthropic_key_ref contains 'PROD'"
 
     - id: least-privilege-rbac
-      description: "Agent RBAC must follow least-privilege (no cluster-admin)"
+      description: "Agent RBAC must follow least-privilege — ClusterRoles limited to job/pod verbs"
       enforcement: BLOCK
-      rule: "rbac roles scoped to namespace, no ClusterRole bindings"
+      rule: |
+        clusterRole.rules[*].verbs subset of [create, get, list, watch, delete] &&
+        clusterRole.rules[*].resources subset of [jobs, pods, pods/log] &&
+        no clusterRole grants cluster-admin
