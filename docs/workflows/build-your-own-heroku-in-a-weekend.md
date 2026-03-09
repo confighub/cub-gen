@@ -2,6 +2,9 @@
 
 You can build one internal platform that supports web apps, ops workflows, and AI agent fleets without building a custom controller stack from scratch.
 
+This project is for teams with an existing platform pattern and for teams rolling out a new one quickly. It builds on ConfigHub's control plane and config database by adding an agentic application layer in Git.
+In this model, a generator is a function that turns app config into platform config, plus governance and attestation artifacts.
+
 ## The model in one line
 
 Team writes a short config -> platform renders Kubernetes resources with guardrails -> Flux/Argo deploys.

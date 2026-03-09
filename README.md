@@ -1,16 +1,67 @@
 # cub-gen
 
-`cub-gen` is a local-first prototype for deterministic DRY -> WET generator import, modeled on `cub gitops` command flow.
+`cub-gen` helps teams understand and govern what their config becomes in Kubernetes, while keeping Git + Flux/Argo as-is.
+
+## Project positioning
+
+`cub-gen` is aimed at two user groups:
+
+1. Teams that already have an app-platform pattern and need visibility/governance without replacing existing workflows.
+2. Teams that want to roll out a new app-platform pattern quickly with clear ownership and guardrails.
+
+`cub-gen` builds on the ConfigHub control plane and config database by adding an agentic application layer in Git.
+This keeps intent in repos, keeps GitOps reconciliation in Flux/Argo, and adds provenance/policy context before runtime apply.
+
+`cub-gen` provides a framework for config generators: functions that turn app config into platform config, plus governance and attestation artifacts.
+
+## Read this first: how it works in practice
+
+### Who does what
+
+The platform team builds an adapter once for each workload type (Spring Boot, Helm, score.dev, c3agent, etc.).
+
+For a Spring Boot adapter, they encode conventions into Kubernetes behavior:
+
+- If `application.yaml` has `server.port: 8080`, create a Service on that port.
+- If it has `management.server.port: 9090`, wire readiness/health probes there.
+- If it has `spring.datasource.url`, map connection settings to Secret-backed runtime config.
+- Always enforce baseline runtime policy (limits, liveness, namespace conventions).
+
+The app team keeps writing normal app files (`application.yaml`, `pom.xml`, Java code).  
+They do not hand-write Kubernetes manifests.
+
+### Which came first
+
+There are two real adoption paths:
+
+1. Path 1 (most common): import what already exists.  
+   Existing repos, copied charts, and drifted manifests become visible and governable first.
+2. Path 2: design a clean platform contract from scratch.  
+   The platform team defines fields/defaults/constraints up front, then app teams self-serve.
+
+Most organizations start with Path 1 and evolve into Path 2.
+
+### How this is the same for AI Ops and Helm
+
+- Spring Boot: platform team encodes Spring conventions once; app team writes `application.yaml`.
+- AI Ops (`c3agent`): platform team encodes fleet/runtime/storage/RBAC conventions once; app team writes `c3agent.yaml`.
+- Helm: teams keep writing charts/values; `cub-gen` makes rendered output governable and traceable.
+
+Same structure every time:
+
+1. Team writes workload config in Git.
+2. `cub-gen` discovers/imports and produces provenance + inverse edit guidance.
+3. Flux/Argo reconciles rendered manifests.
 
 ## Start here (intro + demos)
 
-If you are new, use this path first:
+If you are new, use this path:
 
-1. Plain-English platform story:
+1. Story doc:
    [`docs/workflows/build-your-own-heroku-in-a-weekend.md`](docs/workflows/build-your-own-heroku-in-a-weekend.md)
-2. Example catalog and narratives:
+2. Example catalog:
    [`examples/README.md`](examples/README.md)
-3. Demo track index:
+3. Demo index:
    [`examples/demo/README.md`](examples/demo/README.md)
 
 Fast demo entry points:
@@ -24,11 +75,8 @@ Fast demo entry points:
 ## What cub-gen does today
 
 - Detects generator-style app sources in Git repos (`helm`, `score.dev`, `springboot`, `backstage`, `ably-config`, `ops-workflow`, `c3agent`, `swamp`).
-- Runs the same staged flow shape as `cub gitops`:
-  - `gitops discover`
-  - `gitops import`
-  - `gitops cleanup`
-- Emits provenance and inverse-edit guidance ("what rendered field came from which DRY field").
+- Runs the same staged flow shape as `cub gitops`: `gitops discover`, `gitops import`, `gitops cleanup`.
+- Emits provenance and inverse-edit guidance ("what rendered field came from which source field").
 - Stays local and pre-sync in v0.1 and v0.2 preview (no cluster deploys, no ConfigHub backend required).
 - Exposes supported generator families via `cub-gen generators`.
 
@@ -36,45 +84,12 @@ Fast demo entry points:
 
 `cub-gen` is the import/provenance step, not the reconciler.
 
-1. DRY app intent lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.).
-2. `cub-gen gitops import` classifies DRY inputs + WET targets and emits provenance/inverse map data.
-3. WET artifacts move through Git/OCI transport.
-4. Flux/Argo continue to reconcile WET -> LIVE.
+1. Source intent lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.).
+2. `cub-gen gitops import` classifies inputs + rendered targets and emits provenance/inverse map data.
+3. Rendered artifacts move through Git/OCI transport.
+4. Flux/Argo continue to reconcile rendered -> live.
 
-This means teams can add `cub-gen` to existing Flux/Argo repos today without changing runtime controllers.
-
-## One platform, different workload adapters
-
-`cub-gen` models one platform pattern that supports many workload types.
-
-It is not "one PaaS for Spring Boot" and a different one for Helm or AI agents.
-It is one governance layer with workload adapters:
-
-- Spring Boot adapter reads `application.yaml` conventions.
-- Helm adapter reads `Chart.yaml` + `values.yaml`.
-- score.dev adapter reads `score.yaml`.
-- c3agent adapter reads `c3agent.yaml`.
-
-Same flow every time:
-
-1. Team pushes workload config to Git.
-2. `cub-gen` discovers/imports and emits provenance + inverse edit guidance.
-3. Flux/Argo reconciles rendered manifests.
-
-### Who does what
-
-- Platform team: defines adapters, defaults, and guardrails once.
-- App team: writes app config and code (the files they already use).
-
-### Which comes first in practice
-
-Most orgs start with existing repos and drifted manifests.
-
-1. Path 1 (most common): import what already exists to get visibility and governance first.
-2. Path 2 (next step): standardize clean self-service contracts after visibility is in place.
-
-For a plain-English narrative and team responsibilities, see
-[`docs/workflows/build-your-own-heroku-in-a-weekend.md`](docs/workflows/build-your-own-heroku-in-a-weekend.md).
+This means teams can add `cub-gen` to existing Flux/Argo repos without changing runtime controllers.
 
 ## Jump-in demo modules
 
