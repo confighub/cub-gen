@@ -1,0 +1,28 @@
+# AI Ops PaaS — Production Overlay
+#
+# Platform-enforced production constraints:
+# - Higher concurrency and budget ceiling
+# - HA replicas for control plane and gateway
+# - Larger persistent storage
+# - Separate prod credential refs
+
+fleet:
+  max_concurrent_tasks: 10
+  agent_model: claude-sonnet-4-20250514
+  schedule_interval_secs: 15
+
+agent_runtime:
+  max_budget_usd: 25.0
+
+components:
+  controlplane:
+    replicas: 2
+  gateway:
+    replicas: 2
+
+storage:
+  task_pvc_size: 200Gi
+
+credentials:
+  anthropic_key_ref: ANTHROPIC_API_KEY_PROD
+  github_token_ref: GH_TOKEN_PROD

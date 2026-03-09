@@ -1,0 +1,256 @@
+# AI Ops PaaS — FrameworkRegistry
+#
+# This is the platform's "code": a typed registry of operations
+# that teams can invoke to provision and manage AI agent fleets.
+#
+# Each operation has:
+#   - Typed inputs (JSON Schema for IDP form generation)
+#   - Resource outputs (Kubernetes kinds produced)
+#   - Constraints (policy IDs evaluated at publish time)
+#   - Validation rules (pre-render checks)
+#
+# The registry enables:
+#   1. IDP discovery — portals render dynamic forms from operation schemas
+#   2. Pre-submit validation — catch policy violations before render
+#   3. Audit — every operation invocation produces a ProvenanceRecord
+#
+# Pattern: operations are intent, not execution.
+# See: operation-registry-v1.md, generators-prd FR11
+
+apiVersion: confighub.io/v1
+kind: FrameworkRegistry
+
+metadata:
+  name: ai-ops-paas
+  version: 1.0.0
+
+spec:
+  description: "Self-service platform for provisioning governed AI agent fleets"
+  homepage: "https://docs.acme-corp.com/ai-ops-paas"
+
+  operations:
+    # --- Fleet lifecycle ---
+
+    - name: configureFleet
+      description: "Set fleet identity, model, concurrency, and scheduling"
+      inputs:
+        type: object
+        properties:
+          name:
+            type: string
+            description: "Fleet name (must be DNS-safe)"
+            required: true
+          agent_model:
+            type: string
+            description: "Claude model identifier"
+            enum: [claude-sonnet-4-20250514, claude-haiku-4-20250514]
+            default: claude-sonnet-4-20250514
+          max_concurrent_tasks:
+            type: integer
+            description: "Maximum parallel agent tasks"
+            required: true
+          schedule_interval_secs:
+            type: integer
+            description: "Scheduler polling interval"
+            default: 5
+      outputs:
+        resources: [ConfigMap]
+      constraints:
+        - approved-models-only
+      validation:
+        rules:
+          - condition: "inputs.max_concurrent_tasks > 20"
+            message: "Fleet concurrency capped at 20 — request capacity review for higher"
+            severity: error
+          - condition: "inputs.max_concurrent_tasks > 10 && labels.variant != 'prod'"
+            message: "Non-prod fleets are capped at 10 concurrent tasks"
+            severity: error
+
+    - name: deployControlPlane
+      description: "Deploy the fleet control plane (scheduler + task API)"
+      inputs:
+        type: object
+        properties:
+          grpc_port:
+            type: integer
+            description: "gRPC listen port"
+            default: 50050
+          http_port:
+            type: integer
+            description: "HTTP health/metrics port"
+            default: 8080
+          replicas:
+            type: integer
+            description: "Control plane replica count"
+            required: true
+      outputs:
+        resources: [Deployment, Service]
+      constraints:
+        - min-2-replicas-prod
+      validation:
+        rules:
+          - condition: "inputs.replicas < 2 && labels.variant == 'prod'"
+            message: "Production control plane requires at least 2 replicas"
+            severity: error
+
+    - name: deployGateway
+      description: "Deploy the fleet gateway (external API surface)"
+      inputs:
+        type: object
+        properties:
+          grpc_port:
+            type: integer
+            description: "Gateway gRPC listen port"
+            default: 50052
+          replicas:
+            type: integer
+            description: "Gateway replica count"
+            required: true
+      outputs:
+        resources: [Deployment, Service]
+      constraints:
+        - min-2-replicas-prod
+      validation:
+        rules:
+          - condition: "inputs.replicas < 2 && labels.variant == 'prod'"
+            message: "Production gateway requires at least 2 replicas"
+            severity: error
+
+    # --- Runtime configuration ---
+
+    - name: configureAgentRuntime
+      description: "Set agent container image, budget ceiling, and cache paths"
+      inputs:
+        type: object
+        properties:
+          image:
+            type: string
+            description: "Agent container image (must be from approved registry)"
+            required: true
+          max_budget_usd:
+            type: number
+            description: "Per-task API spend ceiling in USD"
+            required: true
+          repo_cache_dir:
+            type: string
+            description: "Mount path for repo cache"
+            default: /data/repos
+          session_dir:
+            type: string
+            description: "Mount path for session state"
+            default: /data/claude
+      outputs:
+        resources: [ConfigMap]
+      constraints:
+        - approved-registries-only
+        - budget-ceiling-per-tier
+      validation:
+        rules:
+          - condition: "inputs.max_budget_usd > 50"
+            message: "Per-task budget exceeds $50 — requires platform team approval"
+            severity: error
+          - condition: "!inputs.image.startsWith('ghcr.io/')"
+            message: "Agent image must be from ghcr.io approved registry"
+            severity: error
+
+    # --- Credentials and secrets ---
+
+    - name: bindCredentials
+      description: "Bind external API keys and tokens as Kubernetes Secrets"
+      inputs:
+        type: object
+        properties:
+          anthropic_key_ref:
+            type: string
+            description: "Secret name for Anthropic API key"
+            required: true
+          github_token_ref:
+            type: string
+            description: "Secret name for GitHub token"
+            required: true
+          slack_bot_token_ref:
+            type: string
+            description: "Secret name for Slack bot token"
+            required: false
+          slack_app_token_ref:
+            type: string
+            description: "Secret name for Slack app token"
+            required: false
+          database_url_ref:
+            type: string
+            description: "Secret name for database connection URL"
+            required: false
+      outputs:
+        resources: [Secret]
+        sideEffects:
+          - "Validates secret refs exist in target namespace"
+      constraints:
+        - no-plaintext-secrets
+        - prod-credentials-separate
+
+    # --- Storage ---
+
+    - name: provisionStorage
+      description: "Provision persistent storage for task data and session state"
+      inputs:
+        type: object
+        properties:
+          task_pvc:
+            type: string
+            description: "PVC name for task data"
+            required: true
+          task_pvc_size:
+            type: string
+            description: "Storage size (e.g., 50Gi, 100Gi)"
+            required: true
+      outputs:
+        resources: [PersistentVolumeClaim]
+      validation:
+        rules:
+          - condition: "parseInt(inputs.task_pvc_size) > 500"
+            message: "Storage over 500Gi requires capacity planning review"
+            severity: error
+
+    # --- RBAC ---
+
+    - name: grantJobPermissions
+      description: "Create RBAC for agent job execution in target namespace"
+      inputs:
+        type: object
+        properties:
+          namespace:
+            type: string
+            description: "Target namespace for agent jobs"
+            required: true
+          allow_node_selector:
+            type: boolean
+            description: "Allow agents to specify node selectors"
+            default: false
+      outputs:
+        resources: [ServiceAccount, ClusterRole, ClusterRoleBinding]
+      constraints:
+        - least-privilege-rbac
+      validation:
+        rules:
+          - condition: "inputs.allow_node_selector && labels.variant != 'prod'"
+            message: "Node selector access is restricted to production fleets"
+            severity: error
+
+  constraints:
+    - approved-models-only
+    - approved-registries-only
+    - budget-ceiling-per-tier
+    - min-2-replicas-prod
+    - no-plaintext-secrets
+    - prod-credentials-separate
+    - least-privilege-rbac
+
+  produces:
+    - Deployment
+    - Service
+    - ConfigMap
+    - Secret
+    - PersistentVolumeClaim
+    - ServiceAccount
+    - ClusterRole
+    - ClusterRoleBinding
