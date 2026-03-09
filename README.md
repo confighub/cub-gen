@@ -60,6 +60,31 @@ This script walks the same step sequence planned for the GUI:
 4. provenance/inverse hint preview
 5. import confirmation + bundle/verify/attest summary
 
+## ConfigHub Lifecycle Demo (Create -> Deploy -> Update)
+
+Run one example through the full governance lifecycle with surface views:
+
+```bash
+./examples/demo/simulate-confighub-lifecycle.sh ./examples/c3agent ./examples/c3agent c3agent
+```
+
+Run all current platform examples (10 fixtures):
+
+```bash
+./examples/demo/run-all-confighub-lifecycles.sh
+```
+
+Each run shows:
+
+1. Create path (`discover -> import -> publish -> verify -> attest`)
+2. Decision/promotion path (`bridge decision` + `bridge promote`)
+3. Update path (source config mutation + re-run chain)
+4. Visibility surfaces:
+   - OCI (bundle digest + output URIs)
+   - Flux fixtures (`gitops/flux/*` when present)
+   - Argo fixtures (`gitops/argo/*` when present)
+   - cub-scout watchlist (derived from wet targets)
+
 ## AI Work Platform Demo Track
 
 Second demo track focused on AI-work platform scenarios:
