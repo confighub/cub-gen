@@ -1,6 +1,6 @@
 # Governed Execution: Evidence, Trust, and Write-Back Semantics
 
-**Part of:** [AI and GitOps v7 Document Set](/docs/agentic-gitops/00-index/00-gitops7-index.md)
+**Part of:** [AI and GitOps v7 Document Set](../00-index/00-gitops7-index.md)
 **Status:** Planning doc (v7)
 **Date:** 2026-02-28
 **Audience:** Security, compliance, SREs, platform teams
@@ -33,7 +33,7 @@ every phase with intent capture, policy gates, and evidence:
 | **Reconcile** | Flux/Argo pull and apply | Flux/Argo pull and apply *(unchanged)* | — (reconcilers are not replaced) |
 | **Observe** | `flux get all` / Argo health check | cub-scout structured evidence: field-level diff + provenance link | Drift is typed, classified, and linked back to the operation that set the expected value |
 | **Respond** | Manual fix or re-sync | Policy-driven: alert, propose-revert, propose-accept, require-approval | Governed reverse flow — no silent overwrite in either direction |
-| **Record** | Git log + Flux/Argo events | [cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md) ChangeInteractionCard: intent + decision + execution + outcome | Mutation ledger answers "why was this allowed?" not just "what changed" |
+| **Record** | Git log + Flux/Argo events | [cub-track](../05-rollout/10-cub-track.md) ChangeInteractionCard: intent + decision + execution + outcome | Mutation ledger answers "why was this allowed?" not just "what changed" |
 | **Attest** | *(not modeled)* | Signed attestation: actor, intent revision, artifact digest, observed result | Audit-grade proof that authority, action, and outcome are linked |
 
 The left two columns are what Flux/Argo users already have. The right two columns
@@ -179,7 +179,7 @@ Flux/Argo is trying to apply). It does not compare stored WET against what the
 generator *would* produce from current DRY inputs — that is a staleness check,
 owned by ConfigHub's publishing pipeline via `inputs.digest` comparison.
 
-cub-scout's evidence feeds into the broader system: [cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md)
+cub-scout's evidence feeds into the broader system: [cub-track](../05-rollout/10-cub-track.md)
 can enrich mutation records with field-origin data, and ConfigHub can correlate
 evidence with provenance to classify drift causes.
 
@@ -262,7 +262,7 @@ Observed runtime changes **do not** overwrite intent. They produce explicit prop
 
 Write-backs from agents follow the same pattern. An agent changes an operational
 overlay value, proposes it as a merge request, and the mutation is logged via
-[cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md) in both ConfigHub and Git (depending on scope).
+[cub-track](../05-rollout/10-cub-track.md) in both ConfigHub and Git (depending on scope).
 
 ### Overlay Edits: Transitional, Not Steady-State
 
@@ -278,7 +278,7 @@ output.
 
 If an overlay is applied to WET:
 
-1. The system records it as a governed mutation ([cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md) ChangeInteractionCard)
+1. The system records it as a governed mutation ([cub-track](../05-rollout/10-cub-track.md) ChangeInteractionCard)
 2. `cub-track suggest` flags the field's DRY origin, if one exists
 3. The overlay is classified as "overlay drift from DRY source" — distinct from
    runtime drift
@@ -286,7 +286,7 @@ If an overlay is applied to WET:
    default-worthy, or long-lived
 
 The system should create friction — evidence, staleness detection,
-[cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md) redirection — that encourages promotion back to DRY
+[cub-track](../05-rollout/10-cub-track.md) redirection — that encourages promotion back to DRY
 rather than normalizing WET-space editing for generator-backed config.
 
 ---
@@ -302,7 +302,7 @@ In each case, the failure is explicit, surfaced early, and non-destructive.
 | **Generator bug** | Output reproducible via input digest; diff available | Fix generator, re-render; change is explicit and diffable |
 | **Invalid operation** | Validation rejects before rendering | Fix inputs or obtain platform exception |
 | **Manual runtime change** | Detected as drift on next observation | Depends on drift policy; never silently accepted |
-| **Overlay drift from DRY** | WET field changed without `inputs.digest` change; [cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md) classifies as overlay | Promote to DRY input or expire; `cub-track suggest` redirects to DRY source |
+| **Overlay drift from DRY** | WET field changed without `inputs.digest` change; [cub-track](../05-rollout/10-cub-track.md) classifies as overlay | Promote to DRY input or expire; `cub-track suggest` redirects to DRY source |
 | **Stale render** | `inputs.digest` changed but WET not re-rendered; detected by ConfigHub publishing pipeline | Re-render from current DRY inputs; diff shows what changed |
 | **Generator version mismatch** | Provenance shows old version; version pinning prevents silent upgrade | Explicit re-render; diff shows changes |
 
@@ -314,11 +314,11 @@ This document is part of the AI and GitOps v7 Document Set. Related documents:
 
 | Document | Covers |
 |----------|--------|
-| [01 — Introducing Agentic GitOps](/docs/agentic-gitops/01-vision/01-introducing-agentic-gitops.md) | Why agentic GitOps exists, foundational invariants, classical GitOps gaps |
-| [02 — Generators PRD](/docs/agentic-gitops/02-design/10-generators-prd.md) | Generator model, maturity levels, authoring landscape |
-| [03 — Field-Origin Maps and Editing](/docs/agentic-gitops/02-design/20-field-origin-maps-and-editing.md) | Field-origin maps, editing model, provenance tracking |
-| [04 — App Model and Contracts](/docs/agentic-gitops/02-design/30-app-model-and-contracts.md) | Entity definitions, operating boundary, constraints, staging model, operations |
-| [05 — cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md) | Git-native mutation ledger, ChangeInteractionCard, trust tiers, attestation, adoption stages |
+| [01 — Introducing Agentic GitOps](../01-vision/01-introducing-agentic-gitops.md) | Why agentic GitOps exists, foundational invariants, classical GitOps gaps |
+| [02 — Generators PRD](../02-design/10-generators-prd.md) | Generator model, maturity levels, authoring landscape |
+| [03 — Field-Origin Maps and Editing](../02-design/20-field-origin-maps-and-editing.md) | Field-origin maps, editing model, provenance tracking |
+| [04 — App Model and Contracts](../02-design/30-app-model-and-contracts.md) | Entity definitions, operating boundary, constraints, staging model, operations |
+| [05 — cub-track](../05-rollout/10-cub-track.md) | Git-native mutation ledger, ChangeInteractionCard, trust tiers, attestation, adoption stages |
 | **06 — Governed Execution** (this document) | Two-loop model, evidence, write-back semantics, failure modes |
-| [07 — User Experience](/docs/agentic-gitops/05-rollout/30-user-experience.md) | Four surfaces, two personas, import flow, generator UX, AI tooling, skill definition |
-| [08 — Adoption and Reference](/docs/agentic-gitops/05-rollout/40-adoption-and-reference.md) | Adoption path, value analysis, pricing boundary, worked examples, FAQ |
+| [07 — User Experience](../05-rollout/30-user-experience.md) | Four surfaces, two personas, import flow, generator UX, AI tooling, skill definition |
+| [08 — Adoption and Reference](../05-rollout/40-adoption-and-reference.md) | Adoption path, value analysis, pricing boundary, worked examples, FAQ |

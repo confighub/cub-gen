@@ -8,5 +8,8 @@ examples/**/.cub-gen/
 *.out
 coverage.txt
 
+# MkDocs build output
+/site/
+
 # OS/editor noise
 .DS_Store

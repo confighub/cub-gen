@@ -3,7 +3,7 @@
 > Teams think in apps, not in repos or namespaces. The app model makes that
 > the organizing primitive for configuration, governance, and operations.
 
-**Part of:** [AI and GitOps v7 Document Set](/docs/agentic-gitops/00-index/00-gitops7-index.md)
+**Part of:** [AI and GitOps v7 Document Set](../00-index/00-gitops7-index.md)
 **Status:** Planning doc (v7)
 **Date:** 2026-02-28
 **Audience:** Implementors, API consumers, platform teams
@@ -92,7 +92,7 @@ token scoped to that specific action.
 
 **Editing routes through field-origin maps.** When a user changes a rendered
 field, ConfigHub traces it to its DRY source. cub-track intercepts direct WET
-edits and performs the same redirection. See [03 -- Field-Origin Maps](/docs/agentic-gitops/02-design/20-field-origin-maps-and-editing.md).
+edits and performs the same redirection. See [03 -- Field-Origin Maps](../02-design/20-field-origin-maps-and-editing.md).
 
 ### Key clarifications
 
@@ -404,10 +404,10 @@ agents) to discover available operations without executing them.
 
 | Document | Relationship |
 |----------|-------------|
-| [01 -- Introducing Agentic GitOps](/docs/agentic-gitops/01-vision/01-introducing-agentic-gitops.md) | The "why": classical gaps that the app model and operating boundary address |
-| [02 -- Generators PRD](/docs/agentic-gitops/02-design/10-generators-prd.md) | Generator model, maturity levels, and provenance requirements |
-| [03 -- Field-Origin Maps and Editing](/docs/agentic-gitops/02-design/20-field-origin-maps-and-editing.md) | How field-origin maps trace WET fields back to DRY sources within the app model |
-| [05 -- cub-track](/docs/agentic-gitops/05-rollout/10-cub-track.md) | Governed mutation history: how cub-track records changes to Units and Deployments |
-| [06 -- Governed Execution](/docs/agentic-gitops/02-design/40-governed-execution.md) | The two-loop model, evidence, and decision authority referenced in the operating boundary |
-| [07 -- User Experience](/docs/agentic-gitops/05-rollout/30-user-experience.md) | How app-centric language appears in CLI, TUI, and AI skill interfaces |
-| [08 -- Adoption and Reference](/docs/agentic-gitops/05-rollout/40-adoption-and-reference.md) | Adoption path showing how teams progressively adopt the app model |
+| [01 -- Introducing Agentic GitOps](../01-vision/01-introducing-agentic-gitops.md) | The "why": classical gaps that the app model and operating boundary address |
+| [02 -- Generators PRD](../02-design/10-generators-prd.md) | Generator model, maturity levels, and provenance requirements |
+| [03 -- Field-Origin Maps and Editing](../02-design/20-field-origin-maps-and-editing.md) | How field-origin maps trace WET fields back to DRY sources within the app model |
+| [05 -- cub-track](../05-rollout/10-cub-track.md) | Governed mutation history: how cub-track records changes to Units and Deployments |
+| [06 -- Governed Execution](../02-design/40-governed-execution.md) | The two-loop model, evidence, and decision authority referenced in the operating boundary |
+| [07 -- User Experience](../05-rollout/30-user-experience.md) | How app-centric language appears in CLI, TUI, and AI skill interfaces |
+| [08 -- Adoption and Reference](../05-rollout/40-adoption-and-reference.md) | Adoption path showing how teams progressively adopt the app model |
