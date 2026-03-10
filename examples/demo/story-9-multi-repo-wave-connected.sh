@@ -24,43 +24,25 @@ echo "[story-9] wave id: $WAVE_ID"
 echo "[story-9] output root: $OUT_ROOT"
 
 summaries=()
-blocked=0
 
 for example in "${EXAMPLES[@]}"; do
   repo="./examples/$example"
   out_dir="$OUT_ROOT/$example"
   mkdir -p "$out_dir"
 
-  decision_state="ALLOW"
-  policy_ref="policy/wave/default-allow"
+  echo "[story-9] $example decision=backend-driven"
 
-  case "$example" in
-    c3agent)
-      decision_state="ESCALATE"
-      policy_ref="policy/wave/ai-review-required"
-      ;;
-    confighub-actions)
-      decision_state="BLOCK"
-      policy_ref="policy/wave/recursive-governance-hold"
-      ;;
-  esac
-
-  echo "[story-9] $example decision=$decision_state"
-
-  DECISION_STATE="$decision_state" \
-  DECISION_POLICY_REF="$policy_ref" \
-  DECISION_APPROVED_BY="" \
-  DECISION_REASON_PREFIX="wave:$WAVE_ID" \
   VERIFIER="wave-bot" \
   ./examples/demo/simulate-confighub-lifecycle-connected.sh "$repo" "$repo" "$example" "$out_dir"
 
   summary_file="$out_dir/story-9-summary.json"
+  actual_state="$(jq -r '.state // "UNKNOWN"' "$out_dir/update/decision-final.json")"
   jq -n \
     --arg wave_id "$WAVE_ID" \
     --arg repo "$example" \
     --arg change_id "$(jq -r .change_id "$out_dir/update/bundle.json")" \
     --arg bundle_digest "$(jq -r .bundle_digest "$out_dir/update/bundle.json")" \
-    --arg decision_state "$(jq -r '.state // "UNKNOWN"' "$out_dir/update/decision-final.json")" \
+    --arg decision_state "$actual_state" \
     --arg policy_ref "$(jq -r '.policy_decision_ref // ""' "$out_dir/update/decision-final.json")" \
     --arg ingest_status "$(jq -r '.status // "unknown"' "$out_dir/update/ingest.json")" \
     --argjson wet_targets "$(jq '.wet_manifest_targets | length' "$out_dir/update/import.json")" \
@@ -76,10 +58,6 @@ for example in "${EXAMPLES[@]}"; do
     }' | tee "$summary_file"
 
   summaries+=("$summary_file")
-
-  if [ "$decision_state" = "BLOCK" ]; then
-    blocked=$((blocked + 1))
-  fi
 done
 
 jq -s \
@@ -96,6 +74,7 @@ jq -s \
     }
   }' "${summaries[@]}" | tee "$OUT_ROOT/wave-summary.json"
 
+blocked="$(jq '[.targets[] | select(.decision_state == "BLOCK")] | length' "$OUT_ROOT/wave-summary.json")"
 if [ "$blocked" -gt 0 ] && [ "$WAVE_FAIL_ON_BLOCK" = "1" ]; then
   echo "error: wave contains BLOCK decisions ($blocked) and WAVE_FAIL_ON_BLOCK=1" >&2
   exit 1

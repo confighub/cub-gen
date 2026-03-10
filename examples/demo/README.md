@@ -99,7 +99,8 @@ Connected flow shape:
 publish -> verify -> attest -> bridge ingest -> decision query
 ```
 
-Connected ingest/query are real ConfigHub API calls. Some decision/promotion steps in current demo scripts are still local contract simulation.
+Connected ingest/query and decision-state authority are real ConfigHub API calls in connected lifecycle scripts.
+Local contract simulation is limited to explicit local-only demos (`simulate-confighub-lifecycle.sh`, `module-4-bridge-governance.sh`).
 
 If ingest returns `404 Not Found`, point `CONFIGHUB_BASE_URL` to a backend with the governed-wet bridge endpoints enabled.
 If your backend exposes non-default paths, set `BRIDGE_INGEST_ENDPOINT` and `BRIDGE_DECISION_ENDPOINT`.
@@ -164,6 +165,6 @@ References:
 
 | Status | User stories |
 |---|---|
-| Met/strong in current demos | 2, 3, 4, 5, 6, 13 |
-| Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 8, 9, 10, 11, 12 |
+| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 9, 12, 13 |
+| Partial (simulated/local-first, not full backend/runtime integration) | 8, 10, 11 |
 | Deferred | None |

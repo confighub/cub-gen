@@ -13,12 +13,11 @@ EXAMPLE_SLUG="${3:-$(basename "$REPO_PATH")}"
 OUTPUT_DIR="${4:-}"
 SPACE="${SPACE:-}"
 VERIFIER="${VERIFIER:-ci-bot}"
-DECISION_STATE="${DECISION_STATE:-ALLOW}"
-DECISION_APPROVED_BY="${DECISION_APPROVED_BY:-platform-owner}"
-DECISION_POLICY_REF="${DECISION_POLICY_REF:-}"
-DECISION_REASON_PREFIX="${DECISION_REASON_PREFIX:-governance}"
 BRIDGE_INGEST_ENDPOINT="${BRIDGE_INGEST_ENDPOINT:-}"
 BRIDGE_DECISION_ENDPOINT="${BRIDGE_DECISION_ENDPOINT:-}"
+DECISION_POLL_TIMEOUT_SECS="${DECISION_POLL_TIMEOUT_SECS:-120}"
+DECISION_POLL_INTERVAL_SECS="${DECISION_POLL_INTERVAL_SECS:-3}"
+REQUIRE_TERMINAL_DECISION="${REQUIRE_TERMINAL_DECISION:-1}"
 
 if [ ! -d "$REPO_PATH" ]; then
   echo "error: repo path not found: $REPO_PATH" >&2
@@ -30,14 +29,6 @@ if [ ! -d "$RENDER_TARGET" ]; then
   exit 1
 fi
 
-case "$DECISION_STATE" in
-  ALLOW|ESCALATE|BLOCK) ;;
-  *)
-    echo "error: unsupported DECISION_STATE: $DECISION_STATE (expected ALLOW|ESCALATE|BLOCK)" >&2
-    exit 1
-    ;;
-esac
-
 require_connected_preflight
 if [ -z "$SPACE" ]; then
   SPACE="$CONFIGHUB_SPACE"
@@ -48,6 +39,30 @@ if [ "${SKIP_BUILD:-0}" != "1" ]; then
   echo "[lifecycle][connected] build cub-gen"
   go build -o ./cub-gen ./cmd/cub-gen
 fi
+
+is_terminal_decision_state() {
+  local state="$1"
+  case "$state" in
+    ALLOW|ESCALATE|BLOCK) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+query_backend_decision() {
+  local change_id="$1"
+  local output="$2"
+
+  decision_query_cmd=(
+    ./cub-gen bridge decision query
+    --base-url "$CONFIGHUB_BASE_URL"
+    --token "$CONFIGHUB_TOKEN"
+    --change-id "$change_id"
+  )
+  if [ -n "$BRIDGE_DECISION_ENDPOINT" ]; then
+    decision_query_cmd+=(--endpoint "$BRIDGE_DECISION_ENDPOINT")
+  fi
+  "${decision_query_cmd[@]}" > "$output"
+}
 
 run_governed_cycle_connected() {
   local phase="$1"
@@ -83,61 +98,42 @@ run_governed_cycle_connected() {
   local change_id
   change_id="$(jq -r .change_id "$outdir/bundle.json")"
 
-  echo "[connected][$phase] query decision state from ConfigHub"
-  decision_query_cmd=(
-    ./cub-gen bridge decision query
-    --base-url "$CONFIGHUB_BASE_URL"
-    --token "$CONFIGHUB_TOKEN"
-    --change-id "$change_id"
-  )
-  if [ -n "$BRIDGE_DECISION_ENDPOINT" ]; then
-    decision_query_cmd+=(--endpoint "$BRIDGE_DECISION_ENDPOINT")
-  fi
-  "${decision_query_cmd[@]}" > "$outdir/decision-query.json"
+  echo "[connected][$phase] query decision state from ConfigHub (authoritative)"
+  query_backend_decision "$change_id" "$outdir/decision-query-initial.json"
+  cp "$outdir/decision-query-initial.json" "$outdir/decision-query.json"
 
-  # Keep local contract artifacts for continuity with existing promotion demos.
-  ./cub-gen bridge decision create --ingest "$outdir/ingest.json" > "$outdir/decision.json"
-  ./cub-gen bridge decision attach --decision "$outdir/decision.json" --attestation "$outdir/attestation.json" > "$outdir/decision-attested.json"
-
-  local reason
-  reason="$DECISION_REASON_PREFIX: $phase"
-  local decision_output
-  decision_output="$outdir/decision-final.json"
-  if [ -n "$DECISION_POLICY_REF" ]; then
-    ./cub-gen bridge decision apply \
-      --decision "$outdir/decision-attested.json" \
-      --state "$DECISION_STATE" \
-      --policy-ref "$DECISION_POLICY_REF" \
-      --reason "$reason" > "$decision_output"
-  else
-    ./cub-gen bridge decision apply \
-      --decision "$outdir/decision-attested.json" \
-      --state "$DECISION_STATE" \
-      --approved-by "$DECISION_APPROVED_BY" \
-      --reason "$reason" > "$decision_output"
+  local decision_state
+  decision_state="$(jq -r '.state // "UNKNOWN"' "$outdir/decision-query-initial.json")"
+  if ! is_terminal_decision_state "$decision_state"; then
+    local waited=0
+    while [ "$waited" -lt "$DECISION_POLL_TIMEOUT_SECS" ]; do
+      sleep "$DECISION_POLL_INTERVAL_SECS"
+      waited=$((waited + DECISION_POLL_INTERVAL_SECS))
+      query_backend_decision "$change_id" "$outdir/decision-query.json"
+      decision_state="$(jq -r '.state // "UNKNOWN"' "$outdir/decision-query.json")"
+      if is_terminal_decision_state "$decision_state"; then
+        break
+      fi
+    done
   fi
 
-  if [ "$DECISION_STATE" = "ALLOW" ]; then
-    ./cub-gen bridge promote init \
-      --change-id "$(jq -r .change_id "$decision_output")" \
-      --app-pr-repo github.com/confighub/apps \
-      --app-pr-number 42 \
-      --app-pr-url https://github.com/confighub/apps/pull/42 \
-      --mr-id mr_123 \
-      --mr-url "$CONFIGHUB_BASE_URL/mr/123" > "$outdir/flow.json"
-
-    ./cub-gen bridge promote govern --flow "$outdir/flow.json" --state ALLOW --decision-ref decision_123 > "$outdir/flow-allow.json"
-    ./cub-gen bridge promote verify --flow "$outdir/flow-allow.json" > "$outdir/flow-verified.json"
-    ./cub-gen bridge promote open --flow "$outdir/flow-verified.json" --repo github.com/confighub/platform-dry --number 7 --url https://github.com/confighub/platform-dry/pull/7 > "$outdir/flow-open.json"
-    ./cub-gen bridge promote approve --flow "$outdir/flow-open.json" --by platform-owner > "$outdir/flow-approved.json"
-    ./cub-gen bridge promote merge --flow "$outdir/flow-approved.json" --by platform-owner > "$outdir/flow-final.json"
-  else
-    jq -n \
-      --arg change_id "$(jq -r .change_id "$decision_output")" \
-      --arg state "$DECISION_STATE" \
-      --arg reason "$reason" \
-      '{change_id: $change_id, state: $state, promotion: "skipped", reason: $reason}' > "$outdir/flow-final.json"
+  if ! is_terminal_decision_state "$decision_state"; then
+    if [ "$REQUIRE_TERMINAL_DECISION" = "1" ]; then
+      echo "error: backend decision did not reach terminal ALLOW|ESCALATE|BLOCK state within ${DECISION_POLL_TIMEOUT_SECS}s (state=$decision_state)." >&2
+      echo "remediation: ensure ConfigHub decision evaluation workers are running and policy evaluation is enabled for governed-wet ingest." >&2
+      return 1
+    fi
+    echo "[connected][$phase] warning: non-terminal backend decision state after timeout: $decision_state"
   fi
+
+  cp "$outdir/decision-query.json" "$outdir/decision-final.json"
+
+  jq -n \
+    --arg change_id "$change_id" \
+    --arg decision_state "$decision_state" \
+    --arg source "confighub-backend" \
+    --arg note "Promotion state is backend-owned in connected mode; no local bridge promote simulation performed." \
+    '{change_id: $change_id, decision_state: $decision_state, source: $source, note: $note}' > "$outdir/flow-final.json"
 }
 
 show_surface_views() {
@@ -205,7 +201,7 @@ mkdir -p "$work_repo" "$work_target"
 cp -R "$REPO_PATH"/. "$work_repo"
 cp -R "$RENDER_TARGET"/. "$work_target"
 
-echo "[phase:create][connected] discover -> import -> publish -> verify -> attest -> ingest -> decision-query -> promote"
+echo "[phase:create][connected] discover -> import -> publish -> verify -> attest -> ingest -> backend decision query"
 run_governed_cycle_connected "create" "$work_repo" "$work_target" "$tmpdir/create"
 summary_line "create" "$tmpdir/create" | tee "$tmpdir/create/summary.json"
 show_surface_views "$work_repo" "$tmpdir/create"

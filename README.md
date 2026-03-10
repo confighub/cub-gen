@@ -163,8 +163,8 @@ Workflow template for non-interactive CI auth:
 
 | Status | User stories | Notes |
 |---|---|---|
-| Met/strong in current demos | 2, 3, 4, 5, 6, 13 | Proven by current local-first examples and lifecycle flows. |
-| Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 8, 9, 10, 11, 12 | Command shape and evidence model are present; backend/runtime coupling is still partial. |
+| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 9, 12, 13 | Connected lifecycle now uses backend decision state as source of truth for governed flows. |
+| Partial (simulated/local-first, not full backend/runtime integration) | 8, 10, 11 | These flows still include synthetic/local proposal artifacts around taxonomy migration and write-back/live proposal evidence. |
 | Deferred | None | Deferred stories now have connected acceptance scripts and evidence outputs. |
 
 ## Repo Map

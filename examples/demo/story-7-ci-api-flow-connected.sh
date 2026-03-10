@@ -23,10 +23,6 @@ echo "[story-7] CI-centric connected flow"
 echo "[story-7] example: $EXAMPLE_SLUG"
 echo "[story-7] output: $OUT_DIR"
 
-# Use policy decision references in CI to avoid person-bound authority.
-DECISION_STATE="${DECISION_STATE:-ALLOW}" \
-DECISION_POLICY_REF="${DECISION_POLICY_REF:-policy/ci/default}" \
-DECISION_APPROVED_BY="" \
 VERIFIER="${VERIFIER:-ci-bot}" \
 ./examples/demo/simulate-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
 

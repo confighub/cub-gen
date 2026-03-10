@@ -51,6 +51,12 @@ BUNDLE_DIGEST="$(jq -r .bundle_digest "$LIFECYCLE_DIR/update/bundle.json")"
 INGEST_STATUS="$(jq -r '.status // "unknown"' "$LIFECYCLE_DIR/update/ingest.json")"
 DECISION_STATE="$(jq -r '.state // "UNKNOWN"' "$LIFECYCLE_DIR/update/decision-final.json")"
 
+if [ "$DECISION_STATE" != "ALLOW" ]; then
+  echo "error: backend decision for $EXAMPLE_SLUG is $DECISION_STATE; live reconciler e2e requires ALLOW." >&2
+  echo "remediation: adjust ConfigHub policy/approvals for this change or use a fixture expected to evaluate to ALLOW." >&2
+  exit 1
+fi
+
 echo "[e2e] phase 2/3: run live reconciler proof(s) from helm-paas rendered fixture manifests"
 flux_ok=false
 argo_ok=false

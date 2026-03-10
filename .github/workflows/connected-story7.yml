@@ -19,8 +19,6 @@ jobs:
       EXAMPLE_SLUG: ${{ inputs.example_slug }}
       RUN_ID: ${{ github.run_id }}
       VERIFIER: ci-bot
-      DECISION_STATE: ALLOW
-      DECISION_POLICY_REF: policy/ci/default
     steps:
       - uses: actions/checkout@v4
 
