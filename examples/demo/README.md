@@ -8,6 +8,22 @@ Each script demonstrates part of the flow:
 detect -> import -> publish -> verify -> attest -> (optional) bridge ingest/query
 ```
 
+## Workflow-first start (Ops + Swamp)
+
+If your platform is workflow-heavy, start here before app-manifest demos:
+
+```bash
+# Swamp workflow graph governance (models/methods/required steps)
+./examples/demo/ai-work-platform/scenario-2-swamp.sh
+./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation \
+  | jq '.provenance[0].swamp_workflow_analysis'
+
+# Ops workflow governance (actions/schedules/approval gates)
+./examples/demo/ai-work-platform/scenario-4-operations.sh
+./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+  | jq '.provenance[0].ops_workflow_analysis'
+```
+
 ## Local mode (no ConfigHub login required)
 
 ## Core platform/app track
