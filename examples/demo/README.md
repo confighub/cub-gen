@@ -68,6 +68,15 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 | `story-12-unified-actor-evidence.sh` | 12 | Unified human/CI/AI attestation chain under one `change_id` |
 | `run-phase-3-connected-stories.sh` | 1,7,9,12 | Runs all four connected Phase 3 stories |
 
+## Phase 4 connected story scripts
+
+| Script | User story | What it demonstrates |
+|--------|------------|---------------------|
+| `story-8-label-evolution-connected.sh` | 8 | Label/taxonomy migration contract with compatibility queries (no repo surgery) |
+| `story-10-signed-writeback-proof-connected.sh` | 10 | Signed commit + branch protection proof artifact for governed write-back |
+| `story-11-live-breakglass-proposal-connected.sh` | 11 | Convert LIVE break-glass mutation into explicit accept/revert governed proposals |
+| `run-phase-4-connected-stories.sh` | 8,10,11 | Runs all three connected Phase 4 stories |
+
 ## Connected mode (ConfigHub)
 
 Start with authentication:
@@ -101,6 +110,7 @@ Connected runner:
 ./examples/demo/run-all-connected-lifecycles.sh
 ./examples/demo/run-all-connected-entrypoints.sh
 ./examples/demo/run-phase-3-connected-stories.sh
+./examples/demo/run-phase-4-connected-stories.sh
 ```
 
 ## Live reconciler e2e (Flux + Argo + kind)
@@ -155,5 +165,5 @@ References:
 | Status | User stories |
 |---|---|
 | Met/strong in current demos | 2, 3, 4, 5, 6, 13 |
-| Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 9, 12 |
-| Deferred | 8, 10, 11 |
+| Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 8, 9, 10, 11, 12 |
+| Deferred | None |

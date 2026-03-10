@@ -1,4 +1,4 @@
-.PHONY: build test test-parity test-contracts test-bridge-symmetry test-examples test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo lint-dual-mode check-story-status update-goldens sync-triple-styles ci ci-local ci-connected docs docs-serve
+.PHONY: build test test-parity test-contracts test-bridge-symmetry test-examples test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo lint-dual-mode check-story-status update-goldens sync-triple-styles ci ci-local ci-connected docs docs-serve
 
 PARITY_TEST_PATTERN := ^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand|TestGeneratorsGolden)
 BRIDGE_SYMMETRY_PATTERN := ^(TestBridgeSymmetryMatrix|TestExamplesPathModeBridgeFlow)$
@@ -29,6 +29,9 @@ test-connected-lifecycles:
 test-phase-3-stories:
 	./examples/demo/run-phase-3-connected-stories.sh
 
+test-phase-4-stories:
+	./examples/demo/run-phase-4-connected-stories.sh
+
 test-connected-governed-reconcile-helm:
 	@if [ "$${ENABLE_CONNECTED_GOVERNED_RECONCILE_HELM:-0}" != "1" ]; then \
 		echo "skip: set ENABLE_CONNECTED_GOVERNED_RECONCILE_HELM=1 to run connected full-loop helm e2e"; \
@@ -56,7 +59,7 @@ sync-triple-styles:
 
 ci-local: build test test-contracts test-bridge-symmetry test-examples lint-dual-mode check-story-status
 
-ci-connected: build test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo check-story-status
+ci-connected: build test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo check-story-status
 
 ci: ci-local
 

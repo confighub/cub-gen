@@ -133,7 +133,7 @@ This shows structural change governance first: actions/schedules/approval gates 
 
 ```bash
 make ci-local       # build + tests + parity + docs/coverage gates
-make ci-connected   # connected entrypoints + lifecycle + phase-3 stories + connected full-loop helm e2e + flux/argo live reconcile gates
+make ci-connected   # connected entrypoints + lifecycle + phase-3/4 stories + connected full-loop helm e2e + flux/argo live reconcile gates
 make ci             # alias of ci-local
 
 # enable connected full-loop helm e2e gate explicitly
@@ -148,6 +148,13 @@ Story-specific connected scripts (Phase 3):
 - `./examples/demo/story-12-unified-actor-evidence.sh`
 - `./examples/demo/run-phase-3-connected-stories.sh`
 
+Story-specific connected scripts (Phase 4):
+
+- `./examples/demo/story-8-label-evolution-connected.sh`
+- `./examples/demo/story-10-signed-writeback-proof-connected.sh`
+- `./examples/demo/story-11-live-breakglass-proposal-connected.sh`
+- `./examples/demo/run-phase-4-connected-stories.sh`
+
 Workflow template for non-interactive CI auth:
 
 - [connected-story7.yml](/Users/alexis/Public/github-repos/cub-gen/.github/workflows/connected-story7.yml)
@@ -157,8 +164,8 @@ Workflow template for non-interactive CI auth:
 | Status | User stories | Notes |
 |---|---|---|
 | Met/strong in current demos | 2, 3, 4, 5, 6, 13 | Proven by current local-first examples and lifecycle flows. |
-| Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 9, 12 | Command shape and evidence model are present; backend/runtime coupling is still partial. |
-| Deferred | 8, 10, 11 | Requires additional platform/runtime features and connected workflows. |
+| Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 8, 9, 10, 11, 12 | Command shape and evidence model are present; backend/runtime coupling is still partial. |
+| Deferred | None | Deferred stories now have connected acceptance scripts and evidence outputs. |
 
 ## Repo Map
 
