@@ -168,7 +168,7 @@ Workflow template for non-interactive CI auth:
 | Status | User stories | Notes |
 |---|---|---|
 | Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13 | Connected lifecycle now uses backend decision state as source of truth for governed flows, and Story 10 captures real GitHub signed-commit + branch-protection evidence. |
-| Partial (simulated/local-first, not full backend/runtime integration) | 8, 11 | These flows still include synthetic/local proposal artifacts around taxonomy migration and live accept/revert proposal evidence. |
+| Partial (simulated/local-first, not full backend/runtime integration) | 8, 11 | Story 8/11 proposals are now persisted/queryable in backend changesets, but source signals are still demo-simulated (taxonomy mapping + break-glass observation data). |
 | Deferred | None | Deferred stories now have connected acceptance scripts and evidence outputs. |
 
 ## Repo Map

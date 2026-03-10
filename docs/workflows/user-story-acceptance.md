@@ -19,10 +19,10 @@ This matrix maps user-story IDs to runnable acceptance scripts in this repo.
 | 5 | Bridge governance contract | `examples/demo/module-4-bridge-governance.sh` | decision and promotion state JSON |
 | 6 | No-config-platform app-config governance | `examples/demo/module-5-no-config-platform.sh` | import/publish/verify artifacts |
 | 7 | CI-centric connected API flow | `examples/demo/story-7-ci-api-flow-connected.sh` | `.tmp/ci-connected/*/*/story-7-summary.json` |
-| 8 | Label/taxonomy evolution | `examples/demo/story-8-label-evolution-connected.sh` | `.tmp/story-8/*/*/story-8-summary.json` |
+| 8 | Label/taxonomy evolution | `examples/demo/story-8-label-evolution-connected.sh` | `.tmp/story-8/*/*/story-8-summary.json` (includes backend changeset/query evidence) |
 | 9 | Governed multi-repo wave | `examples/demo/story-9-multi-repo-wave-connected.sh` | `.tmp/waves/*/wave-summary.json` |
 | 10 | Signed commit + branch protection proof | `examples/demo/story-10-signed-writeback-proof-connected.sh` | `.tmp/story-10/*/*/story-10-summary.json` |
-| 11 | LIVE break-glass accept/revert proposal | `examples/demo/story-11-live-breakglass-proposal-connected.sh` | `.tmp/story-11/*/*/story-11-summary.json` |
+| 11 | LIVE break-glass accept/revert proposal | `examples/demo/story-11-live-breakglass-proposal-connected.sh` | `.tmp/story-11/*/*/story-11-summary.json` (includes backend proposal changesets + query hits) |
 | 12 | Unified human/CI/AI mutation model | `examples/demo/story-12-unified-actor-evidence.sh` | `.tmp/story-12/*/*/story-12-summary.json` |
 | 13 | Live reconcile create/update/drift correction | `examples/demo/e2e-live-reconcile-flux.sh`, `examples/demo/e2e-live-reconcile-argo.sh` | script summary JSON |
 

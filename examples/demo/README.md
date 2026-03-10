@@ -72,9 +72,9 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 
 | Script | User story | What it demonstrates |
 |--------|------------|---------------------|
-| `story-8-label-evolution-connected.sh` | 8 | Label/taxonomy migration contract with compatibility queries (no repo surgery) |
+| `story-8-label-evolution-connected.sh` | 8 | Backend-persisted label/taxonomy migration anchor with compatibility queries (no repo surgery) |
 | `story-10-signed-writeback-proof-connected.sh` | 10 | Real GitHub PR/commit/branch-protection evidence for signed write-back proof |
-| `story-11-live-breakglass-proposal-connected.sh` | 11 | Convert LIVE break-glass mutation into explicit accept/revert governed proposals |
+| `story-11-live-breakglass-proposal-connected.sh` | 11 | Persist accept/revert break-glass proposals as backend changesets with queryable evidence |
 | `run-phase-4-connected-stories.sh` | 8,10,11 | Runs all three connected Phase 4 stories |
 
 Story 10 required inputs (real GitHub evidence):
