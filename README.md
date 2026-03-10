@@ -103,6 +103,24 @@ Start with the catalog:
 - Includes a persona-first quick navigator (`Choose your starting view`) for Helm, Spring Boot, Score, AI, and Ops users.
 - 5-minute stack-specific entry paths: [persona-5-minute-runbooks.md](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/persona-5-minute-runbooks.md)
 
+### Workflow-First Start (Ops + Swamp)
+
+If your platform is workflow-heavy (operations workflows or agent-authored workflows), start here:
+
+```bash
+# Ops workflow structural governance
+./examples/ops-workflow/demo-local.sh
+./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+  | jq '.provenance[0].ops_workflow_analysis'
+
+# Swamp workflow-graph governance
+./examples/swamp-automation/demo-local.sh
+./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation \
+  | jq '.provenance[0].swamp_workflow_analysis'
+```
+
+This shows structural change governance first: actions/schedules/approval gates for Ops, and models/methods/required steps for Swamp.
+
 ## Which Story Should You Read First?
 
 - New to cub-gen: [Build your own Heroku in a weekend](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/build-your-own-heroku-in-a-weekend.md)

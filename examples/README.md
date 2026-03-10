@@ -91,6 +91,22 @@ If you want copy/paste 5-minute paths per persona, use:
 
 - [Persona 5-minute runbooks](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/persona-5-minute-runbooks.md)
 
+## Workflow-first quick path (Ops + Swamp)
+
+If your users mostly run workflows (not app manifests), start with these two:
+
+```bash
+# Ops workflows: actions/schedules/approval-gates as governed config
+./examples/ops-workflow/demo-local.sh
+./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+  | jq '.provenance[0].ops_workflow_analysis'
+
+# Swamp workflows: model/method/required-step structural governance
+./examples/swamp-automation/demo-local.sh
+./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation \
+  | jq '.provenance[0].swamp_workflow_analysis'
+```
+
 ## Platform + app patterns (Kubernetes workloads)
 
 | Example | You use... | cub-gen shows you... |
@@ -119,7 +135,7 @@ If you want copy/paste 5-minute paths per persona, use:
 
 | Example | You use... | cub-gen shows you... |
 |---------|-----------|---------------------|
-| [**ops-workflow**](ops-workflow/) | Scheduled maintenance workflows | Approval and execution policy mapping |
+| [**ops-workflow**](ops-workflow/) | Scheduled maintenance workflows | Structural workflow governance (actions/schedules/approval gates) |
 | [**confighub-actions**](confighub-actions/) | ConfigHub lifecycle automation | Recursive governance (ConfigHub governing itself) |
 
 ## Infrastructure
