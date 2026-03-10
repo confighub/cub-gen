@@ -1259,6 +1259,7 @@ func printImportTripleSummary(result gitopsflow.ImportFlowResult) {
 	}
 
 	if len(editableByTotals) == 0 {
+		printSwampWorkflowSummary(result.Provenance)
 		return
 	}
 	owners := make([]string, 0, len(editableByTotals))
@@ -1271,6 +1272,65 @@ func printImportTripleSummary(result gitopsflow.ImportFlowResult) {
 	fmt.Println("Patch owner\tCount")
 	for _, owner := range owners {
 		fmt.Printf("%s\t%d\n", owner, editableByTotals[owner])
+	}
+
+	printSwampWorkflowSummary(result.Provenance)
+}
+
+func printSwampWorkflowSummary(provenance []model.ProvenanceRecord) {
+	type swampSummaryRow struct {
+		generatorName              string
+		profile                    string
+		workflowCount              int
+		stepCount                  int
+		modelRefCount              int
+		missingRequiredCount       int
+		unapprovedModelCount       int
+		unapprovedModelMethodCount int
+	}
+
+	rows := make([]swampSummaryRow, 0, len(provenance))
+	for _, prov := range provenance {
+		if prov.SwampWorkflow == nil {
+			continue
+		}
+		analysis := prov.SwampWorkflow
+		rows = append(rows, swampSummaryRow{
+			generatorName:              prov.GeneratorName,
+			profile:                    prov.GeneratorProfile,
+			workflowCount:              len(analysis.WorkflowPaths),
+			stepCount:                  len(analysis.StepNames),
+			modelRefCount:              len(analysis.ModelRefs),
+			missingRequiredCount:       len(analysis.MissingRequiredSteps),
+			unapprovedModelCount:       len(analysis.UnapprovedModels),
+			unapprovedModelMethodCount: len(analysis.UnapprovedModelMethods),
+		})
+	}
+	if len(rows) == 0 {
+		return
+	}
+
+	sort.Slice(rows, func(i, j int) bool {
+		if rows[i].profile != rows[j].profile {
+			return rows[i].profile < rows[j].profile
+		}
+		return rows[i].generatorName < rows[j].generatorName
+	})
+
+	fmt.Println("Swamp workflow analysis")
+	fmt.Println("Generator\tProfile\tWorkflows\tSteps\tModel refs\tMissing required\tUnapproved models\tUnapproved model methods")
+	for _, row := range rows {
+		fmt.Printf(
+			"%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
+			row.generatorName,
+			row.profile,
+			row.workflowCount,
+			row.stepCount,
+			row.modelRefCount,
+			row.missingRequiredCount,
+			row.unapprovedModelCount,
+			row.unapprovedModelMethodCount,
+		)
 	}
 }
 

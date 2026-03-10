@@ -404,6 +404,24 @@ func TestGitOpsParityGoldenImportTable(t *testing.T) {
 	assertGoldenText(t, filepath.Join("testdata", "parity", "gitops-import.table.golden.txt"), out)
 }
 
+func TestGitOpsImportTableIncludesSwampWorkflowSummary(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "swamp", "render-target"})
+	if err != nil {
+		t.Fatalf("run swamp import table returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+	if !strings.Contains(out, "Swamp workflow analysis") {
+		t.Fatalf("expected swamp workflow analysis section in output, got:\n%s", out)
+	}
+	if !strings.Contains(out, "swamp-automation\tswamp\t1\t2\t2\t0\t0\t0") {
+		t.Fatalf("expected swamp workflow summary row in output, got:\n%s", out)
+	}
+}
+
 func TestGitOpsParityGoldenHelp(t *testing.T) {
 	tests := []struct {
 		name         string

@@ -562,6 +562,39 @@ func TestImportRepoSwampDryPathAndHint(t *testing.T) {
 	if !inversePatchHasDryPath(result.InversePlans[0].Patches, "jobs[].steps[].task.modelIdOrName") {
 		t.Fatalf("expected inverse patch dry path jobs[].steps[].task.modelIdOrName, got %+v", result.InversePlans[0].Patches)
 	}
+	if prov.SwampWorkflow == nil {
+		t.Fatalf("expected swamp workflow analysis, got nil")
+	}
+	if prov.SwampWorkflow.BaseWorkflowPath != "workflow-deploy.yaml" {
+		t.Fatalf("expected base workflow path workflow-deploy.yaml, got %+v", prov.SwampWorkflow)
+	}
+	if prov.SwampWorkflow.PolicyPath != "platform/swamp-constraints.yaml" {
+		t.Fatalf("expected policy path platform/swamp-constraints.yaml, got %+v", prov.SwampWorkflow)
+	}
+	if !containsString(prov.SwampWorkflow.WorkflowPaths, "workflow-deploy.yaml") {
+		t.Fatalf("expected workflow path workflow-deploy.yaml in analysis, got %+v", prov.SwampWorkflow)
+	}
+	if !containsString(prov.SwampWorkflow.StepNames, "validate") || !containsString(prov.SwampWorkflow.StepNames, "apply") {
+		t.Fatalf("expected workflow step names validate/apply, got %+v", prov.SwampWorkflow.StepNames)
+	}
+	if !containsString(prov.SwampWorkflow.ModelRefs, "app-validator") || !containsString(prov.SwampWorkflow.ModelRefs, "app-deployer") {
+		t.Fatalf("expected model refs app-validator/app-deployer, got %+v", prov.SwampWorkflow.ModelRefs)
+	}
+	if !containsString(prov.SwampWorkflow.ModelMethodRefs, "app-validator.check") || !containsString(prov.SwampWorkflow.ModelMethodRefs, "app-deployer.apply") {
+		t.Fatalf("expected model method refs in analysis, got %+v", prov.SwampWorkflow.ModelMethodRefs)
+	}
+	if !containsString(prov.SwampWorkflow.RequiredSteps, "validate") {
+		t.Fatalf("expected required step validate in analysis, got %+v", prov.SwampWorkflow.RequiredSteps)
+	}
+	if len(prov.SwampWorkflow.MissingRequiredSteps) != 0 {
+		t.Fatalf("expected no missing required steps, got %+v", prov.SwampWorkflow.MissingRequiredSteps)
+	}
+	if len(prov.SwampWorkflow.UnapprovedModels) != 0 {
+		t.Fatalf("expected no unapproved models, got %+v", prov.SwampWorkflow.UnapprovedModels)
+	}
+	if len(prov.SwampWorkflow.UnapprovedModelMethods) != 0 {
+		t.Fatalf("expected no unapproved model methods, got %+v", prov.SwampWorkflow.UnapprovedModelMethods)
+	}
 }
 
 func TestImportRepoDeterministicChangeIdentity(t *testing.T) {

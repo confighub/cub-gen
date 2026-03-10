@@ -226,6 +226,165 @@
         }
       }
     },
+    "swamp_workflow_analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workflow_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "base_workflow_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policy_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "step_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "model_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "method_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "model_method_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "approved_models": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "approved_model_methods": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required_steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "missing_required_steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unapproved_models": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unapproved_model_methods": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbidden_step_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbidden_steps_present": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "max_steps_per_job": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_parallel_jobs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_jobs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_steps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "jobs_exceeding_max_steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "exceeds_max_parallel_jobs": {
+          "type": "boolean"
+        },
+        "added_steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "removed_steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "added_model_method_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "removed_model_method_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
     "rendered_at": {
       "type": "string",
       "minLength": 1

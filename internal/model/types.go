@@ -103,6 +103,34 @@ type InverseEditPointer struct {
 	Confidence float64 `json:"confidence"`
 }
 
+type SwampWorkflowAnalysis struct {
+	WorkflowPaths          []string `json:"workflow_paths,omitempty"`
+	BaseWorkflowPath       string   `json:"base_workflow_path,omitempty"`
+	PolicyPath             string   `json:"policy_path,omitempty"`
+	StepNames              []string `json:"step_names,omitempty"`
+	ModelRefs              []string `json:"model_refs,omitempty"`
+	MethodRefs             []string `json:"method_refs,omitempty"`
+	ModelMethodRefs        []string `json:"model_method_refs,omitempty"`
+	ApprovedModels         []string `json:"approved_models,omitempty"`
+	ApprovedModelMethods   []string `json:"approved_model_methods,omitempty"`
+	RequiredSteps          []string `json:"required_steps,omitempty"`
+	MissingRequiredSteps   []string `json:"missing_required_steps,omitempty"`
+	UnapprovedModels       []string `json:"unapproved_models,omitempty"`
+	UnapprovedModelMethods []string `json:"unapproved_model_methods,omitempty"`
+	ForbiddenStepNames     []string `json:"forbidden_step_names,omitempty"`
+	ForbiddenStepsPresent  []string `json:"forbidden_steps_present,omitempty"`
+	MaxStepsPerJob         int      `json:"max_steps_per_job,omitempty"`
+	MaxParallelJobs        int      `json:"max_parallel_jobs,omitempty"`
+	TotalJobs              int      `json:"total_jobs,omitempty"`
+	TotalSteps             int      `json:"total_steps,omitempty"`
+	JobsExceedingMaxSteps  []string `json:"jobs_exceeding_max_steps,omitempty"`
+	ExceedsMaxParallelJobs bool     `json:"exceeds_max_parallel_jobs,omitempty"`
+	AddedSteps             []string `json:"added_steps,omitempty"`
+	RemovedSteps           []string `json:"removed_steps,omitempty"`
+	AddedModelMethodRefs   []string `json:"added_model_method_refs,omitempty"`
+	RemovedModelMethodRefs []string `json:"removed_model_method_refs,omitempty"`
+}
+
 type ProvenanceRecord struct {
 	SchemaVersion       string                  `json:"schema_version"`
 	ProvenanceID        string                  `json:"provenance_id"`
@@ -119,6 +147,7 @@ type ProvenanceRecord struct {
 	RenderedLineage     []RenderedObjectLineage `json:"rendered_object_lineage,omitempty"`
 	FieldOriginMap      []FieldOrigin           `json:"field_origin_map"`
 	InverseEditPointers []InverseEditPointer    `json:"inverse_edit_pointers"`
+	SwampWorkflow       *SwampWorkflowAnalysis  `json:"swamp_workflow_analysis,omitempty"`
 	RenderedAt          string                  `json:"rendered_at"`
 }
 
