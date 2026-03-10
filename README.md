@@ -95,10 +95,12 @@ Start with the catalog:
 
 - [examples/README.md](/Users/alexis/Public/github-repos/cub-gen/examples/README.md)
 - Includes a persona-first quick navigator (`Choose your starting view`) for Helm, Spring Boot, Score, AI, and Ops users.
+- 5-minute stack-specific entry paths: [persona-5-minute-runbooks.md](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/persona-5-minute-runbooks.md)
 
 ## Which Story Should You Read First?
 
 - New to cub-gen: [Build your own Heroku in a weekend](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/build-your-own-heroku-in-a-weekend.md)
+- Fastest persona-based starts: [Persona 5-minute runbooks](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/persona-5-minute-runbooks.md)
 - Demo scripts index: [examples/demo/README.md](/Users/alexis/Public/github-repos/cub-gen/examples/demo/README.md)
 - User-story acceptance matrix: [user-story-acceptance.md](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/user-story-acceptance.md)
 - Generator contract boundary: [canonical-triple-and-storage-boundary.md](/Users/alexis/Public/github-repos/cub-gen/docs/contracts/canonical-triple-and-storage-boundary.md)

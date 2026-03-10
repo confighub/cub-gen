@@ -80,6 +80,10 @@ When you run `cub-gen attest --verifier <name>`, the verifier name records who/w
 | Helm-based AI runtime team | [swamp-project](swamp-project/) | [If you already operate Helm-based AI runtimes](swamp-project/README.md#if-you-already-operate-helm-based-ai-runtimes) | `./examples/swamp-project/demo-local.sh` |
 | Reconciler/platform reliability engineer | [live-reconcile](live-reconcile/) | [If you already operate Flux/Argo at scale](live-reconcile/README.md#if-you-already-operate-fluxargo-at-scale) | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
 
+If you want copy/paste 5-minute paths per persona, use:
+
+- [Persona 5-minute runbooks](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/persona-5-minute-runbooks.md)
+
 ## Platform + app patterns (Kubernetes workloads)
 
 | Example | You use... | cub-gen shows you... |

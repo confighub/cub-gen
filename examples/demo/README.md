@@ -107,6 +107,10 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./examples/demo/ai-work-platform/run-all.sh
 ```
 
+Persona-first quick starts:
+
+- [Persona 5-minute runbooks](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/persona-5-minute-runbooks.md)
+
 ## Qualification caveat
 
 Without a live `WET -> LIVE` reconciler loop shown end-to-end, classify the flow as `governed config automation`, not full `Agentic GitOps`.
