@@ -1,6 +1,15 @@
 # cub-gen
 
-`cub-gen` is the Git-side application layer for ConfigHub: it reads app/platform config, maps it to governed platform output, and tells you exactly what to edit when something changes.
+`cub-gen` answers one operational question:
+
+`a deployed field changed; which file/path should I edit, who owns it, and what evidence proves this change was safe?`
+
+Point it at config you already have (Helm, Score, Spring Boot, Backstage, ops workflows, c3agent, provider config), and it emits:
+
+- provenance (`what generated this`)
+- field-origin maps (`which source field controls this deployed field`)
+- inverse-edit guidance (`edit this file/path`)
+- optional governed change bundles for ConfigHub (`publish -> verify -> attest`)
 
 It is for two teams:
 
@@ -10,35 +19,35 @@ It is for two teams:
 ## What It Is
 
 - A deterministic CLI for `discover -> import -> publish -> verify -> attest`.
-- A generator framework: each generator turns app config into platform config plus governance and attestation metadata.
+- A DRY -> WET analysis/import layer that keeps source ownership explicit.
 - A dual-mode workflow:
-  - `Local mode`: no login, fast onboarding.
-  - `Connected mode`: authenticated calls to ConfigHub.
+  - `Local mode`: no login; analyze and generate evidence in place.
+  - `Connected mode`: send the same artifacts to ConfigHub decision APIs.
 
 ## What It Is Not
 
 - Not a Kubernetes reconciler.
 - Not a Flux/Argo replacement.
-- Not an app runtime by itself.
+- Not a standalone policy runtime by itself.
 
 Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability after deploy.
 
 ## Core Value in 10 Seconds
 
-You can point at a deployed field and get the source-of-truth edit path.
+Take a deployed field and trace it to the exact source edit path:
 
 ```json
 {
-  "wet_field": "Deployment/spec/template/spec/containers/0/image",
-  "source_file": "values.yaml",
-  "source_path": "image.tag",
+  "wet_path": "Deployment/spec/template/spec/containers[name=main]/image",
+  "dry_path": "containers.main.image",
+  "source_file": "score.yaml",
   "owner": "app-team",
-  "confidence": 0.91,
-  "edit_hint": "Edit values.yaml:image.tag (or env overlay for prod-only changes)."
+  "edit_hint": "Edit the Score container image in score.yaml.",
+  "confidence": 0.94
 }
 ```
 
-That is the day-to-day problem cub-gen solves.
+That is the day-to-day workflow this tool optimizes.
 
 ## ConfigHub Is Real (Today)
 
@@ -55,6 +64,21 @@ go build -o ./cub-gen ./cmd/cub-gen
 ```
 
 This gives immediate value with local evidence and lifecycle outputs.
+
+## Fast Path: App/AI Programmer (One Command)
+
+If you want one command that returns the edit recommendation plus evidence artifacts:
+
+```bash
+./examples/demo/app-ai-fastpath.sh ./examples/scoredev-paas
+```
+
+Output:
+
+- `change_id`, `bundle_digest`, `attestation_digest`
+- detected profile(s) and target counts
+- highest-confidence edit recommendation (`owner`, `wet_path`, `dry_path`, `edit_hint`)
+- artifact paths in `.tmp/app-ai-fastpath/...`
 
 ## Quickstart: Connected Mode (ConfigHub)
 
