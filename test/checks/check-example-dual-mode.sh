@@ -54,6 +54,35 @@ while IFS= read -r readme; do
   if ! rg -q '^## Why this maps' "$readme"; then
     failures+=("$example_name: README missing model-mapping section (## Why this maps ...)")
   fi
+
+  entrypoint_section="$(awk '
+    /^## Local and Connected Entrypoints$/ {capture=1; next}
+    /^## / && capture {exit}
+    capture {print}
+  ' "$readme")"
+
+  if [ -z "$entrypoint_section" ]; then
+    failures+=("$example_name: README missing Local and Connected Entrypoints section")
+    continue
+  fi
+
+  if ! printf '%s\n' "$entrypoint_section" | rg -q 'demo-local\.sh'; then
+    failures+=("$example_name: entrypoint section missing demo-local.sh command")
+  fi
+
+  if ! printf '%s\n' "$entrypoint_section" | rg -q 'demo-connected\.sh'; then
+    failures+=("$example_name: entrypoint section missing demo-connected.sh command")
+  fi
+
+  if ! printf '%s\n' "$entrypoint_section" | rg -q 'cub auth login'; then
+    failures+=("$example_name: entrypoint section missing cub auth login command")
+  else
+    login_line="$(printf '%s\n' "$entrypoint_section" | rg -n 'cub auth login' | head -n1 | cut -d: -f1)"
+    connected_line="$(printf '%s\n' "$entrypoint_section" | rg -n 'demo-connected\.sh' | head -n1 | cut -d: -f1)"
+    if [ -n "$login_line" ] && [ -n "$connected_line" ] && [ "$login_line" -gt "$connected_line" ]; then
+      failures+=("$example_name: entrypoint section must list cub auth login before demo-connected.sh")
+    fi
+  fi
 done < <(find "$ROOT_DIR/examples" -mindepth 2 -maxdepth 2 -type f -name README.md | sort)
 
 if [ "${#failures[@]}" -gt 0 ]; then
