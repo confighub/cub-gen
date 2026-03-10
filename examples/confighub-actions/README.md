@@ -50,6 +50,26 @@ approval threshold, and deploy window traced back to its DRY source.
 | `operations-prod.yaml` | Platform | Prod overlay — approval count, deploy window |
 | `platform/lifecycle-policy.yaml` | Platform | Required actions, sequence, approvals, windows, break-glass |
 
+## If you already automate platform lifecycles
+
+This example is for teams running policy-driven operational pipelines already:
+
+- You model lifecycle stages (verify, policy-check, apply) as explicit steps.
+- You frequently adjust approval thresholds and deployment windows.
+- You need auditable proof that governance changes were themselves governed.
+
+cub-gen keeps your operations model intact and adds deterministic provenance for
+every lifecycle field so recursive governance is practical, not theoretical.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing lifecycle model | cub-gen concept | Why it matters |
+|------|------|------|
+| `operations*.yaml` workflow definitions | DRY operational intent | Teams keep editing explicit workflow config. |
+| Execution plan/action manifest | WET governed plan | Each action/approval field is traceable by source and owner. |
+| Lifecycle policy constraints | Governance layer | Policy changes can be reviewed with explicit ALLOW/BLOCK outcomes. |
+| ConfigHub action execution | LIVE workflow run | Runtime execution remains in ConfigHub decision engine. |
+
 ## Try it
 
 ```bash

@@ -41,6 +41,16 @@ detect -> import -> publish -> verify -> attest -> (optional) bridge ingest/quer
 | `run-all-connected-lifecycles.sh` | Connected lifecycle run across current fixtures with pass/fail summary |
 | `simulate-repo-wizard.sh <repo> <target> [hint]` | GUI wizard simulation path |
 
+## Phase 3 connected story scripts
+
+| Script | User story | What it demonstrates |
+|--------|------------|---------------------|
+| `story-1-existing-repo-connected.sh` | 1 | Existing repo import + connected change query by `change_id` |
+| `story-7-ci-api-flow-connected.sh` | 7 | Non-interactive CI flow using `CONFIGHUB_TOKEN` |
+| `story-9-multi-repo-wave-connected.sh` | 9 | Multi-repo wave with per-target ALLOW/ESCALATE/BLOCK outcomes |
+| `story-12-unified-actor-evidence.sh` | 12 | Unified human/CI/AI attestation chain under one `change_id` |
+| `run-phase-3-connected-stories.sh` | 1,7,9,12 | Runs all four connected Phase 3 stories |
+
 ## Connected mode (ConfigHub)
 
 Start with authentication:
@@ -71,6 +81,7 @@ Connected runner:
 
 ```bash
 ./examples/demo/run-all-connected-lifecycles.sh
+./examples/demo/run-phase-3-connected-stories.sh
 ```
 
 ## Live reconciler e2e (Flux + Argo + kind)

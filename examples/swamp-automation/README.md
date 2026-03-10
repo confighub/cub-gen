@@ -54,6 +54,27 @@ managed services.
 | `workflow-deploy.yaml` | App team | Deployment workflow — validate → deploy steps |
 | `platform/swamp-constraints.yaml` | Platform | Approved models, execution windows, vault policy |
 
+## If you already build workflow automation systems
+
+This example is for teams already operating workflow engines with model/tool
+binding semantics:
+
+- App/SRE teams author high-level DAGs and task steps.
+- Platform teams enforce model allowlists, vault controls, and execution windows.
+- You need to audit workflow mutations without exposing runtime internals.
+
+cub-gen keeps workflow authoring simple while adding traceable ownership,
+verification, and attestation over generated execution plans.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing workflow model | cub-gen concept | Why it matters |
+|------|------|------|
+| Workflow YAML + runtime config | DRY operational intent | Teams stay in high-level task declarations. |
+| Compiled workflow manifest | WET governed output | Every step/model binding remains traceable to source. |
+| Model/vault constraints | Governance layer | Unsafe or out-of-policy automations can be blocked/escalated. |
+| Swamp execution | LIVE state | Runtime remains Swamp-native while governance is centralized. |
+
 ## Try it
 
 ```bash

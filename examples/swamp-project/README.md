@@ -53,6 +53,26 @@ mapped back to its DRY source — values file, chart template, or platform polic
 | `templates/deployment.yaml` | Platform | K8s Deployment structure |
 | `platform/runtime-policy.yaml` | Platform | Resource limits, model gateway allowlist, min replicas, required probes |
 
+## If you already operate Helm-based AI runtimes
+
+This example targets teams already managing AI runtime delivery with Helm:
+
+- Project teams tune runtime values (gateway, replicas, image).
+- Platform teams own chart structure and runtime safety constraints.
+- Production changes need clear ownership and policy checks before rollout.
+
+cub-gen keeps Helm workflows familiar while adding policy-aware tracing for
+runtime-specific knobs like model gateway selection.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing Helm runtime model | cub-gen concept | Why it matters |
+|------|------|------|
+| `values*.yaml` for runtime tuning | DRY app/project intent | Teams edit only high-level runtime knobs. |
+| Rendered Deployment/Service/HelmRelease | WET targets with provenance | Runtime rollouts can be traced to exact values keys. |
+| Runtime policy constraints | Governance layer | Unsafe gateway or capacity changes can be blocked/escalated. |
+| Flux/Argo reconcile path | LIVE state | Existing release and reconciliation tooling remains intact. |
+
 ## Try it
 
 ```bash

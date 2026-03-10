@@ -53,6 +53,27 @@ enforces them.
 | `ably-prod.yaml` | App team | Production overlay — prod channels, region settings |
 | `platform/.gitkeep` | — | Placeholder for future platform policies |
 
+## If you already manage provider config directly
+
+This example is for teams that run app-level provider config without a strong
+platform abstraction yet:
+
+- Application teams own channel/topic/credential config directly.
+- There is little or no platform policy at first.
+- Incidents still require tracing which config line changed live behavior.
+
+cub-gen gives you governance visibility before you build a full platform layer:
+field origins, ownership boundaries, and evidence artifacts over plain app config.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing provider-config model | cub-gen concept | Why it matters |
+|------|------|------|
+| `ably*.yaml` | DRY app intent | Teams keep editing familiar provider config files. |
+| Rendered provider payloads | WET targets with provenance | Every live-impacting field can be traced back to source. |
+| Optional future `platform/` rules | Governance layer | You can add policy later without replacing authoring workflow. |
+| Provider sync/runtime | LIVE state | Runtime remains external; cub-gen focuses on safe config change flow. |
+
 ## Try it
 
 ```bash

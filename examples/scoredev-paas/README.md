@@ -56,6 +56,26 @@ reconciler stays in control.
 | `gitops/flux/kustomization.yaml` | Platform | Flux Kustomization transport |
 | `gitops/argo/application.yaml` | Platform | ArgoCD Application transport |
 
+## If you already use Score.dev in production
+
+This example is for teams already committed to Score-style app specs:
+
+- Developers define workload intent in `score.yaml`.
+- Platform teams map that intent into runtime policy and infrastructure.
+- Incidents still require tracing rendered behavior back to Score fields.
+
+cub-gen keeps Score as the app-team interface and adds deterministic provenance
+and ownership routing so debugging and governance use the same contract.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing Score concept | cub-gen concept | Why it matters |
+|------|------|------|
+| `score.yaml` | DRY app intent | Teams keep writing one high-level workload spec. |
+| Score-to-K8s expansion | WET targets with lineage | Rendered manifests stop being opaque. |
+| Platform contracts/policies | Governance layer | Rules run before deploy, not as after-the-fact review. |
+| Flux/Argo deployment loop | LIVE state | Runtime remains unchanged while visibility improves. |
+
 ## Try it
 
 ```bash

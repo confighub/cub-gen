@@ -53,6 +53,27 @@ cub-gen doesn't touch this layer — your existing reconciler stays in control.
 | `gitops/flux/helmrelease.yaml` | Platform team | Flux HelmRelease transport |
 | `gitops/argo/application.yaml` | Platform team | ArgoCD Application transport |
 
+## If you already run Helm heavily
+
+This example is written for teams that already depend on Helm conventions:
+
+- You keep app settings in `values*.yaml` and chart structure in `templates/`.
+- You use env overlays and still get disputes about "who should edit what".
+- You have drift incidents where people patch rendered manifests instead of DRY inputs.
+
+cub-gen is additive: it does not replace Helm templating or your reconciler. It
+adds ownership-aware tracing so Helm users can answer "which values key controls
+this deployed field?" without manual chart archaeology.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing Helm concept | cub-gen concept | Why it matters |
+|------|------|------|
+| `values.yaml` / `values-prod.yaml` | DRY app intent | Keep app-team edits in values files, not rendered manifests. |
+| `templates/*.yaml` | DRY platform contract | Platform structure stays explicit and reviewable. |
+| Rendered Kubernetes objects | WET targets with provenance | Every WET field is traced back to values or templates with confidence. |
+| Flux/Argo applying Helm output | LIVE state | Existing runtime path stays unchanged; only governance visibility is added. |
+
 ## Try it
 
 ```bash

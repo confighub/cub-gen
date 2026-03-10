@@ -52,6 +52,27 @@ artifact, and ConfigHub's decision engine controls when and how it runs.
 | `operations-prod.yaml` | Ops team | Prod overlay — schedule timing, prod image tags |
 | `platform/execution-policy.yaml` | Platform | Allowed/blocked actions, scheduling windows, approval gates |
 
+## If you already run operational workflows at scale
+
+This example is aimed at SRE and operations teams that already manage scheduled
+deploy/restart/maintenance workflows:
+
+- Workflow YAML defines intent, but ownership and safety boundaries are implicit.
+- Schedule or action changes can have broad operational impact.
+- Post-incident review needs a clear source-of-truth for "who changed what".
+
+cub-gen keeps the operations workflow interface and adds explicit provenance,
+decision-state gating, and attestable evidence for each operational mutation.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing ops workflow model | cub-gen concept | Why it matters |
+|------|------|------|
+| `operations*.yaml` | DRY operational intent | Ops teams keep authoring high-level workflow steps. |
+| Execution plan/action manifest | WET governed output | Schedules and actions become traceable and reviewable. |
+| Execution policy | Governance layer | Risky schedule/action changes can be blocked or escalated. |
+| Actual job execution | LIVE state | Runtime execution remains separate while governance becomes explicit. |
+
 ## Try it
 
 ```bash

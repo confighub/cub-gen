@@ -56,6 +56,26 @@ confidence, inverse-edit hints, and provenance digest.
 | `storage.*` | PersistentVolumeClaim | Task data volume |
 | (implicit) | ServiceAccount, ClusterRole, CRB | RBAC for agent workloads |
 
+## If you already run AI/ops platforms on Kubernetes
+
+This example is for platform teams supporting autonomous agent workloads:
+
+- App and AI teams want a short, high-level fleet interface.
+- Platform teams still need strict policy on model, budget, credentials, and RBAC.
+- Runtime fan-out (1 DRY spec -> many Kubernetes resources) must remain auditable.
+
+cub-gen lets app teams stay in high-level fleet config while platform teams keep
+deterministic control of generated runtime and governance decisions.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing AI platform model | cub-gen concept | Why it matters |
+|------|------|------|
+| Fleet config (`c3agent*.yaml`) | DRY intent | Teams declare desired behavior, not low-level Kubernetes objects. |
+| Fleet runtime resources (11 targets) | WET targets with provenance | Every generated object is linked to the source field and owner. |
+| Registry + constraints | Verification/governance loop | Policy checks and attestable decisions can gate autonomous changes. |
+| Flux/Argo reconciliation | LIVE state | Existing GitOps runtime still executes deploys and drift correction. |
+
 ## Try it
 
 ```bash

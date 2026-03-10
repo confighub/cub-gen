@@ -10,8 +10,13 @@ source "$ROOT_DIR/examples/demo/lib/connected-preflight.sh"
 REPO_PATH="${1:-./examples/helm-paas}"
 RENDER_TARGET="${2:-$REPO_PATH}"
 EXAMPLE_SLUG="${3:-$(basename "$REPO_PATH")}" 
+OUTPUT_DIR="${4:-}"
 SPACE="${SPACE:-}"
 VERIFIER="${VERIFIER:-ci-bot}"
+DECISION_STATE="${DECISION_STATE:-ALLOW}"
+DECISION_APPROVED_BY="${DECISION_APPROVED_BY:-platform-owner}"
+DECISION_POLICY_REF="${DECISION_POLICY_REF:-}"
+DECISION_REASON_PREFIX="${DECISION_REASON_PREFIX:-governance}"
 
 if [ ! -d "$REPO_PATH" ]; then
   echo "error: repo path not found: $REPO_PATH" >&2
@@ -22,6 +27,14 @@ if [ ! -d "$RENDER_TARGET" ]; then
   echo "error: render target path not found: $RENDER_TARGET" >&2
   exit 1
 fi
+
+case "$DECISION_STATE" in
+  ALLOW|ESCALATE|BLOCK) ;;
+  *)
+    echo "error: unsupported DECISION_STATE: $DECISION_STATE (expected ALLOW|ESCALATE|BLOCK)" >&2
+    exit 1
+    ;;
+esac
 
 require_connected_preflight
 if [ -z "$SPACE" ]; then
@@ -75,21 +88,46 @@ run_governed_cycle_connected() {
   # Keep local contract artifacts for continuity with existing promotion demos.
   ./cub-gen bridge decision create --ingest "$outdir/ingest.json" > "$outdir/decision.json"
   ./cub-gen bridge decision attach --decision "$outdir/decision.json" --attestation "$outdir/attestation.json" > "$outdir/decision-attested.json"
-  ./cub-gen bridge decision apply --decision "$outdir/decision-attested.json" --state ALLOW --approved-by platform-owner --reason "$phase approved" > "$outdir/decision-allow.json"
 
-  ./cub-gen bridge promote init \
-    --change-id "$(jq -r .change_id "$outdir/decision-allow.json")" \
-    --app-pr-repo github.com/confighub/apps \
-    --app-pr-number 42 \
-    --app-pr-url https://github.com/confighub/apps/pull/42 \
-    --mr-id mr_123 \
-    --mr-url "$CONFIGHUB_BASE_URL/mr/123" > "$outdir/flow.json"
+  local reason
+  reason="$DECISION_REASON_PREFIX: $phase"
+  local decision_output
+  decision_output="$outdir/decision-final.json"
+  if [ -n "$DECISION_POLICY_REF" ]; then
+    ./cub-gen bridge decision apply \
+      --decision "$outdir/decision-attested.json" \
+      --state "$DECISION_STATE" \
+      --policy-ref "$DECISION_POLICY_REF" \
+      --reason "$reason" > "$decision_output"
+  else
+    ./cub-gen bridge decision apply \
+      --decision "$outdir/decision-attested.json" \
+      --state "$DECISION_STATE" \
+      --approved-by "$DECISION_APPROVED_BY" \
+      --reason "$reason" > "$decision_output"
+  fi
 
-  ./cub-gen bridge promote govern --flow "$outdir/flow.json" --state ALLOW --decision-ref decision_123 > "$outdir/flow-allow.json"
-  ./cub-gen bridge promote verify --flow "$outdir/flow-allow.json" > "$outdir/flow-verified.json"
-  ./cub-gen bridge promote open --flow "$outdir/flow-verified.json" --repo github.com/confighub/platform-dry --number 7 --url https://github.com/confighub/platform-dry/pull/7 > "$outdir/flow-open.json"
-  ./cub-gen bridge promote approve --flow "$outdir/flow-open.json" --by platform-owner > "$outdir/flow-approved.json"
-  ./cub-gen bridge promote merge --flow "$outdir/flow-approved.json" --by platform-owner > "$outdir/flow-promoted.json"
+  if [ "$DECISION_STATE" = "ALLOW" ]; then
+    ./cub-gen bridge promote init \
+      --change-id "$(jq -r .change_id "$decision_output")" \
+      --app-pr-repo github.com/confighub/apps \
+      --app-pr-number 42 \
+      --app-pr-url https://github.com/confighub/apps/pull/42 \
+      --mr-id mr_123 \
+      --mr-url "$CONFIGHUB_BASE_URL/mr/123" > "$outdir/flow.json"
+
+    ./cub-gen bridge promote govern --flow "$outdir/flow.json" --state ALLOW --decision-ref decision_123 > "$outdir/flow-allow.json"
+    ./cub-gen bridge promote verify --flow "$outdir/flow-allow.json" > "$outdir/flow-verified.json"
+    ./cub-gen bridge promote open --flow "$outdir/flow-verified.json" --repo github.com/confighub/platform-dry --number 7 --url https://github.com/confighub/platform-dry/pull/7 > "$outdir/flow-open.json"
+    ./cub-gen bridge promote approve --flow "$outdir/flow-open.json" --by platform-owner > "$outdir/flow-approved.json"
+    ./cub-gen bridge promote merge --flow "$outdir/flow-approved.json" --by platform-owner > "$outdir/flow-final.json"
+  else
+    jq -n \
+      --arg change_id "$(jq -r .change_id "$decision_output")" \
+      --arg state "$DECISION_STATE" \
+      --arg reason "$reason" \
+      '{change_id: $change_id, state: $state, promotion: "skipped", reason: $reason}' > "$outdir/flow-final.json"
+  fi
 }
 
 show_surface_views() {
@@ -131,17 +169,25 @@ summary_line() {
     --arg change_id "$(jq -r .change_id "$outdir/bundle.json")" \
     --arg bundle_digest "$(jq -r .bundle_digest "$outdir/bundle.json")" \
     --arg ingest_status "$(jq -r '.status // "unknown"' "$outdir/ingest.json")" \
+    --arg decision_state "$(jq -r '.state // "UNKNOWN"' "$outdir/decision-final.json")" \
+    --arg decision_authority "$(jq -r '.approved_by // .policy_decision_ref // "none"' "$outdir/decision-final.json")" \
     --argjson wet_targets "$(jq '.wet_manifest_targets | length' "$outdir/import.json")" \
     --argjson inverse_patches "$(jq '[.inverse_transform_plans[].patches | length] | add' "$outdir/import.json")" \
     --argjson attested_valid "$(jq '.valid' "$outdir/attestation-verify.json")" \
-    '{phase: $phase, change_id: $change_id, bundle_digest: $bundle_digest, ingest_status: $ingest_status, wet_targets: $wet_targets, inverse_patches: $inverse_patches, attestation_valid: $attested_valid}'
+    '{phase: $phase, change_id: $change_id, bundle_digest: $bundle_digest, ingest_status: $ingest_status, decision_state: $decision_state, decision_authority: $decision_authority, wet_targets: $wet_targets, inverse_patches: $inverse_patches, attestation_valid: $attested_valid}'
 }
 
 echo "[lifecycle][connected] example: $EXAMPLE_SLUG"
 echo "[lifecycle][connected] source: $REPO_PATH"
 
-tmpdir="$(mktemp -d)"
-trap 'rm -rf "$tmpdir"' EXIT
+if [ -n "$OUTPUT_DIR" ]; then
+  tmpdir="$OUTPUT_DIR"
+  mkdir -p "$tmpdir"
+  echo "[lifecycle][connected] output dir: $tmpdir"
+else
+  tmpdir="$(mktemp -d)"
+  trap 'rm -rf "$tmpdir"' EXIT
+fi
 
 work_repo="$tmpdir/repo"
 work_target="$tmpdir/target"
@@ -151,7 +197,7 @@ cp -R "$RENDER_TARGET"/. "$work_target"
 
 echo "[phase:create][connected] discover -> import -> publish -> verify -> attest -> ingest -> decision-query -> promote"
 run_governed_cycle_connected "create" "$work_repo" "$work_target" "$tmpdir/create"
-summary_line "create" "$tmpdir/create"
+summary_line "create" "$tmpdir/create" | tee "$tmpdir/create/summary.json"
 show_surface_views "$work_repo" "$tmpdir/create"
 
 echo "[phase:update][connected] apply source change"
@@ -159,7 +205,7 @@ apply_update "$EXAMPLE_SLUG" "$work_repo"
 
 echo "[phase:update][connected] rerun connected governance chain"
 run_governed_cycle_connected "update" "$work_repo" "$work_target" "$tmpdir/update"
-summary_line "update" "$tmpdir/update"
+summary_line "update" "$tmpdir/update" | tee "$tmpdir/update/summary.json"
 
 echo "[phase:diff][connected]"
 jq -n \
@@ -182,4 +228,6 @@ jq -n \
     update_ingest_status: $update_ingest_status,
     create_wet_targets: $create_wet,
     update_wet_targets: $update_wet
-  }'
+  }' | tee "$tmpdir/diff-summary.json"
+
+echo "[lifecycle][connected] artifacts: $tmpdir"

@@ -99,6 +99,7 @@ Start with the catalog:
 
 - New to cub-gen: [Build your own Heroku in a weekend](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/build-your-own-heroku-in-a-weekend.md)
 - Demo scripts index: [examples/demo/README.md](/Users/alexis/Public/github-repos/cub-gen/examples/demo/README.md)
+- User-story acceptance matrix: [user-story-acceptance.md](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/user-story-acceptance.md)
 - Generator contract boundary: [canonical-triple-and-storage-boundary.md](/Users/alexis/Public/github-repos/cub-gen/docs/contracts/canonical-triple-and-storage-boundary.md)
 
 ## CI Targets
@@ -108,6 +109,18 @@ make ci-local       # build + tests + parity + docs/coverage gates
 make ci-connected   # connected lifecycle + flux/argo live reconcile gates
 make ci             # alias of ci-local
 ```
+
+Story-specific connected scripts (Phase 3):
+
+- `./examples/demo/story-1-existing-repo-connected.sh`
+- `./examples/demo/story-7-ci-api-flow-connected.sh`
+- `./examples/demo/story-9-multi-repo-wave-connected.sh`
+- `./examples/demo/story-12-unified-actor-evidence.sh`
+- `./examples/demo/run-phase-3-connected-stories.sh`
+
+Workflow template for non-interactive CI auth:
+
+- [connected-story7.yml](/Users/alexis/Public/github-repos/cub-gen/.github/workflows/connected-story7.yml)
 
 ## User-Story Coverage Snapshot
 

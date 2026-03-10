@@ -15,6 +15,23 @@ Both scripts verify:
 2. Update reconciliation (desired v2 reaches LIVE)
 3. Drift correction (manual LIVE change gets corrected back to desired)
 
+## If you already operate Flux/Argo at scale
+
+This fixture is for teams that already trust GitOps reconciliation and want a
+fast proof harness:
+
+- Validate create/update/drift behavior on demand.
+- Compare controller behavior (Flux vs Argo) with the same manifests.
+- Reproduce reconciliation incidents quickly in an isolated `kind` cluster.
+
+## Why this maps to the cub-gen framework
+
+| Existing reconciler concern | cub-gen DRY/WET/LIVE framing | Why it matters |
+|------|------|------|
+| Desired manifests in Git | WET input to reconciler | Matches where `cub-gen` hands off after governance. |
+| Controller reconciliation | WET -> LIVE loop | Proves the active loop required for Agentic GitOps claims. |
+| Live drift correction | LIVE feedback loop | Shows why provenance + inverse-edit guidance are useful upstream. |
+
 ## Local and Connected Entrypoints
 
 From repo root:

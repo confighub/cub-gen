@@ -57,6 +57,28 @@ manifests to LIVE state. cub-gen doesn't touch your reconciler.
 | `gitops/flux/kustomization.yaml` | Platform | Flux Kustomization transport |
 | `gitops/argo/application.yaml` | Platform | ArgoCD Application transport |
 
+## If you already ship Spring Boot services
+
+This example targets teams that already standardize around Spring profiles and
+application config:
+
+- Developers own `application.yaml` behavior and feature toggles.
+- Platform teams enforce datasource, SLO, and operational controls.
+- Production issues still require brittle mapping from runtime fields back to
+  Spring config keys.
+
+cub-gen keeps Spring config as the source contract and makes the mapping to
+runtime manifests explicit, including ownership boundaries by field.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing Spring model | cub-gen concept | Why it matters |
+|------|------|------|
+| `application*.yaml` + profiles | DRY intent | Spring remains the authoring interface for app teams. |
+| Spring-to-K8s transformation | WET targets with provenance | Each runtime field can be traced back to a Spring property. |
+| Datasource and secret controls | Ownership + policy gates | Sensitive changes can be blocked/escalated before deploy. |
+| Flux/Argo deployment path | LIVE state | Existing deployment runtime remains unchanged. |
+
 ## Try it
 
 ```bash
