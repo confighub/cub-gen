@@ -1,55 +1,75 @@
-# Example repos for demo narratives
+# Examples
 
-These fixtures are intentionally small but realistic enough to demonstrate platform + app collaboration and governance turns.
+Every example follows the same canonical pattern regardless of generator, app type, or workload:
 
-## Core examples (MVP demos)
+```
+DRY intent → cub-gen detect/import → WET with provenance → publish/verify/attest → ConfigHub governed decision
+```
 
-1. `helm-paas`
-- Platform-owned chart contract + app-owned values overlays.
-- Shows DRY value edits, env rollout, and guarded promotion.
+The generator changes. The app type changes. The pattern stays the same.
 
-2. `scoredev-paas`
-- App-first workload intent with platform contracts/policies.
-- Shows field-origin and inverse-edit mapping.
+See [Example Checklist](../docs/workflows/example-checklist.md) for the verification criteria.
 
-3. `springboot-paas`
-- Application code + app config + platform runtime policy split.
-- Shows app/team ownership boundaries in inverse pointers.
+## App generators (Kubernetes workloads)
 
-4. `ably-config`
-- App-config style platform integration with explicit inverse edit guidance.
-- Included in the core PaaS demo path alongside Spring.
+| Example | Generator | DRY Source | Story |
+|---------|-----------|------------|-------|
+| [`helm-paas`](helm-paas/) | `helm-paas` | `Chart.yaml` + `values.yaml` | Platform owns chart contract; app team owns values overlays |
+| [`scoredev-paas`](scoredev-paas/) | `scoredev-paas` | `score.yaml` | App-first authoring in Score format with platform contracts |
+| [`springboot-paas`](springboot-paas/) | `springboot-paas` | `application.yaml` | Java service with app config + platform runtime policy |
 
-## AI work platform scenarios
+## Operations generators (governed execution)
 
-5. `c3agent`
-- AI agent fleet orchestration with native c3agent config surface.
-- Shows fleet/credential DRY config with inverse-edit mapping.
+| Example | Generator | DRY Source | Story |
+|---------|-----------|------------|-------|
+| [`ops-workflow`](ops-workflow/) | `ops-workflow` | `operations.yaml` | Scheduled maintenance workflows with approval gates |
+| [`confighub-actions`](confighub-actions/) | `ops-workflow` | `operations.yaml` | ConfigHub lifecycle: plan → verify → deploy |
 
-6. `swamp-automation`
-- System Initiative Swamp AI-native workflow automation.
-- Shows workflow definition + vault config with model orchestration.
+## Integration generators (external services)
 
-7. `confighub-actions`
-8. `ops-workflow`
+| Example | Generator | DRY Source | Story |
+|---------|-----------|------------|-------|
+| [`ably-config`](ably-config/) | `ably-config` | `ably.yaml` | Just apps, no platform config — provider config only |
+| [`backstage-idp`](backstage-idp/) | `backstage-idp` | `catalog-info.yaml` | Developer portal catalog with governed ownership |
 
-Run the AI track scripts under:
-- `examples/demo/ai-work-platform/`
+## Automation generators (AI-native platforms)
 
-## Additional preview examples
+| Example | Generator | DRY Source | Story |
+|---------|-----------|------------|-------|
+| [`c3agent`](c3agent/) | `c3agent` | `c3agent.yaml` | Standalone AI agent fleet config |
+| [`ai-ops-paas`](ai-ops-paas/) | `c3agent` | `c3agent.yaml` | Full platform with registry + constraints |
+| [`swamp-automation`](swamp-automation/) | `swamp` | `.swamp.yaml` | ConfigHub + Swamp agentic app platform |
+| [`swamp-project`](swamp-project/) | `helm-paas` | `Chart.yaml` | Helm chart deploying the Swamp runtime |
 
-9. `backstage-idp`
+## Special purpose
 
-## Demo rule
+| Example | Purpose |
+|---------|---------|
+| [`live-reconcile`](live-reconcile/) | Flux e2e test fixture — proves WET→LIVE reconciliation |
 
-All examples assume:
-- Kubernetes runtime
-- Git + OCI transport
-- Flux or Argo reconciliation
-- ConfigHub governance and API layer on top
+## Quick start
 
-## Docs and illustrations
+```bash
+# Build once
+go build -o ./cub-gen ./cmd/cub-gen
 
-1. `docs/agentic-gitops/00-index/02-illustrated-cheat-sheet.md`
-2. `docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md`
-3. `docs/agentic-gitops/05-rollout/94-demo-illustration-pack.md`
+# Try any example
+./cub-gen gitops discover --space platform ./examples/helm-paas
+./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas
+
+# Full bridge flow (works with any example)
+./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
+./cub-gen verify --in /tmp/bundle.json
+./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
+./cub-gen verify-attestation --in /tmp/attestation.json --bundle /tmp/bundle.json
+```
+
+## The canonical pattern
+
+Every example answers five questions:
+
+1. **What is this?** — Real-world scenario in plain English
+2. **Who does what?** — Explicit ownership map (app / platform / reconciler)
+3. **What does cub-gen add?** — DRY→WET mapping with runnable commands
+4. **How do I run it?** — Copy-paste commands from repo root
+5. **Show me a real-world example using ConfigHub** — Governed pipeline walkthrough

@@ -1,0 +1,21 @@
+apiVersion: confighub.io/v1
+kind: FleetPolicy
+metadata:
+  name: c3agent-fleet-constraints
+spec:
+  approved_models:
+    - claude-sonnet-4-20250514
+    - claude-sonnet-4.5-20260101
+  budget_ceilings:
+    per_task_usd: 25.0
+    per_fleet_daily_usd: 500.0
+  ha_requirements:
+    production:
+      min_controlplane_replicas: 2
+      min_gateway_replicas: 2
+  credential_hygiene:
+    require_secret_refs: true
+    block_inline_credentials: true
+    rotation_period_days: 90
+  approved_registries:
+    - ghcr.io/confighubai

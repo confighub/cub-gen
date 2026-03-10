@@ -1,0 +1,22 @@
+apiVersion: confighub.io/v1
+kind: RuntimePolicy
+metadata:
+  name: swamp-runtime-constraints
+spec:
+  resources:
+    limits:
+      cpu: "4"
+      memory: 8Gi
+    requests:
+      cpu: "1"
+      memory: 2Gi
+  model_gateway_allowlist:
+    - llama-gateway
+    - mistral-gateway
+    - claude-gateway
+  min_replicas:
+    production: 3
+    staging: 1
+  required_probes:
+    - readiness
+    - liveness
