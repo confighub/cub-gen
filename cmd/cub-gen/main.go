@@ -1275,6 +1275,7 @@ func printImportTripleSummary(result gitopsflow.ImportFlowResult) {
 	}
 
 	printSwampWorkflowSummary(result.Provenance)
+	printOpsWorkflowSummary(result.Provenance)
 }
 
 func printSwampWorkflowSummary(provenance []model.ProvenanceRecord) {
@@ -1330,6 +1331,63 @@ func printSwampWorkflowSummary(provenance []model.ProvenanceRecord) {
 			row.missingRequiredCount,
 			row.unapprovedModelCount,
 			row.unapprovedModelMethodCount,
+		)
+	}
+}
+
+func printOpsWorkflowSummary(provenance []model.ProvenanceRecord) {
+	type opsSummaryRow struct {
+		generatorName         string
+		profile               string
+		workflowCount         int
+		actionCount           int
+		scheduleOverrideCount int
+		approvalGateCount     int
+		blockedUsedCount      int
+		unapprovedActionCount int
+	}
+
+	rows := make([]opsSummaryRow, 0, len(provenance))
+	for _, prov := range provenance {
+		if prov.OpsWorkflow == nil {
+			continue
+		}
+		analysis := prov.OpsWorkflow
+		rows = append(rows, opsSummaryRow{
+			generatorName:         prov.GeneratorName,
+			profile:               prov.GeneratorProfile,
+			workflowCount:         len(analysis.WorkflowPaths),
+			actionCount:           len(analysis.ActionNames),
+			scheduleOverrideCount: len(analysis.ScheduleOverrides),
+			approvalGateCount:     len(analysis.ApprovalGates),
+			blockedUsedCount:      len(analysis.BlockedActionsUsed),
+			unapprovedActionCount: len(analysis.UnapprovedActions),
+		})
+	}
+	if len(rows) == 0 {
+		return
+	}
+
+	sort.Slice(rows, func(i, j int) bool {
+		if rows[i].profile != rows[j].profile {
+			return rows[i].profile < rows[j].profile
+		}
+		return rows[i].generatorName < rows[j].generatorName
+	})
+
+	fmt.Println("Ops workflow analysis")
+	fmt.Println("Generator\tProfile\tWorkflows\tActions\tSchedule overrides\tApproval gates\tBlocked used\tUnapproved actions")
+	for _, row := range rows {
+		fmt.Printf(
+			"%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
+			row.generatorName,
+			row.profile,
+			row.workflowCount,
+			row.actionCount,
+			row.scheduleOverrideCount,
+			row.approvalGateCount,
+			row.blockedUsedCount,
+			row.unapprovedActionCount,
 		)
 	}
 }

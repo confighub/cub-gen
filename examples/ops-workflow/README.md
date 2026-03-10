@@ -84,6 +84,10 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Import with field-origin tracing
 ./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs}'
+
+# Inspect structural ops workflow analysis
+./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+  | jq '.provenance[0].ops_workflow_analysis'
 ```
 
 cub-gen detects `operations.yaml` with `actions:` structure and classifies it

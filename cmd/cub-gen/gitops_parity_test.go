@@ -422,6 +422,24 @@ func TestGitOpsImportTableIncludesSwampWorkflowSummary(t *testing.T) {
 	}
 }
 
+func TestGitOpsImportTableIncludesOpsWorkflowSummary(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "ops", "render-target"})
+	if err != nil {
+		t.Fatalf("run ops import table returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+	if !strings.Contains(out, "Ops workflow analysis") {
+		t.Fatalf("expected ops workflow analysis section in output, got:\n%s", out)
+	}
+	if !strings.Contains(out, "ops-workflow\tops-workflow\t2\t2\t1\t2\t0\t0") {
+		t.Fatalf("expected ops workflow summary row in output, got:\n%s", out)
+	}
+}
+
 func TestGitOpsParityGoldenHelp(t *testing.T) {
 	tests := []struct {
 		name         string
