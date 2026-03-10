@@ -156,3 +156,16 @@ WET:  Deployment/spec/template/spec/containers[name=main]/image
   config with ownership boundaries
 - **E2E demo**: `../demo/module-2-score-field-map.sh`
 - **Worked example**: `../../docs/agentic-gitops/03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/scoredev-paas/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/scoredev-paas/demo-connected.sh
+```

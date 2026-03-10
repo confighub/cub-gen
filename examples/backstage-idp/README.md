@@ -138,3 +138,16 @@ cub-gen's `backstage-idp` generator detects `catalog-info.yaml` containing a
 - **Helm + Backstage**: [`helm-paas`](../helm-paas/) — catalog entries often
   live alongside Helm charts in the same repo
 - **Full platform story**: see the [platform architecture](../../docs/platform.md)
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/backstage-idp/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/backstage-idp/demo-connected.sh
+```

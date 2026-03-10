@@ -4,10 +4,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
+source "$ROOT_DIR/examples/demo/lib/lifecycle-update.sh"
+source "$ROOT_DIR/examples/demo/lib/connected-preflight.sh"
+
 REPO_PATH="${1:-./examples/helm-paas}"
 RENDER_TARGET="${2:-$REPO_PATH}"
-EXAMPLE_SLUG="${3:-$(basename "$REPO_PATH")}"
-SPACE="${SPACE:-platform}"
+EXAMPLE_SLUG="${3:-$(basename "$REPO_PATH")}" 
+SPACE="${SPACE:-}"
 VERIFIER="${VERIFIER:-ci-bot}"
 
 if [ ! -d "$REPO_PATH" ]; then
@@ -20,14 +23,20 @@ if [ ! -d "$RENDER_TARGET" ]; then
   exit 1
 fi
 
+require_connected_preflight
+if [ -z "$SPACE" ]; then
+  SPACE="$CONFIGHUB_SPACE"
+fi
+print_connected_context
+
+echo "[connected] required login check: run 'cub auth login' if this script fails auth preflight"
+
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
-  echo "[lifecycle] build cub-gen"
+  echo "[lifecycle][connected] build cub-gen"
   go build -o ./cub-gen ./cmd/cub-gen
 fi
 
-source "$ROOT_DIR/examples/demo/lib/lifecycle-update.sh"
-
-run_governed_cycle() {
+run_governed_cycle_connected() {
   local phase="$1"
   local repo="$2"
   local render_target="$3"
@@ -42,18 +51,28 @@ run_governed_cycle() {
   ./cub-gen attest --in "$outdir/bundle.json" --verifier "$VERIFIER" > "$outdir/attestation.json"
   ./cub-gen verify-attestation --json --in "$outdir/attestation.json" --bundle "$outdir/bundle.json" > "$outdir/attestation-verify.json"
 
-  jq -n \
-    --arg change_id "$(jq -r .change_id "$outdir/bundle.json")" \
-    --arg bundle_digest "$(jq -r .bundle_digest "$outdir/bundle.json")" \
-    '{
-      status_code: 201,
-      artifact_id: "wet_art_123",
-      status: "created",
-      change_id: $change_id,
-      bundle_digest: $bundle_digest,
-      idempotency_key: ($change_id + ":" + $bundle_digest)
-    }' > "$outdir/ingest.json"
+  echo "[connected][$phase] ingest bundle into ConfigHub"
+  if ! ./cub-gen bridge ingest \
+    --in "$outdir/bundle.json" \
+    --base-url "$CONFIGHUB_BASE_URL" \
+    --token "$CONFIGHUB_TOKEN" \
+    > "$outdir/ingest.json"; then
+    echo "error: connected ingest failed for $phase." >&2
+    echo "remediation: ensure CONFIGHUB_BASE_URL points to a ConfigHub backend that exposes /api/v1/governed-wet-artifacts:ingest." >&2
+    return 1
+  fi
 
+  local change_id
+  change_id="$(jq -r .change_id "$outdir/bundle.json")"
+
+  echo "[connected][$phase] query decision state from ConfigHub"
+  ./cub-gen bridge decision query \
+    --base-url "$CONFIGHUB_BASE_URL" \
+    --token "$CONFIGHUB_TOKEN" \
+    --change-id "$change_id" \
+    > "$outdir/decision-query.json"
+
+  # Keep local contract artifacts for continuity with existing promotion demos.
   ./cub-gen bridge decision create --ingest "$outdir/ingest.json" > "$outdir/decision.json"
   ./cub-gen bridge decision attach --decision "$outdir/decision.json" --attestation "$outdir/attestation.json" > "$outdir/decision-attested.json"
   ./cub-gen bridge decision apply --decision "$outdir/decision-attested.json" --state ALLOW --approved-by platform-owner --reason "$phase approved" > "$outdir/decision-allow.json"
@@ -64,7 +83,7 @@ run_governed_cycle() {
     --app-pr-number 42 \
     --app-pr-url https://github.com/confighub/apps/pull/42 \
     --mr-id mr_123 \
-    --mr-url https://confighub.example/mr/123 > "$outdir/flow.json"
+    --mr-url "$CONFIGHUB_BASE_URL/mr/123" > "$outdir/flow.json"
 
   ./cub-gen bridge promote govern --flow "$outdir/flow.json" --state ALLOW --decision-ref decision_123 > "$outdir/flow-allow.json"
   ./cub-gen bridge promote verify --flow "$outdir/flow-allow.json" > "$outdir/flow-verified.json"
@@ -79,6 +98,12 @@ show_surface_views() {
 
   echo "[surface][oci]"
   jq '{change_id, bundle_digest, output_uris: [.provenance[].outputs[].uri] | unique}' "$outdir/bundle.json"
+
+  echo "[surface][confighub-ingest]"
+  jq '{status_code, status, change_id, bundle_digest, idempotency_key, artifact_id}' "$outdir/ingest.json"
+
+  echo "[surface][confighub-decision-query]"
+  jq '.' "$outdir/decision-query.json"
 
   echo "[surface][flux]"
   if [ -d "$repo/gitops/flux" ]; then
@@ -105,14 +130,15 @@ summary_line() {
     --arg phase "$phase" \
     --arg change_id "$(jq -r .change_id "$outdir/bundle.json")" \
     --arg bundle_digest "$(jq -r .bundle_digest "$outdir/bundle.json")" \
+    --arg ingest_status "$(jq -r '.status // "unknown"' "$outdir/ingest.json")" \
     --argjson wet_targets "$(jq '.wet_manifest_targets | length' "$outdir/import.json")" \
     --argjson inverse_patches "$(jq '[.inverse_transform_plans[].patches | length] | add' "$outdir/import.json")" \
     --argjson attested_valid "$(jq '.valid' "$outdir/attestation-verify.json")" \
-    '{phase: $phase, change_id: $change_id, bundle_digest: $bundle_digest, wet_targets: $wet_targets, inverse_patches: $inverse_patches, attestation_valid: $attested_valid}'
+    '{phase: $phase, change_id: $change_id, bundle_digest: $bundle_digest, ingest_status: $ingest_status, wet_targets: $wet_targets, inverse_patches: $inverse_patches, attestation_valid: $attested_valid}'
 }
 
-echo "[lifecycle] example: $EXAMPLE_SLUG"
-echo "[lifecycle] source: $REPO_PATH"
+echo "[lifecycle][connected] example: $EXAMPLE_SLUG"
+echo "[lifecycle][connected] source: $REPO_PATH"
 
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
@@ -123,24 +149,26 @@ mkdir -p "$work_repo" "$work_target"
 cp -R "$REPO_PATH"/. "$work_repo"
 cp -R "$RENDER_TARGET"/. "$work_target"
 
-echo "[phase:create] discover -> import -> publish -> verify -> attest -> decision -> promote"
-run_governed_cycle "create" "$work_repo" "$work_target" "$tmpdir/create"
+echo "[phase:create][connected] discover -> import -> publish -> verify -> attest -> ingest -> decision-query -> promote"
+run_governed_cycle_connected "create" "$work_repo" "$work_target" "$tmpdir/create"
 summary_line "create" "$tmpdir/create"
 show_surface_views "$work_repo" "$tmpdir/create"
 
-echo "[phase:update] apply source change"
+echo "[phase:update][connected] apply source change"
 apply_update "$EXAMPLE_SLUG" "$work_repo"
 
-echo "[phase:update] rerun governance chain"
-run_governed_cycle "update" "$work_repo" "$work_target" "$tmpdir/update"
+echo "[phase:update][connected] rerun connected governance chain"
+run_governed_cycle_connected "update" "$work_repo" "$work_target" "$tmpdir/update"
 summary_line "update" "$tmpdir/update"
 
-echo "[phase:diff]"
+echo "[phase:diff][connected]"
 jq -n \
   --arg create_change_id "$(jq -r .change_id "$tmpdir/create/bundle.json")" \
   --arg update_change_id "$(jq -r .change_id "$tmpdir/update/bundle.json")" \
   --arg create_digest "$(jq -r .bundle_digest "$tmpdir/create/bundle.json")" \
   --arg update_digest "$(jq -r .bundle_digest "$tmpdir/update/bundle.json")" \
+  --arg create_ingest_status "$(jq -r '.status // "unknown"' "$tmpdir/create/ingest.json")" \
+  --arg update_ingest_status "$(jq -r '.status // "unknown"' "$tmpdir/update/ingest.json")" \
   --argjson create_wet "$(jq '.wet_manifest_targets | length' "$tmpdir/create/import.json")" \
   --argjson update_wet "$(jq '.wet_manifest_targets | length' "$tmpdir/update/import.json")" \
   '{
@@ -150,6 +178,8 @@ jq -n \
     create_bundle_digest: $create_digest,
     update_bundle_digest: $update_digest,
     bundle_digest_changed: ($create_digest != $update_digest),
+    create_ingest_status: $create_ingest_status,
+    update_ingest_status: $update_ingest_status,
     create_wet_targets: $create_wet,
     update_wet_targets: $update_wet
   }'

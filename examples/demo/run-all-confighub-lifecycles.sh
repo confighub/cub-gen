@@ -17,6 +17,7 @@ examples=(
   "c3agent"
   "ai-ops-paas"
   "swamp-automation"
+  "swamp-project"
   "confighub-actions"
 )
 

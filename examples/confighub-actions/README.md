@@ -150,3 +150,16 @@ This example uses the `ops-workflow` generator — the same generator used by
 - **AI workflow governance**: [`swamp-automation`](../swamp-automation/) —
   AI-agent-driven workflows
 - **E2E demo**: `../demo/ai-work-platform/scenario-3-confighub-actions.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/confighub-actions/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/confighub-actions/demo-connected.sh
+```

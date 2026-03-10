@@ -196,3 +196,16 @@ WET:  Deployment/spec/template/spec/containers[0]/env[name=SERVER_PORT]/value = 
   workload specs
 - **E2E demo**: `../demo/module-3-spring-ownership.sh`
 - **Worked example**: `../../docs/agentic-gitops/03-worked-examples/03-spring-boot-dry-wet-unit-worked-example.md`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/springboot-paas/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/springboot-paas/demo-connected.sh
+```

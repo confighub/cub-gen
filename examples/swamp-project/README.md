@@ -147,3 +147,16 @@ the workflows it runs to the infrastructure it runs on.
   the workflows that run on this Swamp instance
 - **AI agent fleets**: [`c3agent`](../c3agent/) — standalone agent fleet config
 - **E2E Helm demo**: `../demo/module-1-helm-import.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/swamp-project/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/swamp-project/demo-connected.sh
+```

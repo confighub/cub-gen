@@ -37,6 +37,8 @@ detect -> import -> publish -> verify -> attest -> (optional) bridge ingest/quer
 |--------|---------------------|
 | `simulate-confighub-lifecycle.sh <repo> <target> [slug]` | Full local lifecycle simulation |
 | `run-all-confighub-lifecycles.sh` | Lifecycle simulation across current fixtures |
+| `simulate-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle: real ConfigHub ingest + decision query |
+| `run-all-connected-lifecycles.sh` | Connected lifecycle run across current fixtures with pass/fail summary |
 | `simulate-repo-wizard.sh <repo> <target> [hint]` | GUI wizard simulation path |
 
 ## Connected mode (ConfigHub)
@@ -46,9 +48,14 @@ Start with authentication:
 ```bash
 cub auth login
 TOKEN="$(cub auth get-token)"
+cub context get --json | jq -r '.coordinate.user'
 ```
 
 Then run bridge calls with `--token "$TOKEN"` and your `--base-url`.
+
+Shared connected preflight helper:
+
+- `examples/demo/lib/connected-preflight.sh`
 
 Connected flow shape:
 
@@ -58,13 +65,22 @@ publish -> verify -> attest -> bridge ingest -> decision query
 
 Connected ingest/query are real ConfigHub API calls. Some decision/promotion steps in current demo scripts are still local contract simulation.
 
-## Live reconciler e2e (Flux + kind)
+If ingest returns `404 Not Found`, point `CONFIGHUB_BASE_URL` to a backend with the governed-wet bridge endpoints enabled.
+
+Connected runner:
+
+```bash
+./examples/demo/run-all-connected-lifecycles.sh
+```
+
+## Live reconciler e2e (Flux + Argo + kind)
 
 | Script | What it demonstrates |
 |--------|---------------------|
 | `e2e-live-reconcile-flux.sh` | Real WET->LIVE reconciliation with Flux on local kind cluster |
+| `e2e-live-reconcile-argo.sh` | Real WET->LIVE reconciliation with Argo CD on local kind cluster |
 
-This script proves:
+These scripts prove:
 
 1. Create reconciliation (v1 to LIVE).
 2. Update reconciliation (v2 rollout).

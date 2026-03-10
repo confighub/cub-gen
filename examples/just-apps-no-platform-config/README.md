@@ -150,3 +150,16 @@ platform policies, the pipeline already exists.
 - **Full platform example**: [`helm-paas`](../helm-paas/) — the Kubernetes
   workload end of the spectrum
 - **E2E demo**: `../demo/module-5-ably-platform.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/just-apps-no-platform-config/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/just-apps-no-platform-config/demo-connected.sh
+```

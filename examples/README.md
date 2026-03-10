@@ -36,6 +36,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 ```bash
 cub auth login
 TOKEN="$(cub auth get-token)"
+cub context get --json | jq -r '.coordinate.user'
 BASE_URL="https://confighub.example"
 
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
@@ -45,6 +46,11 @@ BASE_URL="https://confighub.example"
 ```
 
 Use local mode for first value. Use connected mode for centralized governance state and cross-repo visibility.
+
+Per-example wrappers:
+
+- Local: `./examples/<example>/demo-local.sh`
+- Connected: `./examples/<example>/demo-connected.sh` (starts with `cub auth login`)
 
 ## Verifier identity
 
@@ -94,7 +100,7 @@ When you run `cub-gen attest --verifier <name>`, the verifier name records who/w
 
 | Example | Purpose |
 |---------|---------|
-| [**live-reconcile**](live-reconcile/) | Flux e2e fixture proving WET->LIVE reconciliation |
+| [**live-reconcile**](live-reconcile/) | Flux + Argo e2e fixtures proving WET->LIVE reconciliation |
 | [**demo**](demo/) | Runnable demo script index |
 
 ## How to read each example

@@ -138,3 +138,16 @@ cub-gen's `ops-workflow` generator detects `operations.yaml` containing
 - **AI workflow governance**: [`swamp-automation`](../swamp-automation/) —
   AI-agent-driven workflows with model binding governance
 - **E2E demo**: `../demo/ai-work-platform/scenario-4-operations.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/ops-workflow/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/ops-workflow/demo-connected.sh
+```

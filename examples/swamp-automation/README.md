@@ -175,3 +175,16 @@ ConfigHub (governance)     ←→    cub-gen (bridge)    ←→    Swamp (execut
   operations pattern, different engine
 - **AI agent fleets**: [`c3agent`](../c3agent/) — standalone fleet config
 - **E2E demo**: `../demo/ai-work-platform/scenario-2-swamp.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/swamp-automation/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/swamp-automation/demo-connected.sh
+```

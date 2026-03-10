@@ -147,3 +147,16 @@ WET:  Deployment(controlplane)/spec/template/spec/containers[0]/env[AGENT_MODEL]
 - **AI workflow governance**: [`swamp-automation`](../swamp-automation/) — DAG
   workflows with model binding governance
 - **E2E demo**: `../demo/ai-work-platform/scenario-1-c3agent.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/c3agent/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/c3agent/demo-connected.sh
+```

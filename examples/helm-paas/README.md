@@ -198,3 +198,16 @@ WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payme
   deploying an AI model orchestration runtime
 - **E2E demo script**: `../demo/module-1-helm-import.sh`
 - **Bridge governance demo**: `../demo/module-4-bridge-governance.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/helm-paas/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/helm-paas/demo-connected.sh
+```

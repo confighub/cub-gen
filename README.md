@@ -1,585 +1,137 @@
 # cub-gen
 
-`cub-gen` tells you where deployed fields came from in your existing GitOps repo, and what file to edit safely.
+`cub-gen` is the Git-side application layer for ConfigHub: it reads app/platform config, maps it to governed platform output, and tells you exactly what to edit when something changes.
 
-It works on config you already have (Helm, Score, Spring Boot, Backstage, ops workflows, c3agent, and more) and emits:
+It is for two teams:
 
-1. provenance ("what generated this")
-2. field-origin maps ("which source field controls this deployed field")
-3. inverse-edit guidance ("edit this path in this file")
+- teams with existing platform/app patterns (Helm, Score, Spring Boot, workflows) that need governance and traceability,
+- teams rolling out a new internal platform quickly with clear ownership boundaries.
 
-## What It Is, What It Is Not
+## What It Is
 
-`cub-gen` is:
+- A deterministic CLI for `discover -> import -> publish -> verify -> attest`.
+- A generator framework: each generator turns app config into platform config plus governance and attestation metadata.
+- A dual-mode workflow:
+  - `Local mode`: no login, fast onboarding.
+  - `Connected mode`: authenticated calls to ConfigHub.
 
-- A local-first analysis and import CLI for platform/app config.
-- An on-ramp to governed execution in ConfigHub.
+## What It Is Not
 
-`cub-gen` is not:
+- Not a Kubernetes reconciler.
+- Not a Flux/Argo replacement.
+- Not an app runtime by itself.
 
-- A reconciler replacement (Flux/Argo still reconcile WET -> LIVE).
-- A Kubernetes controller that enforces policy by itself.
+Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability after deploy.
 
-## The Core Value In 10 Seconds
+## Core Value in 10 Seconds
 
-You can take a deployed field and trace it back to the right source edit:
+You can point at a deployed field and get the source-of-truth edit path.
 
 ```json
 {
-  "wet_path": "Deployment/spec/template/spec/containers[name=main]/image",
-  "dry_path": "containers.main.image",
+  "wet_field": "Deployment/spec/template/spec/containers/0/image",
+  "source_file": "values.yaml",
+  "source_path": "image.tag",
   "owner": "app-team",
-  "edit_hint": "Edit the Score container image in score.yaml.",
-  "confidence": 0.94
+  "confidence": 0.91,
+  "edit_hint": "Edit values.yaml:image.tag (or env overlay for prod-only changes)."
 }
 ```
 
-That is the day-to-day problem `cub-gen` solves.
+That is the day-to-day problem cub-gen solves.
 
-## ConfigHub Exists Today
+## ConfigHub Is Real (Today)
 
-ConfigHub is not hypothetical. The backend/control plane exists and is open source at:
-[https://github.com/confighubai/confighub](https://github.com/confighubai/confighub)
+Connected mode targets a live ConfigHub backend. Backend OSS repo:
 
-`cub-gen` is the local-first front door to that platform.
+- [confighubai/confighub](https://github.com/confighubai/confighub)
 
-## Start Here
-
-If you are new, use this path:
-
-1. Plain-English platform story:
-   [`docs/workflows/build-your-own-heroku-in-a-weekend.md`](docs/workflows/build-your-own-heroku-in-a-weekend.md)
-2. Example catalog:
-   [`examples/README.md`](examples/README.md)
-3. Demo track index:
-   [`examples/demo/README.md`](examples/demo/README.md)
-
-## Quickstart: Local Mode (No Login Required)
+## Quickstart: Local Mode (No Login)
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
-./cub-gen gitops discover --space platform ./examples/scoredev-paas
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
-  | jq '.provenance[0].inverse_edit_pointers[:2]'
-```
-
-Use this mode when you want immediate value from existing repos without backend setup.
-
-## Quickstart: Connected Mode (ConfigHub)
-
-```bash
-# 1) Log into ConfigHub with cub
-cub auth login
-
-# 2) Build a governed change bundle from your repo
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas > bundle.json
-./cub-gen verify --in bundle.json
-./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
-
-# 3) Submit to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
-```
-
-If your ConfigHub endpoint requires bearer auth for bridge calls, pass `--token`.
-
-## Documentation
-
-Full docs are published at **https://confighub.github.io/cub-gen/**.
-
-- [Getting Started](https://confighub.github.io/cub-gen/getting-started/)
-- [The ConfigHub Platform](https://confighub.github.io/cub-gen/platform/)
-- [CLI Reference](https://confighub.github.io/cub-gen/cli-reference/)
-- [Examples](examples/README.md)
-- [Contributing](https://confighub.github.io/cub-gen/contributing-guide/)
-
-## One Platform, Multiple Workload Adapters
-
-This is one model with different adapters:
-
-- Spring Boot (`application.yaml`)
-- Helm (`Chart.yaml` + `values.yaml`)
-- score.dev (`score.yaml`)
-- c3agent (`c3agent.yaml`)
-
-Platform team defines adapters/guardrails once. App teams keep writing the files they already use.
-
-## Jump-in demo modules
-
-Run any module independently:
-
-```bash
-./examples/demo/module-1-helm-import.sh
-./examples/demo/module-2-score-field-map.sh
-./examples/demo/module-3-spring-ownership.sh
-./examples/demo/module-4-bridge-governance.sh
-./examples/demo/module-5-ably-platform.sh
-```
-
-Or run all modules in one pass:
-
-```bash
 ./examples/demo/run-all-modules.sh
-```
-
-Example repo narratives and ownership maps are documented in `/Users/alexis/Public/github-repos/cub-gen/examples/README.md`.
-
-## Wizard Simulation (Repo-First)
-
-Simulate a future GUI discover/import wizard against any repo fixture:
-
-```bash
-./examples/demo/simulate-repo-wizard.sh ./examples/helm-paas ./examples/helm-paas auto
-./examples/demo/simulate-repo-wizard.sh ./examples/springboot-paas ./examples/springboot-paas springboot-paas
-```
-
-This script walks the same step sequence planned for the GUI:
-1. source selection
-2. discover preview
-3. import graph preview (DRY -> GEN -> WET)
-4. provenance/inverse hint preview
-5. import confirmation + bundle/verify/attest summary
-
-## ConfigHub Lifecycle Demo (Create -> Deploy -> Update)
-
-Run one example through the full governance lifecycle with surface views:
-
-```bash
-./examples/demo/simulate-confighub-lifecycle.sh ./examples/c3agent ./examples/c3agent c3agent
-```
-
-Run all current platform examples (10 fixtures):
-
-```bash
 ./examples/demo/run-all-confighub-lifecycles.sh
 ```
 
-Each run shows:
+This gives immediate value with local evidence and lifecycle outputs.
 
-1. Create path (`discover -> import -> publish -> verify -> attest`)
-2. Decision/promotion path (`bridge decision` + `bridge promote`)
-3. Update path (source config mutation + re-run chain)
-4. Visibility surfaces:
-   - OCI (bundle digest + output URIs)
-   - Flux fixtures (`gitops/flux/*` when present)
-   - Argo fixtures (`gitops/argo/*` when present)
-   - cub-scout watchlist (derived from wet targets)
+## Quickstart: Connected Mode (ConfigHub)
 
-Optional full live reconciliation proof (kind + Flux):
+All connected paths start with login.
 
 ```bash
-./examples/demo/e2e-live-reconcile-flux.sh
+# 1) Authenticate
+cub auth login
+TOKEN="$(cub auth get-token)"
+cub context get --json | jq -r '.coordinate.user'
+
+# 2) Run connected lifecycle coverage
+./examples/demo/run-all-connected-lifecycles.sh
+
+# 3) Optional: run one connected example directly
+./examples/helm-paas/demo-connected.sh
 ```
 
-This script creates a local cluster, installs Flux controllers, and proves:
-create reconciliation, update reconciliation, and drift correction against LIVE resources.
+If ingest returns `404`, your configured base URL does not expose the governed bridge endpoint used by this demo flow. Set `CONFIGHUB_BASE_URL` to a backend endpoint that supports ingest/query.
 
-## Complete Inventory And Coverage Check
+## Live Reconciler Proofs
 
-App demos:
+We ship live reconcile E2E scripts for both controllers:
 
-- `helm-paas` (`./examples/demo/module-1-helm-import.sh`)
-- `scoredev-paas` (`./examples/demo/module-2-score-field-map.sh`)
-- `springboot-paas` (`./examples/demo/module-3-spring-ownership.sh`)
-- `just-apps-no-platform-config` (`./examples/demo/module-5-ably-platform.sh`)
-- `backstage-idp` (included in `./examples/demo/run-all-confighub-lifecycles.sh`)
+- Flux: `./examples/demo/e2e-live-reconcile-flux.sh`
+- Argo CD: `./examples/demo/e2e-live-reconcile-argo.sh`
 
-Platform demos:
+Both prove create, update, and drift-correction on a real `kind` cluster.
 
-- Governance bridge path (`./examples/demo/module-4-bridge-governance.sh`)
-- AI work platform track (`./examples/demo/ai-work-platform/run-all.sh`)
-- AI Ops PaaS narrative demo (`./examples/ai-ops-paas/demo.sh`)
-- Full create -> governance/deploy path -> update matrix (`./examples/demo/run-all-confighub-lifecycles.sh`)
+## Example Entry Points
 
-Other things users may want to see:
+Every example has both wrappers:
 
-- Repo-first wizard simulation (`./examples/demo/simulate-repo-wizard.sh`)
-- Core module aggregator (`./examples/demo/run-all-modules.sh`)
-- Live reconciler e2e (`./examples/demo/e2e-live-reconcile-flux.sh`)
-- Demo index and track entrypoints (`./examples/demo/README.md`)
-- Story-card matrix (`docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md`)
+- Local: `./examples/<example>/demo-local.sh`
+- Connected: `cub auth login` then `./examples/<example>/demo-connected.sh`
 
-Qualification caveat:
-Without live `WET -> LIVE` reconciler evidence, classify the flow as `governed config automation`, not full `Agentic GitOps` (see `docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md` and `docs/agentic-gitops/02-design/10-generators-prd.md`). Running `./examples/demo/e2e-live-reconcile-flux.sh` provides that evidence for the Flux path.
+Start with the catalog:
 
-Have we solved all user stories?
+- [examples/README.md](/Users/alexis/Public/github-repos/cub-gen/examples/README.md)
+
+## Which Story Should You Read First?
+
+- New to cub-gen: [Build your own Heroku in a weekend](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/build-your-own-heroku-in-a-weekend.md)
+- Demo scripts index: [examples/demo/README.md](/Users/alexis/Public/github-repos/cub-gen/examples/demo/README.md)
+- Generator contract boundary: [canonical-triple-and-storage-boundary.md](/Users/alexis/Public/github-repos/cub-gen/docs/contracts/canonical-triple-and-storage-boundary.md)
+
+## CI Targets
+
+```bash
+make ci-local       # build + tests + parity + docs/coverage gates
+make ci-connected   # connected lifecycle + flux/argo live reconcile gates
+make ci             # alias of ci-local
+```
+
+## User-Story Coverage Snapshot
 
 | Status | User stories | Notes |
 |---|---|---|
 | Met/strong in current demos | 2, 3, 4, 5, 6, 13 | Proven by current local-first examples and lifecycle flows. |
-| Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 9, 12 | Command shape and evidence model are present; backend/runtime coupling is still simulated. |
-| Deferred | 8, 10, 11 | Requires additional platform features and runtime-connected workflows. |
+| Partial (simulated/local-first, not full backend/runtime integration) | 1, 7, 9, 12 | Command shape and evidence model are present; backend/runtime coupling is still partial. |
+| Deferred | 8, 10, 11 | Requires additional platform/runtime features and connected workflows. |
 
-## AI Work Platform Demo Track
+## Repo Map
 
-Second demo track focused on AI-work platform scenarios:
+- CLI code: `cmd/cub-gen`, `internal/*`
+- Example suites: `examples/*`
+- Demo runners: `examples/demo/*`
+- Contracts and decisions: `docs/contracts`, `docs/decisions`
+- Workflow docs: `docs/workflows`
 
-```bash
-./examples/demo/ai-work-platform/run-all.sh
-```
-
-Or run scenarios individually:
-
-```bash
-./examples/demo/ai-work-platform/scenario-1-c3agent.sh
-./examples/demo/ai-work-platform/scenario-2-swamp.sh
-./examples/demo/ai-work-platform/scenario-3-confighub-actions.sh
-./examples/demo/ai-work-platform/scenario-4-operations.sh
-```
-
-## 10-minute adoption path (Flux/Argo/Helm)
-
-Start with a Helm-based repo and keep your existing runtime model intact.
-
-What stays unchanged:
-
-- Flux/Argo remains the reconciler for WET -> LIVE.
-- Git/OCI remains the transport path.
-- Existing cluster/controller permissions and PR workflow stay in place.
-
-What you add:
-
-- `cub-gen gitops discover` to classify generator roots.
-- `cub-gen gitops import` to emit DRY/WET contracts + provenance/inverse pointers.
-- `cub-gen gitops cleanup` to clear local discover state.
-
-Copy/paste this path:
-
-```bash
-go build -o cub-gen ./cmd/cub-gen
-./cub-gen gitops discover --space platform ./examples/helm-paas
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, provenance: .provenance[0] | {chart_path, values_paths, rendered_object_lineage}}'
-./cub-gen gitops cleanup --space platform ./examples/helm-paas
-```
-
-Boundary language (aligned with `PARITY.md`):
-
-- `matched`: `gitops discover|import|cleanup` command shape and output contracts.
-- `matched`: bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 8 generators.
-- `partial`: local state/artifacts stand in for server-side units during this phase.
-- `partial`: bridge flow commands (`ingest`, `decision`, `promote`) produce correct contract shapes; [ConfigHub backend integration](https://confighub.github.io/cub-gen/platform/) is the next step.
-
-## Terminology (locked for v0.1)
-
-| Term | Meaning in cub-gen |
-|---|---|
-| DRY source | Human-editable app/platform intent (`values.yaml`, `score.yaml`, `application.yaml`) |
-| WET rendered units | Explicit rendered deployment-facing units/manifests |
-| Provenance | Record of DRY inputs, rendered outputs, field-origin map, inverse-edit pointers |
-| Inverse map | Guidance from changed WET field -> where to edit DRY safely |
-| Pre-sync | `cub-gen` stops before WET->LIVE; Flux/Argo own reconciliation |
-
-## Full quickstart examples (copy/paste)
-
-```bash
-go build ./cmd/cub-gen
-```
-
-### Helm example
-
-```bash
-./cub-gen gitops discover --space platform ./examples/helm-paas
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
-./cub-gen gitops cleanup --space platform ./examples/helm-paas
-```
-
-### score.dev example
-
-```bash
-./cub-gen gitops discover --space platform ./examples/scoredev-paas
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas | jq '{profile: .discovered[0].generator_profile, field_origin_map: .provenance[0].field_origin_map, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
-./cub-gen gitops cleanup --space platform ./examples/scoredev-paas
-```
-
-### Spring Boot example
-
-```bash
-./cub-gen gitops discover --space platform ./examples/springboot-paas
-./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
-./cub-gen gitops cleanup --space platform ./examples/springboot-paas
-```
-
-### Backstage IDP example
-
-```bash
-./cub-gen gitops discover --space platform ./examples/backstage-idp
-./cub-gen gitops import --space platform --json ./examples/backstage-idp ./examples/backstage-idp | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
-./cub-gen gitops cleanup --space platform ./examples/backstage-idp
-```
-
-### Ably app-config example
-
-```bash
-./cub-gen gitops discover --space platform ./examples/just-apps-no-platform-config
-./cub-gen gitops import --space platform --json ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
-./cub-gen gitops cleanup --space platform ./examples/just-apps-no-platform-config
-```
-
-### Ops workflow example
-
-```bash
-./cub-gen gitops discover --space platform ./examples/ops-workflow
-./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
-./cub-gen gitops cleanup --space platform ./examples/ops-workflow
-```
-
-### C3 Agent example
-
-```bash
-./cub-gen gitops discover --space platform ./examples/c3agent
-./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets_count: (.wet_manifest_targets|length), inverse_patches_count: (.inverse_transform_plans[0].patches|length), inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
-./cub-gen gitops cleanup --space platform ./examples/c3agent
-```
-
-### Swamp automation example
-
-```bash
-./cub-gen gitops discover --space platform ./examples/swamp-automation
-./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
-./cub-gen gitops cleanup --space platform ./examples/swamp-automation
-```
-
-### Optional bridge artifact (local, no backend)
-
-Generate a ConfigHub-ready change bundle from import output:
-
-```bash
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
-  | ./cub-gen publish --in - --out - \
-  | jq '{schema_version,source,change_id,summary}'
-```
-
-This emits a deterministic `change-bundle` JSON envelope you can upload later,
-without coupling the core flow to a running ConfigHub backend.
-
-### List supported generator families
-
-```bash
-./cub-gen generators
-./cub-gen generators --json | jq '.families[] | {kind, profile, resource_kind}'
-./cub-gen generators --kind helm
-./cub-gen generators --kind helm,score
-./cub-gen generators --capability render-manifests
-./cub-gen generators --capability inverse-values-patch,inverse-score-patch
-./cub-gen generators --strict-filters --kind helm,score
-./cub-gen generators --json --details | jq '.families[] | {kind, profile, policies}'
-./cub-gen generators --markdown
-./cub-gen generators --markdown --details
-```
-
-`--details` exposes full family policy/provenance templates, including:
-`inverse_patch_templates`, `inverse_pointer_templates`,
-`field_origin_confidences`, `hint_defaults`, `inverse_patch_reasons`,
-`inverse_edit_hints`, `input_role_rules`, `default_input_role`,
-`role_owners`, `default_owner`, `wet_targets`, `rendered_lineage_templates`,
-`field_origin_transform`, and `field_origin_overlay_transform`.
-
-### Compare triple expression styles (all 8 generators)
-
-The repo also includes three full style projections for every generator kind:
-
-1. Style A YAML: `/docs/triple-styles/style-a-yaml/*.yaml`
-2. Style B Markdown: `/docs/triple-styles/style-b-markdown/*.md`
-3. Style C YAML+Markdown pair: `/docs/triple-styles/style-c-yaml-plus-docs/<kind>/`
-
-Index:
-
-1. `/docs/triple-styles/README.md`
-
-Regenerate these style projections:
-
-```bash
-make sync-triple-styles
-# or
-go run ./cmd/cub-gen-style-sync
-```
-
-Or run direct mode (import + bundle in one command):
-
-```bash
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas
-./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas
-./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp
-./cub-gen publish --space platform ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config
-./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow
-./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent
-./cub-gen publish --space platform ./examples/swamp-automation ./examples/swamp-automation
-```
-
-Bundle output includes:
-
-- `digest_algorithm` (currently `sha256`)
-- `bundle_digest` (deterministic digest over bundle content excluding digest fields)
-
-This gives you a simple verification handle for attestation pipelines.
-
-Verify a bundle (file or stdin):
-
-```bash
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas | ./cub-gen verify --in -
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas | ./cub-gen verify --in -
-./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas | ./cub-gen verify --in -
-./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp | ./cub-gen verify --in -
-./cub-gen publish --space platform ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config | ./cub-gen verify --in -
-./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow | ./cub-gen verify --in -
-./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent | ./cub-gen verify --in -
-./cub-gen publish --space platform ./examples/swamp-automation ./examples/swamp-automation | ./cub-gen verify --in -
-```
-
-Emit an attestation record from a verified bundle:
-
-```bash
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas \
-  | ./cub-gen attest --in - --verifier ci-bot \
-  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas \
-  | ./cub-gen attest --in - --verifier ci-bot \
-  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
-./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas \
-  | ./cub-gen attest --in - --verifier ci-bot \
-  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
-./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp \
-  | ./cub-gen attest --in - --verifier ci-bot \
-  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
-./cub-gen publish --space platform ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config \
-  | ./cub-gen attest --in - --verifier ci-bot \
-  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
-./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow \
-  | ./cub-gen attest --in - --verifier ci-bot \
-  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
-./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent \
-  | ./cub-gen attest --in - --verifier ci-bot \
-  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
-./cub-gen publish --space platform ./examples/swamp-automation ./examples/swamp-automation \
-  | ./cub-gen attest --in - --verifier ci-bot \
-  | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
-```
-
-Verify an attestation (optionally linked against a bundle file):
-
-```bash
-./cub-gen verify-attestation --in attestation.json --bundle bundle.json
-```
-
-### Bridge flow quickstart (ConfigHub API path)
-
-Generate bundle + attestation, then run bridge flow commands:
-
-```bash
-# 1) Build bundle and attestation artifacts
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
-./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
-
-# 2) Ingest to ConfigHub bridge endpoint
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest-result.json
-
-# 3) Build decision state, attach attestation, apply explicit decision
-./cub-gen bridge decision create --ingest ingest-result.json > decision.json
-./cub-gen bridge decision attach --decision decision.json --attestation attestation.json > decision-attested.json
-./cub-gen bridge decision apply --decision decision-attested.json --state ALLOW --approved-by platform-owner --reason "policy checks passed" > decision-allow.json
-
-# 4) Query decision state by change_id from API
-./cub-gen bridge decision query --base-url https://confighub.example --change-id "$(jq -r .change_id decision-allow.json)"
-```
-
-Promotion guardrail flow (app PR -> CH MR -> platform DRY PR):
-
-```bash
-./cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123 > flow.json
-./cub-gen bridge promote govern --flow flow.json --state ALLOW --decision-ref decision_123 > flow-allow.json
-./cub-gen bridge promote verify --flow flow-allow.json > flow-verified.json
-./cub-gen bridge promote open --flow flow-verified.json --repo github.com/confighub/platform-dry --number 7 --url https://github.com/confighub/platform-dry/pull/7 > flow-open.json
-./cub-gen bridge promote approve --flow flow-open.json --by platform-owner > flow-approved.json
-./cub-gen bridge promote merge --flow flow-approved.json --by platform-owner > flow-promoted.json
-```
-
-## Plain-English collaboration story
-
-A practical app-team/platform-team path in a Spring Boot repo:
-
-1. App team changes `server.port` in `application-prod.yaml` for a feature rollout.
-2. Platform team runs `cub-gen gitops import --json` and sees:
-   - app-owned DRY inputs (`app-config-base`, `app-config-profile`)
-   - platform-owned WET targets (`wet_manifest_targets.owner = platform-runtime`)
-   - inverse pointers showing app-editable fields (`spring.application.name`, `server.port`) vs platform-governed field (`spring.datasource.url`)
-3. Flux/Argo reconciliation path stays unchanged for deployment.
-4. Teams keep app velocity while preserving governance boundaries.
-
-## Contract highlights by example
-
-### score.dev (MVP-01)
-
-- `generator_profile: "scoredev-paas"`
-- provenance `field_origin_map`
-- provenance `inverse_edit_pointers`
-
-### Helm (MVP-02)
-
-- top-level `dry_inputs` and `wet_manifest_targets`
-- provenance `chart_path`, `values_paths`, `rendered_object_lineage`
-
-### Spring Boot (MVP-03)
-
-- `dry_inputs.owner` separates app-team vs platform-engineer edit ownership
-- `wet_manifest_targets.owner` marks platform runtime ownership
-- inverse-edit paths include app-team edits (`spring.application.name`, `server.port`) and platform-governed edits (`spring.datasource.url`)
-
-### Backstage IDP (v0.2 preview)
-
-- `generator_profile: "backstage-idp"`
-- dry input ownership split (`catalog-spec` vs `app-config`)
-- inverse-edit paths for component metadata (`metadata.name`, `spec.lifecycle`)
-
-### Ably app-config (v0.2 preview)
-
-- `generator_profile: "ably-config"`
-- app-team DRY ownership (`provider-config-base`, `provider-config-overlay`)
-- inverse-edit paths for app runtime provider config (`app.environment`, `channels.inbound`)
-
-### Ops workflow (v0.2 preview)
-
-- `generator_profile: "ops-workflow"`
-- platform-engineer DRY ownership (`operations-base`, `operations-overlay`)
-- inverse-edit paths for workflow execution intent (`actions.deploy.image_tag`, `triggers.schedule`)
-
-### C3 Agent (v0.2 preview)
-
-- `generator_profile: "c3agent"`
-- app-team DRY ownership (`fleet-config-base`, `fleet-config-overlay`)
-- manifest-set metadata expansion to 11 WET targets (Deployments, Services, RBAC, PVC, ConfigMap, Secret)
-- inverse-edit coverage expanded to runtime/storage/replicas/rbac in addition to fleet and credentials
-
-### Swamp automation (v0.2 preview)
-
-- `generator_profile: "swamp"`
-- app-team DRY ownership (`swamp-config-base`, `swamp-workflow`)
-- inverse-edit paths for workflow automation (`workflow_definition`, `vault_config`, `model_binding`)
-
-## Quality model (inherited from cub-scout, adapted)
-
-- Deterministic behavior: same input => same output
-- Contract parity tests for CLI outputs (JSON + table goldens)
-- Proof-first delivery: define test matrix before implementation
-- Example-backed validation for user-visible behavior
-
-See:
-
-- `CLAUDE.md`
-- `CONTRIBUTING.md`
-- `docs/contracts/canonical-triple-and-storage-boundary.md`
-- `docs/contracts/decision-and-attestation-state.md`
-- `docs/contracts/pr-mr-linkage-and-dry-promotion.md`
-- `docs/testing/README.md`
-- `docs/workflows/proof-first-delivery.md`
-- `PARITY.md`
-
-## Test
+## Development
 
 ```bash
 go test ./...
-go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v
-go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v
-# or via make:
-make test-contracts
-make test-examples
+make ci-local
 ```
+
+For contribution details, see:
+
+- [CONTRIBUTING.md](/Users/alexis/Public/github-repos/cub-gen/CONTRIBUTING.md)

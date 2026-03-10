@@ -155,3 +155,16 @@ Platform guardrails with enforcement levels:
 - **AI workflow governance**: [`swamp-automation`](../swamp-automation/) —
   DAG workflows with model binding governance
 - **E2E demo**: `../demo/ai-work-platform/scenario-1-c3agent.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/ai-ops-paas/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/ai-ops-paas/demo-connected.sh
+```
