@@ -112,7 +112,7 @@ If you want copy/paste 5-minute paths per persona, use:
 |---------|-----------|---------------------|
 | [**c3agent**](c3agent/) | AI agent fleets | Fleet config governance, model policy, budget controls |
 | [**ai-ops-paas**](ai-ops-paas/) | Full AI platform + constraints | Registry + constraints + governed lifecycle |
-| [**swamp-automation**](swamp-automation/) | Swamp workflow orchestration | DAG/model binding governance |
+| [**swamp-automation**](swamp-automation/) | Swamp agent-authored workflows | Workflow-graph change governance (models/methods/required steps) |
 | [**swamp-project**](swamp-project/) | Helm chart for AI runtime | Helm-based runtime policy mapping |
 
 ## Operations patterns
