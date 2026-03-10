@@ -110,7 +110,7 @@ Start with the catalog:
 
 ```bash
 make ci-local       # build + tests + parity + docs/coverage gates
-make ci-connected   # connected lifecycle + flux/argo live reconcile gates
+make ci-connected   # connected entrypoints + lifecycle + phase-3 stories + flux/argo live reconcile gates
 make ci             # alias of ci-local
 ```
 

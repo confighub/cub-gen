@@ -1,4 +1,4 @@
-.PHONY: build test test-parity test-contracts test-bridge-symmetry test-examples test-connected-entrypoints test-connected-lifecycles test-live-reconcile-flux test-live-reconcile-argo lint-dual-mode check-story-status update-goldens sync-triple-styles ci ci-local ci-connected docs docs-serve
+.PHONY: build test test-parity test-contracts test-bridge-symmetry test-examples test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-live-reconcile-flux test-live-reconcile-argo lint-dual-mode check-story-status update-goldens sync-triple-styles ci ci-local ci-connected docs docs-serve
 
 PARITY_TEST_PATTERN := ^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand|TestGeneratorsGolden)
 BRIDGE_SYMMETRY_PATTERN := ^(TestBridgeSymmetryMatrix|TestExamplesPathModeBridgeFlow)$
@@ -26,6 +26,9 @@ test-connected-entrypoints:
 test-connected-lifecycles:
 	./examples/demo/run-all-connected-lifecycles.sh
 
+test-phase-3-stories:
+	./examples/demo/run-phase-3-connected-stories.sh
+
 test-live-reconcile-flux:
 	./examples/demo/e2e-live-reconcile-flux.sh
 
@@ -46,7 +49,7 @@ sync-triple-styles:
 
 ci-local: build test test-contracts test-bridge-symmetry test-examples lint-dual-mode check-story-status
 
-ci-connected: build test-connected-entrypoints test-connected-lifecycles test-live-reconcile-flux test-live-reconcile-argo check-story-status
+ci-connected: build test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-live-reconcile-flux test-live-reconcile-argo check-story-status
 
 ci: ci-local
 

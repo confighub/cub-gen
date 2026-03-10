@@ -4,6 +4,12 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
+source "$ROOT_DIR/examples/demo/lib/connected-preflight.sh"
+
+echo "[phase-3] preflight (requires cub auth login)"
+require_connected_preflight
+print_connected_context
+
 echo "[phase-3] running connected stories 1,7,9,12"
 
 ./examples/demo/story-1-existing-repo-connected.sh ./examples/helm-paas ./examples/helm-paas helm-paas
