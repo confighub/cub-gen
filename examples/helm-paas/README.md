@@ -70,9 +70,10 @@ featureFlags:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # ConfigHub ingests
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
 
 # Decision engine: image tag change + feature flag toggle → ALLOW (app-team scope)
+./cub-gen bridge decision create --ingest ingest.json > decision.json
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by app-lead --reason "v2.4.1 release with newCheckout flag"
 ```

@@ -72,9 +72,10 @@ spring:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # 3. ConfigHub ingests and evaluates
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
 # Decision engine checks: datasource changes require platform-owner approval
 # (app-team edits to server.port or feature.* would auto-ALLOW)
+./cub-gen bridge decision create --ingest ingest.json > decision.json
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by platform-dba --reason "connection pool increase for Q3 traffic"
 ```

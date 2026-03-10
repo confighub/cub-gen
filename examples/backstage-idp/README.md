@@ -88,8 +88,9 @@ spec:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # 3. ConfigHub ingests and evaluates
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
 # Decision engine checks: is "team-payments-core" a valid team? → ALLOW
+./cub-gen bridge decision create --ingest ingest.json > decision.json
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by engineering-director --reason "Q2 team reorg"
 ```

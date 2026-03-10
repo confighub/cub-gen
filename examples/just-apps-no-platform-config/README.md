@@ -88,10 +88,10 @@ The change bundle shows exactly what changed (new channel added), who authored i
 
 ```bash
 # Submit to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
 
 # Decision engine evaluates — ALLOW (no platform policy violations)
-./cub-gen bridge decision create --ingest ingest.json
+./cub-gen bridge decision create --ingest ingest.json > decision.json
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by app-lead --reason "standard channel addition"
 ```

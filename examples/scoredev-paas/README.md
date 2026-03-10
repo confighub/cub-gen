@@ -73,9 +73,10 @@ resources:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # 3. ConfigHub ingests and evaluates
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
 # Decision engine checks: workload class contract allows Redis? → ALLOW
 # Network policy allows egress to Redis? → Check platform/policies/network-egress.yaml
+./cub-gen bridge decision create --ingest ingest.json > decision.json
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by platform-lead --reason "Redis approved for caching use case"
 ```

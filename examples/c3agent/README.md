@@ -81,9 +81,10 @@ Anthropic releases a new model version. The platform team needs to approve the u
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # 4. ConfigHub ingests and evaluates
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
 # Platform policy checks: is claude-sonnet-4.5-20260101 in the approved models list?
 # If approved → ALLOW. If not yet approved → ESCALATE to platform-owner.
+./cub-gen bridge decision create --ingest ingest.json > decision.json
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by platform-owner --reason "model upgrade approved after eval"
 ```
