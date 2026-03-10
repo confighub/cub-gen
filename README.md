@@ -1,93 +1,107 @@
 # cub-gen
 
-`cub-gen` is the local-first entry point to the [ConfigHub](https://github.com/confighubai/confighub) platform — a deterministic DRY → WET generator importer with command-shape parity to `cub gitops`.
+`cub-gen` tells you where deployed fields came from in your existing GitOps repo, and what file to edit safely.
 
-## Start here (intro + demos)
+It works on config you already have (Helm, Score, Spring Boot, Backstage, ops workflows, c3agent, and more) and emits:
 
-If you are new, use this path first:
+1. provenance ("what generated this")
+2. field-origin maps ("which source field controls this deployed field")
+3. inverse-edit guidance ("edit this path in this file")
+
+## What It Is, What It Is Not
+
+`cub-gen` is:
+
+- A local-first analysis and import CLI for platform/app config.
+- An on-ramp to governed execution in ConfigHub.
+
+`cub-gen` is not:
+
+- A reconciler replacement (Flux/Argo still reconcile WET -> LIVE).
+- A Kubernetes controller that enforces policy by itself.
+
+## The Core Value In 10 Seconds
+
+You can take a deployed field and trace it back to the right source edit:
+
+```json
+{
+  "wet_path": "Deployment/spec/template/spec/containers[name=main]/image",
+  "dry_path": "containers.main.image",
+  "owner": "app-team",
+  "edit_hint": "Edit the Score container image in score.yaml.",
+  "confidence": 0.94
+}
+```
+
+That is the day-to-day problem `cub-gen` solves.
+
+## ConfigHub Exists Today
+
+ConfigHub is not hypothetical. The backend/control plane exists and is open source at:
+[https://github.com/confighubai/confighub](https://github.com/confighubai/confighub)
+
+`cub-gen` is the local-first front door to that platform.
+
+## Start Here
+
+If you are new, use this path:
 
 1. Plain-English platform story:
    [`docs/workflows/build-your-own-heroku-in-a-weekend.md`](docs/workflows/build-your-own-heroku-in-a-weekend.md)
-2. Example catalog and narratives:
+2. Example catalog:
    [`examples/README.md`](examples/README.md)
 3. Demo track index:
    [`examples/demo/README.md`](examples/demo/README.md)
 
-Fast demo entry points:
+## Quickstart: Local Mode (No Login Required)
 
-- Core module walkthrough (all modules): `./examples/demo/run-all-modules.sh`
-- AI work platform scenarios: `./examples/demo/ai-work-platform/run-all.sh`
-- AI Ops PaaS narrative demo: `./examples/ai-ops-paas/demo.sh`
-- Full lifecycle matrix (create -> govern -> update): `./examples/demo/run-all-confighub-lifecycles.sh`
-- Live Flux reconciliation proof (kind + Flux): `./examples/demo/e2e-live-reconcile-flux.sh`
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+./cub-gen gitops discover --space platform ./examples/scoredev-paas
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+  | jq '.provenance[0].inverse_edit_pointers[:2]'
+```
 
-## What cub-gen does today
+Use this mode when you want immediate value from existing repos without backend setup.
 
-- Detects generator-style app sources in Git repos (`helm`, `score.dev`, `springboot`, `backstage`, `ably-config`, `ops-workflow`, `c3agent`, `swamp`).
-- Runs the same staged flow shape as `cub gitops`:
-  - `gitops discover`
-  - `gitops import`
-  - `gitops cleanup`
-- Emits provenance and inverse-edit guidance ("what rendered field came from which DRY field").
-- Works standalone (no backend required) and produces [ConfigHub-ready change bundles](https://confighub.github.io/cub-gen/platform/) for governed execution when connected.
-- Exposes supported generator families via `cub-gen generators`.
+## Quickstart: Connected Mode (ConfigHub)
+
+```bash
+# 1) Log into ConfigHub with cub
+cub auth login
+
+# 2) Build a governed change bundle from your repo
+./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas > bundle.json
+./cub-gen verify --in bundle.json
+./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
+
+# 3) Submit to ConfigHub
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+```
+
+If your ConfigHub endpoint requires bearer auth for bridge calls, pass `--token`.
 
 ## Documentation
 
-Full documentation is published at **https://confighub.github.io/cub-gen/**
+Full docs are published at **https://confighub.github.io/cub-gen/**.
 
-- [Getting Started](https://confighub.github.io/cub-gen/getting-started/) — build and run your first import in 10 minutes
-- [The ConfigHub Platform](https://confighub.github.io/cub-gen/platform/) — how cub-gen connects to ConfigHub, bridge workers, and Flux/ArgoCD
-- [Architecture](https://confighub.github.io/cub-gen/agentic-gitops/02-design/00-agentic-gitops-design/) — DRY/WET model, field-origin maps, governed execution
-- [Generator Reference](https://confighub.github.io/cub-gen/triple-styles/) — contract triples for all 8 generator kinds
-- [CLI Reference](https://confighub.github.io/cub-gen/cli-reference/) — full command and flag documentation
-- [Contributing](https://confighub.github.io/cub-gen/contributing-guide/) — proof-first delivery, test-backed PRs
+- [Getting Started](https://confighub.github.io/cub-gen/getting-started/)
+- [The ConfigHub Platform](https://confighub.github.io/cub-gen/platform/)
+- [CLI Reference](https://confighub.github.io/cub-gen/cli-reference/)
+- [Examples](examples/README.md)
+- [Contributing](https://confighub.github.io/cub-gen/contributing-guide/)
 
-## Part of the ConfigHub platform
+## One Platform, Multiple Workload Adapters
 
-`cub-gen` is the local-first on-ramp. The full stack:
+This is one model with different adapters:
 
-1. **DRY** app intent lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.)
-2. **cub-gen** classifies DRY inputs + WET targets and emits provenance with field-origin tracing
-3. **cub-gen publish** produces change bundles with SHA-256 digest verification
-4. **[ConfigHub](https://github.com/confighubai/confighub)** ingests bundles, enforces governed decision state (ALLOW | ESCALATE | BLOCK), manages units with revision history
-5. **Bridge workers** connect ConfigHub to clusters via HTTP/2 SSE (Kubernetes, Flux, ArgoCD)
-6. **Flux/Argo** continue to reconcile WET → LIVE — unchanged
+- Spring Boot (`application.yaml`)
+- Helm (`Chart.yaml` + `values.yaml`)
+- score.dev (`score.yaml`)
+- c3agent (`c3agent.yaml`)
 
-Teams can start with `cub-gen` locally today and connect to ConfigHub when they need cross-repo queries, policy at write time, and governed execution. See the [platform docs](https://confighub.github.io/cub-gen/platform/) for the full story.
-
-## One platform, different workload adapters
-
-`cub-gen` models one platform pattern that supports many workload types.
-
-It is not "one PaaS for Spring Boot" and a different one for Helm or AI agents.
-It is one governance layer with workload adapters:
-
-- Spring Boot adapter reads `application.yaml` conventions.
-- Helm adapter reads `Chart.yaml` + `values.yaml`.
-- score.dev adapter reads `score.yaml`.
-- c3agent adapter reads `c3agent.yaml`.
-
-Same flow every time:
-
-1. Team pushes workload config to Git.
-2. `cub-gen` discovers/imports and emits provenance + inverse edit guidance.
-3. Flux/Argo reconciles rendered manifests.
-
-### Who does what
-
-- Platform team: defines adapters, defaults, and guardrails once.
-- App team: writes app config and code (the files they already use).
-
-### Which comes first in practice
-
-Most orgs start with existing repos and drifted manifests.
-
-1. Path 1 (most common): import what already exists to get visibility and governance first.
-2. Path 2 (next step): standardize clean self-service contracts after visibility is in place.
-
-For a plain-English narrative and team responsibilities, see
-[`docs/workflows/build-your-own-heroku-in-a-weekend.md`](docs/workflows/build-your-own-heroku-in-a-weekend.md).
+Platform team defines adapters/guardrails once. App teams keep writing the files they already use.
 
 ## Jump-in demo modules
 
