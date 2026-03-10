@@ -30,3 +30,9 @@ policy outcome.
 For Swamp workflows, the important trace is not template field expansion; it is
 "which workflow step caused which live mutation." This example focuses on
 structural workflow governance and sets up that runtime-provenance direction.
+
+## 6. Typed operation discovery for workflow UIs/agents
+
+`platform/registry.yaml` publishes typed operations (for example `addModelMethodStep`
+and `configureVaultPolicy`) so an internal UI or agent can discover valid input
+schemas before proposing workflow changes.

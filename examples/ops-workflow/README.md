@@ -28,7 +28,8 @@ ALLOW decision.
 ┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
 │ operations.yaml     │          │ Execution plan       │         │ Scheduled jobs   │
 │ operations-prod     │──import─▶│ Action manifest      │──exec──▶│ Running deploys  │
-│ platform/execution- │          │ with provenance      │         │ Service restarts │
+│ platform/registry   │          │ with provenance      │         │ Service restarts │
+│ platform/execution- │          │                      │         │                 │
 │   policy.yaml       │          │                      │         │                 │
 └─────────────────────┘          └──────────────────────┘         └─────────────────┘
   Ops team: workflow definition.   Governed execution plan           What actually
@@ -50,6 +51,7 @@ artifact, and ConfigHub's decision engine controls when and how it runs.
 |------|-------|-----------------|
 | `operations.yaml` | Ops team | Workflow name, actions (deploy, restart), schedule trigger |
 | `operations-prod.yaml` | Ops team | Prod overlay — schedule timing, prod image tags |
+| `platform/registry.yaml` | Platform | Typed operation contracts for workflow APIs and portals |
 | `platform/execution-policy.yaml` | Platform | Allowed/blocked actions, scheduling windows, approval gates |
 
 ## If you already run operational workflows at scale
@@ -69,6 +71,7 @@ decision-state gating, and attestable evidence for each operational mutation.
 | Existing ops workflow model | cub-gen concept | Why it matters |
 |------|------|------|
 | `operations*.yaml` | DRY operational intent | Ops teams keep authoring high-level workflow steps. |
+| `platform/registry.yaml` | Operation registry contract | Portals/agents can discover typed operations instead of guessing fields. |
 | Execution plan/action manifest | WET governed output | Schedules and actions become traceable and reviewable. |
 | Execution policy | Governance layer | Risky schedule/action changes can be blocked or escalated. |
 | Actual job execution | LIVE state | Runtime execution remains separate while governance becomes explicit. |
@@ -141,11 +144,14 @@ cub-gen's `ops-workflow` generator detects `operations.yaml` containing
 
 1. **Classifies inputs** — `operations.yaml` (role: workflow-definition),
    `operations-prod.yaml` (role: workflow-overlay)
-2. **Maps field origins** — action types, schedule triggers, and image tags
+2. **Loads operation contracts** — `platform/registry.yaml` defines typed
+   operations like `scheduleWorkflow`, `deployServiceAction`, and
+   `rollbackServiceAction`
+3. **Maps field origins** — action types, schedule triggers, and image tags
    trace to their source file with ownership metadata
-3. **Validates execution policy** — allowed/blocked actions, scheduling windows,
+4. **Validates execution policy** — allowed/blocked actions, scheduling windows,
    and approval thresholds
-4. **Emits inverse guidance** — "to change the deploy image tag in production,
+5. **Emits inverse guidance** — "to change the deploy image tag in production,
    edit `operations-prod.yaml` actions.deploy section"
 
 ## Key files
@@ -154,6 +160,7 @@ cub-gen's `ops-workflow` generator detects `operations.yaml` containing
 |------|-------|---------|
 | `operations.yaml` | Ops team | Workflow definition — actions, schedule, targets |
 | `operations-prod.yaml` | Ops team | Prod overlay — schedule timing, prod image tags |
+| `platform/registry.yaml` | Platform | FrameworkRegistry v1 operation contracts for ops workflows |
 | `platform/execution-policy.yaml` | Platform | Allowed/blocked actions, windows, approvals |
 
 ## Next steps

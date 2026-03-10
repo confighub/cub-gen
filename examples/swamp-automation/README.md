@@ -25,7 +25,8 @@ For this pattern, `cub-gen` is most useful as a **workflow change classifier and
 ┌─────────────────────┐         ┌─────────────────────────┐       ┌──────────────────────┐
 │ workflow-deploy.yaml│         │ change_id + provenance  │       │ Swamp runs steps     │
 │ .swamp.yaml         │──import▶│ structural change view  │──run─▶│ model methods mutate │
-│ constraints policy  │         │ ALLOW/ESCALATE/BLOCK    │       │ real infrastructure  │
+│ platform/registry   │         │ ALLOW/ESCALATE/BLOCK    │       │ real infrastructure  │
+│ constraints policy  │         │                         │       │                      │
 └─────────────────────┘         └─────────────────────────┘       └──────────────────────┘
 ```
 
@@ -50,6 +51,7 @@ This example matches teams that already run local-first, model-driven automation
 | Existing Swamp concern | cub-gen concept | Why it matters |
 |------|------|------|
 | Agent modifies workflow steps | DRY change import | Captures exact workflow mutation in a governed record. |
+| `platform/registry.yaml` operations | Typed contract surface | Portals and agents can discover allowed operation schemas. |
 | New model/method references | Policy evaluation input | Enables ALLOW/BLOCK on risky capability expansion. |
 | Required validation steps | Structural constraint checks | Prevents unsafe workflow edits from merging unnoticed. |
 | Team wants fast iteration | Local verify/attest loop | Keeps agent/human loop fast without backend latency. |
@@ -110,10 +112,11 @@ If the agent removed `validate` or introduced an unapproved model/method, decisi
 For Swamp, use `cub-gen` mainly for **structural classification** of workflow changes:
 
 1. Parse workflow and Swamp repo config.
-2. Capture model/method references and step structure.
-3. Compare change against policy constraints.
-4. Produce evidence bundle and attestation.
-5. Optionally ingest/query in ConfigHub for org-wide reporting.
+2. Load `platform/registry.yaml` operation contracts (for typed operation discovery).
+3. Capture model/method references and step structure.
+4. Compare change against policy constraints.
+5. Produce evidence bundle and attestation.
+6. Optionally ingest/query in ConfigHub for org-wide reporting.
 
 ## What this is not
 
@@ -132,6 +135,7 @@ Recommended pattern:
 |------|-------------------------------|---------|
 | `.swamp.yaml` | Team owning the workflow repo | Local Swamp runtime config (vault/logging/version). |
 | `workflow-deploy.yaml` | Team owning the workflow repo | Workflow graph and model-method tasks. |
+| `platform/registry.yaml` | Org/platform/security | FrameworkRegistry v1 operation contracts for workflow updates. |
 | `platform/swamp-constraints.yaml` | Org/platform/security | Organizational guardrails for workflow changes. |
 
 ## The complete Swamp + ConfigHub picture
