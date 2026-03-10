@@ -155,6 +155,10 @@ Story-specific connected scripts (Phase 4):
 - `./examples/demo/story-11-live-breakglass-proposal-connected.sh`
 - `./examples/demo/run-phase-4-connected-stories.sh`
 
+Story 10 (signed write-back proof) requires real GitHub PR coordinates:
+`APP_PR_REPO`, `APP_PR_NUMBER`, `PROMOTION_PR_REPO`, `PROMOTION_PR_NUMBER`
+and `gh` auth (`GH_TOKEN`/`GITHUB_TOKEN` or `gh auth login`).
+
 Workflow template for non-interactive CI auth:
 
 - [connected-story7.yml](/Users/alexis/Public/github-repos/cub-gen/.github/workflows/connected-story7.yml)
@@ -163,8 +167,8 @@ Workflow template for non-interactive CI auth:
 
 | Status | User stories | Notes |
 |---|---|---|
-| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 9, 12, 13 | Connected lifecycle now uses backend decision state as source of truth for governed flows. |
-| Partial (simulated/local-first, not full backend/runtime integration) | 8, 10, 11 | These flows still include synthetic/local proposal artifacts around taxonomy migration and write-back/live proposal evidence. |
+| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13 | Connected lifecycle now uses backend decision state as source of truth for governed flows, and Story 10 captures real GitHub signed-commit + branch-protection evidence. |
+| Partial (simulated/local-first, not full backend/runtime integration) | 8, 11 | These flows still include synthetic/local proposal artifacts around taxonomy migration and live accept/revert proposal evidence. |
 | Deferred | None | Deferred stories now have connected acceptance scripts and evidence outputs. |
 
 ## Repo Map

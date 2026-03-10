@@ -73,9 +73,23 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 | Script | User story | What it demonstrates |
 |--------|------------|---------------------|
 | `story-8-label-evolution-connected.sh` | 8 | Label/taxonomy migration contract with compatibility queries (no repo surgery) |
-| `story-10-signed-writeback-proof-connected.sh` | 10 | Signed commit + branch protection proof artifact for governed write-back |
+| `story-10-signed-writeback-proof-connected.sh` | 10 | Real GitHub PR/commit/branch-protection evidence for signed write-back proof |
 | `story-11-live-breakglass-proposal-connected.sh` | 11 | Convert LIVE break-glass mutation into explicit accept/revert governed proposals |
 | `run-phase-4-connected-stories.sh` | 8,10,11 | Runs all three connected Phase 4 stories |
+
+Story 10 required inputs (real GitHub evidence):
+
+```bash
+export APP_PR_REPO=owner/app-repo
+export APP_PR_NUMBER=123
+export PROMOTION_PR_REPO=owner/promotion-repo
+export PROMOTION_PR_NUMBER=456
+# optional if not already authenticated with gh:
+export GH_TOKEN=...
+```
+
+If you run `run-phase-4-connected-stories.sh` without these inputs, Story 10 is skipped by default.
+Set `REQUIRE_STORY_10=1` to fail fast instead of skipping.
 
 ## Connected mode (ConfigHub)
 
@@ -165,6 +179,6 @@ References:
 
 | Status | User stories |
 |---|---|
-| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 9, 12, 13 |
-| Partial (simulated/local-first, not full backend/runtime integration) | 8, 10, 11 |
+| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13 |
+| Partial (simulated/local-first, not full backend/runtime integration) | 8, 11 |
 | Deferred | None |

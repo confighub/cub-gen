@@ -43,6 +43,10 @@ cub auth login
 
 # connected phase-4 stories (8,10,11)
 cub auth login
+export APP_PR_REPO=owner/app-repo
+export APP_PR_NUMBER=123
+export PROMOTION_PR_REPO=owner/promotion-repo
+export PROMOTION_PR_NUMBER=456
 ./examples/demo/run-phase-4-connected-stories.sh
 
 # live reconciler proofs
@@ -53,4 +57,5 @@ cub auth login
 ## Notes
 
 - Connected scripts require `cub auth login` or `CONFIGHUB_TOKEN` in CI.
+- Story 10 requires real GitHub PR coordinates (`APP_PR_REPO`, `APP_PR_NUMBER`, `PROMOTION_PR_REPO`, `PROMOTION_PR_NUMBER`) and `gh` auth (`GH_TOKEN`/`GITHUB_TOKEN` or `gh auth login`).
 - If ingest endpoint is unavailable at the configured base URL, connected scripts fail fast with remediation text.
