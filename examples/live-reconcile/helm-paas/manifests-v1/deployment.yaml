@@ -1,32 +1,36 @@
+---
+# Source: payments-api/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: payments-api
   labels:
-    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/name: payments-api
     app.kubernetes.io/part-of: commerce-platform
+    demo.confighub.io/revision: v1
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      app: payments-api
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
+        app: payments-api
+        demo.confighub.io/revision: v1
     spec:
       containers:
-        - name: {{ .Chart.Name }}
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        - name: payments-api
+          image: ghcr.io/stefanprodan/podinfo:6.6.0
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: 9898
           env:
             - name: LOG_LEVEL
-              value: "{{ .Values.appConfig.logLevel }}"
+              value: "info"
             - name: FEATURE_FAST_CHECKOUT
-              value: "{{ .Values.appConfig.featureFlags.fastCheckout }}"
+              value: "false"
           readinessProbe:
             httpGet:
               path: /healthz
@@ -40,4 +44,9 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 20
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi

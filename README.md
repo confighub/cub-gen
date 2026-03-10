@@ -82,6 +82,7 @@ We ship live reconcile E2E scripts for both controllers:
 
 - Flux: `./examples/demo/e2e-live-reconcile-flux.sh`
 - Argo CD: `./examples/demo/e2e-live-reconcile-argo.sh`
+- Connected governed + reconcile (helm-paas): `./examples/demo/e2e-connected-governed-reconcile-helm.sh`
 
 Both prove create, update, and drift-correction on a real `kind` cluster.
 

@@ -92,6 +92,7 @@ Connected runner:
 |--------|---------------------|
 | `e2e-live-reconcile-flux.sh` | Real WET->LIVE reconciliation with Flux on local kind cluster |
 | `e2e-live-reconcile-argo.sh` | Real WET->LIVE reconciliation with Argo CD on local kind cluster |
+| `e2e-connected-governed-reconcile-helm.sh` | Real connected ConfigHub governance round-trip for `helm-paas` + Flux/Argo create/update/drift-correction |
 
 These scripts prove:
 
@@ -100,6 +101,13 @@ These scripts prove:
 3. Drift correction (manual drift reverted).
 
 Uses fixtures from [`live-reconcile`](../live-reconcile/).
+
+Connected full-loop proof:
+
+```bash
+cub auth login
+RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
+```
 
 ## Quick start
 

@@ -170,6 +170,7 @@ Connected mode:
 ```bash
 cub auth login
 ./examples/live-reconcile/demo-connected.sh
+RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 ```
 
 Why this maps:
@@ -181,6 +182,7 @@ What you should see:
 
 - Create, update, and drift-correction across both Flux and Argo paths.
 - Same DRY-WET governance model feeding either reconciler.
+- In the full-loop script, a real connected ConfigHub `change_id` tied to Helm-derived LIVE reconciliation proof.
 
 ## Fast Full-Coverage Paths
 
