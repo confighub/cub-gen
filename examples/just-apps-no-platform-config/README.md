@@ -1,8 +1,8 @@
 # Just Apps, No Platform Config — Governed Provider Config
 
 Not every service runs on Kubernetes. Not every config needs a platform layer.
-Sometimes you just have a provider config file — Ably channels, LaunchDarkly
-flags, Twilio routes — and you want the same governance you'd get for a Helm
+Sometimes you just have a provider config file — realtime channels, feature
+flags, provider routes — and you want the same governance you'd get for a Helm
 chart.
 
 This is the simplest cub-gen example: app-only configuration with no platform
@@ -25,7 +25,7 @@ just Kubernetes workloads.
 ```
   YOU EDIT (DRY)                    cub-gen TRACES (WET)              PROVIDER (LIVE)
 ┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
-│ ably.yaml           │          │ ConfigMap            │         │ Ably channels    │
+│ ably.yaml           │          │ ConfigMap            │         │ Provider channels│
 │ ably-prod.yaml      │──import─▶│ Provider config      │──API───▶│ Live messaging   │
 │ platform/ (empty)   │          │ with provenance      │         │ Prod settings    │
 └─────────────────────┘          └──────────────────────┘         └─────────────────┘
@@ -94,7 +94,7 @@ guidance.
 
 ## Real-world scenario: adding a new event channel
 
-**Who**: A checkout team at an e-commerce company using Ably for real-time
+**Who**: A checkout team at an e-commerce company using a realtime provider for
 order notifications.
 
 ### The change — new cancellation channel
@@ -134,12 +134,12 @@ Even without platform contracts, the governed pipeline provides:
 
 When the platform team adds `platform/policies/channel-naming.yaml` enforcing
 a `{team}.{purpose}` naming convention, the same pipeline catches violations
-*before* they reach Ably — without changing the app team's workflow.
+*before* they reach the provider — without changing the app team's workflow.
 
 ## How it works
 
 cub-gen's `ably-config` generator detects `ably.yaml` containing a service
-identifier matching the Ably pattern. On import:
+identifier matching the provider-config pattern. On import:
 
 1. **Classifies inputs** — `ably.yaml` (role: provider-config-base),
    `ably-prod.yaml` (role: provider-config-overlay)
@@ -170,7 +170,7 @@ platform policies, the pipeline already exists.
   non-K8s governance pattern
 - **Full platform example**: [`helm-paas`](../helm-paas/) — the Kubernetes
   workload end of the spectrum
-- **E2E demo**: `../demo/module-5-ably-platform.sh`
+- **E2E demo**: `../demo/module-5-no-config-platform.sh`
 
 ## Local and Connected Entrypoints
 

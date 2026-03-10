@@ -17,7 +17,7 @@ This matrix maps user-story IDs to runnable acceptance scripts in this repo.
 | 3 | Score local lifecycle | `examples/demo/module-2-score-field-map.sh` | `import` output + inverse-edit map |
 | 4 | Spring ownership | `examples/demo/module-3-spring-ownership.sh` | ownership annotations in import bundle |
 | 5 | Bridge governance contract | `examples/demo/module-4-bridge-governance.sh` | decision and promotion state JSON |
-| 6 | Ably app-config governance | `examples/demo/module-5-ably-platform.sh` | import/publish/verify artifacts |
+| 6 | No-config-platform app-config governance | `examples/demo/module-5-no-config-platform.sh` | import/publish/verify artifacts |
 | 7 | CI-centric connected API flow | `examples/demo/story-7-ci-api-flow-connected.sh` | `.tmp/ci-connected/*/*/story-7-summary.json` |
 | 8 | Label/taxonomy evolution | `examples/demo/story-8-label-evolution-connected.sh` | `.tmp/story-8/*/*/story-8-summary.json` |
 | 9 | Governed multi-repo wave | `examples/demo/story-9-multi-repo-wave-connected.sh` | `.tmp/waves/*/wave-summary.json` |

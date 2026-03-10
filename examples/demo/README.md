@@ -34,7 +34,7 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 | `module-2-score-field-map.sh` | [`scoredev-paas`](../scoredev-paas/) | Score field-origin and inverse edit mapping |
 | `module-3-spring-ownership.sh` | [`springboot-paas`](../springboot-paas/) | Spring ownership boundaries (app vs platform) |
 | `module-4-bridge-governance.sh` | Multiple | Local bridge contract simulation |
-| `module-5-ably-platform.sh` | [`just-apps-no-platform-config`](../just-apps-no-platform-config/) | Provider config governance without platform layer |
+| `module-5-no-config-platform.sh` | [`just-apps-no-platform-config`](../just-apps-no-platform-config/) | No-config-platform provider governance without a platform layer |
 | `run-all-modules.sh` | All above | Run all core modules |
 
 ## AI work platform track

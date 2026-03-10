@@ -29,7 +29,7 @@ AI-assisted changes make this gap wider because more changes happen faster. cub-
 | Score.dev | `scoredev-paas` | `score.yaml` | Stable |
 | Spring Boot | `springboot-paas` | `application.yaml` | Stable |
 | Backstage IDP | `backstage-idp` | `catalog-info.yaml` | v0.2 preview |
-| Ably Config | `ably-config` | Provider config | v0.2 preview |
+| No Config Platform | `ably-config` | Provider config | v0.2 preview |
 | Ops Workflow | `ops-workflow` | Operations config (structural workflow governance) | v0.2 preview |
 | C3 Agent | `c3agent` | Fleet config | v0.2 preview |
 | Swamp | `swamp` | Workflow config (graph/model-method governance) | v0.2 preview |

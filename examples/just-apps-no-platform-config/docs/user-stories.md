@@ -1,4 +1,4 @@
-# Ably Config — User Stories
+# No Config Platform — User Stories
 
 ## 1. App team adds a new event channel
 
@@ -10,8 +10,8 @@ Ops renames the EU inbound channel in `ably-prod.yaml`. The import shows this as
 
 ## 3. Future: Platform adds channel naming policy
 
-The platform team introduces `platform/policies/channel-naming.yaml` requiring all channels to follow `<service>.<direction>.<region>` naming. On next import, cub-gen reports the policy exists. When connected to ConfigHub, the decision engine can enforce naming compliance before changes reach Ably.
+The platform team introduces `platform/policies/channel-naming.yaml` requiring all channels to follow `<service>.<direction>.<region>` naming. On next import, cub-gen reports the policy exists. When connected to ConfigHub, the decision engine can enforce naming compliance before changes reach the provider.
 
 ## 4. Credential rotation audit
 
-Security asks: "which services reference `ABLY_API_KEY`?" The provenance chain in ConfigHub answers this instantly — the field-origin map traces `credentials.api_key_ref` back to the DRY source, and the governed decision history shows every change to credential references.
+Security asks: "which services reference `PROVIDER_API_KEY`?" The provenance chain in ConfigHub answers this instantly — the field-origin map traces `credentials.api_key_ref` back to the DRY source, and the governed decision history shows every change to credential references.
