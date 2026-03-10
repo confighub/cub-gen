@@ -1,3 +1,7 @@
+# NOTE: This policy is illustrative. ConfigHub's decision engine evaluates
+# these constraints server-side. cub-gen reads them for field-origin tracing
+# and documentation but does not enforce them at import time.
+
 apiVersion: confighub.io/v1
 kind: ExecutionPolicy
 metadata:

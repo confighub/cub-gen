@@ -1,108 +1,198 @@
-# Spring Boot PaaS (Java Service)
+# Spring Boot PaaS — Governed Config for Java Services
 
-**Pattern: Java service with business config and platform-owned runtime policy — app teams edit application.yaml, platform teams control datasource and SLO boundaries.**
+Your Spring Boot services already separate concerns: `application.yaml` for
+business config, `application-prod.yaml` for production overrides, `pom.xml`
+for build dependencies. Your developers know this layout.
 
-## 1. What is this?
+The problem is that not everything in `application.yaml` has the same owner.
+Feature flags are app-team territory. Datasource config is platform-controlled.
+When someone changes `spring.datasource.hikari.maximum-pool-size`, is that an
+app change or a platform change? Today, your PR reviewer has to know. With
+ConfigHub, the ownership boundary is explicit and enforced.
 
-An inventory API team maintains a Spring Boot service. They control business configuration — server ports, feature flags, logging levels — in `application.yaml` and `application-prod.yaml`. The platform team owns runtime policy (resource limits, required probes) and SLO targets. The boundary between app and platform config is explicit and governed.
+## What you get
 
-This is the Spring Boot pattern: the `application.yaml` is the DRY source, but not all keys are app-owned. Datasource configuration, for example, is platform-controlled even though it lives in the same file format.
+- **Ownership-aware field tracing**: `server.port` is app-team owned;
+  `spring.datasource.*` is platform-owned — cub-gen knows the difference
+- **Profile overlay tracking**: changes in `application-prod.yaml` are traced
+  separately from base `application.yaml` with full lineage
+- **Framework-native detection**: cub-gen recognizes `pom.xml` + Spring Boot
+  structure automatically — no config file to write
+- **Governance by field owner**: app-team changes auto-allow; platform-owned
+  field edits require platform approval or get blocked
 
-## 2. Who does what?
+## How Spring Boot maps to DRY / WET / LIVE
 
-| Role | Owns | Edits |
-|------|------|-------|
-| **App team** | `src/main/resources/application*.yaml` — business config | `server.port`, `feature.*`, logging levels |
-| **App team** | `src/main/java/*` — service implementation | Java source code |
-| **Platform team** | `platform/base/runtime-policy.yaml` | Required probes, resource limits |
-| **Platform team** | `platform/overlays/prod/slo-policy.yaml` | Production SLO requirements |
-| **GitOps reconciler** | Flux Kustomization / ArgoCD Application | Reconciles WET to LIVE |
+```
+  YOU EDIT (DRY)                    cub-gen TRACES (WET)              RECONCILER (LIVE)
+┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
+│ application.yaml    │          │ Deployment           │         │ Running JVM      │
+│ application-prod    │──import─▶│ ConfigMap            │──sync──▶│ Actuator health  │
+│ pom.xml             │          │ Service              │         │ Live datasource  │
+│ platform/*.yaml     │          │ Kustomization (Flux) │         │                 │
+└─────────────────────┘          └──────────────────────┘         └─────────────────┘
+  Developers edit app config.      Rendered manifests with           What's actually
+  Platform owns datasource +       field-origin provenance.          running.
+  SLO policy.
+```
 
-## 3. What does cub-gen add?
+**DRY** is what your team edits: Spring config files (`application*.yaml`), the
+Maven build (`pom.xml`), and platform policies. These are the source of truth.
 
-- **Generator detection**: recognizes `pom.xml` + Spring Boot structure as `springboot-paas` profile (capabilities: `render-app-config`, `profile-overrides`, `inverse-app-config-patch`)
-- **DRY/WET mapping**: application config (DRY) → rendered ConfigMaps, Deployments (WET)
-- **Field-origin tracing**: `server.port` traces to `application.yaml`, `spring.datasource.*` traces to `application-prod.yaml` overlay
-- **Inverse-edit guidance**: "to change the feature flag in production, edit `application-prod.yaml`"
+**WET** is what cub-gen produces: Kubernetes manifests with every field traced
+back to its Spring config source — including which profile overlay contributed
+each value.
+
+**LIVE** is your running JVM. Flux Kustomization or ArgoCD reconciles WET
+manifests to LIVE state. cub-gen doesn't touch your reconciler.
+
+| File | Owner | What it controls |
+|------|-------|-----------------|
+| `pom.xml` | App team | Maven build — Spring Boot 3.3.2, Java 21 |
+| `src/main/resources/application.yaml` | App team | Base config — server port, logging, app name |
+| `src/main/resources/application-prod.yaml` | App + Platform | Prod overrides — port (app), datasource (platform) |
+| `src/main/java/.../InventoryApplication.java` | App team | Service implementation |
+| `platform/base/runtime-policy.yaml` | Platform | Required actuator health, managed datasource |
+| `platform/overlays/prod/slo-policy.yaml` | Platform | Production SLO targets (99.9%, p95 250ms) |
+| `gitops/flux/kustomization.yaml` | Platform | Flux Kustomization transport |
+| `gitops/argo/application.yaml` | Platform | ArgoCD Application transport |
+
+## Try it
 
 ```bash
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Detect Spring Boot project structure
 ./cub-gen gitops discover --space platform --json ./examples/springboot-paas
+
+# Import with ownership-aware field tracing
 ./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas \
   | jq '{profile: .discovered[0].generator_profile, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
 ```
 
-## 4. How do I run it?
+cub-gen detects `pom.xml` + `src/main/resources/application.yaml` as a
+`springboot-paas` project. The import traces field origins through Spring's
+profile system and classifies each field by owner.
 
-```bash
-go build -o ./cub-gen ./cmd/cub-gen
-./cub-gen gitops discover --space platform ./examples/springboot-paas
-./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas
-./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas > /tmp/spring-bundle.json
-./cub-gen verify --in /tmp/spring-bundle.json
-./cub-gen attest --in /tmp/spring-bundle.json --verifier ci-bot > /tmp/spring-attestation.json
-./cub-gen verify-attestation --in /tmp/spring-attestation.json --bundle /tmp/spring-bundle.json
-./cub-gen gitops cleanup --space platform ./examples/springboot-paas
-```
+## Real-world scenario: database connection pool change
 
-## 5. Real-world example using ConfigHub
+**Who**: An inventory team at a logistics company. 40 Spring Boot microservices.
+Each has `application.yaml` for base config and `application-prod.yaml` for
+production overrides.
 
-A logistics company has 40 Spring Boot microservices. Each service has `application.yaml` for base config and `application-prod.yaml` for production overrides.
+### Scenario A — App team change (ALLOW)
 
-**Scenario: Database connection pool change**
-
-The DBA team determines the inventory service needs a larger connection pool. This is platform-owned config (datasource settings), not app-owned. They update `application-prod.yaml`:
+The app team adds a new feature flag and changes the server port for a canary
+test. These are app-owned fields:
 
 ```yaml
-spring:
-  datasource:
-    hikari:
-      maximum-pool-size: 30   # was 20
+# application-prod.yaml (app-team fields)
+server:
+  port: 8082           # canary port
+feature:
+  inventory:
+    reservationMode: optimistic  # was strict
 ```
 
-**Governed pipeline:**
-
 ```bash
-# 1. cub-gen detects the datasource change
+# Import detects the changes
 ./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas
-# Field-origin: spring.datasource.hikari.maximum-pool-size changed in application-prod.yaml
 
-# 2. Produce evidence chain
+# Evidence chain
 ./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas > bundle.json
 ./cub-gen verify --in bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
-# 3. ConfigHub ingests and evaluates
+# Bridge to ConfigHub
 ./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
-# Decision engine checks: datasource changes require platform-owner approval
-# (app-team edits to server.port or feature.* would auto-ALLOW)
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
+
+# Decision engine: server.port + feature.* are app-owned → ALLOW
+./cub-gen bridge decision apply --decision decision.json --state ALLOW \
+  --approved-by app-lead --reason "canary test with optimistic reservation"
+```
+
+### Scenario B — Platform-owned field edit (BLOCK)
+
+The same app team edits the datasource configuration — a platform-owned field:
+
+```yaml
+# application-prod.yaml (platform-controlled field!)
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 50   # was 20, platform-owned
+```
+
+```bash
+# Import detects the datasource change
+./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas
+
+# Evidence chain
+./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas > bundle.json
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+./cub-gen bridge decision create --ingest ingest.json > decision.json
+
+# Decision engine: spring.datasource.* is platform-owned → BLOCK
+./cub-gen bridge decision apply --decision decision.json --state BLOCK \
+  --approved-by governance-bot \
+  --reason "Datasource config is platform-owned. Requires platform-dba approval."
+```
+
+The field-origin trace shows `spring.datasource.hikari.maximum-pool-size`
+originates from `application-prod.yaml` but falls within the `spring.datasource.*`
+namespace, which is platform-owned per the runtime policy. The app team cannot
+change this without platform-dba review → **BLOCK**.
+
+### The right way — platform-dba makes the change (ALLOW)
+
+```bash
+# Same change, but now submitted by the platform DBA team
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by platform-dba --reason "connection pool increase for Q3 traffic"
 ```
 
-**What ConfigHub provides:**
-- **Ownership-aware decisions**: datasource changes escalate to platform-owner, feature flag changes auto-allow for app-team
-- **Cross-service audit**: "which services have `maximum-pool-size > 20`?" — cross-repo query
-- **SLO linkage**: the SLO policy in `platform/overlays/prod/slo-policy.yaml` can reference datasource settings, linking performance targets to configuration
-- **Drift detection**: if someone edits the connection pool on a running cluster without going through the governed pipeline, ConfigHub flags the drift
+## How it works
 
-## Narrative turns
+cub-gen's `springboot-paas` generator detects any directory containing `pom.xml`
+(or `build.gradle`) with a Spring Boot `application.yaml`. On import:
 
-1. **Feature rollout** — App team changes `server.port` and feature flags in `application-prod.yaml`. Import shows these as app-team DRY with inverse pointers.
-2. **Platform safety check** — Platform verifies datasource/runtime boundaries and policy evidence. Governance decision is explicit before apply.
-3. **Runtime reconciliation** — Flux/Argo reconciles rendered WET manifests from Git/OCI.
-4. **Upstream promotion** — Reusable app-level defaults can be promoted to platform base after successful rollout.
+1. **Classifies inputs** — `pom.xml` (role: build-config), `application.yaml`
+   (role: app-config-base), `application-prod.yaml` (role: app-config-profile)
+2. **Maps field origins** — `server.port` traces from `application.yaml` through
+   Spring's profile merge to the Deployment spec (confidence: 0.92)
+3. **Splits ownership** — `server.port` and `feature.*` are app-team editable;
+   `spring.datasource.*` requires platform review (confidence: 0.78, review
+   required)
+4. **Emits inverse guidance** — "to change the feature flag in production,
+   edit `application-prod.yaml`; to change the datasource pool, get
+   platform-dba approval first"
+
+A concrete field trace:
+
+```
+DRY:  application.yaml → server.port = 8080
+      ↓ spring-config-to-manifest transform (confidence: 0.92)
+WET:  Deployment/spec/template/spec/containers[0]/env[name=SERVER_PORT]/value = "8080"
+```
 
 ## Key files
 
 | File | Owner | Purpose |
 |------|-------|---------|
-| `pom.xml` | App team | Maven config — Spring Boot 3.3.2, Java 21 |
-| `src/main/resources/application.yaml` | App team | App defaults — server port, logging, feature flags |
-| `src/main/resources/application-prod.yaml` | App/Platform | Prod overrides — datasource (platform), features (app) |
-| `src/main/java/com/example/inventory/` | App team | Java service implementation |
-| `platform/base/runtime-policy.yaml` | Platform team | Runtime policy — probes, resource limits |
-| `platform/overlays/prod/slo-policy.yaml` | Platform team | Production SLO targets |
-| `gitops/flux/kustomization.yaml` | Platform team | Flux Kustomization transport |
-| `gitops/argo/application.yaml` | Platform team | ArgoCD Application transport |
-| `docs/user-stories.md` | — | Narrative user stories |
+| `pom.xml` | App team | Maven — Spring Boot 3.3.2, Java 21 |
+| `application.yaml` | App team | Base config — port, logging, app name |
+| `application-prod.yaml` | Shared | Prod overrides — port (app), datasource (platform) |
+| `platform/base/runtime-policy.yaml` | Platform | Required actuator, managed datasource |
+| `platform/overlays/prod/slo-policy.yaml` | Platform | SLO targets — 99.9%, p95 250ms |
+| `gitops/flux/kustomization.yaml` | Platform | Flux Kustomization transport |
+| `gitops/argo/application.yaml` | Platform | ArgoCD Application transport |
+
+## Next steps
+
+- **Helm version**: [`helm-paas`](../helm-paas/) — same governance for
+  chart-based deployments
+- **Score.dev version**: [`scoredev-paas`](../scoredev-paas/) — platform-agnostic
+  workload specs
+- **E2E demo**: `../demo/module-3-spring-ownership.sh`
+- **Worked example**: `../../docs/agentic-gitops/03-worked-examples/03-spring-boot-dry-wet-unit-worked-example.md`

@@ -1,73 +1,149 @@
-# Swamp Runtime (Helm Deployment)
+# Swamp Runtime — Governed Helm for AI Model Orchestration
 
-**Pattern: platform-provided Helm chart deploying the Swamp AI automation runtime on Kubernetes.**
+Your platform provides Swamp — an AI model orchestration runtime — as a
+managed service. Project teams deploy it via a Helm chart, customizing the
+model gateway, replica count, and image version through values overlays.
+The platform controls the chart contract, resource baselines, and model
+gateway allowlist.
 
-> This is the infrastructure side of the Swamp story. For the workflow governance side, see [`swamp-automation`](../swamp-automation/).
+This is the infrastructure side of the Swamp story: deploying the engine
+itself. For governance over the *workflows* that run on Swamp, see
+[`swamp-automation`](../swamp-automation/).
 
-## 1. What is this?
+## What you get
 
-A platform team provides a Helm chart that deploys the Swamp runtime — the execution engine that runs AI-agent-driven workflows. Project teams customize the runtime for their use case (model gateway selection, replica count, image version) via values overlays. The platform controls the chart contract and runtime policy.
+- **Standard Helm governance**: same field-origin tracing, ownership mapping,
+  and decision pipeline as any `helm-paas` example
+- **Model gateway policy**: platform controls which model gateways (llama,
+  mistral, claude) are approved for each environment
+- **Runtime policy enforcement**: resource limits, minimum replicas, and
+  required probes enforced by platform policy
+- **Two-layer Swamp story**: this example (infrastructure) pairs with
+  `swamp-automation` (workflow governance) for complete coverage
 
-This uses the standard `helm-paas` generator. The Swamp-specific story is that this chart *deploys the workflow engine itself* — the same engine whose workflow definitions are governed in the [`swamp-automation`](../swamp-automation/) example.
+## How Swamp deployment maps to DRY / WET / LIVE
 
-## 2. Who does what?
-
-| Role | Owns | Edits |
-|------|------|-------|
-| **Project team** | `values.yaml` — replica count, image tag, model gateway | `replicaCount`, `image.tag`, `runtime.modelGateway` |
-| **Platform team** | `Chart.yaml` — chart contract, version | Chart version, appVersion |
-| **Platform team** | `platform/` — runtime policy (future) | Resource baselines, model gateway allowlist |
-| **GitOps reconciler** | Flux/ArgoCD syncs the rendered HelmRelease | Reconciles WET to LIVE |
-
-## 3. What does cub-gen add?
-
-Standard Helm generator features:
-
-- **Generator detection**: recognizes `Chart.yaml` + `values.yaml` as a helm-paas source
-- **DRY/WET classification**: chart contract is platform DRY, values overlays are project DRY
-- **Field-origin tracing**: `runtime.modelGateway` traces to `values.yaml` (base) or `values-prod.yaml` (prod override)
-- **Inverse-edit guidance**: "to change the model gateway in production, edit `values-prod.yaml` runtime section"
-
-```bash
-./cub-gen gitops discover --space platform --json ./examples/swamp-project
-./cub-gen gitops import --space platform --json ./examples/swamp-project ./examples/swamp-project
+```
+  YOU EDIT (DRY)                    cub-gen TRACES (WET)              RECONCILER (LIVE)
+┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
+│ Chart.yaml          │          │ Deployment           │         │ Swamp runtime    │
+│ values.yaml         │──import─▶│ Service              │──sync──▶│ Model gateway    │
+│ values-prod.yaml    │          │ HelmRelease          │         │ Running agents   │
+│ platform/runtime-   │          │                      │         │                 │
+│   policy.yaml       │          │                      │         │                 │
+└─────────────────────┘          └──────────────────────┘         └─────────────────┘
+  Project team: values overlays.   Rendered manifests with           What's actually
+  Platform: chart + runtime policy. field provenance.                serving models.
 ```
 
-## 4. How do I run it?
+**DRY** is what teams edit: `values.yaml` sets the model gateway, replicas, and
+image version. `values-prod.yaml` overrides for production. The platform team
+owns `Chart.yaml`, templates, and runtime policy.
+
+**WET** is what cub-gen traces: rendered Kubernetes manifests with every field
+mapped back to its DRY source — values file, chart template, or platform policy.
+
+**LIVE** is the running Swamp runtime. Flux or ArgoCD reconciles the HelmRelease.
+
+| File | Owner | What it controls |
+|------|-------|-----------------|
+| `Chart.yaml` | Platform | Chart contract — name, version |
+| `values.yaml` | Project team | Base values — replicas, image, model gateway |
+| `values-prod.yaml` | Project team | Prod overlay — higher replicas, pinned image, prod gateway |
+| `templates/deployment.yaml` | Platform | K8s Deployment structure |
+| `platform/runtime-policy.yaml` | Platform | Resource limits, model gateway allowlist, min replicas, required probes |
+
+## Try it
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
-./cub-gen gitops discover --space platform ./examples/swamp-project
+
+# Detect Helm chart for Swamp runtime
+./cub-gen gitops discover --space platform --json ./examples/swamp-project
+
+# Import with full provenance
 ./cub-gen gitops import --space platform --json ./examples/swamp-project ./examples/swamp-project
-./cub-gen publish --space platform ./examples/swamp-project ./examples/swamp-project > /tmp/swamp-proj-bundle.json
-./cub-gen verify --in /tmp/swamp-proj-bundle.json
-./cub-gen attest --in /tmp/swamp-proj-bundle.json --verifier ci-bot
-./cub-gen gitops cleanup --space platform ./examples/swamp-project
 ```
 
-## 5. Real-world example using ConfigHub
+cub-gen detects `Chart.yaml` + `values.yaml` as a `helm-paas` project. The
+import traces field origins through the Helm template structure, including
+Swamp-specific fields like `runtime.modelGateway`.
 
-The ML platform team maintains the Swamp runtime chart. When a project team needs to switch from `llama-gateway` to `mistral-gateway`:
+## Real-world scenario: switching model gateways
 
-1. Project team edits `values-prod.yaml`: `runtime.modelGateway: mistral-gateway`
-2. `cub-gen publish` produces a change bundle showing the gateway change
-3. ConfigHub's decision engine checks the platform's model gateway allowlist
-4. If `mistral-gateway` is approved → ALLOW; if not → ESCALATE to platform-owner
-5. After ALLOW, Flux reconciles the updated HelmRelease to the cluster
+**Who**: An ML platform team maintaining the Swamp runtime chart. A project
+team wants to switch from `llama-gateway` to `mistral-gateway`.
+
+### The change
+
+```yaml
+# values-prod.yaml — project team edits
+runtime:
+  modelGateway: mistral-gateway  # was llama-gateway
+```
+
+### Governed pipeline
+
+```bash
+# cub-gen detects the gateway change
+./cub-gen gitops import --space platform --json ./examples/swamp-project ./examples/swamp-project
+
+# Evidence chain
+./cub-gen publish --space platform ./examples/swamp-project ./examples/swamp-project > bundle.json
+./cub-gen verify --in bundle.json
+./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
+
+# Bridge to ConfigHub
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+./cub-gen bridge decision create --ingest ingest.json > decision.json
+
+# Platform checks: is mistral-gateway in the allowlist?
+# Runtime policy allows llama, mistral, claude → ALLOW
+./cub-gen bridge decision apply --decision decision.json --state ALLOW \
+  --approved-by platform-owner --reason "mistral gateway approved for team workload"
+```
+
+The runtime policy's `model_gateway_allowlist` includes `mistral` → **ALLOW**.
+If the team requested an unapproved gateway, the decision engine would
+**BLOCK** and route to the platform owner.
+
+## How it works
+
+This example uses the standard `helm-paas` generator — same as
+[`helm-paas`](../helm-paas/). The Swamp-specific aspect is the runtime policy
+which governs model gateway selection and AI-specific resource requirements:
+
+- **Model gateway allowlist**: only approved gateways (llama, mistral, claude)
+  can be deployed
+- **Minimum replicas by environment**: production requires at least 2 replicas
+- **Resource limits**: CPU 4, memory 8Gi — higher than typical web services
+  because model serving is resource-intensive
+- **Required probes**: readiness and liveness probes are mandatory
 
 ## Key files
 
 | File | Owner | Purpose |
 |------|-------|---------|
-| `Chart.yaml` | Platform team | Helm chart contract — name, version |
-| `values.yaml` | Project team | Base values — replicas, image, model gateway |
-| `values-prod.yaml` | Project team | Production overlay — higher replicas, pinned image, prod gateway |
+| `Chart.yaml` | Platform | Helm chart contract |
+| `values.yaml` | Project team | Base values — gateway, replicas, image |
+| `values-prod.yaml` | Project team | Prod overlay |
+| `templates/deployment.yaml` | Platform | K8s Deployment structure |
+| `platform/runtime-policy.yaml` | Platform | Gateway allowlist, resource limits, HA |
 
 ## The complete Swamp + ConfigHub picture
 
-| Layer | Example | Generator |
-|-------|---------|-----------|
-| **Workflow governance** | [`swamp-automation`](../swamp-automation/) | `swamp` — governs workflow definitions |
-| **Runtime deployment** | `swamp-project` (this) | `helm-paas` — deploys the Swamp engine |
+| Layer | Example | Generator | What it governs |
+|-------|---------|-----------|-----------------|
+| **Workflow** | [`swamp-automation`](../swamp-automation/) | `swamp` | Workflow definitions, model bindings, vault policy |
+| **Runtime** | `swamp-project` (this) | `helm-paas` | Swamp engine deployment, model gateway, resources |
 
-Both use the same canonical DRY+WET+LIVE pattern. Both produce ConfigHub-ready change bundles. Together they show how an AI automation platform gets full governance — from the workflows it runs to the infrastructure it runs on.
+Both use the same DRY→WET→LIVE pattern and produce ConfigHub-ready change
+bundles. Together they give an AI automation platform full governance — from
+the workflows it runs to the infrastructure it runs on.
+
+## Next steps
+
+- **Workflow governance**: [`swamp-automation`](../swamp-automation/) — govern
+  the workflows that run on this Swamp instance
+- **AI agent fleets**: [`c3agent`](../c3agent/) — standalone agent fleet config
+- **E2E Helm demo**: `../demo/module-1-helm-import.sh`

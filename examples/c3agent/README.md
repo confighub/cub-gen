@@ -1,107 +1,149 @@
-# C3 Agent Fleet (Standalone)
+# C3 Agent Fleet — Governed AI Agent Orchestration
 
-**Pattern: AI agent fleet configuration — a team authors 30 lines of YAML, the platform enforces model approval, budget caps, and credential hygiene.**
+Your AI agent fleet runs Claude, GPT, or other LLMs for automated code review,
+test generation, security scanning — whatever your teams need. The fleet
+configuration lives in `c3agent.yaml`: concurrency limits, model selection,
+budget caps, storage, and credential references.
 
-> For the full platform story with registry and constraints, see [`ai-ops-paas`](../ai-ops-paas/).
+The challenge: AI fleets mutate configuration at high velocity. Model upgrades,
+budget adjustments, credential rotations — each change needs governance. Which
+model versions are approved? What's the budget ceiling? Are prod credentials
+properly isolated? ConfigHub makes AI fleet governance explicit and traceable.
 
-## 1. What is this?
+> For the full platform story with registry and constraint enforcement, see
+> [`ai-ops-paas`](../ai-ops-paas/).
 
-A team runs a fleet of Claude Code agents for automated code review. They declare the fleet configuration in `c3agent.yaml`: how many tasks to run concurrently, which AI model to use, budget limits, storage, and credential references. The platform ensures approved models, budget ceilings, and HA requirements are met.
+## What you get
 
-This is the standalone version of the c3agent pattern. It shows the minimal config a team authors to get a governed agent fleet. The [`ai-ops-paas`](../ai-ops-paas/) example shows the full platform with registry and constraints.
+- **Fleet config governance**: 30 lines of DRY config → 11 governed WET
+  Kubernetes targets (Deployments, Services, ConfigMaps, Secret, PVC, RBAC)
+- **Model approval tracking**: "which fleets run which models?" — answerable
+  from the provenance index
+- **Budget visibility**: aggregate budget tracking across all agent fleets
+- **Credential audit**: "which fleets reference prod credentials?" — cross-repo
+  query
 
-## 2. Who does what?
+## How C3 Agent maps to DRY / WET / LIVE
 
-| Role | Owns | Edits |
-|------|------|-------|
-| **App team** | `c3agent.yaml` — fleet config, agent runtime settings | Concurrency, model, budget, credential refs |
-| **App team** | `c3agent-prod.yaml` — production overlay | HA replicas, higher budget, prod credentials |
-| **Platform team** | `platform/` — fleet policies (future) | Approved models, budget ceilings, credential rotation |
-| **GitOps reconciler** | Flux/ArgoCD syncs rendered Kubernetes manifests | Reconciles WET to LIVE |
+```
+  YOU EDIT (DRY)                    cub-gen TRACES (WET)              RECONCILER (LIVE)
+┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
+│ c3agent.yaml        │          │ Deployment (control)  │         │ Agent fleet      │
+│ c3agent-prod.yaml   │──import─▶│ Deployment (gateway)  │──sync──▶│ Running agents   │
+│ platform/           │          │ Services (gRPC+HTTP)  │         │ Task execution   │
+│   fleet-policy.yaml │          │ ConfigMap, Secret     │         │                 │
+└─────────────────────┘          │ PVC, RBAC             │         └─────────────────┘
+  App team: fleet config.         └──────────────────────┘           What's actually
+  Platform: model + budget policy. 11 WET targets from 30 DRY lines. orchestrating.
+```
 
-## 3. What does cub-gen add?
+**DRY** is what the team authors: `c3agent.yaml` defines the fleet — agent model,
+concurrency, components (controlplane + gateway), storage, and credential
+references. `c3agent-prod.yaml` overrides for HA and higher budgets.
 
-The c3agent generator maps DRY fleet config to governed Kubernetes resources:
+**WET** is what cub-gen traces: 11 Kubernetes resources generated from the fleet
+config — Deployments for controlplane and gateway, Services for gRPC and HTTP,
+ConfigMap, Secret, PVC, and RBAC resources. Each field maps back to its DRY source.
 
-- **Generator detection**: recognizes `c3agent.yaml` with `service: c3agent` + `apiVersion: c3agent/v1` (capabilities: `fleet-config`, `agent-orchestration`, `inverse-fleet-config-patch`)
-- **DRY/WET mapping**: 30 lines of DRY config → 11 WET Kubernetes targets (Deployments, Services, ConfigMaps, Secret, PVC, RBAC)
-- **Field-origin tracing**: `fleet.agent_model` traces to `c3agent.yaml`, overridden by `c3agent-prod.yaml` in production
-- **Inverse-edit guidance**: "to change the budget in production, edit `c3agent-prod.yaml` agent_runtime.max_budget_usd"
+**LIVE** is the running agent fleet. Flux or ArgoCD reconciles WET to LIVE.
+
+| File | Owner | What it controls |
+|------|-------|-----------------|
+| `c3agent.yaml` | App team | Fleet config — model, concurrency, components, storage, credentials |
+| `c3agent-prod.yaml` | App team | Prod overlay — HA replicas, higher budget, prod credentials |
+| `platform/fleet-policy.yaml` | Platform | Approved models, budget ceilings, HA requirements, credential hygiene |
+
+## Try it
 
 ```bash
-# Discover — detects c3agent with high confidence
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Detect c3agent fleet config
 ./cub-gen gitops discover --space platform --json ./examples/c3agent
 
-# Import — produces DRY/WET classification with provenance
+# Import with full provenance — see 11 WET targets from 30 lines
 ./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs}'
 ```
 
-## 4. How do I run it?
+cub-gen detects `c3agent.yaml` with `service: c3agent` and `apiVersion: c3agent/v1`.
+The import maps every fleet setting to its rendered Kubernetes targets.
 
-```bash
-# Build
-go build -o ./cub-gen ./cmd/cub-gen
+## Real-world scenario: model upgrade across fleets
 
-# Discover
-./cub-gen gitops discover --space platform ./examples/c3agent
+**Who**: A fintech company running 5 C3 agent fleets — code review, testing,
+docs, security scanning, and incident response.
 
-# Import with provenance
-./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent
+### The change — upgrading the AI model
 
-# Full bridge flow
-./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent > /tmp/c3-bundle.json
-./cub-gen verify --in /tmp/c3-bundle.json
-./cub-gen attest --in /tmp/c3-bundle.json --verifier ci-bot > /tmp/c3-attestation.json
-./cub-gen verify-attestation --in /tmp/c3-attestation.json --bundle /tmp/c3-bundle.json
-
-# Cleanup
-./cub-gen gitops cleanup --space platform ./examples/c3agent
+```yaml
+# c3agent.yaml — model upgrade
+fleet:
+  agent_model: claude-sonnet-4-20250514  # was claude-sonnet-4-20250514
+  # changing to: claude-sonnet-4.5-20260101
 ```
 
-## 5. Real-world example using ConfigHub
-
-A fintech company runs 5 C3 agent fleets across different teams: code review, test generation, documentation, security scanning, and incident response.
-
-**Scenario: Upgrading the AI model across all fleets**
-
-Anthropic releases a new model version. The platform team needs to approve the upgrade and roll it out fleet by fleet.
+### Governed pipeline
 
 ```bash
-# 1. Team updates their fleet config
-# c3agent.yaml: fleet.agent_model: claude-sonnet-4-20250514 → claude-sonnet-4.5-20260101
-
-# 2. cub-gen detects the model change
+# cub-gen detects the model change
 ./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent
-# Field-origin: fleet.agent_model changed in c3agent.yaml
 
-# 3. Produce evidence chain
+# Evidence chain
 ./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent > bundle.json
 ./cub-gen verify --in bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
-# 4. ConfigHub ingests and evaluates
+# Bridge to ConfigHub
 ./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
-# Platform policy checks: is claude-sonnet-4.5-20260101 in the approved models list?
-# If approved → ALLOW. If not yet approved → ESCALATE to platform-owner.
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
+
+# Platform checks: is the new model in the approved list?
+# If approved → ALLOW. If not yet evaluated → ESCALATE to platform-owner.
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by platform-owner --reason "model upgrade approved after eval"
 ```
 
-**What ConfigHub provides:**
-- **Model governance**: "which fleets are running which models?" — cross-repo query
-- **Budget visibility**: aggregate budget across all fleets
-- **Credential audit**: "which fleets reference prod credentials?" — provenance index
-- **Rollout tracking**: decision history shows which fleets have upgraded vs. pending
+The fleet policy checks the approved models list. If the new model isn't
+approved yet, the decision engine **ESCALATE**s to the platform owner.
+After evaluation and approval, the fleet upgrade proceeds through the
+governed pipeline.
+
+## How it works
+
+cub-gen's `c3agent` generator detects `c3agent.yaml` containing `service: c3agent`
+with `apiVersion: c3agent/v1`. On import:
+
+1. **Classifies inputs** — `c3agent.yaml` (role: fleet-config-base),
+   `c3agent-prod.yaml` (role: fleet-config-overlay)
+2. **Maps 30 DRY lines to 11 WET targets** — controlplane Deployment, gateway
+   Deployment, gRPC Service, HTTP Service, ConfigMap, Secret, PVC, and RBAC
+   resources
+3. **Traces field origins** — `fleet.agent_model` traces from DRY to the
+   controlplane Deployment image spec; budget settings trace to ConfigMap
+4. **Computes ownership** — fleet config is app-team editable; fleet policy
+   constraints are platform-owned
+
+A concrete field trace:
+
+```
+DRY:  c3agent.yaml → fleet.agent_model = "claude-sonnet-4-20250514"
+      ↓ c3agent transform
+WET:  Deployment(controlplane)/spec/template/spec/containers[0]/env[AGENT_MODEL]
+```
 
 ## Key files
 
 | File | Owner | Purpose |
 |------|-------|---------|
-| `c3agent.yaml` | App team | DRY fleet config — identity, model, concurrency, components, storage, credentials |
-| `c3agent-prod.yaml` | App team | Production overlay — HA replicas, higher budget, prod credential refs |
+| `c3agent.yaml` | App team | Fleet config — model, concurrency, components |
+| `c3agent-prod.yaml` | App team | Prod overlay — HA, budget, prod credentials |
+| `platform/fleet-policy.yaml` | Platform | Approved models, budgets, HA, credential rules |
 
-## Related examples
+## Next steps
 
-- [`ai-ops-paas`](../ai-ops-paas/) — Full platform version with FrameworkRegistry and platform constraints. Shows the IDP portal perspective.
+- **Full platform version**: [`ai-ops-paas`](../ai-ops-paas/) — FrameworkRegistry
+  and ConstraintSet for enterprise AI fleet governance
+- **AI workflow governance**: [`swamp-automation`](../swamp-automation/) — DAG
+  workflows with model binding governance
+- **E2E demo**: `../demo/ai-work-platform/scenario-1-c3agent.sh`
