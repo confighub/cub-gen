@@ -17,7 +17,7 @@ fleet:
   schedule_interval_secs: 5
 
 agent_runtime:
-  image: ghcr.io/acme-corp/ai-ops-agent:latest
+  image: ghcr.io/acme-corp/ai-ops-agent:0.3.1
   max_budget_usd: 8.0
   repo_cache_dir: /data/repos
   session_dir: /data/claude

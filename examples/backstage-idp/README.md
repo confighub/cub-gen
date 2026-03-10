@@ -1,33 +1,62 @@
-# Backstage IDP (Developer Portal)
+# Backstage IDP — Governed Software Catalog
 
-**Pattern: developer portal catalog registration — Backstage catalog entities as governed configuration with platform-enforced ownership and lifecycle standards.**
+Your Backstage software catalog is the single source of truth for service
+ownership, lifecycle, and discoverability. Every team registers their services
+in `catalog-info.yaml`. The platform team enforces standards: valid owners,
+approved lifecycle stages, consistent naming.
 
-## 1. What is this?
+The problem: catalog changes happen via Git PRs, but there's no structured
+governance over *what* changed. When 50 teams rename owners during a reorg,
+you need traceability — not just commit history. ConfigHub makes every catalog
+change traceable, auditable, and queryable across repos.
 
-A payments team registers their service in the company's Backstage developer portal. The catalog entry (`catalog-info.yaml`) declares the service identity, ownership, and lifecycle stage. The app config (`app-config.yaml`) sets up the portal URLs. The platform team enforces standards: every component must have an owner, a lifecycle stage, and conform to the company's catalog schema.
+## What you get
 
-This is configuration governance for developer experience: the portal catalog is the single source of truth for service ownership, and cub-gen ensures every change to that catalog is traceable, governed, and auditable.
+- **Catalog entity governance**: ownership, lifecycle, and type changes are
+  traced with full provenance
+- **Platform standards enforcement**: required fields, valid lifecycle stages,
+  naming conventions — enforced at publish time
+- **Cross-repo catalog queries**: "which services are still owned by the old
+  team?" — answerable in one query
+- **Change audit trail**: who changed the owner, who approved it, and why
 
-## 2. Who does what?
+## How Backstage maps to DRY / WET / LIVE
 
-| Role | Owns | Edits |
-|------|------|-------|
-| **App team** | `catalog-info.yaml` — component identity, type, owner | Service name, description, lifecycle stage |
-| **Platform team** | `app-config.yaml` — portal infrastructure config | Base URLs, backend endpoints |
-| **Platform team** | `platform/` — catalog standards (future) | Required fields, naming conventions, ownership rules |
-| **GitOps reconciler** | N/A — Backstage syncs from Git natively | N/A |
+```
+  YOU EDIT (DRY)                    cub-gen TRACES (WET)              BACKSTAGE (LIVE)
+┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
+│ catalog-info.yaml   │          │ Component entity     │         │ Service catalog  │
+│ app-config.yaml     │──import─▶│ Catalog metadata     │──sync──▶│ Portal pages     │
+│ platform/catalog-   │          │ Ownership records    │         │ API docs         │
+│   standards.yaml    │          │                      │         │                 │
+└─────────────────────┘          └──────────────────────┘         └─────────────────┘
+  App team: catalog-info.          Structured entity data            What's visible
+  Platform: standards.             with field provenance.            in Backstage.
+```
 
-## 3. What does cub-gen add?
+**DRY** is what teams edit: `catalog-info.yaml` declares the service identity
+(name, owner, type, lifecycle). `app-config.yaml` configures the portal
+infrastructure. Platform standards define valid values.
 
-cub-gen treats Backstage catalog entities as a generator source:
+**WET** is what cub-gen produces: structured catalog entity metadata with every
+field traced back to its source. The platform's catalog standards validate
+required fields and naming conventions.
 
-- **Generator detection**: recognizes `catalog-info.yaml` with `backstage.io/v1alpha1` apiVersion (capabilities: `catalog-metadata`, `render-manifests`, `inverse-catalog-patch`)
-- **DRY/WET classification**: catalog entity is app DRY (service identity), app config is platform DRY (portal infra)
-- **Field-origin tracing**: owner, lifecycle, and component type all trace back to the DRY catalog file
-- **Inverse-edit guidance**: "to change the service owner, edit `catalog-info.yaml` spec.owner"
+**LIVE** is what's visible in Backstage. Backstage syncs from Git natively —
+no Flux or ArgoCD needed for catalog entities.
+
+| File | Owner | What it controls |
+|------|-------|-----------------|
+| `catalog-info.yaml` | App team | Service identity — name, owner, type, lifecycle |
+| `app-config.yaml` | Platform | Portal config — base URLs, backend endpoints |
+| `platform/catalog-standards.yaml` | Platform | Required fields, valid lifecycles, naming conventions |
+
+## Try it
 
 ```bash
-# Discover
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Detect Backstage catalog entity
 ./cub-gen gitops discover --space platform --json ./examples/backstage-idp
 
 # Import with provenance
@@ -35,80 +64,77 @@ cub-gen treats Backstage catalog entities as a generator source:
   | jq '{profile: .discovered[0].generator_profile, dry_inputs}'
 ```
 
-## 4. How do I run it?
+cub-gen detects `catalog-info.yaml` with `backstage.io/v1alpha1` apiVersion
+and classifies it as `backstage-idp`. The import traces every entity field
+back to its source with ownership metadata.
 
-```bash
-# Build
-go build -o ./cub-gen ./cmd/cub-gen
+## Real-world scenario: ownership transfer during team reorg
 
-# Discover
-./cub-gen gitops discover --space platform ./examples/backstage-idp
+**Who**: A company with 200 microservices and a Backstage-powered developer
+portal. The payments team is splitting into payments-core and payments-fraud.
 
-# Import with provenance
-./cub-gen gitops import --space platform --json ./examples/backstage-idp ./examples/backstage-idp
-
-# Full bridge flow
-./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp > /tmp/backstage-bundle.json
-./cub-gen verify --in /tmp/backstage-bundle.json
-./cub-gen attest --in /tmp/backstage-bundle.json --verifier ci-bot > /tmp/backstage-attestation.json
-./cub-gen verify-attestation --in /tmp/backstage-attestation.json --bundle /tmp/backstage-bundle.json
-
-# Cleanup
-./cub-gen gitops cleanup --space platform ./examples/backstage-idp
-```
-
-## 5. Real-world example using ConfigHub
-
-A company with 200 microservices uses Backstage for service discovery and ownership tracking. Every service has a `catalog-info.yaml` in its repo.
-
-**Scenario: Ownership transfer during team reorganization**
-
-The payments team is splitting into payments-core and payments-fraud. Services need to update their catalog ownership:
+### The change — 15 services need new owners
 
 ```yaml
-# Before
+# catalog-info.yaml — before
 spec:
   owner: team-payments
 
-# After
+# catalog-info.yaml — after
 spec:
   owner: team-payments-core
 ```
 
-**Governed pipeline:**
+### Governed pipeline
 
 ```bash
-# 1. cub-gen detects the ownership change
+# cub-gen detects the ownership change
 ./cub-gen gitops import --space platform --json ./examples/backstage-idp ./examples/backstage-idp
-# Field-origin: spec.owner changed in catalog-info.yaml (app-team owned)
 
-# 2. Produce evidence chain
+# Evidence chain
 ./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp > bundle.json
 ./cub-gen verify --in bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
-# 3. ConfigHub ingests and evaluates
+# Bridge to ConfigHub
 ./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
-# Decision engine checks: is "team-payments-core" a valid team? → ALLOW
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
+
+# Platform validates: "team-payments-core" is in the approved team list → ALLOW
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by engineering-director --reason "Q2 team reorg"
 ```
 
-**What ConfigHub provides:**
-- **Ownership audit**: "which services changed ownership in Q2?" — answerable from decision history
-- **Completeness check**: "are there any services still owned by the old team-payments?" — cross-repo query
-- **Standard enforcement**: platform policies can require valid team names, lifecycle stages, and component types
-- **Change provenance**: every catalog change traces back to who made it, who approved it, and why
+After the reorg, ConfigHub can answer: "are there any services still owned by
+the old team-payments?" — a cross-repo query that would otherwise require
+grepping across 200 repositories.
+
+## How it works
+
+cub-gen's `backstage-idp` generator detects `catalog-info.yaml` containing a
+`backstage.io/v1alpha1` apiVersion with `kind: Component`. On import:
+
+1. **Classifies inputs** — `catalog-info.yaml` (role: catalog-entity),
+   `app-config.yaml` (role: portal-config)
+2. **Maps field origins** — `spec.owner`, `spec.lifecycle`, `spec.type` all
+   trace to `catalog-info.yaml` with ownership metadata
+3. **Validates standards** — platform catalog standards check required fields,
+   valid lifecycles (experimental, production, deprecated), and naming patterns
+4. **Emits inverse guidance** — "to change the service owner, edit
+   `catalog-info.yaml` spec.owner"
 
 ## Key files
 
 | File | Owner | Purpose |
 |------|-------|---------|
-| `catalog-info.yaml` | App team | Backstage catalog entity — service identity, owner, lifecycle |
-| `app-config.yaml` | Platform team | Backstage portal config — base URLs, backend endpoints |
+| `catalog-info.yaml` | App team | Backstage catalog entity |
+| `app-config.yaml` | Platform | Portal infrastructure config |
+| `platform/catalog-standards.yaml` | Platform | Required fields, valid lifecycles, naming rules |
 
-## Related examples
+## Next steps
 
-- [`just-apps-no-platform-config`](../just-apps-no-platform-config/) — Another "just config, no manifests" pattern. Shows that governance works for external service configuration.
-- [`helm-paas`](../helm-paas/) — The Kubernetes workload end of the spectrum. The Backstage catalog entry often lives alongside a Helm chart in the same repo.
+- **App-only config**: [`just-apps-no-platform-config`](../just-apps-no-platform-config/) —
+  simplest possible example with no platform layer
+- **Helm + Backstage**: [`helm-paas`](../helm-paas/) — catalog entries often
+  live alongside Helm charts in the same repo
+- **Full platform story**: see the [platform architecture](../../docs/platform.md)

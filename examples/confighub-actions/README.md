@@ -1,33 +1,61 @@
-# ConfigHub Actions (Lifecycle Governance)
+# ConfigHub Actions — Recursive Governance
 
-**Pattern: ConfigHub's own release lifecycle — plan → verify → deploy — expressed as governed operations configuration.**
+ConfigHub's own release lifecycle — plan → verify → deploy — is expressed as
+governed operations configuration. When a commit lands, three actions execute
+in sequence: a dry-run plan, a policy check, and a governed apply. In production,
+the verify step requires two approvals and deploys are restricted to business
+hours.
 
-## 1. What is this?
+This is governance governing itself. The lifecycle definition is configuration,
+and configuration gets governed. The same provenance, ownership, and decision
+pipeline that governs your app changes also governs the governance rules.
 
-A platform team uses ConfigHub Actions to govern their own release lifecycle. When a commit lands, three actions execute in sequence: a dry-run plan, a policy check, and a governed apply. In production, the verify step requires two approvals and the deploy step is restricted to business hours.
+## What you get
 
-This is the same operations model as [`ops-workflow`](../ops-workflow/), but applied to ConfigHub's own lifecycle. It demonstrates that the governance pattern is recursive — ConfigHub governs its own changes the same way it governs application changes.
+- **Recursive governance**: changes to lifecycle rules go through the same
+  ALLOW/ESCALATE/BLOCK pipeline as app changes
+- **Action sequencing**: plan → verify → deploy is enforced by policy, not
+  convention
+- **Production safety**: deploy windows, approval thresholds, and trigger
+  policies are platform-owned configuration
+- **Break-glass override**: emergency changes bypass approval thresholds and
+  deploy windows, with mandatory post-incident retrospective
 
-## 2. Who does what?
+## How ConfigHub Actions map to DRY / WET / LIVE
 
-| Role | Owns | Edits |
-|------|------|-------|
-| **Platform team** | `operations.yaml` — action types, trigger config | Action sequence, trigger events |
-| **Platform team** | `operations-prod.yaml` — production overrides | Approval requirements, deploy windows |
-| **Platform owner** | `platform/` — lifecycle policies | Required action types, approval thresholds |
-| **GitOps reconciler** | N/A — actions execute within ConfigHub's decision engine | N/A |
+```
+  YOU EDIT (DRY)                    cub-gen TRACES (WET)              EXECUTION (LIVE)
+┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
+│ operations.yaml     │          │ Lifecycle plan       │         │ plan (dry-run)   │
+│ operations-prod     │──import─▶│ Action manifest      │──exec──▶│ verify (check)   │
+│ platform/lifecycle- │          │ with provenance      │         │ deploy (apply)   │
+│   policy.yaml       │          │                      │         │                 │
+└─────────────────────┘          └──────────────────────┘         └─────────────────┘
+  Platform: lifecycle actions.     Governed execution plan           What actually
+  Platform: lifecycle policy.      with field-origin tracing.        ran.
+```
 
-## 3. What does cub-gen add?
+**DRY** is what the platform team authors: `operations.yaml` defines the action
+types and trigger (commit-driven). `operations-prod.yaml` adds production
+approval requirements and deploy windows.
 
-The `ops-workflow` generator detects ConfigHub Actions the same way it detects any operations workflow:
+**WET** is what cub-gen traces: a structured lifecycle plan with every action,
+approval threshold, and deploy window traced back to its DRY source.
 
-- **Generator detection**: recognizes `operations.yaml` with `workflow:` + `actions:` structure
-- **DRY/WET classification**: action definitions are DRY, rendered execution plan is WET
-- **Field-origin tracing**: action types, approval requirements, and deploy windows all trace to DRY sources
-- **Inverse-edit guidance**: "to change approval requirements in production, edit `operations-prod.yaml` actions.verify section"
+**LIVE** is what actually executes within ConfigHub's decision engine.
+
+| File | Owner | What it controls |
+|------|-------|-----------------|
+| `operations.yaml` | Platform | Action types (dry-run, policy-check, apply), commit trigger |
+| `operations-prod.yaml` | Platform | Prod overlay — approval count, deploy window |
+| `platform/lifecycle-policy.yaml` | Platform | Required actions, sequence, approvals, windows, break-glass |
+
+## Try it
 
 ```bash
-# Discover
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Detect ConfigHub Actions lifecycle
 ./cub-gen gitops discover --space platform --json ./examples/confighub-actions
 
 # Import with provenance
@@ -35,100 +63,90 @@ The `ops-workflow` generator detects ConfigHub Actions the same way it detects a
   | jq '{profile: .discovered[0].generator_profile, dry_inputs}'
 ```
 
-## 4. How do I run it?
+cub-gen detects `operations.yaml` and classifies it as `ops-workflow` — the
+same generator used for [`ops-workflow`](../ops-workflow/). The ConfigHub
+Actions lifecycle is just a specific workflow shape.
 
-```bash
-# Build
-go build -o ./cub-gen ./cmd/cub-gen
+## Real-world scenario: tightening production approvals
 
-# Discover
-./cub-gen gitops discover --space platform ./examples/confighub-actions
+**Who**: A platform team managing 30 microservices through ConfigHub. The
+security team requires three approvals for production deploys (up from two).
 
-# Import with provenance
-./cub-gen gitops import --space platform --json ./examples/confighub-actions ./examples/confighub-actions
-
-# Full bridge flow
-./cub-gen publish --space platform ./examples/confighub-actions ./examples/confighub-actions > /tmp/actions-bundle.json
-./cub-gen verify --in /tmp/actions-bundle.json
-./cub-gen attest --in /tmp/actions-bundle.json --verifier ci-bot > /tmp/actions-attestation.json
-./cub-gen verify-attestation --in /tmp/actions-attestation.json --bundle /tmp/actions-bundle.json
-
-# Cleanup
-./cub-gen gitops cleanup --space platform ./examples/confighub-actions
-```
-
-## 5. Real-world example using ConfigHub
-
-A platform team manages 30 microservices through ConfigHub. Every release follows the same lifecycle: plan → verify → deploy. The lifecycle itself is governed configuration.
-
-**Scenario: Tightening production approval requirements**
-
-The security team requires three approvals for production deploys (up from two). The platform team edits `operations-prod.yaml`:
+### The change
 
 ```yaml
+# operations-prod.yaml — tighten approvals
 actions:
   verify:
     approvals:
       required: 3   # was 2
-  deploy:
-    window: business-hours
 ```
 
-**Governed pipeline:**
+### Governed pipeline — governance governs itself
 
 ```bash
-# 1. cub-gen detects the policy change
+# cub-gen detects the approval threshold change
 ./cub-gen gitops import --space platform --json ./examples/confighub-actions ./examples/confighub-actions
-# Field-origin: actions.verify.approvals.required changed in operations-prod.yaml
 
-# 2. Produce evidence chain
+# Evidence chain
 ./cub-gen publish --space platform ./examples/confighub-actions ./examples/confighub-actions > bundle.json
 ./cub-gen verify --in bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
-# 3. ConfigHub ingests — governance governs itself
+# Bridge to ConfigHub — the lifecycle change is itself governed
 ./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by security-lead --reason "SOC2 compliance: 3 approvals for prod"
 ```
 
-**The recursive governance loop:**
-1. ConfigHub Actions define the lifecycle (plan → verify → deploy)
-2. Changes to the lifecycle definition are *themselves* governed through ConfigHub
-3. The decision engine evaluates the lifecycle change using the current lifecycle rules
-4. Every change to governance policy has the same provenance and attestation as every app change
+The recursive loop: ConfigHub Actions define the lifecycle (plan → verify →
+deploy). Changes to the lifecycle are *themselves* governed through ConfigHub.
+The decision engine evaluates the lifecycle change using the current rules.
 
-This is not circular — it's the same governance model applied at every level. The lifecycle definition is configuration; configuration gets governed.
+### Break-glass: emergency override
 
-## The action lifecycle
+During an incident, the platform owner can bypass approval thresholds and
+deploy windows:
 
+```yaml
+# platform/lifecycle-policy.yaml — break-glass section
+emergency_override:
+  enabled: true
+  requires: [platform-owner, justification, incident-ticket]
+  bypasses: [approval_thresholds, deploy_windows]
+  post_actions: [notify-security-lead, create-incident, require-retrospective]
 ```
-Commit lands
-    │
-    ▼
-plan (dry-run)
-    │  What would change? Show the diff.
-    ▼
-verify (policy-check)
-    │  Do the changes pass platform policies?
-    │  In prod: requires N approvals.
-    ▼
-deploy (apply)
-    │  Apply the change with attestation.
-    │  In prod: restricted to business hours.
-    ▼
-Decision recorded in ConfigHub
-```
+
+The override requires a platform-owner, a justification, and an incident ticket.
+After the emergency, mandatory post-actions ensure a security notification,
+incident record, and retrospective.
+
+## How it works
+
+This example uses the `ops-workflow` generator — the same generator used by
+[`ops-workflow`](../ops-workflow/). What makes it distinctive:
+
+1. **Lifecycle-specific policy** — the `LifecyclePolicy` kind defines required
+   actions (dry-run, policy-check), action sequencing, approval thresholds,
+   deploy windows, trigger policies, and break-glass overrides
+2. **Recursive governance** — changes to governance rules are governed by the
+   same rules
+3. **Break-glass path** — emergency overrides are explicit, audited, and require
+   post-incident actions
 
 ## Key files
 
 | File | Owner | Purpose |
 |------|-------|---------|
-| `operations.yaml` | Platform team | DRY intent — action types (dry-run, policy-check, apply), commit trigger |
-| `operations-prod.yaml` | Platform team | Production overlay — approval count, deploy window |
+| `operations.yaml` | Platform | Action types — dry-run, policy-check, apply |
+| `operations-prod.yaml` | Platform | Prod overlay — approval count, deploy window |
+| `platform/lifecycle-policy.yaml` | Platform | Required actions, sequence, approvals, break-glass |
 
-## Related examples
+## Next steps
 
-- [`ops-workflow`](../ops-workflow/) — Scheduled maintenance workflows. Same operations model, different trigger pattern (cron vs commit).
-- [`swamp-automation`](../swamp-automation/) — Swamp AI workflow automation. Same governance, different execution engine.
+- **Operations workflows**: [`ops-workflow`](../ops-workflow/) — scheduled
+  maintenance workflows with the same governance model
+- **AI workflow governance**: [`swamp-automation`](../swamp-automation/) —
+  AI-agent-driven workflows
+- **E2E demo**: `../demo/ai-work-platform/scenario-3-confighub-actions.sh`

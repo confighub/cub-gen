@@ -1,153 +1,157 @@
-# AI Ops PaaS
+# AI Ops PaaS — Self-Service AI Fleet Platform
 
-**An internal Heroku for AI agent fleets — governed, auditable, self-service.**
+An internal Heroku for AI agent fleets — governed, auditable, self-service.
 
-This example shows how a platform team can offer self-service AI agent fleet
-provisioning using the c3agent generator with full DRY/WET governance.
+Your platform team wants to offer AI agent fleet provisioning as a service.
+Teams author 30 lines of YAML describing their fleet (model, concurrency,
+budget, credentials). The platform transforms this into 11 governed Kubernetes
+resources with full provenance, constraint enforcement, and inverse-edit
+guidance.
 
-## What this demonstrates
+This is the full platform version of the c3agent story. For the standalone
+fleet config (without registry and constraints), see [`c3agent`](../c3agent/).
 
-A team wants to run a fleet of Claude Code agents for automated ML code review.
-Instead of hand-writing Kubernetes manifests, they author a short DRY config
-(`c3agent.yaml`). The platform's c3agent generator transforms this into 11
-governed Kubernetes resources with full provenance.
+## What you get
 
-```
-c3agent.yaml (DRY intent)
-    |
-    v
-c3agent generator (detect -> import)
-    |
-    v
-11 WET targets: Deployment x2, Service x2, ConfigMap x2, Secret,
-                 PVC, ServiceAccount, ClusterRole, ClusterRoleBinding
-    |
-    v
-Each target has: field-origin confidence, inverse edit hints,
-                 rendered lineage template, provenance digest
-```
+- **Self-service provisioning**: teams author `c3agent.yaml`, platform provides
+  everything else — Deployments, Services, ConfigMaps, Secrets, PVC, RBAC
+- **Constraint enforcement**: approved models only, budget ceilings per tier,
+  minimum replicas for production, no plaintext secrets
+- **Framework registry**: 7 typed operations that an IDP portal can use to
+  render self-service forms
+- **30 lines → 11 targets**: minimal DRY input produces a complete governed
+  Kubernetes footprint
 
-## Pattern 5: Ops Apps
-
-This follows the Ops Apps authoring pattern from the ConfigHub design:
-
-- **DRY input:** Fleet config authored by the team (`c3agent.yaml`)
-- **Generator:** c3agent (auto-detected from `service: c3agent`)
-- **WET output:** Governed Kubernetes manifests with provenance
-- **Value:** Operations become config — diffable, governed, attested
-
-The key distinction from app scaffolding (Pattern 2): these operations manage
-*operational infrastructure* (agent fleets, control planes, RBAC), not
-application code. Governance is mandatory at this level because AI agents
-authoring changes at velocity makes ungoverned execution an incident factory.
-
-## Files
+## How AI Ops maps to DRY / WET / LIVE
 
 ```
-ai-ops-paas/
-  c3agent.yaml            DRY base config (team-authored intent)
-  c3agent-prod.yaml       Production overlay (platform-enforced)
-  agent/
-    run.sh                Agent workload entry point (the "app")
-  platform/
-    registry.yaml         FrameworkRegistry — operations the platform offers (illustrative)
-    constraints.yaml      Platform policy guardrails (illustrative)
-  demo.sh                 Run the full detect -> import -> explain demo
-  README.md               This file
+  YOU EDIT (DRY)                    cub-gen TRACES (WET)              RECONCILER (LIVE)
+┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
+│ c3agent.yaml        │          │ Deployment x2        │         │ Agent fleet      │
+│ c3agent-prod.yaml   │──import─▶│ Service x2           │──sync──▶│ Control plane    │
+│ platform/           │          │ ConfigMap x2         │         │ Gateway          │
+│   registry.yaml     │          │ Secret, PVC          │         │ Task execution   │
+│   constraints.yaml  │          │ RBAC (SA, CR, CRB)   │         │                 │
+└─────────────────────┘          └──────────────────────┘         └─────────────────┘
+  Team: fleet config.              11 governed K8s resources          What's actually
+  Platform: registry + constraints. with field provenance.            orchestrating.
 ```
 
-### DRY files (runtime)
+**DRY** is what the team authors: `c3agent.yaml` defines the fleet config —
+model, concurrency, budget, components, storage, credentials. The platform
+provides `registry.yaml` (typed operations) and `constraints.yaml` (guardrails).
 
-- `c3agent.yaml` — Base fleet config. Detected as c3agent by structural matching
-  (`service: c3agent` + `apiVersion: c3agent/v1`). This is what a team authors.
-- `c3agent-prod.yaml` — Production overlay with HA replicas, higher concurrency,
-  larger storage, separate credential refs.
+**WET** is what cub-gen traces: 11 Kubernetes resources, each with field-origin
+confidence, inverse-edit hints, and provenance digest.
 
-### Platform specs (illustrative)
+**LIVE** is the running agent fleet on Kubernetes.
 
-- `platform/registry.yaml` — A FrameworkRegistry defining 7 typed operations
-  (configureFleet, deployControlPlane, deployGateway, configureAgentRuntime,
-  bindCredentials, provisionStorage, grantJobPermissions). Each operation has
-  typed inputs, resource outputs, constraints, and validation rules. This is
-  what an IDP portal would use to render self-service forms.
+| DRY Section | WET Targets | What it governs |
+|-------------|-------------|-----------------|
+| `fleet.*` | ConfigMap (fleet-config) | Model, concurrency, schedule |
+| `components.controlplane.*` | Deployment, Service | Control plane pods + ports |
+| `components.gateway.*` | Deployment, Service | Gateway pods + ports |
+| `agent_runtime.*` | ConfigMap (agent-template) | Budget, image, paths |
+| `credentials.*` | Secret | API keys, tokens, DB URL |
+| `storage.*` | PersistentVolumeClaim | Task data volume |
+| (implicit) | ServiceAccount, ClusterRole, CRB | RBAC for agent workloads |
 
-- `platform/constraints.yaml` — Platform guardrails: approved models, approved
-  registries, budget ceilings, HA requirements, secret hygiene, RBAC policy.
-
-These specs are *illustrative* — they show what the platform offers as a
-contract. In ConfigHub, they become governance objects. In `cub-gen` today,
-the Go registry is the runtime source of truth.
-
-### Workload
-
-- `agent/run.sh` — The agent workload entry point. In production, this runs
-  Claude Code with task parameters from the control plane.
-
-## Running the demo
+## Try it
 
 ```bash
-# From repo root
 go build -o ./cub-gen ./cmd/cub-gen
 
-# Option 1: Run the demo script
-./examples/ai-ops-paas/demo.sh
-
-# Option 2: Run commands individually
-
-# Discover — finds c3agent generator with 0.92 confidence
+# Discover — finds c3agent generator
 ./cub-gen gitops discover --space ai-ops --json ./examples/ai-ops-paas
 
-# Import — produces DRY/WET with provenance
+# Import — traces 30 DRY lines to 11 WET targets
 ./cub-gen gitops import --space ai-ops --json ./examples/ai-ops-paas ./examples/ai-ops-paas
 
-# See the full c3agent triple
+# See the full c3agent generator triple
 ./cub-gen generators --json --details | jq '.families[] | select(.kind == "c3agent")'
 ```
 
-## What the generator produces
+## Real-world scenario: onboarding a new ML review fleet
 
-The c3agent generator maps DRY sections to WET targets:
+**Who**: An ML team wants an agent fleet for automated code review. The platform
+team provides self-service provisioning with guardrails.
 
-| DRY Section | WET Targets | Inverse Key |
-|---|---|---|
-| `fleet.*` | ConfigMap (fleet-config) | fleet_config |
-| `components.controlplane.*` | Deployment, Service | component_ports |
-| `components.gateway.*` | Deployment, Service | component_ports |
-| `agent_runtime.*` | ConfigMap (agent-template) | agent_runtime |
-| `credentials.*` | Secret | credentials |
-| `storage.*` | PersistentVolumeClaim | storage |
-| (implicit) | ServiceAccount, ClusterRole, ClusterRoleBinding | rbac |
+### Step 1 — Team authors fleet config
 
-Each WET target includes:
-- **Field-origin confidence** (0.85-0.95) — how certain we are about DRY→WET mapping
-- **Inverse edit hints** — "to change X in prod, edit Y in fleet-prod.yaml"
-- **Rendered lineage template** — provenance digest linking output to input
+```yaml
+# c3agent.yaml — 30 lines of DRY intent
+service: c3agent
+apiVersion: c3agent/v1
+fleet:
+  name: ml-review-fleet
+  max_concurrent_tasks: 3
+  agent_model: claude-sonnet-4-20250514
+agent_runtime:
+  image: ghcr.io/acme-corp/ai-ops-agent:0.3.1
+  max_budget_usd: 8.0
+```
 
-## The PaaS value proposition
+### Step 2 — Platform validates against constraints
 
-Without this platform:
-- Teams hand-write ~11 Kubernetes manifests per fleet
-- No standard structure — every team reinvents RBAC, storage, secrets
-- Prod config drifts from intent with no audit trail
-- AI agent budget and model changes are invisible
+```bash
+# Import with constraint validation
+./cub-gen gitops import --space ai-ops --json ./examples/ai-ops-paas ./examples/ai-ops-paas
 
-With this platform:
-- Teams author 30 lines of YAML (c3agent.yaml)
-- Platform enforces constraints (approved models, budget caps, HA requirements)
-- Every field traces back to DRY intent with provenance
-- Inverse hints tell teams exactly what to edit and where
+# Evidence chain
+./cub-gen publish --space ai-ops ./examples/ai-ops-paas ./examples/ai-ops-paas > bundle.json
+./cub-gen verify --in bundle.json
+./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
-This is the "internal Heroku that doesn't hide the output" — teams get
-self-service, platform gets governance, and everything is in Git.
+# Bridge to ConfigHub
+./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+./cub-gen bridge decision create --ingest ingest.json > decision.json
+./cub-gen bridge decision apply --decision decision.json --state ALLOW \
+  --approved-by platform-owner --reason "ML review fleet approved"
+```
 
-## Pricing boundary
+The platform's constraints check:
+- **approved-models-only**: is `claude-sonnet-4-20250514` in the approved list? → yes
+- **approved-registries-only**: is `ghcr.io/*` the only image source? → yes
+- **budget-ceiling-per-tier**: is $8.00 within the budget ceiling? → yes (ESCALATE if over)
+- **no-plaintext-secrets**: are all credentials reference-only? → yes
 
-This demo shows both sides of the ConfigHub pricing boundary:
+All constraints pass → **ALLOW**.
 
-| Side | What | Free/Paid |
-|---|---|---|
-| **DRY** | c3agent.yaml, c3agent-prod.yaml, generator detection | Free (OSS, cub-gen) |
-| **WET** | Units with provenance, cross-env queries, policy gates | Paid (ConfigHub) |
+## How it works — the platform layer
 
-The generator boundary IS the pricing boundary. DRY authoring drives adoption.
-WET governance drives revenue.
+What distinguishes `ai-ops-paas` from the standalone [`c3agent`](../c3agent/)
+is the platform layer:
+
+### FrameworkRegistry (`platform/registry.yaml`)
+
+Defines 7 typed operations the platform offers as self-service:
+`configureFleet`, `deployControlPlane`, `deployGateway`, `configureAgentRuntime`,
+`bindCredentials`, `provisionStorage`, `grantJobPermissions`.
+
+Each operation has typed inputs (JSON Schema), resource outputs, constraints,
+and validation rules. An IDP portal can render self-service forms from this.
+
+### ConstraintSet (`platform/constraints.yaml`)
+
+Platform guardrails with enforcement levels:
+- **BLOCK**: approved models only, approved registries, no plaintext secrets,
+  min 2 replicas in prod, least-privilege RBAC
+- **ESCALATE**: budget ceiling per tier, prod credentials separate from dev
+
+## Key files
+
+| File | Owner | Purpose |
+|------|-------|---------|
+| `c3agent.yaml` | Team | Fleet config — model, concurrency, budget |
+| `c3agent-prod.yaml` | Team | Prod overlay — HA, budget, credentials |
+| `platform/registry.yaml` | Platform | Typed operations for IDP self-service |
+| `platform/constraints.yaml` | Platform | Guardrails — models, budget, HA, secrets |
+| `agent/run.sh` | Team | Agent workload entry point |
+
+## Next steps
+
+- **Standalone fleet config**: [`c3agent`](../c3agent/) — minimal version
+  without registry and constraints
+- **AI workflow governance**: [`swamp-automation`](../swamp-automation/) —
+  DAG workflows with model binding governance
+- **E2E demo**: `../demo/ai-work-platform/scenario-1-c3agent.sh`

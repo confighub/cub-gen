@@ -26,5 +26,17 @@ spec:
               value: "{{ .Values.appConfig.logLevel }}"
             - name: FEATURE_FAST_CHECKOUT
               value: "{{ .Values.appConfig.featureFlags.fastCheckout }}"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

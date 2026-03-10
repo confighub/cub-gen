@@ -1,0 +1,11 @@
+# Production overlay for Score workload.
+# Overrides base score.yaml values for the production environment.
+apiVersion: score.dev/v1b1
+metadata:
+  name: checkout-api
+containers:
+  main:
+    image: ghcr.io/example/checkout-api:v2.1.0
+    variables:
+      LOG_LEVEL: warn
+      NODE_ENV: production

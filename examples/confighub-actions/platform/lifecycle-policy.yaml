@@ -1,3 +1,7 @@
+# NOTE: This policy is illustrative. ConfigHub's decision engine evaluates
+# these constraints server-side. cub-gen reads them for field-origin tracing
+# and documentation but does not enforce them at import time.
+
 apiVersion: confighub.io/v1
 kind: LifecyclePolicy
 metadata:
@@ -31,3 +35,8 @@ spec:
     blocked_triggers:
       - schedule
       reason: "Lifecycle actions should be event-driven, not scheduled"
+  emergency_override:
+    enabled: true
+    requires: [platform-owner, justification, incident-ticket]
+    bypasses: [approval_thresholds, deploy_windows]
+    post_actions: [notify-security-lead, create-incident, require-retrospective]

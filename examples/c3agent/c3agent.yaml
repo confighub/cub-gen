@@ -6,7 +6,7 @@ fleet:
   agent_model: claude-sonnet-4-20250514
   schedule_interval_secs: 5
 agent_runtime:
-  image: ghcr.io/confighubai/c3agent:latest
+  image: ghcr.io/confighubai/c3agent:0.3.1
   max_budget_usd: 5.0
   repo_cache_dir: /data/repos
   session_dir: /data/claude

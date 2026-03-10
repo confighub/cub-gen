@@ -1,0 +1,8 @@
+# Production overlay for Backstage catalog entity.
+# Overrides lifecycle to production for promoted services.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: payments-service
+spec:
+  lifecycle: production
