@@ -1,142 +1,110 @@
 # Examples — Governed Config for Every Stack
 
-You already have a deployment pipeline. Git, Helm, Flux, Argo, Spring Boot, Score —
-whatever you use to get code running in production. That pipeline works.
+You already have a deployment pipeline: Git, Helm, Flux, Argo, Spring Boot, Score, or internal workflows.
 
-What it can't answer: *who changed this field, what generator produced it,
-why was it allowed, and what would break if I change it back?*
+`cub-gen` adds the missing answers:
 
-**cub-gen** is a local CLI that scans your existing repo, classifies every config
-file by owner and purpose, and produces a traceable evidence chain — without
-changing your workflow.
+- who changed this field,
+- what source produced this deployed value,
+- who owns it,
+- what file to edit safely.
 
-Each example in this directory is a complete, runnable scenario for a specific
-technology stack. Pick the one closest to your world and try it.
+Each example in this directory is runnable and maps to a real platform/app pattern.
 
-## What is cub-gen?
+## What `cub-gen` does
 
-`cub-gen` is a deterministic, Git-native generator importer. It reads your
-existing config files (Helm charts, Spring Boot properties, Score workloads,
-AI agent fleet configs, operational workflows) and produces:
+`cub-gen` is a deterministic, Git-native generator importer. It reads existing config and emits:
 
-1. **Generator detection** — recognizes what kind of project you have
-2. **DRY/WET classification** — separates human-authored intent (DRY) from
-   rendered deployment artifacts (WET)
-3. **Field-origin tracing** — maps every deployed field back to its source file,
-   line, and owner
-4. **Inverse-edit guidance** — tells you *where to edit* to change a deployed value
-5. **Evidence bundles** — publish, verify, and attest changes for governance
+1. generator detection (what type of project this is),
+2. DRY/WET classification (authoring intent vs rendered targets),
+3. field-origin tracing (WET field -> DRY source path),
+4. inverse-edit guidance (where to edit),
+5. evidence bundles (`publish`, `verify`, `attest`).
 
-It runs locally. No server required. No vendor lock-in at the CLI layer.
-When you're ready for cross-repo queries, policy evaluation, and governed
-decisions, connect to [ConfigHub](https://confighub.com).
+## Run modes
 
-## How DRY → WET → LIVE works
+## Local mode (fastest, no login required)
 
-```
- YOU EDIT (DRY)              cub-gen TRACES (WET)           RECONCILER DEPLOYS (LIVE)
-┌──────────────┐           ┌───────────────────┐          ┌──────────────────┐
-│ values.yaml  │──detect──▶│ Deployment.yaml   │──Flux───▶│ Running pod      │
-│ score.yaml   │  import   │ Service.yaml      │  Argo    │ Live config      │
-│ app.yaml     │  publish  │ ConfigMap.yaml     │          │ Cluster state    │
-│ c3agent.yaml │           │ HelmRelease.yaml  │          │                  │
-└──────────────┘           └───────────────────┘          └──────────────────┘
-       │                          │                              │
-   Your files.               What generators               What's actually
-   You own these.            produce from them.             running.
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+./examples/demo/run-all-modules.sh
+./examples/demo/run-all-confighub-lifecycles.sh
 ```
 
-- **DRY** = the files you edit in Git. Human-authored intent.
-- **WET** = rendered manifests that generators produce from DRY. Machine-readable,
-  queryable, governable.
-- **LIVE** = what's actually running in your cluster. Reconciled by Flux/Argo.
+## Connected mode (ConfigHub)
 
-cub-gen works at the DRY→WET boundary. It doesn't replace your reconciler — it
-makes the link between "what you wrote" and "what got deployed" explicit and
-traceable.
+```bash
+cub auth login
+TOKEN="$(cub auth get-token)"
+BASE_URL="https://confighub.example"
+
+./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
+./cub-gen verify --in /tmp/bundle.json
+./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
+./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN" > /tmp/ingest.json
+```
+
+Use local mode for first value. Use connected mode for centralized governance state and cross-repo visibility.
 
 ## Verifier identity
 
-When you run `cub-gen attest --verifier <name>`, the verifier name identifies
-*who or what* vouches for the evidence bundle. Common verifier identities:
+When you run `cub-gen attest --verifier <name>`, the verifier name records who/what attested the bundle.
 
 | Verifier | When to use |
 |----------|-------------|
-| `ci-bot` | CI pipeline attestation (GitHub Actions, GitLab CI, Jenkins) |
-| `platform-lead` | Human platform engineer sign-off |
-| `security-review` | Security team review attestation |
+| `ci-bot` | CI pipeline attestation |
+| `platform-lead` | Human platform sign-off |
+| `security-review` | Security approval |
 | `deploy-agent` | Automated deployment agent |
-
-The verifier is a string label — not a cryptographic identity (yet). It records
-*intent*: "this actor reviewed and approved this evidence bundle." Future versions
-will support signature-based verification.
 
 ## Pick your starting point
 
-### Platform + App patterns (Kubernetes workloads)
+## Platform + app patterns (Kubernetes workloads)
 
 | Example | You use... | cub-gen shows you... |
 |---------|-----------|---------------------|
 | [**helm-paas**](helm-paas/) | Helm charts + values overlays | Chart contract tracing, values ownership, ALLOW/BLOCK governance |
-| [**scoredev-paas**](scoredev-paas/) | Score.dev workload specs | Platform-agnostic DRY with full field-origin mapping |
-| [**springboot-paas**](springboot-paas/) | Spring Boot + application.yaml | Framework config ownership, datasource vs app-config boundaries |
+| [**scoredev-paas**](scoredev-paas/) | Score.dev workload specs | DRY intent with field-origin mapping |
+| [**springboot-paas**](springboot-paas/) | Spring Boot + `application.yaml` | App/platform ownership boundaries |
 
-### Integration patterns (external services + developer portals)
-
-| Example | You use... | cub-gen shows you... |
-|---------|-----------|---------------------|
-| [**backstage-idp**](backstage-idp/) | Backstage software catalog | Catalog entity governance with ownership standards |
-| [**just-apps-no-platform-config**](just-apps-no-platform-config/) | SaaS provider config (Ably, etc.) | App-only config without platform layer — simplest possible example |
-
-### AI + automation patterns
+## Integration patterns (external services + developer portals)
 
 | Example | You use... | cub-gen shows you... |
 |---------|-----------|---------------------|
-| [**c3agent**](c3agent/) | AI agent fleets (Claude, GPT) | Fleet config governance, model policy, token budgets |
-| [**ai-ops-paas**](ai-ops-paas/) | Full AI platform with registry + constraints | Enterprise AI fleet with constraint enforcement |
-| [**swamp-automation**](swamp-automation/) | Swamp AI workflow orchestration | DAG workflows with model binding governance |
-| [**swamp-project**](swamp-project/) | Helm chart for AI runtime | Helm-based Swamp deployment with model gateway policy |
+| [**backstage-idp**](backstage-idp/) | Backstage software catalog | Catalog governance with ownership standards |
+| [**just-apps-no-platform-config**](just-apps-no-platform-config/) | SaaS provider config | App-only config governance without platform layer |
 
-### Operations patterns
+## AI + automation patterns
 
 | Example | You use... | cub-gen shows you... |
 |---------|-----------|---------------------|
-| [**ops-workflow**](ops-workflow/) | Scheduled maintenance + rollouts | Execution policy, approval gates, deploy windows |
-| [**confighub-actions**](confighub-actions/) | ConfigHub lifecycle automation | Recursive governance — ConfigHub governing itself |
+| [**c3agent**](c3agent/) | AI agent fleets | Fleet config governance, model policy, budget controls |
+| [**ai-ops-paas**](ai-ops-paas/) | Full AI platform + constraints | Registry + constraints + governed lifecycle |
+| [**swamp-automation**](swamp-automation/) | Swamp workflow orchestration | DAG/model binding governance |
+| [**swamp-project**](swamp-project/) | Helm chart for AI runtime | Helm-based runtime policy mapping |
 
-### Infrastructure
+## Operations patterns
+
+| Example | You use... | cub-gen shows you... |
+|---------|-----------|---------------------|
+| [**ops-workflow**](ops-workflow/) | Scheduled maintenance workflows | Approval and execution policy mapping |
+| [**confighub-actions**](confighub-actions/) | ConfigHub lifecycle automation | Recursive governance (ConfigHub governing itself) |
+
+## Infrastructure
 
 | Example | Purpose |
 |---------|---------|
-| [**live-reconcile**](live-reconcile/) | Flux e2e test fixture — proves WET→LIVE reconciliation |
-| [**demo**](demo/) | Runnable demo scripts for all examples |
+| [**live-reconcile**](live-reconcile/) | Flux e2e fixture proving WET->LIVE reconciliation |
+| [**demo**](demo/) | Runnable demo script index |
 
-## Quick start
+## How to read each example
 
-```bash
-# Build once
-go build -o ./cub-gen ./cmd/cub-gen
+Every example README should answer:
 
-# Pick any example — here's helm-paas
-./cub-gen gitops discover --space platform ./examples/helm-paas
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas
+1. What scenario it models.
+2. Who owns which fields.
+3. How to run local mode.
+4. How to run connected mode.
+5. What proof artifacts to inspect.
 
-# Full evidence chain (works with any example)
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
-./cub-gen verify --in bundle.json
-./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
-./cub-gen verify-attestation --in attestation.json --bundle bundle.json
-
-# Bridge to ConfigHub (governance decisions)
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
-./cub-gen bridge decision create --ingest ingest.json > decision.json
-./cub-gen bridge decision apply --decision decision.json --state ALLOW \
-  --approved-by platform-lead --reason "reviewed and approved"
-```
-
-## Next steps
-
-- **Run the E2E demo**: `./examples/demo/run-all-modules.sh`
-- **Try the AI work platform demos**: `./examples/demo/ai-work-platform/run-all.sh`
-- **Read the design docs**: `docs/agentic-gitops/`
-- **Contribute a new generator**: see [CONTRIBUTING.md](../CONTRIBUTING.md)
+For acceptance criteria across examples, see [Example Checklist](../docs/workflows/example-checklist.md).
