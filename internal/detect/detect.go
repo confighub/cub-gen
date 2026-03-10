@@ -52,7 +52,7 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 	if err != nil {
 		return model.DetectionResult{}, err
 	}
-	ablyDetections, err := detectAbly(absRepo)
+	noConfigPlatformDetections, err := detectNoConfigPlatform(absRepo)
 	if err != nil {
 		return model.DetectionResult{}, err
 	}
@@ -72,7 +72,7 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 	all := append(helmDetections, scoreDetections...)
 	all = append(all, springDetections...)
 	all = append(all, backstageDetections...)
-	all = append(all, ablyDetections...)
+	all = append(all, noConfigPlatformDetections...)
 	all = append(all, opsDetections...)
 	all = append(all, c3agentDetections...)
 	all = append(all, swampDetections...)
@@ -361,7 +361,7 @@ func detectBackstage(repo string) ([]model.GeneratorDetection, error) {
 	return mapValuesSorted(detected), nil
 }
 
-func detectAbly(repo string) ([]model.GeneratorDetection, error) {
+func detectNoConfigPlatform(repo string) ([]model.GeneratorDetection, error) {
 	detected := make(map[string]model.GeneratorDetection)
 	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
@@ -374,7 +374,7 @@ func detectAbly(repo string) ([]model.GeneratorDetection, error) {
 			return nil
 		}
 		name := strings.ToLower(d.Name())
-		if name != "ably.yaml" && name != "ably.yml" && name != "ably.json" {
+		if name != "no-config-platform.yaml" && name != "no-config-platform.yml" && name != "no-config-platform.json" {
 			return nil
 		}
 
@@ -383,7 +383,7 @@ func detectAbly(repo string) ([]model.GeneratorDetection, error) {
 			return nil
 		}
 		content := strings.ToLower(string(b))
-		if !strings.Contains(content, "ably") {
+		if !strings.Contains(content, "service: no-config-platform") {
 			return nil
 		}
 
@@ -397,7 +397,11 @@ func detectAbly(repo string) ([]model.GeneratorDetection, error) {
 		}
 
 		inputs := []string{}
-		patterns := []string{"ably*.yaml", "ably*.yml", "ably*.json"}
+		patterns := []string{
+			"no-config-platform*.yaml",
+			"no-config-platform*.yml",
+			"no-config-platform*.json",
+		}
 		for _, pattern := range patterns {
 			matches, _ := filepath.Glob(filepath.Join(root, pattern))
 			for _, match := range matches {
@@ -417,10 +421,11 @@ func detectAbly(repo string) ([]model.GeneratorDetection, error) {
 			}
 		}
 
-		detected["ably:"+relRoot] = model.GeneratorDetection{
-			ID:         "gen_" + shortID("ably:"+filepath.ToSlash(relRoot)),
-			Kind:       model.GeneratorAbly,
-			Profile:    profileForKind(model.GeneratorAbly),
+		detectKey := string(model.GeneratorNoConfigPlatform) + ":" + relRoot
+		detected[detectKey] = model.GeneratorDetection{
+			ID:         "gen_" + shortID(detectKey),
+			Kind:       model.GeneratorNoConfigPlatform,
+			Profile:    profileForKind(model.GeneratorNoConfigPlatform),
 			Name:       filepath.Base(root),
 			Root:       filepath.ToSlash(relRoot),
 			Inputs:     inputs,
@@ -429,7 +434,7 @@ func detectAbly(repo string) ([]model.GeneratorDetection, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("detect ably: %w", err)
+		return nil, fmt.Errorf("detect no-config-platform: %w", err)
 	}
 	return mapValuesSorted(detected), nil
 }

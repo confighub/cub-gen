@@ -4,80 +4,14 @@ Total: 8
 
 | Kind | Profile | Resource Kind | Resource Type | Capabilities |
 | --- | --- | --- | --- | --- |
-| `ably` | `ably-config` | `ConfigMap` | `v1/ConfigMap` | app-config-only, provider-config, inverse-provider-config-patch |
 | `backstage` | `backstage-idp` | `Component` | `backstage.io/v1alpha1/Component` | catalog-metadata, render-manifests, inverse-catalog-patch |
 | `c3agent` | `c3agent` | `ConfigMap` | `v1/ConfigMap` | fleet-config, agent-orchestration, inverse-fleet-config-patch |
 | `helm` | `helm-paas` | `HelmRelease` | `helm.toolkit.fluxcd.io/v2/HelmRelease` | render-manifests, values-overrides, inverse-values-patch |
+| `no-config-platform` | `no-config-platform` | `ConfigMap` | `v1/ConfigMap` | app-config-only, provider-config, inverse-provider-config-patch |
 | `opsworkflow` | `ops-workflow` | `Workflow` | `argoproj.io/v1alpha1/Workflow` | workflow-plan, governed-execution-intent, inverse-workflow-patch |
 | `score` | `scoredev-paas` | `Application` | `argoproj.io/v1alpha1/Application` | render-manifests, workload-spec, inverse-score-patch |
 | `springboot` | `springboot-paas` | `Kustomization` | `kustomize.toolkit.fluxcd.io/v1/Kustomization` | render-app-config, profile-overrides, inverse-app-config-patch |
 | `swamp` | `swamp` | `Workflow` | `swamp.dev/v1/Workflow` | workflow-automation, model-orchestration, inverse-workflow-patch |
-
-## `ably`
-
-- Profile: `ably-config`
-- Resource: `ConfigMap` (`v1/ConfigMap`)
-- Capabilities: app-config-only, provider-config, inverse-provider-config-patch
-- Default input role: `provider-config`
-- Default owner: `app-team`
-- Field-origin transform: `ably-config-to-runtime`
-- Field-origin overlay transform: `ably-overlay-merge`
-
-### Input Role Rules
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `provider-config-base` | ably.yaml, ably.yml, ably.json | - | - |
-| `provider-config-overlay` | - | ably- | .yaml, .yml, .json |
-
-### Inverse Patch Templates
-| Key | Editable by | Confidence | Requires review |
-| --- | --- | --- | --- |
-| `channels` | `app-team` | 0.88 | `false` |
-| `environment` | `app-team` | 0.90 | `false` |
-
-### Inverse Pointer Templates
-| Key | Owner | Confidence |
-| --- | --- | --- |
-| `channels` | `app-team` | 0.88 |
-| `environment` | `app-team` | 0.90 |
-
-### Field Origin Confidences
-| Key | Confidence |
-| --- | --- |
-| `channels_base` | 0.88 |
-| `channels_overlay` | 0.84 |
-| `environment` | 0.90 |
-
-### Hint Defaults
-| Key | Value |
-| --- | --- |
-| `base_config_path` | `ably.yaml` |
-
-### Inverse Patch Reasons
-| Key | Reason |
-| --- | --- |
-| `channels` | Channel mapping is app-level runtime behavior. |
-| `environment` | Environment is sourced from {{base_config_path}}. |
-
-### Inverse Edit Hints
-| Key | Hint |
-| --- | --- |
-| `channels_base` | Edit channels.inbound in {{base_config_path}}. |
-| `channels_overlay` | Edit channels.inbound in {{overlay_config_path}} for environment-specific behavior; use {{base_config_path}} for defaults. |
-| `environment` | Edit app.environment in {{base_config_path}}. |
-
-### WET Targets
-| Kind | Name template | Owner | Namespace | Source DRY path template |
-| --- | --- | --- | --- | --- |
-| `ConfigMap` | `{{name}}-ably` | `platform-runtime` | `apps` | `app.environment` |
-| `Secret` | `{{name}}-ably-credentials` | `platform-runtime` | `apps` | `credentials.api_key_ref` |
-
-### Rendered Lineage Templates
-| Kind | Name template | Namespace | Source path hint | Hint fallback | Multi hint | Source DRY path template | Optional |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `ConfigMap` | `{{name}}-ably` | `apps` | `base_config_path` | `-` | `false` | `app.environment` | `false` |
-| `Secret` | `{{name}}-ably-credentials` | `apps` | `base_config_path` | `-` | `false` | `credentials.api_key_ref` | `false` |
-| `ConfigMap` | `{{name}}-ably` | `apps` | `overlay_config_path` | `-` | `false` | `channels.inbound` | `true` |
 
 ## `backstage`
 
@@ -322,6 +256,72 @@ Total: 8
 | `HelmRelease` | `{{name}}` | `apps` | `chart_path` | `-` | `false` | `Chart.yaml` | `false` |
 | `Deployment` | `{{name}}` | `apps` | `values_paths` | `chart_path` | `true` | `values.image.tag` | `false` |
 | `Service` | `{{name}}` | `apps` | `values_paths` | `chart_path` | `true` | `values.service.port` | `false` |
+
+## `no-config-platform`
+
+- Profile: `no-config-platform`
+- Resource: `ConfigMap` (`v1/ConfigMap`)
+- Capabilities: app-config-only, provider-config, inverse-provider-config-patch
+- Default input role: `provider-config`
+- Default owner: `app-team`
+- Field-origin transform: `no-config-platform-to-runtime`
+- Field-origin overlay transform: `no-config-platform-overlay-merge`
+
+### Input Role Rules
+| Role | Exact basenames | Prefixes | Extensions |
+| --- | --- | --- | --- |
+| `provider-config-base` | no-config-platform.yaml, no-config-platform.yml, no-config-platform.json | - | - |
+| `provider-config-overlay` | - | no-config-platform- | .yaml, .yml, .json |
+
+### Inverse Patch Templates
+| Key | Editable by | Confidence | Requires review |
+| --- | --- | --- | --- |
+| `channels` | `app-team` | 0.88 | `false` |
+| `environment` | `app-team` | 0.90 | `false` |
+
+### Inverse Pointer Templates
+| Key | Owner | Confidence |
+| --- | --- | --- |
+| `channels` | `app-team` | 0.88 |
+| `environment` | `app-team` | 0.90 |
+
+### Field Origin Confidences
+| Key | Confidence |
+| --- | --- |
+| `channels_base` | 0.88 |
+| `channels_overlay` | 0.84 |
+| `environment` | 0.90 |
+
+### Hint Defaults
+| Key | Value |
+| --- | --- |
+| `base_config_path` | `no-config-platform.yaml` |
+
+### Inverse Patch Reasons
+| Key | Reason |
+| --- | --- |
+| `channels` | Channel mapping is app-level runtime behavior. |
+| `environment` | Environment is sourced from {{base_config_path}}. |
+
+### Inverse Edit Hints
+| Key | Hint |
+| --- | --- |
+| `channels_base` | Edit channels.inbound in {{base_config_path}}. |
+| `channels_overlay` | Edit channels.inbound in {{overlay_config_path}} for environment-specific behavior; use {{base_config_path}} for defaults. |
+| `environment` | Edit app.environment in {{base_config_path}}. |
+
+### WET Targets
+| Kind | Name template | Owner | Namespace | Source DRY path template |
+| --- | --- | --- | --- | --- |
+| `ConfigMap` | `{{name}}-provider-config` | `platform-runtime` | `apps` | `app.environment` |
+| `Secret` | `{{name}}-provider-credentials` | `platform-runtime` | `apps` | `credentials.api_key_ref` |
+
+### Rendered Lineage Templates
+| Kind | Name template | Namespace | Source path hint | Hint fallback | Multi hint | Source DRY path template | Optional |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `ConfigMap` | `{{name}}-provider-config` | `apps` | `base_config_path` | `-` | `false` | `app.environment` | `false` |
+| `Secret` | `{{name}}-provider-credentials` | `apps` | `base_config_path` | `-` | `false` | `credentials.api_key_ref` | `false` |
+| `ConfigMap` | `{{name}}-provider-config` | `apps` | `overlay_config_path` | `-` | `false` | `channels.inbound` | `true` |
 
 ## `opsworkflow`
 

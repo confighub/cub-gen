@@ -3,123 +3,6 @@
   "families": [
     {
       "capabilities": [
-        "app-config-only",
-        "provider-config",
-        "inverse-provider-config-patch"
-      ],
-      "kind": "ably",
-      "policies": {
-        "default_input_role": "provider-config",
-        "default_owner": "app-team",
-        "field_origin_confidences": {
-          "channels_base": 0.88,
-          "channels_overlay": 0.84,
-          "environment": 0.9
-        },
-        "field_origin_overlay_transform": "ably-overlay-merge",
-        "field_origin_transform": "ably-config-to-runtime",
-        "hint_defaults": {
-          "base_config_path": "ably.yaml"
-        },
-        "input_role_rules": [
-          {
-            "exact_basenames": [
-              "ably.yaml",
-              "ably.yml",
-              "ably.json"
-            ],
-            "role": "provider-config-base"
-          },
-          {
-            "extensions": [
-              ".yaml",
-              ".yml",
-              ".json"
-            ],
-            "prefixes": [
-              "ably-"
-            ],
-            "role": "provider-config-overlay"
-          }
-        ],
-        "inverse_edit_hints": {
-          "channels_base": "Edit channels.inbound in {{base_config_path}}.",
-          "channels_overlay": "Edit channels.inbound in {{overlay_config_path}} for environment-specific behavior; use {{base_config_path}} for defaults.",
-          "environment": "Edit app.environment in {{base_config_path}}."
-        },
-        "inverse_patch_reasons": {
-          "channels": "Channel mapping is app-level runtime behavior.",
-          "environment": "Environment is sourced from {{base_config_path}}."
-        },
-        "inverse_patch_templates": {
-          "channels": {
-            "confidence": 0.88,
-            "editable_by": "app-team",
-            "requires_review": false
-          },
-          "environment": {
-            "confidence": 0.9,
-            "editable_by": "app-team",
-            "requires_review": false
-          }
-        },
-        "inverse_pointer_templates": {
-          "channels": {
-            "confidence": 0.88,
-            "owner": "app-team"
-          },
-          "environment": {
-            "confidence": 0.9,
-            "owner": "app-team"
-          }
-        },
-        "rendered_lineage_templates": [
-          {
-            "kind": "ConfigMap",
-            "name_template": "{{name}}-ably",
-            "namespace": "apps",
-            "source_dry_path_template": "app.environment",
-            "source_path_hint": "base_config_path"
-          },
-          {
-            "kind": "Secret",
-            "name_template": "{{name}}-ably-credentials",
-            "namespace": "apps",
-            "source_dry_path_template": "credentials.api_key_ref",
-            "source_path_hint": "base_config_path"
-          },
-          {
-            "kind": "ConfigMap",
-            "name_template": "{{name}}-ably",
-            "namespace": "apps",
-            "optional": true,
-            "source_dry_path_template": "channels.inbound",
-            "source_path_hint": "overlay_config_path"
-          }
-        ],
-        "wet_targets": [
-          {
-            "kind": "ConfigMap",
-            "name_template": "{{name}}-ably",
-            "namespace": "apps",
-            "owner": "platform-runtime",
-            "source_dry_path_template": "app.environment"
-          },
-          {
-            "kind": "Secret",
-            "name_template": "{{name}}-ably-credentials",
-            "namespace": "apps",
-            "owner": "platform-runtime",
-            "source_dry_path_template": "credentials.api_key_ref"
-          }
-        ]
-      },
-      "profile": "ably-config",
-      "resource_kind": "ConfigMap",
-      "resource_type": "v1/ConfigMap"
-    },
-    {
-      "capabilities": [
         "catalog-metadata",
         "render-manifests",
         "inverse-catalog-patch"
@@ -628,6 +511,123 @@
       "profile": "helm-paas",
       "resource_kind": "HelmRelease",
       "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease"
+    },
+    {
+      "capabilities": [
+        "app-config-only",
+        "provider-config",
+        "inverse-provider-config-patch"
+      ],
+      "kind": "no-config-platform",
+      "policies": {
+        "default_input_role": "provider-config",
+        "default_owner": "app-team",
+        "field_origin_confidences": {
+          "channels_base": 0.88,
+          "channels_overlay": 0.84,
+          "environment": 0.9
+        },
+        "field_origin_overlay_transform": "no-config-platform-overlay-merge",
+        "field_origin_transform": "no-config-platform-to-runtime",
+        "hint_defaults": {
+          "base_config_path": "no-config-platform.yaml"
+        },
+        "input_role_rules": [
+          {
+            "exact_basenames": [
+              "no-config-platform.yaml",
+              "no-config-platform.yml",
+              "no-config-platform.json"
+            ],
+            "role": "provider-config-base"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml",
+              ".json"
+            ],
+            "prefixes": [
+              "no-config-platform-"
+            ],
+            "role": "provider-config-overlay"
+          }
+        ],
+        "inverse_edit_hints": {
+          "channels_base": "Edit channels.inbound in {{base_config_path}}.",
+          "channels_overlay": "Edit channels.inbound in {{overlay_config_path}} for environment-specific behavior; use {{base_config_path}} for defaults.",
+          "environment": "Edit app.environment in {{base_config_path}}."
+        },
+        "inverse_patch_reasons": {
+          "channels": "Channel mapping is app-level runtime behavior.",
+          "environment": "Environment is sourced from {{base_config_path}}."
+        },
+        "inverse_patch_templates": {
+          "channels": {
+            "confidence": 0.88,
+            "editable_by": "app-team",
+            "requires_review": false
+          },
+          "environment": {
+            "confidence": 0.9,
+            "editable_by": "app-team",
+            "requires_review": false
+          }
+        },
+        "inverse_pointer_templates": {
+          "channels": {
+            "confidence": 0.88,
+            "owner": "app-team"
+          },
+          "environment": {
+            "confidence": 0.9,
+            "owner": "app-team"
+          }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-provider-config",
+            "namespace": "apps",
+            "source_dry_path_template": "app.environment",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "Secret",
+            "name_template": "{{name}}-provider-credentials",
+            "namespace": "apps",
+            "source_dry_path_template": "credentials.api_key_ref",
+            "source_path_hint": "base_config_path"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-provider-config",
+            "namespace": "apps",
+            "optional": true,
+            "source_dry_path_template": "channels.inbound",
+            "source_path_hint": "overlay_config_path"
+          }
+        ],
+        "wet_targets": [
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-provider-config",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "app.environment"
+          },
+          {
+            "kind": "Secret",
+            "name_template": "{{name}}-provider-credentials",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "credentials.api_key_ref"
+          }
+        ]
+      },
+      "profile": "no-config-platform",
+      "resource_kind": "ConfigMap",
+      "resource_type": "v1/ConfigMap"
     },
     {
       "capabilities": [

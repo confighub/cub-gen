@@ -13,8 +13,8 @@ just Kubernetes workloads.
 
 - **Field-origin tracing**: every channel, credential ref, and setting maps
   back to its source file and line
-- **Production overlay tracking**: `ably-prod.yaml` overrides are traced
-  separately from base `ably.yaml`
+- **Production overlay tracking**: `no-config-platform-prod.yaml` overrides are traced
+  separately from base `no-config-platform.yaml`
 - **Change bundles**: the same publish → verify → attest → bridge flow works
   here as it does for Helm or Spring Boot
 - **Future-proof**: when the platform team later adds channel naming policies
@@ -25,16 +25,16 @@ just Kubernetes workloads.
 ```
   YOU EDIT (DRY)                    cub-gen TRACES (WET)              PROVIDER (LIVE)
 ┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
-│ ably.yaml           │          │ ConfigMap            │         │ Provider channels│
-│ ably-prod.yaml      │──import─▶│ Provider config      │──API───▶│ Live messaging   │
+│ no-config-platform.yaml           │          │ ConfigMap            │         │ Provider channels│
+│ no-config-platform-prod.yaml      │──import─▶│ Provider config      │──API───▶│ Live messaging   │
 │ platform/ (empty)   │          │ with provenance      │         │ Prod settings    │
 └─────────────────────┘          └──────────────────────┘         └─────────────────┘
   App team: provider config.       Rendered config with              What's active
   No platform layer yet.           field-origin tracing.             in the provider.
 ```
 
-**DRY** is what the app team edits: `ably.yaml` declares channels, app identity,
-and credential references. `ably-prod.yaml` overrides for production.
+**DRY** is what the app team edits: `no-config-platform.yaml` declares channels, app identity,
+and credential references. `no-config-platform-prod.yaml` overrides for production.
 
 **WET** is what cub-gen produces: rendered provider config as a ConfigMap with
 every field traced back to its DRY source.
@@ -49,8 +49,8 @@ enforces them.
 
 | File | Owner | What it controls |
 |------|-------|-----------------|
-| `ably.yaml` | App team | Base config — channels, app identity, credential refs |
-| `ably-prod.yaml` | App team | Production overlay — prod channels, region settings |
+| `no-config-platform.yaml` | App team | Base config — channels, app identity, credential refs |
+| `no-config-platform-prod.yaml` | App team | Production overlay — prod channels, region settings |
 | `platform/.gitkeep` | — | Placeholder for future platform policies |
 
 ## If you already manage provider config directly
@@ -69,7 +69,7 @@ field origins, ownership boundaries, and evidence artifacts over plain app confi
 
 | Existing provider-config model | cub-gen concept | Why it matters |
 |------|------|------|
-| `ably*.yaml` | DRY app intent | Teams keep editing familiar provider config files. |
+| `no-config-platform*.yaml` | DRY app intent | Teams keep editing familiar provider config files. |
 | Rendered provider payloads | WET targets with provenance | Every live-impacting field can be traced back to source. |
 | Optional future `platform/` rules | Governance layer | You can add policy later without replacing authoring workflow. |
 | Provider sync/runtime | LIVE state | Runtime remains external; cub-gen focuses on safe config change flow. |
@@ -88,7 +88,7 @@ go build -o ./cub-gen ./cmd/cub-gen
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, provenance: .provenance[0].field_origin_map}'
 ```
 
-cub-gen detects `ably.yaml` as an `ably-config` provider source. Even without
+cub-gen detects `no-config-platform.yaml` as an `no-config-platform` provider source. Even without
 platform policies, the import traces every field and computes inverse-edit
 guidance.
 
@@ -100,7 +100,7 @@ order notifications.
 ### The change — new cancellation channel
 
 ```yaml
-# ably.yaml
+# no-config-platform.yaml
 channels:
   inbound: checkout.inbound
   outbound: checkout.outbound
@@ -138,24 +138,24 @@ a `{team}.{purpose}` naming convention, the same pipeline catches violations
 
 ## How it works
 
-cub-gen's `ably-config` generator detects `ably.yaml` containing a service
+cub-gen's `no-config-platform` generator detects `no-config-platform.yaml` containing a service
 identifier matching the provider-config pattern. On import:
 
-1. **Classifies inputs** — `ably.yaml` (role: provider-config-base),
-   `ably-prod.yaml` (role: provider-config-overlay)
+1. **Classifies inputs** — `no-config-platform.yaml` (role: provider-config-base),
+   `no-config-platform-prod.yaml` (role: provider-config-overlay)
 2. **Maps field origins** — channels, credential refs, and app identity all
    trace to their source file with ownership metadata
 3. **Handles empty platform** — the platform directory is recognized as empty;
    no contract validation occurs, but the governance pipeline still works
 4. **Emits inverse guidance** — "to change the outbound channel in production,
-   edit `ably-prod.yaml` channels section"
+   edit `no-config-platform-prod.yaml` channels section"
 
 ## Key files
 
 | File | Owner | Purpose |
 |------|-------|---------|
-| `ably.yaml` | App team | Provider config — channels, identity, credentials |
-| `ably-prod.yaml` | App team | Production overlay |
+| `no-config-platform.yaml` | App team | Provider config — channels, identity, credentials |
+| `no-config-platform-prod.yaml` | App team | Production overlay |
 | `platform/.gitkeep` | — | Future platform policies |
 
 ## Why this pattern matters

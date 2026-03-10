@@ -23,7 +23,7 @@ func TestImportRepoExamples(t *testing.T) {
 		{name: "scoredev-paas", repoDir: "scoredev-paas", expectedKind: model.GeneratorScore, expectedProfile: "scoredev-paas"},
 		{name: "springboot-paas", repoDir: "springboot-paas", expectedKind: model.GeneratorSpringBoot, expectedProfile: "springboot-paas"},
 		{name: "backstage-idp", repoDir: "backstage-idp", expectedKind: model.GeneratorBackstage, expectedProfile: "backstage-idp"},
-		{name: "just-apps-no-platform-config", repoDir: "just-apps-no-platform-config", expectedKind: model.GeneratorAbly, expectedProfile: "ably-config"},
+		{name: "just-apps-no-platform-config", repoDir: "just-apps-no-platform-config", expectedKind: model.GeneratorNoConfigPlatform, expectedProfile: "no-config-platform"},
 		{name: "ops-workflow", repoDir: "ops-workflow", expectedKind: model.GeneratorOpsFlow, expectedProfile: "ops-workflow"},
 		{name: "c3agent", repoDir: "c3agent", expectedKind: model.GeneratorC3Agent, expectedProfile: "c3agent"},
 		{name: "swamp-automation", repoDir: "swamp-automation", expectedKind: model.GeneratorSwamp, expectedProfile: "swamp"},
@@ -402,7 +402,7 @@ func TestImportRepoBackstageDryWetContract(t *testing.T) {
 	}
 }
 
-func TestImportRepoAblyDryWetContract(t *testing.T) {
+func TestImportRepoNoConfigPlatformDryWetContract(t *testing.T) {
 	repo := filepath.Join("..", "..", "examples", "just-apps-no-platform-config")
 	result, err := ImportRepo(repo, "main", "platform")
 	if err != nil {
@@ -423,10 +423,10 @@ func TestImportRepoAblyDryWetContract(t *testing.T) {
 		t.Fatalf("expected channels.inbound inverse pointer, got %+v", prov.InverseEditPointers)
 	}
 
-	if !dryInputHasRoleOwnerPath(result.DryInputs, "provider-config-base", "app-team", "ably.yaml") {
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "provider-config-base", "app-team", "no-config-platform.yaml") {
 		t.Fatalf("expected provider-config-base owner to be app-team, got %+v", result.DryInputs)
 	}
-	if !dryInputHasRoleOwnerPath(result.DryInputs, "provider-config-overlay", "app-team", "ably-prod.yaml") {
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "provider-config-overlay", "app-team", "no-config-platform-prod.yaml") {
 		t.Fatalf("expected provider-config-overlay owner to be app-team, got %+v", result.DryInputs)
 	}
 

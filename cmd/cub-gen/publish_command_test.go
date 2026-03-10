@@ -134,9 +134,9 @@ func TestPublishDirectTargetModeSupportedTargets(t *testing.T) {
 			expectedProfile: "backstage-idp",
 		},
 		{
-			name:            "ably",
-			target:          "ably",
-			expectedProfile: "ably-config",
+			name:            "no-config-platform",
+			target:          "no-config-platform",
+			expectedProfile: "no-config-platform",
 		},
 		{
 			name:            "ops",

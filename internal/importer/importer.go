@@ -315,8 +315,8 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Reason:         registry.InversePatchReason(g.Kind, "lifecycle", "Lifecycle changes impact platform ownership and support policy."),
 			},
 		}
-	case model.GeneratorAbly:
-		hints := ablyPathHintsFromInputs(g.Inputs)
+	case model.GeneratorNoConfigPlatform:
+		hints := noConfigPlatformPathHintsFromInputs(g.Inputs)
 		environmentPolicy := registry.InversePatchTemplateFor(g.Kind, "environment", registry.InversePatchTemplate{
 			EditableBy: "app-team", Confidence: 0.90, RequiresReview: false,
 		})
@@ -327,7 +327,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 			{
 				Operation:      "replace",
 				DryPath:        "app.environment",
-				WetPath:        "ConfigMap/data/ABLY_ENVIRONMENT",
+				WetPath:        "ConfigMap/data/PROVIDER_ENVIRONMENT",
 				EditableBy:     environmentPolicy.EditableBy,
 				Confidence:     environmentPolicy.Confidence,
 				RequiresReview: environmentPolicy.RequiresReview,
@@ -339,7 +339,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 			{
 				Operation:      "replace",
 				DryPath:        "channels.inbound",
-				WetPath:        "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				WetPath:        "ConfigMap/data/PROVIDER_CHANNEL_INBOUND",
 				EditableBy:     channelsPolicy.EditableBy,
 				Confidence:     channelsPolicy.Confidence,
 				RequiresReview: channelsPolicy.RequiresReview,
@@ -607,19 +607,19 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "lifecycle", 0.82),
 			},
 		}
-	case model.GeneratorAbly:
-		hints := ablyPathHintsFromInputs(g.Inputs)
+	case model.GeneratorNoConfigPlatform:
+		hints := noConfigPlatformPathHintsFromInputs(g.Inputs)
 		origins := []model.FieldOrigin{
 			{
 				DryPath:    "app.environment",
-				WetPath:    "ConfigMap/data/ABLY_ENVIRONMENT",
+				WetPath:    "ConfigMap/data/PROVIDER_ENVIRONMENT",
 				SourcePath: hints.BaseConfigPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "environment", 0.90),
 			},
 			{
 				DryPath:    "channels.inbound",
-				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				WetPath:    "ConfigMap/data/PROVIDER_CHANNEL_INBOUND",
 				SourcePath: hints.BaseConfigPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "channels_base", 0.88),
@@ -628,7 +628,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 		if hints.OverlayConfigPath != "" {
 			origins = append(origins, model.FieldOrigin{
 				DryPath:    "channels.inbound",
-				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				WetPath:    "ConfigMap/data/PROVIDER_CHANNEL_INBOUND",
 				SourcePath: hints.OverlayConfigPath,
 				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "channels_overlay", 0.84),
@@ -934,8 +934,8 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				Confidence: lifecyclePolicy.Confidence,
 			},
 		}
-	case model.GeneratorAbly:
-		hints := ablyPathHintsFromInputs(g.Inputs)
+	case model.GeneratorNoConfigPlatform:
+		hints := noConfigPlatformPathHintsFromInputs(g.Inputs)
 		environmentPolicy := registry.InversePointerTemplateFor(g.Kind, "environment", registry.InversePointerTemplate{
 			Owner: "app-team", Confidence: 0.90,
 		})
@@ -954,14 +954,14 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 		}
 		return []model.InverseEditPointer{
 			{
-				WetPath:    "ConfigMap/data/ABLY_ENVIRONMENT",
+				WetPath:    "ConfigMap/data/PROVIDER_ENVIRONMENT",
 				DryPath:    "app.environment",
 				Owner:      environmentPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "environment", "Edit app.environment in {{base_config_path}}."), vars),
 				Confidence: environmentPolicy.Confidence,
 			},
 			{
-				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				WetPath:    "ConfigMap/data/PROVIDER_CHANNEL_INBOUND",
 				DryPath:    "channels.inbound",
 				Owner:      channelsPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, channelsHintKey, channelsHintFallback), vars),
@@ -1471,8 +1471,8 @@ func lineageTemplateContext(detection model.DetectionResult, g model.GeneratorDe
 	case model.GeneratorBackstage:
 		hints := backstagePathHintsFromInputs(g.Inputs)
 		singleHints["catalog_path"] = hints.CatalogPath
-	case model.GeneratorAbly:
-		hints := ablyPathHintsFromInputs(g.Inputs)
+	case model.GeneratorNoConfigPlatform:
+		hints := noConfigPlatformPathHintsFromInputs(g.Inputs)
 		singleHints["base_config_path"] = hints.BaseConfigPath
 		singleHints["overlay_config_path"] = hints.OverlayConfigPath
 	case model.GeneratorOpsFlow:
@@ -1576,22 +1576,22 @@ func backstagePathHintsFromInputs(inputs []string) backstageHints {
 	return h
 }
 
-type ablyHints struct {
+type noConfigPlatformHints struct {
 	BaseConfigPath    string
 	OverlayConfigPath string
 }
 
-func ablyPathHintsFromInputs(inputs []string) ablyHints {
-	h := ablyHints{
-		BaseConfigPath: registry.HintDefault(model.GeneratorAbly, "base_config_path", "ably.yaml"),
+func noConfigPlatformPathHintsFromInputs(inputs []string) noConfigPlatformHints {
+	h := noConfigPlatformHints{
+		BaseConfigPath: registry.HintDefault(model.GeneratorNoConfigPlatform, "base_config_path", "no-config-platform.yaml"),
 	}
 	for _, in := range inputs {
 		p := filepath.ToSlash(in)
 		base := strings.ToLower(filepath.Base(in))
 		switch {
-		case base == "ably.yaml" || base == "ably.yml" || base == "ably.json":
+		case base == "no-config-platform.yaml" || base == "no-config-platform.yml" || base == "no-config-platform.json":
 			h.BaseConfigPath = p
-		case strings.HasPrefix(base, "ably-"):
+		case strings.HasPrefix(base, "no-config-platform-"):
 			if h.OverlayConfigPath == "" || p < h.OverlayConfigPath {
 				h.OverlayConfigPath = p
 			}

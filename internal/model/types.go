@@ -7,7 +7,7 @@ const (
 	GeneratorScore      GeneratorKind = "score"
 	GeneratorSpringBoot GeneratorKind = "springboot"
 	GeneratorBackstage  GeneratorKind = "backstage"
-	GeneratorAbly       GeneratorKind = "ably"
+	GeneratorNoConfigPlatform       GeneratorKind = "no-config-platform"
 	GeneratorOpsFlow    GeneratorKind = "opsworkflow"
 	GeneratorC3Agent    GeneratorKind = "c3agent"
 	GeneratorSwamp      GeneratorKind = "swamp"

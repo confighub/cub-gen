@@ -1,19 +1,19 @@
-# ably Triple
+# no-config-platform Triple
 
-- Profile: `ably-config`
+- Profile: `no-config-platform`
 - Resource: `ConfigMap` (`v1/ConfigMap`)
 - Capabilities: app-config-only, provider-config, inverse-provider-config-patch
 
 ```mermaid
 flowchart LR
   subgraph DRY["DRY Inputs"]
-    d1["provider-config-base: ably.yaml, ably.yml, ably.json<br/>owner: app-team"]
-    d2["provider-config-overlay: ably-*.yaml | ably-*.yml | ably-*.json<br/>owner: app-team"]
+    d1["provider-config-base: no-config-platform.yaml, no-config-platform.yml, no-config-platform.json<br/>owner: app-team"]
+    d2["provider-config-overlay: no-config-platform-*.yaml | no-config-platform-*.yml | no-config-platform-*.json<br/>owner: app-team"]
   end
-  gen["ably (ably-config)<br/>capabilities: app-config-only, provider-config, inverse-provider-config-patch"]
+  gen["no-config-platform (no-config-platform)<br/>capabilities: app-config-only, provider-config, inverse-provider-config-patch"]
   subgraph WET["WET Targets"]
-    w1["ConfigMap {{name}}-ably<br/>owner: platform-runtime<br/>namespace: apps<br/>source: app.environment"]
-    w2["Secret {{name}}-ably-credentials<br/>owner: platform-runtime<br/>namespace: apps<br/>source: credentials.api_key_ref"]
+    w1["ConfigMap {{name}}-provider-config<br/>owner: platform-runtime<br/>namespace: apps<br/>source: app.environment"]
+    w2["Secret {{name}}-provider-credentials<br/>owner: platform-runtime<br/>namespace: apps<br/>source: credentials.api_key_ref"]
   end
   d1 --> gen
   d2 --> gen
@@ -30,8 +30,8 @@ flowchart LR
 
 | Role | Exact basenames | Prefixes | Extensions |
 | --- | --- | --- | --- |
-| `provider-config-base` | ably.yaml, ably.yml, ably.json | - | - |
-| `provider-config-overlay` | - | ably- | .yaml, .yml, .json |
+| `provider-config-base` | no-config-platform.yaml, no-config-platform.yml, no-config-platform.json | - | - |
+| `provider-config-overlay` | - | no-config-platform- | .yaml, .yml, .json |
 
 ### Role owners
 
@@ -42,20 +42,20 @@ flowchart LR
 
 | Role | Schema ref |
 | --- | --- |
-| `provider-config-base` | `https://schema.confighub.dev/generators/ably-config-v1` |
-| `provider-config-overlay` | `https://schema.confighub.dev/generators/ably-config-v1` |
+| `provider-config-base` | `https://schema.confighub.dev/generators/no-config-platform-v1` |
+| `provider-config-overlay` | `https://schema.confighub.dev/generators/no-config-platform-v1` |
 
 ### WET targets
 
 | Kind | Name template | Owner | Namespace | Source DRY path template |
 | --- | --- | --- | --- | --- |
-| `ConfigMap` | `{{name}}-ably` | `platform-runtime` | `apps` | `app.environment` |
-| `Secret` | `{{name}}-ably-credentials` | `platform-runtime` | `apps` | `credentials.api_key_ref` |
+| `ConfigMap` | `{{name}}-provider-config` | `platform-runtime` | `apps` | `app.environment` |
+| `Secret` | `{{name}}-provider-credentials` | `platform-runtime` | `apps` | `credentials.api_key_ref` |
 
 ## Provenance
 
-- Field-origin transform: `ably-config-to-runtime`
-- Field-origin overlay transform: `ably-overlay-merge`
+- Field-origin transform: `no-config-platform-to-runtime`
+- Field-origin overlay transform: `no-config-platform-overlay-merge`
 
 ### Field-origin confidences
 
@@ -69,9 +69,9 @@ flowchart LR
 
 | Kind | Name template | Namespace | Source path hint | Hint fallback | Multi hint | Source DRY path template | Optional |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ConfigMap` | `{{name}}-ably` | `apps` | `base_config_path` | `` | `false` | `app.environment` | `false` |
-| `Secret` | `{{name}}-ably-credentials` | `apps` | `base_config_path` | `` | `false` | `credentials.api_key_ref` | `false` |
-| `ConfigMap` | `{{name}}-ably` | `apps` | `overlay_config_path` | `` | `false` | `channels.inbound` | `true` |
+| `ConfigMap` | `{{name}}-provider-config` | `apps` | `base_config_path` | `` | `false` | `app.environment` | `false` |
+| `Secret` | `{{name}}-provider-credentials` | `apps` | `base_config_path` | `` | `false` | `credentials.api_key_ref` | `false` |
+| `ConfigMap` | `{{name}}-provider-config` | `apps` | `overlay_config_path` | `` | `false` | `channels.inbound` | `true` |
 
 ## Inverse
 
@@ -108,4 +108,4 @@ flowchart LR
 
 | Key | Value |
 | --- | --- |
-| `base_config_path` | `ably.yaml` |
+| `base_config_path` | `no-config-platform.yaml` |
