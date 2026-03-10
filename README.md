@@ -166,7 +166,7 @@ App demos:
 - `helm-paas` (`./examples/demo/module-1-helm-import.sh`)
 - `scoredev-paas` (`./examples/demo/module-2-score-field-map.sh`)
 - `springboot-paas` (`./examples/demo/module-3-spring-ownership.sh`)
-- `ably-config` (`./examples/demo/module-5-ably-platform.sh`)
+- `just-apps-no-platform-config` (`./examples/demo/module-5-ably-platform.sh`)
 - `backstage-idp` (included in `./examples/demo/run-all-confighub-lifecycles.sh`)
 
 Platform demos:
@@ -295,9 +295,9 @@ go build ./cmd/cub-gen
 ### Ably app-config example
 
 ```bash
-./cub-gen gitops discover --space platform ./examples/ably-config
-./cub-gen gitops import --space platform --json ./examples/ably-config ./examples/ably-config | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
-./cub-gen gitops cleanup --space platform ./examples/ably-config
+./cub-gen gitops discover --space platform ./examples/just-apps-no-platform-config
+./cub-gen gitops import --space platform --json ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
+./cub-gen gitops cleanup --space platform ./examples/just-apps-no-platform-config
 ```
 
 ### Ops workflow example
@@ -386,7 +386,7 @@ Or run direct mode (import + bundle in one command):
 ./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas
 ./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas
 ./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp
-./cub-gen publish --space platform ./examples/ably-config ./examples/ably-config
+./cub-gen publish --space platform ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config
 ./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow
 ./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent
 ./cub-gen publish --space platform ./examples/swamp-automation ./examples/swamp-automation
@@ -406,7 +406,7 @@ Verify a bundle (file or stdin):
 ./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp | ./cub-gen verify --in -
-./cub-gen publish --space platform ./examples/ably-config ./examples/ably-config | ./cub-gen verify --in -
+./cub-gen publish --space platform ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent | ./cub-gen verify --in -
 ./cub-gen publish --space platform ./examples/swamp-automation ./examples/swamp-automation | ./cub-gen verify --in -
@@ -427,7 +427,7 @@ Emit an attestation record from a verified bundle:
 ./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp \
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
-./cub-gen publish --space platform ./examples/ably-config ./examples/ably-config \
+./cub-gen publish --space platform ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config \
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{schema_version,status,verifier,bundle_digest,attestation_digest}'
 ./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow \

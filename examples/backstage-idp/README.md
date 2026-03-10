@@ -109,5 +109,5 @@ spec:
 
 ## Related examples
 
-- [`ably-config`](../ably-config/) — Another "just config, no manifests" pattern. Shows that governance works for external service configuration.
+- [`just-apps-no-platform-config`](../just-apps-no-platform-config/) — Another "just config, no manifests" pattern. Shows that governance works for external service configuration.
 - [`helm-paas`](../helm-paas/) — The Kubernetes workload end of the spectrum. The Backstage catalog entry often lives alongside a Helm chart in the same repo.

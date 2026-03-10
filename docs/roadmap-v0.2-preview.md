@@ -19,7 +19,7 @@ Implemented in this preview slice:
 5. Extended path-mode smoke and bridge smoke tests to include Backstage.
 6. Added generator capability contract tests across all supported families.
 7. Added `ably-config` app-config-only generator family (detect + import).
-8. Added example repo fixture at `examples/ably-config/`.
+8. Added example repo fixture at `examples/just-apps-no-platform-config/`.
 9. Added gitops parity goldens for Ably discover/import:
    - `gitops-discover-ably.golden.json`
    - `gitops-import-ably.golden.json`

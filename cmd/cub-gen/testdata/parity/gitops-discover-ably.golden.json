@@ -1,5 +1,5 @@
 {
-  "alias_path_suffix": "examples/ably-config",
+  "alias_path_suffix": "examples/just-apps-no-platform-config",
   "detections": [
     {
       "confidence": 0.9,
@@ -9,7 +9,7 @@
         "ably.yaml"
       ],
       "kind": "ably",
-      "name": "ably-config",
+      "name": "just-apps-no-platform-config",
       "profile": "ably-config",
       "root": ""
     }
@@ -27,15 +27,15 @@
         "ably-prod.yaml",
         "ably.yaml"
       ],
-      "resource_body": "kind: ConfigMap\nmetadata:\n  name: ably-config\nspec:\n  root: \n",
+      "resource_body": "kind: ConfigMap\nmetadata:\n  name: just-apps-no-platform-config\nspec:\n  root: \n",
       "resource_kind": "ConfigMap",
-      "resource_name": "ably-config",
+      "resource_name": "just-apps-no-platform-config",
       "resource_type": "v1/ConfigMap",
       "root": ""
     }
   ],
   "space": "platform",
   "target_path": "\u003ctarget_path\u003e",
-  "target_path_expected_suffix": "examples/ably-config",
+  "target_path_expected_suffix": "examples/just-apps-no-platform-config",
   "target_slug": "ably"
 }

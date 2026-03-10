@@ -29,7 +29,7 @@ See [Example Checklist](../docs/workflows/example-checklist.md) for the verifica
 
 | Example | Generator | DRY Source | Story |
 |---------|-----------|------------|-------|
-| [`ably-config`](ably-config/) | `ably-config` | `ably.yaml` | Just apps, no platform config — provider config only |
+| [`just-apps-no-platform-config`](just-apps-no-platform-config/) | `ably-config` | `ably.yaml` | Just apps, no platform config — provider config only |
 | [`backstage-idp`](backstage-idp/) | `backstage-idp` | `catalog-info.yaml` | Developer portal catalog with governed ownership |
 
 ## Automation generators (AI-native platforms)

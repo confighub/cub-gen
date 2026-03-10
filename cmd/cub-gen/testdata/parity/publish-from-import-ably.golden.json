@@ -23,7 +23,7 @@
         }
       ],
       "kind": "ably",
-      "name": "ably-config",
+      "name": "just-apps-no-platform-config",
       "output_format": "kubernetes/yaml",
       "profile": "ably-config",
       "schema_version": "cub.confighub.io/generator-contract/v1",
@@ -44,9 +44,9 @@
         "ably-prod.yaml",
         "ably.yaml"
       ],
-      "resource_body": "kind: ConfigMap\nmetadata:\n  name: ably-config\nspec:\n  root: \n",
+      "resource_body": "kind: ConfigMap\nmetadata:\n  name: just-apps-no-platform-config\nspec:\n  root: \n",
       "resource_kind": "ConfigMap",
-      "resource_name": "ably-config",
+      "resource_name": "just-apps-no-platform-config",
       "resource_type": "v1/ConfigMap",
       "root": ""
     }
@@ -74,7 +74,7 @@
       "id": "dry_81d31492577f5656",
       "kind": "dry-unit",
       "layer": "dry",
-      "name": "ably-config-dry"
+      "name": "just-apps-no-platform-config-dry"
     }
   ],
   "generated_at": "\u003ctimestamp\u003e",
@@ -83,7 +83,7 @@
       "id": "gen_e140b47854b90c71",
       "kind": "generator-unit",
       "layer": "generator",
-      "name": "ably-config-generator"
+      "name": "just-apps-no-platform-config-generator"
     }
   ],
   "inverse_transform_plans": [
@@ -152,7 +152,7 @@
         }
       ],
       "generator_id": "gen_8c38d405bdc97967",
-      "generator_name": "ably-config",
+      "generator_name": "just-apps-no-platform-config",
       "generator_profile": "ably-config",
       "input_digest": "sha256:0ebf188c0dbbd6554b5789fa2f7a63be2c0599273aa6b25ae38d4dc17813ba18",
       "inverse_edit_pointers": [
@@ -175,7 +175,7 @@
         {
           "digest": "\u003cdigest\u003e",
           "role": "rendered-manifests",
-          "uri": "oci://example.local/platform/ably-config:latest"
+          "uri": "oci://example.local/platform/just-apps-no-platform-config:latest"
         }
       ],
       "provenance_id": "\u003cprovenance_id\u003e",
@@ -183,21 +183,21 @@
       "rendered_object_lineage": [
         {
           "kind": "ConfigMap",
-          "name": "ably-config-ably",
+          "name": "just-apps-no-platform-config-ably",
           "namespace": "apps",
           "source_dry_path": "app.environment",
           "source_path": "ably.yaml"
         },
         {
           "kind": "Secret",
-          "name": "ably-config-ably-credentials",
+          "name": "just-apps-no-platform-config-ably-credentials",
           "namespace": "apps",
           "source_dry_path": "credentials.api_key_ref",
           "source_path": "ably.yaml"
         },
         {
           "kind": "ConfigMap",
-          "name": "ably-config-ably",
+          "name": "just-apps-no-platform-config-ably",
           "namespace": "apps",
           "source_dry_path": "channels.inbound",
           "source_path": "ably-prod.yaml"
@@ -247,7 +247,7 @@
     {
       "generator_id": "gen_8c38d405bdc97967",
       "kind": "ConfigMap",
-      "name": "ably-config-ably",
+      "name": "just-apps-no-platform-config-ably",
       "namespace": "apps",
       "owner": "platform-runtime",
       "source_dry_path": "app.environment"
@@ -255,7 +255,7 @@
     {
       "generator_id": "gen_8c38d405bdc97967",
       "kind": "Secret",
-      "name": "ably-config-ably-credentials",
+      "name": "just-apps-no-platform-config-ably-credentials",
       "namespace": "apps",
       "owner": "platform-runtime",
       "source_dry_path": "credentials.api_key_ref"
@@ -266,7 +266,7 @@
       "id": "wet_3e91016693281ace",
       "kind": "wet-unit",
       "layer": "wet",
-      "name": "ably-config-wet"
+      "name": "just-apps-no-platform-config-wet"
     }
   ]
 }

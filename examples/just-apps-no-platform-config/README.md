@@ -29,10 +29,10 @@ Even without platform contracts, cub-gen provides:
 
 ```bash
 # Discover — detects ably generator
-./cub-gen gitops discover --space platform --json ./examples/ably-config
+./cub-gen gitops discover --space platform --json ./examples/just-apps-no-platform-config
 
 # Import — produces DRY/WET classification with provenance
-./cub-gen gitops import --space platform --json ./examples/ably-config ./examples/ably-config \
+./cub-gen gitops import --space platform --json ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, provenance: .provenance[0].field_origin_map}'
 ```
 
@@ -43,19 +43,19 @@ Even without platform contracts, cub-gen provides:
 go build -o ./cub-gen ./cmd/cub-gen
 
 # Discover
-./cub-gen gitops discover --space platform ./examples/ably-config
+./cub-gen gitops discover --space platform ./examples/just-apps-no-platform-config
 
 # Import with provenance
-./cub-gen gitops import --space platform --json ./examples/ably-config ./examples/ably-config
+./cub-gen gitops import --space platform --json ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config
 
 # Full bridge flow
-./cub-gen publish --space platform ./examples/ably-config ./examples/ably-config > /tmp/ably-bundle.json
+./cub-gen publish --space platform ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config > /tmp/ably-bundle.json
 ./cub-gen verify --in /tmp/ably-bundle.json
 ./cub-gen attest --in /tmp/ably-bundle.json --verifier ci-bot > /tmp/ably-attestation.json
 ./cub-gen verify-attestation --in /tmp/ably-attestation.json --bundle /tmp/ably-bundle.json
 
 # Cleanup
-./cub-gen gitops cleanup --space platform ./examples/ably-config
+./cub-gen gitops cleanup --space platform ./examples/just-apps-no-platform-config
 ```
 
 ## 5. Real-world example using ConfigHub
@@ -77,7 +77,7 @@ channels:
 
 ```bash
 # cub-gen detects the change and produces a bundle
-./cub-gen publish --space platform ./examples/ably-config ./examples/ably-config > bundle.json
+./cub-gen publish --space platform ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config > bundle.json
 ./cub-gen verify --in bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 ```

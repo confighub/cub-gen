@@ -44,7 +44,7 @@ func bridgeSymmetryMatrix() []exampleFamilyFixture {
 		},
 		{
 			name:            "ably",
-			repoSuffix:      filepath.Join("examples", "ably-config"),
+			repoSuffix:      filepath.Join("examples", "just-apps-no-platform-config"),
 			expectedProfile: "ably-config",
 			expectedKind:    "ably",
 		},
