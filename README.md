@@ -94,6 +94,7 @@ Every example has both wrappers:
 Start with the catalog:
 
 - [examples/README.md](/Users/alexis/Public/github-repos/cub-gen/examples/README.md)
+- Includes a persona-first quick navigator (`Choose your starting view`) for Helm, Spring Boot, Score, AI, and Ops users.
 
 ## Which Story Should You Read First?
 

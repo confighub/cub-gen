@@ -65,6 +65,21 @@ When you run `cub-gen attest --verifier <name>`, the verifier name records who/w
 
 ## Pick your starting point
 
+## Choose your starting view
+
+| If you are... | Start here | Direct viewpoint section | First command |
+|---------|-----------|--------------------------|---------------|
+| Helm / umbrella-chart platform team | [helm-paas](helm-paas/) | [If you already run Helm heavily](helm-paas/README.md#if-you-already-run-helm-heavily) | `./examples/helm-paas/demo-local.sh` |
+| Spring Boot platform/app lead | [springboot-paas](springboot-paas/) | [If you already ship Spring Boot services](springboot-paas/README.md#if-you-already-ship-spring-boot-services) | `./examples/springboot-paas/demo-local.sh` |
+| Score.dev platform team | [scoredev-paas](scoredev-paas/) | [If you already use Score.dev in production](scoredev-paas/README.md#if-you-already-use-scoredev-in-production) | `./examples/scoredev-paas/demo-local.sh` |
+| Backstage/IDP owner | [backstage-idp](backstage-idp/) | [If you already run Backstage catalogs at scale](backstage-idp/README.md#if-you-already-run-backstage-catalogs-at-scale) | `./examples/backstage-idp/demo-local.sh` |
+| Ops workflow/SRE automation team | [ops-workflow](ops-workflow/) | [If you already run operational workflows at scale](ops-workflow/README.md#if-you-already-run-operational-workflows-at-scale) | `./examples/ops-workflow/demo-local.sh` |
+| AI agent fleet platform team | [c3agent](c3agent/) | [If you already run agent fleets operationally](c3agent/README.md#if-you-already-run-agent-fleets-operationally) | `./examples/c3agent/demo-local.sh` |
+| Full AI PaaS builder | [ai-ops-paas](ai-ops-paas/) | [If you already run AI/ops platforms on Kubernetes](ai-ops-paas/README.md#if-you-already-run-aiops-platforms-on-kubernetes) | `./examples/ai-ops-paas/demo-local.sh` |
+| Workflow automation platform team | [swamp-automation](swamp-automation/) | [If you already build workflow automation systems](swamp-automation/README.md#if-you-already-build-workflow-automation-systems) | `./examples/swamp-automation/demo-local.sh` |
+| Helm-based AI runtime team | [swamp-project](swamp-project/) | [If you already operate Helm-based AI runtimes](swamp-project/README.md#if-you-already-operate-helm-based-ai-runtimes) | `./examples/swamp-project/demo-local.sh` |
+| Reconciler/platform reliability engineer | [live-reconcile](live-reconcile/) | [If you already operate Flux/Argo at scale](live-reconcile/README.md#if-you-already-operate-fluxargo-at-scale) | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
+
 ## Platform + app patterns (Kubernetes workloads)
 
 | Example | You use... | cub-gen shows you... |
