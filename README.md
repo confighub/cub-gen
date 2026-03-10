@@ -32,7 +32,7 @@ Fast demo entry points:
 - Works standalone (no backend required) and produces [ConfigHub-ready change bundles](https://confighub.github.io/cub-gen/platform/) for governed execution when connected.
 - Exposes supported generator families via `cub-gen generators`.
 
-## Documentation
+## Documentation - FIXME **
 
 Full documentation is published at **https://confighub.github.io/cub-gen/**
 
@@ -40,6 +40,8 @@ Full documentation is published at **https://confighub.github.io/cub-gen/**
 - [The ConfigHub Platform](https://confighub.github.io/cub-gen/platform/) — how cub-gen connects to ConfigHub, bridge workers, and Flux/ArgoCD
 - [Architecture](https://confighub.github.io/cub-gen/architecture/) — DRY/WET model, field-origin maps, governed execution
 - [Generator Reference](https://confighub.github.io/cub-gen/generators/) — contract triples for all 8 generator kinds
+- [Architecture](https://confighub.github.io/cub-gen/agentic-gitops/02-design/00-agentic-gitops-design/) — DRY/WET model, field-origin maps, governed execution
+- [Generator Reference](https://confighub.github.io/cub-gen/triple-styles/) — contract triples for all 8 generator kinds
 - [CLI Reference](https://confighub.github.io/cub-gen/cli-reference/) — full command and flag documentation
 - [Contributing](https://confighub.github.io/cub-gen/contributing-guide/) — proof-first delivery, test-backed PRs
 
