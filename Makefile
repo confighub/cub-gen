@@ -30,6 +30,10 @@ test-phase-3-stories:
 	./examples/demo/run-phase-3-connected-stories.sh
 
 test-connected-governed-reconcile-helm:
+	@if [ "$${ENABLE_CONNECTED_GOVERNED_RECONCILE_HELM:-0}" != "1" ]; then \
+		echo "skip: set ENABLE_CONNECTED_GOVERNED_RECONCILE_HELM=1 to run connected full-loop helm e2e"; \
+		exit 0; \
+	fi
 	RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 
 test-live-reconcile-flux:

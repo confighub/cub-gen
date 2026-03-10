@@ -17,6 +17,8 @@ DECISION_STATE="${DECISION_STATE:-ALLOW}"
 DECISION_APPROVED_BY="${DECISION_APPROVED_BY:-platform-owner}"
 DECISION_POLICY_REF="${DECISION_POLICY_REF:-}"
 DECISION_REASON_PREFIX="${DECISION_REASON_PREFIX:-governance}"
+BRIDGE_INGEST_ENDPOINT="${BRIDGE_INGEST_ENDPOINT:-}"
+BRIDGE_DECISION_ENDPOINT="${BRIDGE_DECISION_ENDPOINT:-}"
 
 if [ ! -d "$REPO_PATH" ]; then
   echo "error: repo path not found: $REPO_PATH" >&2
@@ -63,13 +65,18 @@ run_governed_cycle_connected() {
   ./cub-gen verify-attestation --json --in "$outdir/attestation.json" --bundle "$outdir/bundle.json" > "$outdir/attestation-verify.json"
 
   echo "[connected][$phase] ingest bundle into ConfigHub"
-  if ! ./cub-gen bridge ingest \
-    --in "$outdir/bundle.json" \
-    --base-url "$CONFIGHUB_BASE_URL" \
-    --token "$CONFIGHUB_TOKEN" \
-    > "$outdir/ingest.json"; then
+  ingest_cmd=(
+    ./cub-gen bridge ingest
+    --in "$outdir/bundle.json"
+    --base-url "$CONFIGHUB_BASE_URL"
+    --token "$CONFIGHUB_TOKEN"
+  )
+  if [ -n "$BRIDGE_INGEST_ENDPOINT" ]; then
+    ingest_cmd+=(--endpoint "$BRIDGE_INGEST_ENDPOINT")
+  fi
+  if ! "${ingest_cmd[@]}" > "$outdir/ingest.json"; then
     echo "error: connected ingest failed for $phase." >&2
-    echo "remediation: ensure CONFIGHUB_BASE_URL points to a ConfigHub backend that exposes /api/v1/governed-wet-artifacts:ingest." >&2
+    echo "remediation: ensure CONFIGHUB_BASE_URL points to a ConfigHub backend exposing ingest, or set BRIDGE_INGEST_ENDPOINT to the correct path." >&2
     return 1
   fi
 
@@ -77,11 +84,16 @@ run_governed_cycle_connected() {
   change_id="$(jq -r .change_id "$outdir/bundle.json")"
 
   echo "[connected][$phase] query decision state from ConfigHub"
-  ./cub-gen bridge decision query \
-    --base-url "$CONFIGHUB_BASE_URL" \
-    --token "$CONFIGHUB_TOKEN" \
-    --change-id "$change_id" \
-    > "$outdir/decision-query.json"
+  decision_query_cmd=(
+    ./cub-gen bridge decision query
+    --base-url "$CONFIGHUB_BASE_URL"
+    --token "$CONFIGHUB_TOKEN"
+    --change-id "$change_id"
+  )
+  if [ -n "$BRIDGE_DECISION_ENDPOINT" ]; then
+    decision_query_cmd+=(--endpoint "$BRIDGE_DECISION_ENDPOINT")
+  fi
+  "${decision_query_cmd[@]}" > "$outdir/decision-query.json"
 
   # Keep local contract artifacts for continuity with existing promotion demos.
   ./cub-gen bridge decision create --ingest "$outdir/ingest.json" > "$outdir/decision.json"

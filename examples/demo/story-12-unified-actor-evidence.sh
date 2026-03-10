@@ -22,6 +22,9 @@ print_connected_context
 
 go build -o ./cub-gen ./cmd/cub-gen
 
+BRIDGE_INGEST_ENDPOINT="${BRIDGE_INGEST_ENDPOINT:-}"
+BRIDGE_DECISION_ENDPOINT="${BRIDGE_DECISION_ENDPOINT:-}"
+
 ./cub-gen gitops import --space "$CONFIGHUB_SPACE" --json "$REPO_PATH" "$RENDER_TARGET" > "$OUT_DIR/import.json"
 ./cub-gen publish --in "$OUT_DIR/import.json" > "$OUT_DIR/bundle.json"
 ./cub-gen verify --json --in "$OUT_DIR/bundle.json" > "$OUT_DIR/verify.json"
@@ -35,8 +38,27 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./cub-gen verify-attestation --json --in "$OUT_DIR/attestation-ci.json" --bundle "$OUT_DIR/bundle.json" > "$OUT_DIR/attestation-ci-verify.json"
 ./cub-gen verify-attestation --json --in "$OUT_DIR/attestation-ai.json" --bundle "$OUT_DIR/bundle.json" > "$OUT_DIR/attestation-ai-verify.json"
 
-./cub-gen bridge ingest --in "$OUT_DIR/bundle.json" --base-url "$CONFIGHUB_BASE_URL" --token "$CONFIGHUB_TOKEN" > "$OUT_DIR/ingest.json"
-./cub-gen bridge decision query --base-url "$CONFIGHUB_BASE_URL" --token "$CONFIGHUB_TOKEN" --change-id "$(jq -r .change_id "$OUT_DIR/bundle.json")" > "$OUT_DIR/decision-query.json"
+ingest_cmd=(
+  ./cub-gen bridge ingest
+  --in "$OUT_DIR/bundle.json"
+  --base-url "$CONFIGHUB_BASE_URL"
+  --token "$CONFIGHUB_TOKEN"
+)
+if [ -n "$BRIDGE_INGEST_ENDPOINT" ]; then
+  ingest_cmd+=(--endpoint "$BRIDGE_INGEST_ENDPOINT")
+fi
+"${ingest_cmd[@]}" > "$OUT_DIR/ingest.json"
+
+decision_query_cmd=(
+  ./cub-gen bridge decision query
+  --base-url "$CONFIGHUB_BASE_URL"
+  --token "$CONFIGHUB_TOKEN"
+  --change-id "$(jq -r .change_id "$OUT_DIR/bundle.json")"
+)
+if [ -n "$BRIDGE_DECISION_ENDPOINT" ]; then
+  decision_query_cmd+=(--endpoint "$BRIDGE_DECISION_ENDPOINT")
+fi
+"${decision_query_cmd[@]}" > "$OUT_DIR/decision-query.json"
 
 jq -n \
   --arg story "12-unified-human-ci-ai-mutation" \

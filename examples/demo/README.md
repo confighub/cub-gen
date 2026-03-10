@@ -77,6 +77,7 @@ publish -> verify -> attest -> bridge ingest -> decision query
 Connected ingest/query are real ConfigHub API calls. Some decision/promotion steps in current demo scripts are still local contract simulation.
 
 If ingest returns `404 Not Found`, point `CONFIGHUB_BASE_URL` to a backend with the governed-wet bridge endpoints enabled.
+If your backend exposes non-default paths, set `BRIDGE_INGEST_ENDPOINT` and `BRIDGE_DECISION_ENDPOINT`.
 
 Connected runner:
 
@@ -108,6 +109,9 @@ Connected full-loop proof:
 cub auth login
 RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 ```
+
+If your backend does not expose the default ingest/query routes, set
+`BRIDGE_INGEST_ENDPOINT` and `BRIDGE_DECISION_ENDPOINT` before running.
 
 ## Quick start
 

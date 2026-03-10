@@ -75,6 +75,10 @@ cub context get --json | jq -r '.coordinate.user'
 ```
 
 If ingest returns `404`, your configured base URL does not expose the governed bridge endpoint used by this demo flow. Set `CONFIGHUB_BASE_URL` to a backend endpoint that supports ingest/query.
+If your backend uses non-default paths, set:
+
+- `BRIDGE_INGEST_ENDPOINT` (for `bridge ingest`)
+- `BRIDGE_DECISION_ENDPOINT` (for `bridge decision query`)
 
 ## Live Reconciler Proofs
 
@@ -113,6 +117,9 @@ Start with the catalog:
 make ci-local       # build + tests + parity + docs/coverage gates
 make ci-connected   # connected entrypoints + lifecycle + phase-3 stories + connected full-loop helm e2e + flux/argo live reconcile gates
 make ci             # alias of ci-local
+
+# enable connected full-loop helm e2e gate explicitly
+ENABLE_CONNECTED_GOVERNED_RECONCILE_HELM=1 make ci-connected
 ```
 
 Story-specific connected scripts (Phase 3):
