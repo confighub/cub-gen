@@ -13,3 +13,4 @@ coverage.txt
 
 # OS/editor noise
 .DS_Store
+examples/demo/output/
