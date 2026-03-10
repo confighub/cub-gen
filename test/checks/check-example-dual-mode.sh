@@ -29,6 +29,12 @@ while IFS= read -r readme; do
     failures+=("$example_name: missing executable demo-connected.sh")
   fi
 
+  if [ -x "$connected_script" ]; then
+    if ! rg -q 'simulate-confighub-lifecycle-connected\.sh|connected-preflight\.sh' "$connected_script"; then
+      failures+=("$example_name: demo-connected.sh must use shared connected preflight path")
+    fi
+  fi
+
   if ! rg -q 'demo-local\.sh' "$readme"; then
     failures+=("$example_name: README missing demo-local.sh usage")
   fi
@@ -58,4 +64,4 @@ if [ "${#failures[@]}" -gt 0 ]; then
   exit 1
 fi
 
-echo "ok: every example has local+connected entrypoints, login guidance, expert viewpoint, and model mapping"
+echo "ok: every example has local+connected entrypoints, shared connected preflight wiring, login guidance, expert viewpoint, and model mapping"

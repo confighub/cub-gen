@@ -9,6 +9,38 @@ require_cmd() {
   fi
 }
 
+resolve_connected_token() {
+  local token
+  token="$(printf '%s' "${CONFIGHUB_TOKEN:-}" | tr -d '\r\n')"
+  if [ -n "$token" ]; then
+    printf '%s' "$token"
+    return 0
+  fi
+
+  if token="$(cub auth get-token 2>/dev/null | tr -d '\r\n')" && [ -n "$token" ]; then
+    printf '%s' "$token"
+    return 0
+  fi
+
+  # Interactive path: start connected flows with cub auth login when possible.
+  if [ -t 0 ] && [ -t 1 ]; then
+    echo "[connected] no active auth session; running: cub auth login" >&2
+    if ! cub auth login; then
+      echo "error: cub auth login failed." >&2
+      echo "remediation: rerun 'cub auth login' and complete browser authentication." >&2
+      return 1
+    fi
+    if token="$(cub auth get-token 2>/dev/null | tr -d '\r\n')" && [ -n "$token" ]; then
+      printf '%s' "$token"
+      return 0
+    fi
+  fi
+
+  echo "error: ConfigHub authentication missing." >&2
+  echo "remediation: run 'cub auth login' (interactive) or export CONFIGHUB_TOKEN (CI)." >&2
+  return 1
+}
+
 resolve_confighub_base_url() {
   if [ -n "${CONFIGHUB_BASE_URL:-}" ]; then
     printf '%s' "$CONFIGHUB_BASE_URL"
@@ -30,13 +62,8 @@ require_connected_preflight() {
   require_cmd jq
 
   local token
-  token="$(printf '%s' "${CONFIGHUB_TOKEN:-}" | tr -d '\r\n')"
-  if [ -z "$token" ]; then
-    if ! token="$(cub auth get-token 2>/dev/null | tr -d '\r\n')" || [ -z "$token" ]; then
-      echo "error: ConfigHub authentication missing." >&2
-      echo "remediation: run 'cub auth login' (interactive) or export CONFIGHUB_TOKEN (CI)." >&2
-      return 1
-    fi
+  if ! token="$(resolve_connected_token)"; then
+    return 1
   fi
 
   local base_url

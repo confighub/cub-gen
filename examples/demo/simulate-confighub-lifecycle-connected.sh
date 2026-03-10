@@ -42,8 +42,6 @@ if [ -z "$SPACE" ]; then
 fi
 print_connected_context
 
-echo "[connected] required login check: run 'cub auth login' if this script fails auth preflight"
-
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   echo "[lifecycle][connected] build cub-gen"
   go build -o ./cub-gen ./cmd/cub-gen
