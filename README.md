@@ -1,6 +1,6 @@
 # cub-gen
 
-`cub-gen` is a local-first prototype for deterministic DRY -> WET generator import, modeled on `cub gitops` command flow.
+`cub-gen` is the local-first entry point to the [ConfigHub](https://github.com/confighubai/confighub) platform — a deterministic DRY → WET generator importer with command-shape parity to `cub gitops`.
 
 ## Start here (intro + demos)
 
@@ -29,29 +29,34 @@ Fast demo entry points:
   - `gitops import`
   - `gitops cleanup`
 - Emits provenance and inverse-edit guidance ("what rendered field came from which DRY field").
-- Stays local and pre-sync in v0.1 and v0.2 preview (no cluster deploys, no ConfigHub backend required).
+- Works standalone (no backend required) and produces [ConfigHub-ready change bundles](https://confighub.github.io/cub-gen/platform/) for governed execution when connected.
 - Exposes supported generator families via `cub-gen generators`.
 
-## Documentation
+## Documentation - FIXME **
 
 Full documentation is published at **https://confighub.github.io/cub-gen/**
 
 - [Getting Started](https://confighub.github.io/cub-gen/getting-started/) — build and run your first import in 10 minutes
+- [The ConfigHub Platform](https://confighub.github.io/cub-gen/platform/) — how cub-gen connects to ConfigHub, bridge workers, and Flux/ArgoCD
+- [Architecture](https://confighub.github.io/cub-gen/architecture/) — DRY/WET model, field-origin maps, governed execution
+- [Generator Reference](https://confighub.github.io/cub-gen/generators/) — contract triples for all 8 generator kinds
 - [Architecture](https://confighub.github.io/cub-gen/agentic-gitops/02-design/00-agentic-gitops-design/) — DRY/WET model, field-origin maps, governed execution
 - [Generator Reference](https://confighub.github.io/cub-gen/triple-styles/) — contract triples for all 8 generator kinds
 - [CLI Reference](https://confighub.github.io/cub-gen/cli-reference/) — full command and flag documentation
 - [Contributing](https://confighub.github.io/cub-gen/contributing-guide/) — proof-first delivery, test-backed PRs
 
-## Where Flux/Argo/OCI fit
+## Part of the ConfigHub platform
 
-`cub-gen` is the import/provenance step, not the reconciler.
+`cub-gen` is the local-first on-ramp. The full stack:
 
-1. DRY app intent lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.).
-2. `cub-gen gitops import` classifies DRY inputs + WET targets and emits provenance/inverse map data.
-3. WET artifacts move through Git/OCI transport.
-4. Flux/Argo continue to reconcile WET -> LIVE.
+1. **DRY** app intent lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.)
+2. **cub-gen** classifies DRY inputs + WET targets and emits provenance with field-origin tracing
+3. **cub-gen publish** produces change bundles with SHA-256 digest verification
+4. **[ConfigHub](https://github.com/confighubai/confighub)** ingests bundles, enforces governed decision state (ALLOW | ESCALATE | BLOCK), manages units with revision history
+5. **Bridge workers** connect ConfigHub to clusters via HTTP/2 SSE (Kubernetes, Flux, ArgoCD)
+6. **Flux/Argo** continue to reconcile WET → LIVE — unchanged
 
-This means teams can add `cub-gen` to existing Flux/Argo repos today without changing runtime controllers.
+Teams can start with `cub-gen` locally today and connect to ConfigHub when they need cross-repo queries, policy at write time, and governed execution. See the [platform docs](https://confighub.github.io/cub-gen/platform/) for the full story.
 
 ## One platform, different workload adapters
 
@@ -237,9 +242,9 @@ go build -o cub-gen ./cmd/cub-gen
 Boundary language (aligned with `PARITY.md`):
 
 - `matched`: `gitops discover|import|cleanup` command shape and output contracts.
+- `matched`: bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 8 generators.
 - `partial`: local state/artifacts stand in for server-side units during this phase.
-- `deferred`: ConfigHub API bridge coupling and runtime reconcile execution.
-- `deferred`: YAML bundle registry migration (Go remains canonical source of truth in current releases).
+- `partial`: bridge flow commands (`ingest`, `decision`, `promote`) produce correct contract shapes; [ConfigHub backend integration](https://confighub.github.io/cub-gen/platform/) is the next step.
 
 ## Terminology (locked for v0.1)
 

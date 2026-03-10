@@ -152,6 +152,7 @@ Or all at once:
 
 ## Next steps
 
+- [The ConfigHub Platform](platform.md) — how cub-gen connects to ConfigHub, bridge workers, and Flux/ArgoCD
 - [CLI Reference](cli-reference.md) — full command and flag documentation
 - [Architecture](agentic-gitops/02-design/00-agentic-gitops-design.md) — DRY/WET model, contract triples, governed execution
 - [Worked Examples](agentic-gitops/03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md) — end-to-end Score.dev walkthrough

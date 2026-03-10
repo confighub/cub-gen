@@ -108,6 +108,7 @@ nav:
   - Getting Started:
       - getting-started.md
       - "CLI Reference": cli-reference.md
+      - "The ConfigHub Platform": platform.md
       - "Adoption Path & FAQ": agentic-gitops/05-rollout/40-adoption-and-reference.md
 
   - Architecture:

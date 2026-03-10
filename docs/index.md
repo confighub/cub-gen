@@ -36,16 +36,18 @@ AI-assisted changes make this gap wider because more changes happen faster. cub-
 
 ---
 
-## Where Flux/Argo/OCI fit
+## Part of the ConfigHub platform
 
-cub-gen is the **import/provenance step**, not the reconciler.
+cub-gen is the **local-first entry point** to the [ConfigHub platform](platform.md). It works standalone — no backend, no accounts, no cluster access needed. But everything it produces feeds into ConfigHub when you're ready.
 
 1. **DRY** app intent lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.)
-2. **cub-gen** classifies DRY inputs + WET targets and emits provenance/inverse map data
-3. **WET** artifacts move through Git/OCI transport
-4. **Flux/Argo** continue to reconcile WET to LIVE — unchanged
+2. **cub-gen** classifies DRY inputs + WET targets and emits provenance with field-origin tracing
+3. **cub-gen publish** produces ConfigHub-ready change bundles with digest verification
+4. **ConfigHub** ingests bundles, enforces governed decision state, manages units with revision history
+5. **Bridge workers** connect ConfigHub to clusters via HTTP/2 SSE
+6. **Flux/Argo** continue to reconcile WET to LIVE — unchanged
 
-Teams can add cub-gen to existing Flux/Argo repos today without changing runtime controllers.
+Teams can start with cub-gen locally today and connect to ConfigHub when they need cross-repo queries, policy at write time, and governed execution.
 
 ---
 
@@ -79,6 +81,12 @@ Teams can add cub-gen to existing Flux/Argo repos today without changing runtime
 
     [Architecture](agentic-gitops/02-design/00-agentic-gitops-design.md)
 
+-   **See the full platform**
+
+    How cub-gen connects to ConfigHub, bridge workers, and Flux/ArgoCD.
+
+    [The ConfigHub Platform](platform.md)
+
 -   **Contribute**
 
     Deterministic behavior, proof-first delivery, test-backed PRs.
@@ -109,4 +117,4 @@ Teams can add cub-gen to existing Flux/Argo repos today without changing runtime
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
 - Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 8 generators
 - Generator catalog (`generators`) with filtering, details, and markdown output
-- Local-first: no ConfigHub backend required
+- Local-first: works standalone, connects to [ConfigHub](platform.md) for governed execution
