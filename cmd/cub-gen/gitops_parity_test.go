@@ -118,8 +118,8 @@ func TestGitOpsParityGoldenDiscoverAbly(t *testing.T) {
 	}
 	normalizeDiscover(got)
 
-	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("examples", "ably-config"))
-	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["ably"]), filepath.ToSlash(filepath.Join("examples", "ably-config")))
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("examples", "just-apps-no-platform-config"))
+	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["ably"]), filepath.ToSlash(filepath.Join("examples", "just-apps-no-platform-config")))
 
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-ably.golden.json"), got)
 }
@@ -560,7 +560,7 @@ func setupAliases(t *testing.T) map[string]string {
 	if err != nil {
 		t.Fatalf("resolve backstage path: %v", err)
 	}
-	ablyAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "ably-config"))
+	ablyAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "just-apps-no-platform-config"))
 	if err != nil {
 		t.Fatalf("resolve ably path: %v", err)
 	}

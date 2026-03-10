@@ -1,0 +1,30 @@
+apiVersion: confighub.io/v1
+kind: ExecutionPolicy
+metadata:
+  name: ops-workflow-constraints
+spec:
+  allowed_actions:
+    - deploy
+    - restart
+    - scale
+    - rollback
+  blocked_actions:
+    - destroy
+    - force-restart
+  scheduling:
+    production:
+      window: "00:00-06:00 UTC"
+      reason: "Production maintenance only during low-traffic hours"
+    staging:
+      window: "anytime"
+  approval_gates:
+    production:
+      required_approvals: 1
+      approvers:
+        - ops-lead
+        - platform-owner
+    staging:
+      required_approvals: 0
+  image_tag_policy:
+    require_semver: true
+    block_latest: true

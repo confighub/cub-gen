@@ -23,7 +23,7 @@ func TestImportRepoExamples(t *testing.T) {
 		{name: "scoredev-paas", repoDir: "scoredev-paas", expectedKind: model.GeneratorScore, expectedProfile: "scoredev-paas"},
 		{name: "springboot-paas", repoDir: "springboot-paas", expectedKind: model.GeneratorSpringBoot, expectedProfile: "springboot-paas"},
 		{name: "backstage-idp", repoDir: "backstage-idp", expectedKind: model.GeneratorBackstage, expectedProfile: "backstage-idp"},
-		{name: "ably-config", repoDir: "ably-config", expectedKind: model.GeneratorAbly, expectedProfile: "ably-config"},
+		{name: "just-apps-no-platform-config", repoDir: "just-apps-no-platform-config", expectedKind: model.GeneratorAbly, expectedProfile: "ably-config"},
 		{name: "ops-workflow", repoDir: "ops-workflow", expectedKind: model.GeneratorOpsFlow, expectedProfile: "ops-workflow"},
 		{name: "c3agent", repoDir: "c3agent", expectedKind: model.GeneratorC3Agent, expectedProfile: "c3agent"},
 		{name: "swamp-automation", repoDir: "swamp-automation", expectedKind: model.GeneratorSwamp, expectedProfile: "swamp"},
@@ -147,8 +147,8 @@ func TestImportRepoGeneratorCapabilities(t *testing.T) {
 			expectedCapabilities: []string{"catalog-metadata", "render-manifests", "inverse-catalog-patch"},
 		},
 		{
-			name:                 "ably-config",
-			repoDir:              "ably-config",
+			name:                 "just-apps-no-platform-config",
+			repoDir:              "just-apps-no-platform-config",
 			expectedCapabilities: []string{"app-config-only", "provider-config", "inverse-provider-config-patch"},
 		},
 		{
@@ -403,7 +403,7 @@ func TestImportRepoBackstageDryWetContract(t *testing.T) {
 }
 
 func TestImportRepoAblyDryWetContract(t *testing.T) {
-	repo := filepath.Join("..", "..", "examples", "ably-config")
+	repo := filepath.Join("..", "..", "examples", "just-apps-no-platform-config")
 	result, err := ImportRepo(repo, "main", "platform")
 	if err != nil {
 		t.Fatalf("ImportRepo returned error: %v", err)

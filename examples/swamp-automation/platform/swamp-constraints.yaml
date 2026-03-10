@@ -1,0 +1,21 @@
+apiVersion: confighub.io/v1
+kind: WorkflowPolicy
+metadata:
+  name: swamp-workflow-constraints
+spec:
+  approved_models:
+    - app-validator
+    - app-deployer
+    - app-healthcheck
+    - credential-rotator
+  execution_windows:
+    production:
+      allowed: "Mon-Fri 06:00-22:00 UTC"
+      reason: "No production deployments outside business hours"
+  required_steps:
+    - name: validate
+      reason: "All deployment workflows must include a validation step"
+  max_parallel_jobs: 5
+  vault_policy:
+    required_type: local-encryption
+    key_rotation_days: 90

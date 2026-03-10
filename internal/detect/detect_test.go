@@ -48,8 +48,8 @@ func TestScanRepoExamples(t *testing.T) {
 			expectedFile:    "catalog-info.yaml",
 		},
 		{
-			name:            "ably-config",
-			repoDir:         "ably-config",
+			name:            "just-apps-no-platform-config",
+			repoDir:         "just-apps-no-platform-config",
 			expectedKind:    model.GeneratorAbly,
 			expectedProfile: "ably-config",
 			expectedFile:    "ably.yaml",

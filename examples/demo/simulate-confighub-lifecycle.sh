@@ -75,7 +75,7 @@ feature:
     backstage-idp|backstage)
       mv "$repo/catalog-info.yaml" "$repo/catalog-info.yml"
       ;;
-    ably-config|ably)
+    just-apps-no-platform-config|ably-config|ably)
       write_file "$repo/ably-canary.yaml" "app:
   environment: canary
 channels:

@@ -1,0 +1,33 @@
+apiVersion: confighub.io/v1
+kind: LifecyclePolicy
+metadata:
+  name: confighub-actions-constraints
+spec:
+  required_actions:
+    - type: dry-run
+      reason: "Every release must include a dry-run plan step"
+    - type: policy-check
+      reason: "Every release must pass policy verification"
+  action_sequence:
+    - dry-run
+    - policy-check
+    - apply
+  approval_thresholds:
+    production:
+      min_approvals: 2
+      approver_roles:
+        - platform-owner
+        - security-lead
+        - ops-lead
+    staging:
+      min_approvals: 0
+  deploy_windows:
+    production: "Mon-Fri 09:00-17:00 UTC"
+    staging: "anytime"
+  trigger_policy:
+    allowed_triggers:
+      - commit
+      - manual
+    blocked_triggers:
+      - schedule
+      reason: "Lifecycle actions should be event-driven, not scheduled"

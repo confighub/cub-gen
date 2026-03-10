@@ -12,7 +12,7 @@ examples=(
   "scoredev-paas"
   "springboot-paas"
   "backstage-idp"
-  "ably-config"
+  "just-apps-no-platform-config"
   "ops-workflow"
   "c3agent"
   "ai-ops-paas"
