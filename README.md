@@ -68,6 +68,7 @@ cub context get --json | jq -r '.coordinate.user'
 
 # 2) Run connected lifecycle coverage
 ./examples/demo/run-all-connected-lifecycles.sh
+./examples/demo/run-all-connected-entrypoints.sh
 
 # 3) Optional: run one connected example directly
 ./examples/helm-paas/demo-connected.sh

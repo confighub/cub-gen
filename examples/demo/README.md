@@ -39,6 +39,7 @@ detect -> import -> publish -> verify -> attest -> (optional) bridge ingest/quer
 | `run-all-confighub-lifecycles.sh` | Lifecycle simulation across current fixtures |
 | `simulate-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle: real ConfigHub ingest + decision query |
 | `run-all-connected-lifecycles.sh` | Connected lifecycle run across current fixtures with pass/fail summary |
+| `run-all-connected-entrypoints.sh` | Runs every `examples/*/demo-connected.sh` entrypoint (all examples, optional `live-reconcile`) |
 | `simulate-repo-wizard.sh <repo> <target> [hint]` | GUI wizard simulation path |
 
 ## Phase 3 connected story scripts
@@ -81,6 +82,7 @@ Connected runner:
 
 ```bash
 ./examples/demo/run-all-connected-lifecycles.sh
+./examples/demo/run-all-connected-entrypoints.sh
 ./examples/demo/run-phase-3-connected-stories.sh
 ```
 

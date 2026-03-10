@@ -47,6 +47,13 @@ BASE_URL="https://confighub.example"
 
 Use local mode for first value. Use connected mode for centralized governance state and cross-repo visibility.
 
+Connected full-entrypoint runner:
+
+```bash
+cub auth login
+./examples/demo/run-all-connected-entrypoints.sh
+```
+
 Per-example wrappers:
 
 - Local: `./examples/<example>/demo-local.sh`
