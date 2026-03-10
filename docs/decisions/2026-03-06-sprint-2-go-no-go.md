@@ -44,7 +44,7 @@ Evidence:
 
 1. Embedded schemas + runtime validator in `internal/contracts/`.
 2. Governed import block on missing/invalid triple.
-3. Cross-family conformance fixtures for Helm/Score/Spring/Backstage/Ably/Ops in `internal/contracts/triple_conformance_fixtures_test.go`.
+3. Cross-family conformance fixtures for Helm/Score/Spring/Backstage/No Config Platform/Ops in `internal/contracts/triple_conformance_fixtures_test.go`.
 
 ### 3) Bridge artifact symmetry coverage
 

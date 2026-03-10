@@ -18,14 +18,14 @@ Implemented in this preview slice:
    - `gitops-import-backstage.golden.json`
 5. Extended path-mode smoke and bridge smoke tests to include Backstage.
 6. Added generator capability contract tests across all supported families.
-7. Added `ably-config` app-config-only generator family (detect + import).
+7. Added `no-config-platform` app-config-only generator family (detect + import).
 8. Added example repo fixture at `examples/just-apps-no-platform-config/`.
-9. Added gitops parity goldens for Ably discover/import:
-   - `gitops-discover-ably.golden.json`
-   - `gitops-import-ably.golden.json`
-10. Extended publish parity goldens to all supported families (Helm/Score/Spring/Backstage/Ably) in both from-import and direct modes.
-11. Extended verify-attestation linked parity goldens to include Backstage and Ably.
-12. Extended path-mode smoke and bridge smoke tests to include Ably.
+9. Added gitops parity goldens for No Config Platform discover/import:
+   - `gitops-discover-no-config-platform.golden.json`
+   - `gitops-import-no-config-platform.golden.json`
+10. Extended publish parity goldens to all supported families (Helm/Score/Spring/Backstage/No Config Platform) in both from-import and direct modes.
+11. Extended verify-attestation linked parity goldens to include Backstage and No Config Platform.
+12. Extended path-mode smoke and bridge smoke tests to include No Config Platform.
 13. Added `ops-workflow` generator family (detect + import).
 14. Added example repo fixture at `examples/ops-workflow/`.
 15. Added gitops parity goldens for Ops workflow discover/import:
@@ -62,7 +62,7 @@ Implemented in this preview slice:
 44. Cut release `v0.2-preview.1` from green `main` with release notes covering parity lock, supported families, boundaries, known limits, and adoption references.
 45. Added strict schema validation gates for `GeneratorContract`, `ProvenanceRecord`, and `InverseTransformPlan` with embedded JSON schemas and importer runtime enforcement.
 46. Enforced `no-triple-no-governed-import` gate with deterministic blocker errors for missing/cardiinality-mismatched contract triples and locked importer error output tests.
-47. Added cross-family triple conformance fixtures for Helm/Score/Spring/Backstage/Ably/Ops with deterministic re-run checks and registry-kind coverage enforcement.
+47. Added cross-family triple conformance fixtures for Helm/Score/Spring/Backstage/No Config Platform/Ops with deterministic re-run checks and registry-kind coverage enforcement.
 48. Added explicit bridge symmetry matrix gate in CI (`TestBridgeSymmetryMatrix` + `make test-bridge-symmetry`) to enforce `publish -> verify -> attest -> verify-attestation` family coverage across all registry kinds.
 49. Published canonical triple + storage boundary docs mapping schemas, runtime gates, and Git (DRY linkage) vs ConfigHub (WET governance) responsibilities.
 50. Completed Sprint 2 Go/No-Go gate with documented `GO` outcome and opened post-gate bridge backlog issues (`#95`-`#97`).

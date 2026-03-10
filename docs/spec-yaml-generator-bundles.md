@@ -362,7 +362,7 @@ Every existing detection function follows the same pattern. Here is the declarat
 | `score` | `score.yaml`, `score.yml` | `score.dev/`, `kind: workload` | *(trigger file only)* | 0.96 |
 | `springboot` | `pom.xml`, `build.gradle`, `build.gradle.kts` + `src/main/resources/application.yaml\|yml` must exist | *(none — build file + app config is sufficient)* | `application-*.yaml`, `application-*.yml` | 0.93 |
 | `backstage` | `catalog-info.yaml`, `catalog-info.yml` | `backstage.io/` AND `kind: component` | `app-config.yaml`, `app-config.yml` | 0.91 |
-| `ably` | `ably.yaml`, `ably.yml`, `ably.json` | `ably` | `ably*.yaml`, `ably*.yml`, `ably*.json` | 0.90 |
+| `no-config-platform` | `no-config-platform.yaml`, `no-config-platform.yml`, `no-config-platform.json` | `no-config-platform` | `no-config-platform*.yaml`, `no-config-platform*.yml`, `no-config-platform*.json` | 0.90 |
 | `opsworkflow` | `operations.yaml`, `operations.yml`, `workflow.yaml`, `workflow.yml` | `actions:`, `workflow:` | `operations*.yaml`, `operations*.yml`, `workflow*.yaml`, `workflow*.yml`, `actions*.yaml`, `actions*.yml` | 0.89 |
 | `c3agent` | `c3agent.yaml`, `c3agent.yml`, `c3agent.json` | `fleet:`, `agent` | `c3agent*.yaml`, `c3agent*.yml`, `c3agent*.json` | 0.88 |
 | `swamp` | `.swamp.yaml`, `.swamp.yml` | `swamp` | *(trigger file + `workflow-*.yaml\|yml` in same dir + children)* | 0.89 |

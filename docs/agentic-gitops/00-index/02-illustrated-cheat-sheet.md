@@ -55,7 +55,7 @@ flowchart TD
 ```mermaid
 flowchart LR
   subgraph P["Platform/App track"]
-    H["1. Helm PaaS"] --> S["2. Score.dev"] --> SB["3. Spring Boot"] --> A["4. Ably config"]
+    H["1. Helm PaaS"] --> S["2. Score.dev"] --> SB["3. Spring Boot"] --> A["4. No Config Platform config"]
   end
 
   subgraph W["AI work platform track"]

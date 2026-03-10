@@ -295,9 +295,9 @@ visible, auditable, and governable."
 where the output is governed. Together they're the internal Heroku that doesn't
 hide the output."
 
-### Pattern 4: App Platforms (Ably-style)
+### Pattern 4: App Platforms (No Config Platform-style)
 
-Ably, LaunchDarkly, and similar app platforms produce config that is already
+No Config Platform, LaunchDarkly, and similar app platforms produce config that is already
 consumable — feature flags, runtime tuning, service config. This config doesn't
 need a generator to transform it. It's already WET.
 
@@ -307,14 +307,14 @@ need a generator to transform it. It's already WET.
 | **DRY input** | There is no DRY — the config is already literal data |
 | **Generator** | Identity (import worker). Input = output. |
 | **WET output** | Feature flags, connection strings, runtime params |
-| **What's hard without ConfigHub** | "What feature flags are active in prod vs staging?" is a question you ask the app platform's own UI. If you have 5 different config sources (Ably, LaunchDarkly, Vault, custom), there's no unified view. |
-| **ConfigHub value** | **Unified configuration surface.** All config — whether generated from templates or imported from app platforms — lives as Units with the same labels, variants, and governance. "Show me everything deployed to variant=prod" includes Helm output AND Ably feature flags AND LaunchDarkly toggles. |
+| **What's hard without ConfigHub** | "What feature flags are active in prod vs staging?" is a question you ask the app platform's own UI. If you have 5 different config sources (No Config Platform, LaunchDarkly, Vault, custom), there's no unified view. |
+| **ConfigHub value** | **Unified configuration surface.** All config — whether generated from templates or imported from app platforms — lives as Units with the same labels, variants, and governance. "Show me everything deployed to variant=prod" includes Helm output AND No Config Platform feature flags AND LaunchDarkly toggles. |
 | **Value capture** | **Breadth of config coverage.** Each config source that feeds into ConfigHub increases the "single pane of glass" value. The identity generator is trivial, but the governance (who changed this flag? when? was it approved?) is real. Platform vendors often lack their own audit trail — ConfigHub provides it. |
 
 **Key sell:** "Your feature flags and runtime config are just as important as your
 K8s manifests. They should be governed the same way — versioned, auditable,
-promotable across environments. ConfigHub doesn't replace Ably; it records what
-Ably config is active and when it changed."
+promotable across environments. ConfigHub doesn't replace No Config Platform; it records what
+No Config Platform config is active and when it changed."
 
 ### Pattern 5: Ops Apps and Action Workflows
 

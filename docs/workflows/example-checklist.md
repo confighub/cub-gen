@@ -104,7 +104,7 @@ These generate Kubernetes workload manifests. Platform contracts enforce resourc
 
 These generate governed execution plans. The DRY source describes *what operations to run*, not what manifests to deploy. Platform contracts enforce approval gates, scheduling windows, and action policies. The operations model treats workflow steps as configuration — diffable, governed, attested.
 
-### Integration generators (ably-config, backstage-idp)
+### Integration generators (no-config-platform, backstage-idp)
 
 These generate configuration for external services or developer platforms. The DRY source describes *what the app needs from the service*. Platform contracts enforce allowed channels, API policies, catalog standards.
 

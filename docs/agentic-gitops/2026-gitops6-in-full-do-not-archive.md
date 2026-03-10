@@ -507,7 +507,7 @@ record — it captures intent and shows receipts, but does not own state.
 | Pattern | When | Examples |
 |---------|------|----------|
 | **DRY → Transform → WET** | Config has semantic meaning to translate | Spring Boot → K8s, Helm values → manifests, Score → K8s |
-| **WET Already Exists → Store** | Config is already consumable | Feature flags, runtime tuning, Ably config |
+| **WET Already Exists → Store** | Config is already consumable | Feature flags, runtime tuning, No Config Platform config |
 
 An import worker is a degenerate generator (identity transform).
 

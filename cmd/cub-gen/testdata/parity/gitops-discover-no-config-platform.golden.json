@@ -37,5 +37,5 @@
   "space": "platform",
   "target_path": "\u003ctarget_path\u003e",
   "target_path_expected_suffix": "examples/just-apps-no-platform-config",
-  "target_slug": "ably"
+  "target_slug": "no-config-platform"
 }

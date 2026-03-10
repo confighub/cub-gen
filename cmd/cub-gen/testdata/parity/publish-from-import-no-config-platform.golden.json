@@ -242,7 +242,7 @@
     "wet_units": 1
   },
   "target_path": "\u003ctarget_path\u003e",
-  "target_slug": "ably",
+  "target_slug": "no-config-platform",
   "wet_manifest_targets": [
     {
       "generator_id": "gen_7e61057fca5184ad",
