@@ -131,6 +131,24 @@ type SwampWorkflowAnalysis struct {
 	RemovedModelMethodRefs []string `json:"removed_model_method_refs,omitempty"`
 }
 
+type OpsWorkflowAnalysis struct {
+	WorkflowPaths        []string `json:"workflow_paths,omitempty"`
+	BaseWorkflowPath     string   `json:"base_workflow_path,omitempty"`
+	OverlayWorkflowPaths []string `json:"overlay_workflow_paths,omitempty"`
+	PolicyPath           string   `json:"policy_path,omitempty"`
+	WorkflowNames        []string `json:"workflow_names,omitempty"`
+	Schedules            []string `json:"schedules,omitempty"`
+	ScheduleOverrides    []string `json:"schedule_overrides,omitempty"`
+	ActionNames          []string `json:"action_names,omitempty"`
+	AllowedActions       []string `json:"allowed_actions,omitempty"`
+	BlockedActions       []string `json:"blocked_actions,omitempty"`
+	ApprovalGates        []string `json:"approval_gates,omitempty"`
+	UnapprovedActions    []string `json:"unapproved_actions,omitempty"`
+	BlockedActionsUsed   []string `json:"blocked_actions_used,omitempty"`
+	AddedActions         []string `json:"added_actions,omitempty"`
+	RemovedActions       []string `json:"removed_actions,omitempty"`
+}
+
 type ProvenanceRecord struct {
 	SchemaVersion       string                  `json:"schema_version"`
 	ProvenanceID        string                  `json:"provenance_id"`
@@ -147,6 +165,7 @@ type ProvenanceRecord struct {
 	RenderedLineage     []RenderedObjectLineage `json:"rendered_object_lineage,omitempty"`
 	FieldOriginMap      []FieldOrigin           `json:"field_origin_map"`
 	InverseEditPointers []InverseEditPointer    `json:"inverse_edit_pointers"`
+	OpsWorkflow         *OpsWorkflowAnalysis    `json:"ops_workflow_analysis,omitempty"`
 	SwampWorkflow       *SwampWorkflowAnalysis  `json:"swamp_workflow_analysis,omitempty"`
 	RenderedAt          string                  `json:"rendered_at"`
 }

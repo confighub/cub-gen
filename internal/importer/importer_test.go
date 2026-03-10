@@ -458,6 +458,39 @@ func TestImportRepoOpsWorkflowDryWetContract(t *testing.T) {
 	if !inversePointerHasDryPath(prov.InverseEditPointers, "triggers.schedule") {
 		t.Fatalf("expected triggers.schedule inverse pointer, got %+v", prov.InverseEditPointers)
 	}
+	if prov.OpsWorkflow == nil {
+		t.Fatalf("expected ops workflow analysis, got nil")
+	}
+	if prov.OpsWorkflow.BaseWorkflowPath != "operations.yaml" {
+		t.Fatalf("expected base workflow path operations.yaml, got %+v", prov.OpsWorkflow)
+	}
+	if prov.OpsWorkflow.PolicyPath != "platform/execution-policy.yaml" {
+		t.Fatalf("expected policy path platform/execution-policy.yaml, got %+v", prov.OpsWorkflow)
+	}
+	if !containsString(prov.OpsWorkflow.WorkflowPaths, "operations.yaml") || !containsString(prov.OpsWorkflow.WorkflowPaths, "operations-prod.yaml") {
+		t.Fatalf("expected workflow paths operations.yaml and operations-prod.yaml, got %+v", prov.OpsWorkflow.WorkflowPaths)
+	}
+	if !containsString(prov.OpsWorkflow.ActionNames, "deploy") || !containsString(prov.OpsWorkflow.ActionNames, "restart") {
+		t.Fatalf("expected action names deploy/restart, got %+v", prov.OpsWorkflow.ActionNames)
+	}
+	if !containsString(prov.OpsWorkflow.Schedules, "0 2 * * *") || !containsString(prov.OpsWorkflow.Schedules, "0 3 * * *") {
+		t.Fatalf("expected both schedules in analysis, got %+v", prov.OpsWorkflow.Schedules)
+	}
+	if !containsString(prov.OpsWorkflow.ScheduleOverrides, "operations-prod.yaml:0 3 * * *") {
+		t.Fatalf("expected schedule override from operations-prod.yaml, got %+v", prov.OpsWorkflow.ScheduleOverrides)
+	}
+	if !containsString(prov.OpsWorkflow.AllowedActions, "deploy") || !containsString(prov.OpsWorkflow.BlockedActions, "destroy") {
+		t.Fatalf("expected allowed/blocked actions from policy, got %+v", prov.OpsWorkflow)
+	}
+	if !containsString(prov.OpsWorkflow.ApprovalGates, "production:1") || !containsString(prov.OpsWorkflow.ApprovalGates, "staging:0") {
+		t.Fatalf("expected approval gates from policy, got %+v", prov.OpsWorkflow.ApprovalGates)
+	}
+	if len(prov.OpsWorkflow.UnapprovedActions) != 0 {
+		t.Fatalf("expected no unapproved actions, got %+v", prov.OpsWorkflow.UnapprovedActions)
+	}
+	if len(prov.OpsWorkflow.BlockedActionsUsed) != 0 {
+		t.Fatalf("expected no blocked actions used, got %+v", prov.OpsWorkflow.BlockedActionsUsed)
+	}
 
 	if !dryInputHasRoleOwnerPath(result.DryInputs, "operations-base", "platform-engineer", "operations.yaml") {
 		t.Fatalf("expected operations-base owner to be platform-engineer, got %+v", result.DryInputs)
