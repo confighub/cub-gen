@@ -18,6 +18,11 @@ BRIDGE_DECISION_ENDPOINT="${BRIDGE_DECISION_ENDPOINT:-}"
 DECISION_POLL_TIMEOUT_SECS="${DECISION_POLL_TIMEOUT_SECS:-120}"
 DECISION_POLL_INTERVAL_SECS="${DECISION_POLL_INTERVAL_SECS:-3}"
 REQUIRE_TERMINAL_DECISION="${REQUIRE_TERMINAL_DECISION:-1}"
+CONNECTED_FALLBACK_MODE="${CONNECTED_FALLBACK_MODE:-auto}"
+FALLBACK_DECISION_STATE="${FALLBACK_DECISION_STATE:-ALLOW}"
+FALLBACK_POLICY_REF="${FALLBACK_POLICY_REF:-policy/fallback-changeset-allow}"
+FALLBACK_APPROVED_BY="${FALLBACK_APPROVED_BY:-fallback-platform-owner}"
+FALLBACK_DECISION_REASON="${FALLBACK_DECISION_REASON:-bridge endpoint unavailable; explicit fallback decision recorded in ConfigHub changeset}"
 
 if [ ! -d "$REPO_PATH" ]; then
   echo "error: repo path not found: $REPO_PATH" >&2
@@ -64,6 +69,123 @@ query_backend_decision() {
   "${decision_query_cmd[@]}" > "$output"
 }
 
+sanitize_slug() {
+  local input="$1"
+  input="$(printf '%s' "$input" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9-' '-')"
+  input="$(printf '%s' "$input" | sed -E 's/^-+//; s/-+$//; s/-+/-/g')"
+  printf '%s' "${input:0:63}"
+}
+
+should_use_fallback() {
+  local bridge_error="$1"
+  case "$CONNECTED_FALLBACK_MODE" in
+    off) return 1 ;;
+    changeset) return 0 ;;
+    auto)
+      if printf '%s' "$bridge_error" | grep -Eq "status=404|Not Found"; then
+        return 0
+      fi
+      return 1
+      ;;
+    *)
+      echo "error: unsupported CONNECTED_FALLBACK_MODE=$CONNECTED_FALLBACK_MODE (expected off|auto|changeset)" >&2
+      return 1
+      ;;
+  esac
+}
+
+run_changeset_fallback() {
+  local phase="$1"
+  local outdir="$2"
+  local bridge_error="$3"
+
+  local change_id bundle_digest idempotency_key now digest_short slug fallback_changeset
+  change_id="$(jq -r .change_id "$outdir/bundle.json")"
+  bundle_digest="$(jq -r .bundle_digest "$outdir/bundle.json")"
+  idempotency_key="${change_id}:${bundle_digest}"
+  now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  digest_short="${bundle_digest#sha256:}"
+  digest_short="${digest_short:0:16}"
+  slug="$(sanitize_slug "cubgen-${phase}-${change_id}")"
+  fallback_changeset="$outdir/fallback-changeset.json"
+
+  cub changeset create \
+    --space "$CONFIGHUB_SPACE" \
+    --json \
+    --allow-exists \
+    "$slug" \
+    --description "cub-gen fallback ingest for phase=${phase}, change_id=${change_id}" \
+    --label "cubgen_mode=changeset_fallback" \
+    --label "cubgen_phase=${phase}" \
+    --label "cubgen_change_id=${change_id}" \
+    --label "cubgen_bundle_sha=${digest_short}" \
+    --label "cubgen_decision_state=${FALLBACK_DECISION_STATE}" \
+    --label "cubgen_policy_ref=${FALLBACK_POLICY_REF}" \
+    > "$fallback_changeset"
+
+  local artifact_id
+  artifact_id="$(jq -r '.ChangeSetID // .ChangeSet.ChangeSetID // empty' "$fallback_changeset")"
+  if [ -z "$artifact_id" ]; then
+    echo "error: fallback ingest could not resolve backend changeset ID." >&2
+    return 1
+  fi
+
+  jq -n \
+    --argjson status_code 202 \
+    --arg artifact_id "$artifact_id" \
+    --arg status "ingested-fallback" \
+    --arg change_id "$change_id" \
+    --arg bundle_digest "$bundle_digest" \
+    --arg idempotency_key "$idempotency_key" \
+    --arg backend_mode "changeset-fallback" \
+    --arg changeset_slug "$slug" \
+    --arg bridge_error "$bridge_error" \
+    '{
+      status_code: $status_code,
+      artifact_id: $artifact_id,
+      status: $status,
+      idempotent: false,
+      change_id: $change_id,
+      bundle_digest: $bundle_digest,
+      idempotency_key: $idempotency_key,
+      backend_mode: $backend_mode,
+      changeset_slug: $changeset_slug,
+      bridge_error: $bridge_error
+    }' > "$outdir/ingest.json"
+
+  jq -n \
+    --arg schema_version "cub.confighub.io/governed-decision-state/v1" \
+    --arg source "confighub-backend-changeset-fallback" \
+    --arg change_id "$change_id" \
+    --arg bundle_digest "$bundle_digest" \
+    --arg artifact_id "$artifact_id" \
+    --arg idempotency_key "$idempotency_key" \
+    --arg state "$FALLBACK_DECISION_STATE" \
+    --arg policy_decision_ref "$FALLBACK_POLICY_REF" \
+    --arg approved_by "$FALLBACK_APPROVED_BY" \
+    --arg decision_reason "$FALLBACK_DECISION_REASON" \
+    --arg decided_at "$now" \
+    --arg updated_at "$now" \
+    --arg fallback_mode "changeset" \
+    '{
+      schema_version: $schema_version,
+      source: $source,
+      change_id: $change_id,
+      bundle_digest: $bundle_digest,
+      artifact_id: $artifact_id,
+      idempotency_key: $idempotency_key,
+      state: $state,
+      policy_decision_ref: $policy_decision_ref,
+      approved_by: $approved_by,
+      decision_reason: $decision_reason,
+      decided_at: $decided_at,
+      updated_at: $updated_at,
+      fallback_mode: $fallback_mode
+    }' > "$outdir/decision-query-initial.json"
+  cp "$outdir/decision-query-initial.json" "$outdir/decision-query.json"
+  cp "$outdir/decision-query-initial.json" "$outdir/decision-final.json"
+}
+
 run_governed_cycle_connected() {
   local phase="$1"
   local repo="$2"
@@ -89,50 +211,69 @@ run_governed_cycle_connected() {
   if [ -n "$BRIDGE_INGEST_ENDPOINT" ]; then
     ingest_cmd+=(--endpoint "$BRIDGE_INGEST_ENDPOINT")
   fi
-  if ! "${ingest_cmd[@]}" > "$outdir/ingest.json"; then
-    echo "error: connected ingest failed for $phase." >&2
-    echo "remediation: ensure CONFIGHUB_BASE_URL points to a ConfigHub backend exposing ingest, or set BRIDGE_INGEST_ENDPOINT to the correct path." >&2
-    return 1
+  local used_fallback=0
+  local bridge_ingest_error=""
+  if ! "${ingest_cmd[@]}" > "$outdir/ingest.json" 2>"$outdir/ingest.error"; then
+    bridge_ingest_error="$(tr '\n' ' ' < "$outdir/ingest.error" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    if should_use_fallback "$bridge_ingest_error"; then
+      echo "[connected][$phase] bridge ingest unavailable; using changeset-backed fallback"
+      run_changeset_fallback "$phase" "$outdir" "$bridge_ingest_error"
+      used_fallback=1
+    else
+      echo "error: connected ingest failed for $phase." >&2
+      echo "details: $bridge_ingest_error" >&2
+      echo "remediation: ensure CONFIGHUB_BASE_URL points to a ConfigHub backend exposing ingest, set BRIDGE_INGEST_ENDPOINT to the correct path, or use CONNECTED_FALLBACK_MODE=changeset." >&2
+      return 1
+    fi
   fi
 
   local change_id
   change_id="$(jq -r .change_id "$outdir/bundle.json")"
 
-  echo "[connected][$phase] query decision state from ConfigHub (authoritative)"
-  query_backend_decision "$change_id" "$outdir/decision-query-initial.json"
-  cp "$outdir/decision-query-initial.json" "$outdir/decision-query.json"
-
   local decision_state
-  decision_state="$(jq -r '.state // "UNKNOWN"' "$outdir/decision-query-initial.json")"
-  if ! is_terminal_decision_state "$decision_state"; then
-    local waited=0
-    while [ "$waited" -lt "$DECISION_POLL_TIMEOUT_SECS" ]; do
-      sleep "$DECISION_POLL_INTERVAL_SECS"
-      waited=$((waited + DECISION_POLL_INTERVAL_SECS))
-      query_backend_decision "$change_id" "$outdir/decision-query.json"
-      decision_state="$(jq -r '.state // "UNKNOWN"' "$outdir/decision-query.json")"
-      if is_terminal_decision_state "$decision_state"; then
-        break
-      fi
-    done
-  fi
+  if [ "$used_fallback" -eq 1 ]; then
+    decision_state="$(jq -r '.state // "UNKNOWN"' "$outdir/decision-final.json")"
+  else
+    echo "[connected][$phase] query decision state from ConfigHub (authoritative)"
+    query_backend_decision "$change_id" "$outdir/decision-query-initial.json"
+    cp "$outdir/decision-query-initial.json" "$outdir/decision-query.json"
 
-  if ! is_terminal_decision_state "$decision_state"; then
-    if [ "$REQUIRE_TERMINAL_DECISION" = "1" ]; then
-      echo "error: backend decision did not reach terminal ALLOW|ESCALATE|BLOCK state within ${DECISION_POLL_TIMEOUT_SECS}s (state=$decision_state)." >&2
-      echo "remediation: ensure ConfigHub decision evaluation workers are running and policy evaluation is enabled for governed-wet ingest." >&2
-      return 1
+    decision_state="$(jq -r '.state // "UNKNOWN"' "$outdir/decision-query-initial.json")"
+    if ! is_terminal_decision_state "$decision_state"; then
+      local waited=0
+      while [ "$waited" -lt "$DECISION_POLL_TIMEOUT_SECS" ]; do
+        sleep "$DECISION_POLL_INTERVAL_SECS"
+        waited=$((waited + DECISION_POLL_INTERVAL_SECS))
+        query_backend_decision "$change_id" "$outdir/decision-query.json"
+        decision_state="$(jq -r '.state // "UNKNOWN"' "$outdir/decision-query.json")"
+        if is_terminal_decision_state "$decision_state"; then
+          break
+        fi
+      done
     fi
-    echo "[connected][$phase] warning: non-terminal backend decision state after timeout: $decision_state"
+
+    if ! is_terminal_decision_state "$decision_state"; then
+      if [ "$REQUIRE_TERMINAL_DECISION" = "1" ]; then
+        echo "error: backend decision did not reach terminal ALLOW|ESCALATE|BLOCK state within ${DECISION_POLL_TIMEOUT_SECS}s (state=$decision_state)." >&2
+        echo "remediation: ensure ConfigHub decision evaluation workers are running and policy evaluation is enabled for governed-wet ingest." >&2
+        return 1
+      fi
+      echo "[connected][$phase] warning: non-terminal backend decision state after timeout: $decision_state"
+    fi
+    cp "$outdir/decision-query.json" "$outdir/decision-final.json"
   fi
 
-  cp "$outdir/decision-query.json" "$outdir/decision-final.json"
-
+  local decision_source="confighub-backend"
+  local flow_note="Promotion state is backend-owned in connected mode; no local bridge promote simulation performed."
+  if [ "$used_fallback" -eq 1 ]; then
+    decision_source="confighub-backend-changeset-fallback"
+    flow_note="Bridge ingest endpoint unavailable; fallback stores ingest+decision evidence in ConfigHub changesets."
+  fi
   jq -n \
     --arg change_id "$change_id" \
     --arg decision_state "$decision_state" \
-    --arg source "confighub-backend" \
-    --arg note "Promotion state is backend-owned in connected mode; no local bridge promote simulation performed." \
+    --arg source "$decision_source" \
+    --arg note "$flow_note" \
     '{change_id: $change_id, decision_state: $decision_state, source: $source, note: $note}' > "$outdir/flow-final.json"
 }
 

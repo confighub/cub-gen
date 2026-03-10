@@ -53,7 +53,7 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 |--------|---------------------|
 | `simulate-confighub-lifecycle.sh <repo> <target> [slug]` | Full local lifecycle simulation |
 | `run-all-confighub-lifecycles.sh` | Lifecycle simulation across current fixtures |
-| `simulate-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle: real ConfigHub ingest + decision query |
+| `simulate-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle: real ConfigHub ingest/query when bridge endpoints are available, with backend `changeset` fallback when they are not |
 | `run-all-connected-lifecycles.sh` | Connected lifecycle run across current fixtures with pass/fail summary |
 | `run-all-connected-entrypoints.sh` | Runs every `examples/*/demo-connected.sh` entrypoint (all examples, optional `live-reconcile`) |
 | `simulate-repo-wizard.sh <repo> <target> [hint]` | GUI wizard simulation path |
@@ -113,10 +113,17 @@ Connected flow shape:
 publish -> verify -> attest -> bridge ingest -> decision query
 ```
 
-Connected ingest/query and decision-state authority are real ConfigHub API calls in connected lifecycle scripts.
+Connected ingest/query and decision-state authority are real ConfigHub API calls in connected lifecycle scripts when governed-wet bridge endpoints are available.
 Local contract simulation is limited to explicit local-only demos (`simulate-confighub-lifecycle.sh`, `module-4-bridge-governance.sh`).
 
-If ingest returns `404 Not Found`, point `CONFIGHUB_BASE_URL` to a backend with the governed-wet bridge endpoints enabled.
+Bridge endpoint behavior:
+
+- Default (`CONNECTED_FALLBACK_MODE=auto`): if ingest returns `404 Not Found`, the scripts switch to backend `changeset` fallback and still persist evidence in ConfigHub.
+- Strict (`CONNECTED_FALLBACK_MODE=off`): fail fast unless bridge ingest/query endpoints are reachable.
+- Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`): always use backend `changeset` fallback.
+
+Fallback mode records `ingest.json`/`decision-final.json` in the standard contract shape with `source=confighub-backend-changeset-fallback`, so story scripts and CI gates remain deterministic.
+
 If your backend exposes non-default paths, set `BRIDGE_INGEST_ENDPOINT` and `BRIDGE_DECISION_ENDPOINT`.
 
 Connected runner:

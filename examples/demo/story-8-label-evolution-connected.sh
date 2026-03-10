@@ -79,14 +79,13 @@ fi
 
 legacy_where="ChangeSetID = '${migration_changeset_id}' AND Labels.lifecycle = 'production'"
 new_where="ChangeSetID = '${migration_changeset_id}' AND Labels.environment_tier = 'prod'"
-transition_union_where="ChangeSetID = '${migration_changeset_id}' AND (Labels.lifecycle = 'production' OR Labels.environment_tier = 'prod')"
 
 legacy_query="$OUT_DIR/update/migration-query-legacy.json"
 new_query="$OUT_DIR/update/migration-query-new.json"
 union_query="$OUT_DIR/update/migration-query-transition-union.json"
 query_changesets "$legacy_where" "$legacy_query"
 query_changesets "$new_where" "$new_query"
-query_changesets "$transition_union_where" "$union_query"
+jq -s 'add | unique_by(.ChangeSet.ChangeSetID)' "$legacy_query" "$new_query" > "$union_query"
 
 legacy_hits="$(jq 'length' "$legacy_query")"
 new_hits="$(jq 'length' "$new_query")"
@@ -107,7 +106,7 @@ jq -n \
   --arg to_key "metadata.labels.environment_tier" \
   --arg legacy_where "$legacy_where" \
   --arg new_where "$new_where" \
-  --arg union_where "$transition_union_where" \
+  --arg union_where "legacy-query-union + new-query-union (computed in script)" \
   --arg legacy_query "$legacy_query" \
   --arg new_query "$new_query" \
   --arg union_query "$union_query" \
