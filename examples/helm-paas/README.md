@@ -74,6 +74,28 @@ this deployed field?" without manual chart archaeology.
 | Rendered Kubernetes objects | WET targets with provenance | Every WET field is traced back to values or templates with confidence. |
 | Flux/Argo applying Helm output | LIVE state | Existing runtime path stays unchanged; only governance visibility is added. |
 
+## Advanced reality check: umbrella charts, overlays, and GitOps transports
+
+If you run Helm at enterprise scale, the pain is usually in merge precedence,
+not in writing templates:
+
+- umbrella chart values overriding subchart defaults,
+- environment overlays overriding umbrella defaults,
+- Flux/Argo transport layers adding extra value sources (`valuesFrom`, inline overrides),
+- OCI chart/version drift across many repos and clusters.
+
+This example is intentionally a single-chart baseline so new users can see the
+mapping quickly. In real environments, apply the same cub-gen flow at each
+layer where DRY intent exists:
+
+1. Chart + subchart value defaults (platform-owned contract layer).
+2. Environment overlays (app/ops-owned intent layer).
+3. Reconciler transport config (Flux `HelmRelease`, Argo `Application`).
+
+The key outcome does not change: every WET field should have one clear edit
+path and owner. That is what prevents "edit rendered manifests and hope" during
+incidents.
+
 ## Try it
 
 ```bash

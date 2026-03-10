@@ -40,6 +40,14 @@ while IFS= read -r readme; do
   if ! rg -q 'cub auth login' "$readme"; then
     failures+=("$example_name: README missing connected login step (cub auth login)")
   fi
+
+  if ! rg -q '^## If you already' "$readme"; then
+    failures+=("$example_name: README missing expert-user viewpoint section (## If you already ...)")
+  fi
+
+  if ! rg -q '^## Why this maps' "$readme"; then
+    failures+=("$example_name: README missing model-mapping section (## Why this maps ...)")
+  fi
 done < <(find "$ROOT_DIR/examples" -mindepth 2 -maxdepth 2 -type f -name README.md | sort)
 
 if [ "${#failures[@]}" -gt 0 ]; then
@@ -50,4 +58,4 @@ if [ "${#failures[@]}" -gt 0 ]; then
   exit 1
 fi
 
-echo "ok: every example has local+connected entrypoints with login guidance"
+echo "ok: every example has local+connected entrypoints, login guidance, expert viewpoint, and model mapping"

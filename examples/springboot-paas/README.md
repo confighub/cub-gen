@@ -79,6 +79,31 @@ runtime manifests explicit, including ownership boundaries by field.
 | Datasource and secret controls | Ownership + policy gates | Sensitive changes can be blocked/escalated before deploy. |
 | Flux/Argo deployment path | LIVE state | Existing deployment runtime remains unchanged. |
 
+## Advanced reality check: profile chains and developer workflow
+
+Real Spring Boot shops rely on profile resolution, and that is where ownership
+bugs hide. A practical trace should answer:
+
+```
+application.yaml        -> server.port = 8080   (base)
+application-dev.yaml    -> server.port = 9090   (dev override)
+application-prod.yaml   -> server.port = 8081   (prod override)
+active profile: prod
+effective value: 8081 (origin: application-prod.yaml)
+```
+
+For developer adoption, keep cub-gen in CI and return decisions in Spring terms
+instead of Kubernetes terms. The useful message is:
+
+`spring.datasource.hikari.maximum-pool-size` is platform-managed -> BLOCK.
+
+Not:
+
+`Deployment/spec/template/...` changed.
+
+That is why this example treats Spring property namespaces as first-class
+ownership boundaries.
+
 ## Try it
 
 ```bash

@@ -76,6 +76,27 @@ and ownership routing so debugging and governance use the same contract.
 | Platform contracts/policies | Governance layer | Rules run before deploy, not as after-the-fact review. |
 | Flux/Argo deployment loop | LIVE state | Runtime remains unchanged while visibility improves. |
 
+## Advanced reality check: provisioner fan-out and environment context
+
+In mature Score platforms, one DRY resource declaration often fans out into
+multiple runtime objects. Example:
+
+`resources.db.type: postgres` may imply a credential secret, network policy,
+runtime env wiring, and database provisioning metadata.
+
+The governance requirement is the same: each generated field needs a traceable
+source and owner, even when one Score field expands to many WET objects.
+
+The same applies to environment context. The same `score.yaml` can produce
+different WET output in dev vs prod due to platform contracts and provisioner
+rules. This is why provenance must include both:
+
+1. the app-authored DRY source (`score.yaml`), and
+2. the platform-authored contract/policy layer that influenced rendering.
+
+That combined trace is what makes Score practical at scale without forcing app
+teams to learn Kubernetes internals.
+
 ## Try it
 
 ```bash
