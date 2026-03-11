@@ -48,6 +48,8 @@ func run(args []string) error {
 		return runAttest(args[1:])
 	case "verify-attestation":
 		return runVerifyAttestation(args[1:])
+	case "change":
+		return runChange(args[1:])
 	case "generators":
 		return runGenerators(args[1:])
 	case "gitops":
@@ -958,6 +960,191 @@ func runVerifyAttestation(args []string) error {
 	return nil
 }
 
+type changePreviewInput struct {
+	TargetSlug       string `json:"target_slug"`
+	RenderTargetSlug string `json:"render_target_slug"`
+	Space            string `json:"space"`
+	Ref              string `json:"ref"`
+	WhereResource    string `json:"where_resource,omitempty"`
+}
+
+type changePreviewSummary struct {
+	ChangeID          string `json:"change_id"`
+	BundleDigest      string `json:"bundle_digest"`
+	AttestationDigest string `json:"attestation_digest"`
+}
+
+type changePreviewCounts struct {
+	DiscoveredResources int `json:"discovered_resources"`
+	DryInputs           int `json:"dry_inputs"`
+	WetTargets          int `json:"wet_targets"`
+	InversePatches      int `json:"inverse_patches"`
+}
+
+type changePreviewVerification struct {
+	BundleValid      bool   `json:"bundle_valid"`
+	AttestationValid bool   `json:"attestation_valid"`
+	Verifier         string `json:"verifier"`
+}
+
+type changePreviewResult struct {
+	Input              changePreviewInput        `json:"input"`
+	Change             changePreviewSummary      `json:"change"`
+	DiscoveredProfile  []string                  `json:"discovered_profiles"`
+	Counts             changePreviewCounts       `json:"counts"`
+	EditRecommendation model.InverseEditPointer  `json:"edit_recommendation"`
+	Verification       changePreviewVerification `json:"verification"`
+}
+
+func runChange(args []string) error {
+	if len(args) == 0 {
+		printChangeUsage(os.Stderr)
+		return errors.New("change subcommand required")
+	}
+
+	switch args[0] {
+	case "help", "-h", "--help":
+		printChangeUsage(os.Stdout)
+		return nil
+	case "preview":
+		return runChangePreview(args[1:])
+	default:
+		printChangeUsage(os.Stderr)
+		return fmt.Errorf("unknown change subcommand: %s", args[0])
+	}
+}
+
+func runChangePreview(args []string) error {
+	fs := flag.NewFlagSet("change preview", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	space := fs.String("space", "default", "ConfigHub space label")
+	ref := fs.String("ref", "HEAD", "Git ref label to include in output")
+	whereResource := fs.String("where-resource", "", "Additional resource filter expression")
+	out := fs.String("out", "-", "Output file path, or '-' for stdout")
+	verifier := fs.String("verifier", "cub-gen", "Verifier identity label")
+	jsonOut := fs.Bool("json", true, "Output JSON")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	_ = jsonOut
+
+	if fs.NArg() != 2 {
+		return errors.New("usage: cub-gen change preview [flags] <target-slug> <render-target-slug>")
+	}
+	targetSlug := fs.Arg(0)
+	renderTargetSlug := fs.Arg(1)
+
+	imported, err := gitopsflow.Import(targetSlug, renderTargetSlug, *ref, *space, *whereResource)
+	if err != nil {
+		return err
+	}
+
+	bundle := publish.BuildBundle(imported)
+	if err := publish.VerifyBundle(bundle); err != nil {
+		return fmt.Errorf("verify generated bundle: %w", err)
+	}
+
+	attestationRecord, err := attest.Build(bundle, *verifier)
+	if err != nil {
+		return fmt.Errorf("build attestation: %w", err)
+	}
+	if err := attest.VerifyRecordAgainstBundle(attestationRecord, bundle); err != nil {
+		return fmt.Errorf("verify generated attestation: %w", err)
+	}
+
+	topEdit, ok := bestInverseEditPointer(imported.Provenance)
+	if !ok {
+		topEdit = model.InverseEditPointer{
+			Owner:    "unknown",
+			EditHint: "No inverse edit hint produced.",
+		}
+	}
+
+	result := changePreviewResult{
+		Input: changePreviewInput{
+			TargetSlug:       targetSlug,
+			RenderTargetSlug: renderTargetSlug,
+			Space:            *space,
+			Ref:              *ref,
+			WhereResource:    strings.TrimSpace(*whereResource),
+		},
+		Change: changePreviewSummary{
+			ChangeID:          bundle.ChangeID,
+			BundleDigest:      bundle.BundleDigest,
+			AttestationDigest: attestationRecord.AttestationDigest,
+		},
+		DiscoveredProfile: discoveredProfiles(imported.Discovered),
+		Counts: changePreviewCounts{
+			DiscoveredResources: len(imported.Discovered),
+			DryInputs:           len(imported.DryInputs),
+			WetTargets:          len(imported.WetManifestTargets),
+			InversePatches:      countInversePatches(imported.InversePlans),
+		},
+		EditRecommendation: topEdit,
+		Verification: changePreviewVerification{
+			BundleValid:      true,
+			AttestationValid: true,
+			Verifier:         *verifier,
+		},
+	}
+
+	if *out == "-" {
+		return writeJSON(os.Stdout, result, *pretty)
+	}
+
+	f, err := os.Create(*out)
+	if err != nil {
+		return fmt.Errorf("create output file: %w", err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	return writeJSON(f, result, *pretty)
+}
+
+func bestInverseEditPointer(provenance []model.ProvenanceRecord) (model.InverseEditPointer, bool) {
+	best := model.InverseEditPointer{}
+	found := false
+	for _, record := range provenance {
+		for _, pointer := range record.InverseEditPointers {
+			if !found || pointer.Confidence > best.Confidence {
+				best = pointer
+				found = true
+			}
+		}
+	}
+	return best, found
+}
+
+func discoveredProfiles(discovered []gitopsflow.DiscoveredResource) []string {
+	set := map[string]struct{}{}
+	for _, resource := range discovered {
+		profile := strings.TrimSpace(resource.GeneratorProfile)
+		if profile == "" {
+			continue
+		}
+		set[profile] = struct{}{}
+	}
+	profiles := make([]string, 0, len(set))
+	for profile := range set {
+		profiles = append(profiles, profile)
+	}
+	sort.Strings(profiles)
+	return profiles
+}
+
+func countInversePatches(plans []model.InverseTransformPlan) int {
+	total := 0
+	for _, plan := range plans {
+		total += len(plan.Patches)
+	}
+	return total
+}
+
 func runGitOps(args []string) error {
 	if len(args) == 0 {
 		printGitOpsUsage(os.Stderr)
@@ -1411,6 +1598,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen verify [--in FILE|-] [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out, "  cub-gen bridge <ingest|decision|promote> [flags]")
@@ -1439,6 +1627,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config | cub-gen attest --in - --verifier ci-bot")
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen attest --in - --verifier ci-bot")
 	fmt.Fprintln(out, "  cub-gen verify-attestation --in attestation.json --bundle bundle.json")
+	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen bridge ingest --in bundle.json --base-url https://confighub.example")
 	fmt.Fprintln(out, "  cub-gen bridge decision query --change-id chg_123 --base-url https://confighub.example")
 	fmt.Fprintln(out, "  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123")
@@ -1448,6 +1637,17 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen generators --capability render-manifests")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Note: gitops commands are local-only prototypes that mirror cub gitops stages.")
+}
+
+func printChangeUsage(out io.Writer) {
+	fmt.Fprintln(out, "cub-gen change: developer-facing change workflow commands")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "Usage:")
+	fmt.Fprintln(out, "  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "Examples:")
+	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/helm-paas ./examples/helm-paas")
+	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/swamp-automation ./examples/swamp-automation")
 }
 
 func printGitOpsUsage(out io.Writer) {
