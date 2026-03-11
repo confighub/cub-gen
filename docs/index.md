@@ -38,7 +38,14 @@ AI-assisted changes make this gap wider because more changes happen faster. cub-
 
 ## Part of the ConfigHub platform
 
-cub-gen is the **local-first entry point** to the [ConfigHub platform](platform.md). It works standalone — no backend, no accounts, no cluster access needed. But everything it produces feeds into ConfigHub when you're ready.
+cub-gen is the **local-first entry point** to the [ConfigHub platform](platform.md).
+
+- Local mode: standalone, no backend login required.
+- Connected mode: `cub auth login` + ConfigHub backend decision APIs.
+
+ConfigHub backend OSS is available today:
+
+- [confighubai/confighub](https://github.com/confighubai/confighub)
 
 1. **DRY** app intent lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.)
 2. **cub-gen** classifies DRY inputs + WET targets and emits provenance with field-origin tracing
