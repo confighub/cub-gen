@@ -225,7 +225,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./cub-gen gitops cleanup --space platform ./examples/backstage-idp
 ```
 
-### Ably app-config
+### No-config-platform (app-only)
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/just-apps-no-platform-config

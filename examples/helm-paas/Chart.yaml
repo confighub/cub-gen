@@ -4,8 +4,3 @@ version: 0.1.0
 appVersion: "1.0.0"
 description: Platform-managed chart contract for payments-api.
 type: application
-dependencies:
-  - name: postgresql
-    version: "13.2.24"
-    repository: https://charts.bitnami.com/bitnami
-    condition: postgresql.enabled

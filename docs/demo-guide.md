@@ -11,7 +11,7 @@ Run any module independently:
 ./examples/demo/module-2-score-field-map.sh
 ./examples/demo/module-3-spring-ownership.sh
 ./examples/demo/module-4-bridge-governance.sh
-./examples/demo/module-5-ably-platform.sh
+./examples/demo/module-5-no-config-platform.sh
 ```
 
 Or run all modules in one pass:
@@ -105,7 +105,7 @@ create reconciliation, update reconciliation, and drift correction against LIVE 
 | helm-paas | `./examples/demo/module-1-helm-import.sh` |
 | scoredev-paas | `./examples/demo/module-2-score-field-map.sh` |
 | springboot-paas | `./examples/demo/module-3-spring-ownership.sh` |
-| just-apps-no-platform-config | `./examples/demo/module-5-ably-platform.sh` |
+| just-apps-no-platform-config | `./examples/demo/module-5-no-config-platform.sh` |
 | backstage-idp | Included in `./examples/demo/run-all-confighub-lifecycles.sh` |
 
 ### Platform demos
