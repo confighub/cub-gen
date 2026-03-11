@@ -42,6 +42,8 @@ jobs:
       CONNECTED_FALLBACK_MODE: off
       REQUIRE_TERMINAL_DECISION: "1"
       CLEANUP_CLUSTER: "1"
+      RUN_ID: ${{ github.run_id }}
+      WAVE_ID: wave-${{ github.run_id }}
       APP_PR_REPO: ${{ vars.APP_PR_REPO || secrets.APP_PR_REPO }}
       APP_PR_NUMBER: ${{ vars.APP_PR_NUMBER || secrets.APP_PR_NUMBER }}
       PROMOTION_PR_REPO: ${{ vars.PROMOTION_PR_REPO || secrets.PROMOTION_PR_REPO }}

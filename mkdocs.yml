@@ -1,5 +1,4 @@
 site_name: cub-gen
-site_url: https://confighub.github.io/cub-gen/
 site_description: Deterministic Git-native generator importer with command-shape parity to cub gitops
 repo_url: https://github.com/confighub/cub-gen
 repo_name: confighub/cub-gen
