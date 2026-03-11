@@ -9,7 +9,7 @@ on:
 
 jobs:
   local:
-    name: CI Local
+    name: Build + Unit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
         run: make ci-local
 
   connected:
-    name: CI Connected
+    name: CLI Parity
     needs: local
     runs-on: ubuntu-latest
     env:
