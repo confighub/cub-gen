@@ -38,8 +38,7 @@ Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and t
 - `change run`: execute the full governed flow (local or connected).
 - `change explain`: answer "what should I edit and why?" for a specific field.
 
-`change preview` and `change run` are available as first-class CLI commands.
-`change explain` is mapped through the demo wrappers until its native subcommand lands.
+`change preview`, `change run`, and `change explain` are available as first-class CLI commands.
 
 ## Core Value in 10 Seconds
 

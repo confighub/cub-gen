@@ -100,20 +100,18 @@ Expected output fields (`ChangeExplainResult`):
 - `7`: contract/triple validation failed
 - `8`: internal execution error
 
-## MVP compatibility mapping (today)
+## MVP implementation status (today)
 
-Until native `cub-gen change` subcommands are implemented, wrappers map to existing commands:
+Native subcommands are implemented for:
 
 - `change preview`
-  - `cub-gen gitops import --json ...`
-  - `cub-gen publish --in ...`
-  - extract mutation card fields from import/provenance
-- `change run (local)`
-  - `examples/demo/app-ai-change-run.sh`
-- `change run (connected)`
-  - `examples/demo/run-confighub-lifecycle-connected.sh`
+- `change run (local|connected)`
 - `change explain`
-  - read `inverse_edit_pointers` from import output or mutation card projection
+
+Compatibility wrappers remain useful for demo packaging and story scripts:
+
+- `examples/demo/app-ai-change-run.sh`
+- `examples/demo/run-confighub-lifecycle-connected.sh`
 
 ## Determinism requirements
 

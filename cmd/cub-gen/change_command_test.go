@@ -113,6 +113,90 @@ func TestChangeRunConnectedMissingBaseURL(t *testing.T) {
 	}
 }
 
+func TestChangeExplainJSON(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{
+		"change", "explain",
+		"--space", "platform",
+		"score",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("change explain returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal change explain output: %v\noutput=%s", err, out)
+	}
+
+	explanation, ok := got["explanation"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected explanation object, got %T", got["explanation"])
+	}
+	if owner, ok := explanation["owner"].(string); !ok || strings.TrimSpace(owner) == "" {
+		t.Fatalf("expected non-empty owner, got %v", explanation["owner"])
+	}
+	if wetPath, ok := explanation["wet_path"].(string); !ok || strings.TrimSpace(wetPath) == "" {
+		t.Fatalf("expected non-empty wet_path, got %v", explanation["wet_path"])
+	}
+	if dryPath, ok := explanation["dry_path"].(string); !ok || strings.TrimSpace(dryPath) == "" {
+		t.Fatalf("expected non-empty dry_path, got %v", explanation["dry_path"])
+	}
+}
+
+func TestChangeExplainWetPathFilter(t *testing.T) {
+	setupAliases(t)
+
+	previewOut, _, err := runWithCapturedIO([]string{
+		"change", "preview",
+		"--space", "platform",
+		"score",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("change preview returned error: %v", err)
+	}
+	var preview map[string]any
+	if err := json.Unmarshal([]byte(previewOut), &preview); err != nil {
+		t.Fatalf("unmarshal change preview output: %v", err)
+	}
+	recommendation, ok := preview["edit_recommendation"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected edit_recommendation object, got %T", preview["edit_recommendation"])
+	}
+	wetPath, ok := recommendation["wet_path"].(string)
+	if !ok || strings.TrimSpace(wetPath) == "" {
+		t.Fatalf("expected wet_path recommendation, got %v", recommendation["wet_path"])
+	}
+
+	explainOut, _, err := runWithCapturedIO([]string{
+		"change", "explain",
+		"--space", "platform",
+		"--wet-path", wetPath,
+		"score",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("change explain returned error: %v", err)
+	}
+	var explain map[string]any
+	if err := json.Unmarshal([]byte(explainOut), &explain); err != nil {
+		t.Fatalf("unmarshal change explain output: %v", err)
+	}
+	query, ok := explain["query"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected query object, got %T", explain["query"])
+	}
+	if got, ok := query["wet_path_filter"].(string); !ok || got != wetPath {
+		t.Fatalf("expected wet_path_filter=%q, got %v", wetPath, query["wet_path_filter"])
+	}
+}
+
 func TestChangeCommandErrorModes(t *testing.T) {
 	tests := []struct {
 		name string
@@ -126,7 +210,7 @@ func TestChangeCommandErrorModes(t *testing.T) {
 		},
 		{
 			name: "unknown-subcommand",
-			args: []string{"change", "explain"},
+			args: []string{"change", "unknown"},
 			sub:  "unknown change subcommand",
 		},
 		{
@@ -138,6 +222,11 @@ func TestChangeCommandErrorModes(t *testing.T) {
 			name: "run-missing-targets",
 			args: []string{"change", "run"},
 			sub:  "usage: cub-gen change run",
+		},
+		{
+			name: "explain-missing-targets",
+			args: []string{"change", "explain"},
+			sub:  "usage: cub-gen change explain",
 		},
 	}
 
