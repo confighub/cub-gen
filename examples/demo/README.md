@@ -52,6 +52,8 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 | Script | What it demonstrates |
 |--------|---------------------|
 | `app-ai-change-run.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card output |
+| `prompt-as-dry-local.sh [repo]` | Canonical prompt-as-DRY local path (Swamp workflow intent -> governed mutation card) |
+| `prompt-as-dry-connected.sh [repo] [target] [slug]` | Canonical prompt-as-DRY connected path (`cub auth login` + backend ingest/query lifecycle) |
 | `simulate-confighub-lifecycle.sh <repo> <target> [slug]` | Full local lifecycle simulation |
 | `run-all-confighub-lifecycles.sh` | Lifecycle simulation across current fixtures |
 | `run-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle: real ConfigHub ingest/query when bridge endpoints are available, with backend `changeset` fallback when they are not |
@@ -172,6 +174,7 @@ Connected CI bootstrap/runbook:
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
 ./examples/demo/app-ai-change-run.sh ./examples/scoredev-paas
+./examples/demo/prompt-as-dry-local.sh
 ./examples/demo/run-all-modules.sh
 ./examples/demo/ai-work-platform/run-all.sh
 ```

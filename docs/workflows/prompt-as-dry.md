@@ -33,7 +33,7 @@ Together, these represent "prompt as DRY": intent captured as a short workflow s
 Run one command:
 
 ```bash
-./examples/demo/app-ai-change-run.sh ./examples/swamp-automation
+./examples/demo/prompt-as-dry-local.sh
 ```
 
 This executes:
@@ -78,10 +78,7 @@ cub auth login
 Then run a connected lifecycle for the same DRY artifact:
 
 ```bash
-./examples/demo/run-confighub-lifecycle-connected.sh \
-  ./examples/swamp-automation \
-  ./examples/swamp-automation \
-  prompt-dry-swamp
+./examples/demo/prompt-as-dry-connected.sh
 ```
 
 This path performs real backend ingest/query and writes per-phase summaries:
