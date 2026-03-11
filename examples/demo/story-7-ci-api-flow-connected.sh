@@ -30,20 +30,55 @@ if [ "${SKIP_BUILD:-0}" != "1" ]; then
   go build -o ./cub-gen ./cmd/cub-gen
 fi
 
-./cub-gen change run \
-  --mode connected \
-  --space "$SPACE" \
-  --base-url "$CONFIGHUB_BASE_URL" \
-  --token "$CONFIGHUB_TOKEN" \
-  --verifier "$VERIFIER" \
-  "$REPO_PATH" "$RENDER_TARGET" > "$OUT_DIR/change-run.json"
+jq -n \
+  --arg action "run" \
+  --arg mode "connected" \
+  --arg target_slug "$REPO_PATH" \
+  --arg render_target_slug "$RENDER_TARGET" \
+  --arg space "$SPACE" \
+  --arg base_url "$CONFIGHUB_BASE_URL" \
+  --arg token "$CONFIGHUB_TOKEN" \
+  '{
+    action: $action,
+    mode: $mode,
+    input: {
+      target_slug: $target_slug,
+      render_target_slug: $render_target_slug,
+      space: $space
+    },
+    connected: {
+      base_url: $base_url,
+      token: $token
+    }
+  }' > "$OUT_DIR/change-run-request.json"
+
+./examples/demo/change-api-adapter.sh \
+  --request "$OUT_DIR/change-run-request.json" \
+  --out "$OUT_DIR/change-run.json"
 
 WET_PATH="$(jq -r '.preview.edit_recommendation.wet_path // empty' "$OUT_DIR/change-run.json")"
 if [ -n "$WET_PATH" ]; then
-  ./cub-gen change explain \
-    --space "$SPACE" \
-    --wet-path "$WET_PATH" \
-    "$REPO_PATH" "$RENDER_TARGET" > "$OUT_DIR/change-explain.json"
+  jq -n \
+    --arg action "explain" \
+    --arg target_slug "$REPO_PATH" \
+    --arg render_target_slug "$RENDER_TARGET" \
+    --arg space "$SPACE" \
+    --arg wet_path "$WET_PATH" \
+    '{
+      action: $action,
+      input: {
+        target_slug: $target_slug,
+        render_target_slug: $render_target_slug,
+        space: $space
+      },
+      filters: {
+        wet_path: $wet_path
+      }
+    }' > "$OUT_DIR/change-explain-request.json"
+
+  ./examples/demo/change-api-adapter.sh \
+    --request "$OUT_DIR/change-explain-request.json" \
+    --out "$OUT_DIR/change-explain.json"
 fi
 
 jq -n \
