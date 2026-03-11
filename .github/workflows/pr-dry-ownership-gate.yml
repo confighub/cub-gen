@@ -1,0 +1,161 @@
+name: PR DRY Ownership Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'examples/helm-paas/**'
+      - 'examples/springboot-paas/**'
+      - 'test/checks/pr-dry-ownership-gate.sh'
+      - '.github/workflows/pr-dry-ownership-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - slug: helm
+            repo_path: ./examples/helm-paas
+            actor_role: app-team
+          - slug: springboot
+            repo_path: ./examples/springboot-paas
+            actor_role: app-team
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Resolve base/head refs
+        id: refs
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -n "$PR_BASE_SHA" ] && [ -n "$PR_HEAD_SHA" ]; then
+            echo "base_ref=$PR_BASE_SHA" >> "$GITHUB_OUTPUT"
+            echo "head_ref=$PR_HEAD_SHA" >> "$GITHUB_OUTPUT"
+          else
+            # workflow_dispatch fallback
+            echo "base_ref=HEAD~1" >> "$GITHUB_OUTPUT"
+            echo "head_ref=HEAD" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run DRY ownership gate
+        id: gate
+        continue-on-error: true
+        env:
+          REPO_PATH: ${{ matrix.repo_path }}
+          ACTOR_ROLE: ${{ matrix.actor_role }}
+          BASE_REF: ${{ steps.refs.outputs.base_ref }}
+          HEAD_REF: ${{ steps.refs.outputs.head_ref }}
+        run: |
+          out_dir=".tmp/pr-gate/${{ matrix.slug }}"
+          mkdir -p "$out_dir"
+          report="$out_dir/report.json"
+          log="$out_dir/gate.log"
+
+          set +e
+          ./test/checks/pr-dry-ownership-gate.sh "$REPO_PATH" "$BASE_REF" "$HEAD_REF" "$ACTOR_ROLE" --report-json "$report" >"$log" 2>&1
+          exit_code=$?
+          set -e
+
+          echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
+          echo "report=$report" >> "$GITHUB_OUTPUT"
+          echo "log=$log" >> "$GITHUB_OUTPUT"
+
+          cat "$log"
+
+      - name: Build failure comment payload
+        if: steps.gate.outputs.exit_code != '0' && github.event_name == 'pull_request'
+        id: comment
+        env:
+          REPORT_PATH: ${{ steps.gate.outputs.report }}
+        run: |
+          out_dir=".tmp/pr-gate/${{ matrix.slug }}"
+          comment_file="$out_dir/comment.md"
+          marker="<!-- cub-gen-dry-ownership:${{ matrix.slug }} -->"
+
+          {
+            echo "$marker"
+            echo "### cub-gen DRY ownership gate failed (${{ matrix.slug }})"
+            echo
+            echo "Repository path: \`${{ matrix.repo_path }}\`"
+            echo "Actor role: \`${{ matrix.actor_role }}\`"
+            echo
+            echo "Detected violations:"
+            jq -r '.failures[]? | "- \(.)"' "$REPORT_PATH"
+            echo
+            echo "Suggested DRY edit guidance:"
+            echo
+            echo "| Wet path | Suggested DRY path | Suggested DRY file(s) | Owner | Confidence |"
+            echo "|---|---|---|---|---|"
+            jq -r '.suggestions[]? | "| `\(.wet_path)` | `\(.dry_path)` | `\((.dry_files // []) | join(", "))` | `\(.owner)` | \((.confidence // 0) | tostring) |"' "$REPORT_PATH"
+          } > "$comment_file"
+
+          echo "comment_file=$comment_file" >> "$GITHUB_OUTPUT"
+
+      - name: Upsert PR comment
+        if: steps.gate.outputs.exit_code != '0' && github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        env:
+          COMMENT_FILE: ${{ steps.comment.outputs.comment_file }}
+          COMMENT_MARKER: "<!-- cub-gen-dry-ownership:${{ matrix.slug }} -->"
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = process.env.COMMENT_MARKER;
+            const body = fs.readFileSync(process.env.COMMENT_FILE, 'utf8');
+            const issue_number = context.issue.number;
+            const { owner, repo } = context.repo;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            for (const c of comments) {
+              if (c.user?.type === 'Bot' && c.body?.includes(marker)) {
+                await github.rest.issues.deleteComment({ owner, repo, comment_id: c.id });
+              }
+            }
+
+            await github.rest.issues.createComment({ owner, repo, issue_number, body });
+
+      - name: Build success summary
+        if: steps.gate.outputs.exit_code == '0'
+        env:
+          REPORT_PATH: ${{ steps.gate.outputs.report }}
+        run: |
+          {
+            echo "### DRY ownership gate passed (${{ matrix.slug }})"
+            echo
+            echo "Checked files:"
+            jq -r '.changed_files[]? | "- \(.)"' "$REPORT_PATH"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload gate artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dry-ownership-gate-${{ matrix.slug }}
+          path: |
+            ${{ steps.gate.outputs.report }}
+            ${{ steps.gate.outputs.log }}
+
+      - name: Fail job on BLOCK
+        if: steps.gate.outputs.exit_code != '0'
+        run: exit 1

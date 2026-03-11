@@ -59,3 +59,30 @@ This explicitly enables:
 - `CONNECTED_FALLBACK_MODE=changeset`
 - `ALLOW_FALLBACK_INGEST=1`
 - `ALLOW_STORY_10_SKIP=1`
+
+## 5) PR DRY ownership gate (WET edit blocker)
+
+Use the dedicated workflow:
+
+- `.github/workflows/pr-dry-ownership-gate.yml`
+
+What it does:
+
+- Runs `test/checks/pr-dry-ownership-gate.sh` for:
+  - `examples/helm-paas`
+  - `examples/springboot-paas`
+- Compares PR-changed YAML/JSON files to recognized DRY inputs.
+- Blocks merge if a PR edits non-DRY/WET paths (or wrong-owner DRY paths when actor role is enforced).
+- Posts an actionable PR comment with:
+  - `wet_path`
+  - suggested `dry_path`
+  - suggested DRY file candidates
+  - owner
+  - confidence
+
+Manual run (local against refs):
+
+```bash
+./test/checks/pr-dry-ownership-gate.sh ./examples/helm-paas origin/main HEAD app-team --report-json .tmp/pr-gate/helm.json
+./test/checks/pr-dry-ownership-gate.sh ./examples/springboot-paas origin/main HEAD app-team --report-json .tmp/pr-gate/spring.json
+```
