@@ -61,7 +61,7 @@ sync-triple-styles:
 
 ci-local: build test test-contracts test-bridge-symmetry test-examples lint-dual-mode check-story-status check-ai-only-scope
 
-ci-connected: build test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo check-story-evidence
+ci-connected: build test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo check-story-evidence check-ai-only-scope
 
 ci-connected-troubleshoot:
 	CONNECTED_FALLBACK_MODE=changeset ALLOW_FALLBACK_INGEST=1 ALLOW_STORY_10_SKIP=1 $(MAKE) ci-connected
