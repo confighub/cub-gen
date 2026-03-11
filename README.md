@@ -158,6 +158,7 @@ This shows structural change governance first: actions/schedules/approval gates 
 ```bash
 make ci-local       # build + tests + parity + docs/coverage gates
 make ci-connected   # connected entrypoints + lifecycle + phase-3/4 stories + connected full-loop helm e2e + flux/argo live reconcile gates
+make ci-connected-troubleshoot # non-release diagnostics (changeset fallback + Story 10 skip allowed)
 make ci             # alias of ci-local
 ```
 
@@ -183,6 +184,7 @@ and `gh` auth (`GH_TOKEN`/`GITHUB_TOKEN` or `gh auth login`).
 Workflow template for non-interactive CI auth:
 
 - [connected-story7.yml](.github/workflows/connected-story7.yml)
+- Connected CI bootstrap/runbook: [connected-ci-bootstrap.md](docs/workflows/connected-ci-bootstrap.md)
 
 ## User-Story Coverage Snapshot
 

@@ -138,11 +138,12 @@ These three commands work offline. The bundle and attestation are portable JSON 
 
 ```bash
 # Submit bundle to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 
 # Query backend decision state (authoritative)
 ./cub-gen bridge decision query \
-  --base-url https://confighub.example \
+  --base-url "$BASE_URL" \
   --change-id "$(jq -r .change_id bundle.json)" > decision.json
 
 # Promotion flow (app PR → ConfigHub MR → platform DRY PR)

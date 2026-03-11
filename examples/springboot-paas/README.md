@@ -151,7 +151,8 @@ feature:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # Decision engine: server.port + feature.* are app-owned → ALLOW
@@ -177,7 +178,8 @@ spring:
 
 # Evidence chain
 ./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas > bundle.json
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # Decision engine: spring.datasource.* is platform-owned → BLOCK

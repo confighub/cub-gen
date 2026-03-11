@@ -122,7 +122,8 @@ triggers:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # New schedule is within allowed window → ALLOW

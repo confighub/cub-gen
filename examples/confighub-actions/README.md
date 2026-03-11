@@ -114,7 +114,8 @@ actions:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub — the lifecycle change is itself governed
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by security-lead --reason "SOC2 compliance: 3 approvals for prod"

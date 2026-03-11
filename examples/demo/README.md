@@ -122,6 +122,7 @@ Bridge endpoint behavior:
 - Default (`CONNECTED_FALLBACK_MODE=off`): fail fast unless bridge ingest/query endpoints are reachable.
 - Auto fallback (`CONNECTED_FALLBACK_MODE=auto`): if ingest returns `404 Not Found`, scripts switch to backend `changeset` fallback and still persist evidence in ConfigHub.
 - Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`): always use backend `changeset` fallback (troubleshooting only).
+- Release qualification policy: keep `ALLOW_FALLBACK_INGEST=0` and `ALLOW_STORY_10_SKIP=0` (strict mode).
 
 Fallback mode records `ingest.json`/`decision-final.json` in the standard contract shape with `source=confighub-backend-changeset-fallback`, so story scripts and CI gates remain deterministic.
 
@@ -161,6 +162,10 @@ RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 
 If your backend does not expose the default ingest/query routes, set
 `BRIDGE_INGEST_ENDPOINT` and `BRIDGE_DECISION_ENDPOINT` before running.
+
+Connected CI bootstrap/runbook:
+
+- [connected-ci-bootstrap.md](../../docs/workflows/connected-ci-bootstrap.md)
 
 ## Quick start
 

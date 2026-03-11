@@ -41,6 +41,8 @@ jobs:
       CONFIGHUB_USER: ci-bot
       CONNECTED_FALLBACK_MODE: off
       REQUIRE_TERMINAL_DECISION: "1"
+      ALLOW_FALLBACK_INGEST: "0"
+      ALLOW_STORY_10_SKIP: "0"
       CLEANUP_CLUSTER: "1"
       RUN_ID: ${{ github.run_id }}
       WAVE_ID: wave-${{ github.run_id }}
