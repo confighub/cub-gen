@@ -73,6 +73,32 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 This gives immediate value with local evidence and lifecycle outputs.
 
+## Use Your Repo in 3 Commands
+
+Run against an existing repo without changing your deployment workflow:
+
+```bash
+REPO=/path/to/your/repo
+./cub-gen change preview --space platform "$REPO" "$REPO"
+./cub-gen change run --mode local --space platform "$REPO" "$REPO"
+./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
+```
+
+This gives you:
+
+- `change_id` and evidence digests,
+- top inverse-edit recommendation (`what to edit`),
+- ownership and confidence on mapped fields.
+
+Connected mode for the same repo:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO" "$REPO"
+```
+
 ## One-Command Change Run (App/AI)
 
 If you want one command that returns the edit recommendation plus evidence artifacts:

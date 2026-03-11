@@ -47,6 +47,24 @@ BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.se
 
 Use local mode for first value. Use connected mode for centralized governance state and cross-repo visibility.
 
+## Use your own repo quickly
+
+```bash
+REPO=/path/to/your/repo
+./cub-gen change preview --space platform "$REPO" "$REPO"
+./cub-gen change run --mode local --space platform "$REPO" "$REPO"
+./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
+```
+
+Connected run against the same repo:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO" "$REPO"
+```
+
 Connected full-entrypoint runner:
 
 ```bash
