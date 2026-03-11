@@ -1011,6 +1011,32 @@ type changeRunResult struct {
 	PromotionReady bool                `json:"promotion_ready"`
 }
 
+type changeExplainQuery struct {
+	WetPathFilter string `json:"wet_path_filter,omitempty"`
+	DryPathFilter string `json:"dry_path_filter,omitempty"`
+	OwnerFilter   string `json:"owner_filter,omitempty"`
+	MatchCount    int    `json:"match_count"`
+}
+
+type changeExplainSuggestion struct {
+	Owner            string  `json:"owner"`
+	WetPath          string  `json:"wet_path"`
+	DryPath          string  `json:"dry_path"`
+	EditHint         string  `json:"edit_hint"`
+	Confidence       float64 `json:"confidence"`
+	SourcePath       string  `json:"source_path,omitempty"`
+	SourceTransform  string  `json:"source_transform,omitempty"`
+	GeneratorName    string  `json:"generator_name,omitempty"`
+	GeneratorProfile string  `json:"generator_profile,omitempty"`
+}
+
+type changeExplainResult struct {
+	Input       changePreviewInput      `json:"input"`
+	Change      changePreviewSummary    `json:"change"`
+	Query       changeExplainQuery      `json:"query"`
+	Explanation changeExplainSuggestion `json:"explanation"`
+}
+
 func runChange(args []string) error {
 	if len(args) == 0 {
 		printChangeUsage(os.Stderr)
@@ -1025,6 +1051,8 @@ func runChange(args []string) error {
 		return runChangePreview(args[1:])
 	case "run":
 		return runChangeRun(args[1:])
+	case "explain":
+		return runChangeExplain(args[1:])
 	default:
 		printChangeUsage(os.Stderr)
 		return fmt.Errorf("unknown change subcommand: %s", args[0])
@@ -1055,7 +1083,7 @@ func runChangePreview(args []string) error {
 	targetSlug := fs.Arg(0)
 	renderTargetSlug := fs.Arg(1)
 
-	result, _, err := buildChangePreviewResult(
+	result, _, _, err := buildChangePreviewResult(
 		targetSlug,
 		renderTargetSlug,
 		*space,
@@ -1114,7 +1142,7 @@ func runChangeRun(args []string) error {
 		return errors.New("change run --mode must be local|connected")
 	}
 
-	preview, bundle, err := buildChangePreviewResult(
+	preview, bundle, _, err := buildChangePreviewResult(
 		targetSlug,
 		renderTargetSlug,
 		*space,
@@ -1207,25 +1235,98 @@ func runChangeRun(args []string) error {
 	return writeJSON(f, result, *pretty)
 }
 
+func runChangeExplain(args []string) error {
+	fs := flag.NewFlagSet("change explain", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	space := fs.String("space", "default", "ConfigHub space label")
+	ref := fs.String("ref", "HEAD", "Git ref label to include in output")
+	whereResource := fs.String("where-resource", "", "Additional resource filter expression")
+	wetPath := fs.String("wet-path", "", "Filter explanations to a specific WET path")
+	dryPath := fs.String("dry-path", "", "Filter explanations to a specific DRY path")
+	owner := fs.String("owner", "", "Filter explanations to a specific owner")
+	out := fs.String("out", "-", "Output file path, or '-' for stdout")
+	jsonOut := fs.Bool("json", true, "Output JSON")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	_ = jsonOut
+
+	if fs.NArg() != 2 {
+		return errors.New("usage: cub-gen change explain [flags] <target-slug> <render-target-slug>")
+	}
+	targetSlug := fs.Arg(0)
+	renderTargetSlug := fs.Arg(1)
+
+	preview, _, imported, err := buildChangePreviewResult(
+		targetSlug,
+		renderTargetSlug,
+		*space,
+		*ref,
+		*whereResource,
+		"cub-gen",
+	)
+	if err != nil {
+		return err
+	}
+
+	wetFilter := strings.TrimSpace(*wetPath)
+	dryFilter := strings.TrimSpace(*dryPath)
+	ownerFilter := strings.TrimSpace(*owner)
+
+	suggestion, matchCount, ok := pickInverseSuggestion(imported.Provenance, wetFilter, dryFilter, ownerFilter)
+	if !ok {
+		return fmt.Errorf("no inverse edit explanation matched filters (wet_path=%q dry_path=%q owner=%q)", wetFilter, dryFilter, ownerFilter)
+	}
+
+	result := changeExplainResult{
+		Input:  preview.Input,
+		Change: preview.Change,
+		Query: changeExplainQuery{
+			WetPathFilter: wetFilter,
+			DryPathFilter: dryFilter,
+			OwnerFilter:   ownerFilter,
+			MatchCount:    matchCount,
+		},
+		Explanation: suggestion,
+	}
+
+	if *out == "-" {
+		return writeJSON(os.Stdout, result, *pretty)
+	}
+
+	f, err := os.Create(*out)
+	if err != nil {
+		return fmt.Errorf("create output file: %w", err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	return writeJSON(f, result, *pretty)
+}
+
 func buildChangePreviewResult(
 	targetSlug, renderTargetSlug, space, ref, whereResource, verifier string,
-) (changePreviewResult, publish.ChangeBundle, error) {
+) (changePreviewResult, publish.ChangeBundle, gitopsflow.ImportFlowResult, error) {
 	imported, err := gitopsflow.Import(targetSlug, renderTargetSlug, ref, space, whereResource)
 	if err != nil {
-		return changePreviewResult{}, publish.ChangeBundle{}, err
+		return changePreviewResult{}, publish.ChangeBundle{}, gitopsflow.ImportFlowResult{}, err
 	}
 
 	bundle := publish.BuildBundle(imported)
 	if err := publish.VerifyBundle(bundle); err != nil {
-		return changePreviewResult{}, publish.ChangeBundle{}, fmt.Errorf("verify generated bundle: %w", err)
+		return changePreviewResult{}, publish.ChangeBundle{}, gitopsflow.ImportFlowResult{}, fmt.Errorf("verify generated bundle: %w", err)
 	}
 
 	attestationRecord, err := attest.Build(bundle, verifier)
 	if err != nil {
-		return changePreviewResult{}, publish.ChangeBundle{}, fmt.Errorf("build attestation: %w", err)
+		return changePreviewResult{}, publish.ChangeBundle{}, gitopsflow.ImportFlowResult{}, fmt.Errorf("build attestation: %w", err)
 	}
 	if err := attest.VerifyRecordAgainstBundle(attestationRecord, bundle); err != nil {
-		return changePreviewResult{}, publish.ChangeBundle{}, fmt.Errorf("verify generated attestation: %w", err)
+		return changePreviewResult{}, publish.ChangeBundle{}, gitopsflow.ImportFlowResult{}, fmt.Errorf("verify generated attestation: %w", err)
 	}
 
 	topEdit, ok := bestInverseEditPointer(imported.Provenance)
@@ -1264,7 +1365,7 @@ func buildChangePreviewResult(
 		},
 	}
 
-	return result, bundle, nil
+	return result, bundle, imported, nil
 }
 
 func bestInverseEditPointer(provenance []model.ProvenanceRecord) (model.InverseEditPointer, bool) {
@@ -1279,6 +1380,106 @@ func bestInverseEditPointer(provenance []model.ProvenanceRecord) (model.InverseE
 		}
 	}
 	return best, found
+}
+
+func pickInverseSuggestion(
+	provenance []model.ProvenanceRecord,
+	wetFilter, dryFilter, ownerFilter string,
+) (changeExplainSuggestion, int, bool) {
+	matchCount := 0
+	best := changeExplainSuggestion{}
+	bestConfidence := -1.0
+
+	for _, record := range provenance {
+		for _, pointer := range record.InverseEditPointers {
+			if wetFilter != "" && pointer.WetPath != wetFilter {
+				continue
+			}
+			if dryFilter != "" && pointer.DryPath != dryFilter {
+				continue
+			}
+			if ownerFilter != "" && pointer.Owner != ownerFilter {
+				continue
+			}
+			matchCount++
+
+			sourcePath := ""
+			sourceTransform := ""
+			if source, ok := bestFieldOrigin(record.FieldOriginMap, pointer.WetPath, pointer.DryPath); ok {
+				sourcePath = source.SourcePath
+				sourceTransform = source.Transform
+			}
+
+			candidate := changeExplainSuggestion{
+				Owner:            pointer.Owner,
+				WetPath:          pointer.WetPath,
+				DryPath:          pointer.DryPath,
+				EditHint:         pointer.EditHint,
+				Confidence:       pointer.Confidence,
+				SourcePath:       sourcePath,
+				SourceTransform:  sourceTransform,
+				GeneratorName:    record.GeneratorName,
+				GeneratorProfile: record.GeneratorProfile,
+			}
+			if candidate.Confidence > bestConfidence {
+				best = candidate
+				bestConfidence = candidate.Confidence
+			}
+		}
+	}
+
+	if bestConfidence < 0 {
+		return changeExplainSuggestion{}, 0, false
+	}
+	return best, matchCount, true
+}
+
+func bestFieldOrigin(origins []model.FieldOrigin, wetPath, dryPath string) (model.FieldOrigin, bool) {
+	best := model.FieldOrigin{}
+	bestConfidence := -1.0
+
+	for _, origin := range origins {
+		if wetPath != "" && origin.WetPath != wetPath {
+			continue
+		}
+		if dryPath != "" && origin.DryPath != dryPath {
+			continue
+		}
+		if origin.Confidence > bestConfidence {
+			best = origin
+			bestConfidence = origin.Confidence
+		}
+	}
+	if bestConfidence >= 0 {
+		return best, true
+	}
+
+	for _, origin := range origins {
+		if dryPath != "" && origin.DryPath != dryPath {
+			continue
+		}
+		if origin.Confidence > bestConfidence {
+			best = origin
+			bestConfidence = origin.Confidence
+		}
+	}
+	if bestConfidence >= 0 {
+		return best, true
+	}
+
+	for _, origin := range origins {
+		if wetPath != "" && origin.WetPath != wetPath {
+			continue
+		}
+		if origin.Confidence > bestConfidence {
+			best = origin
+			bestConfidence = origin.Confidence
+		}
+	}
+	if bestConfidence < 0 {
+		return model.FieldOrigin{}, false
+	}
+	return best, true
 }
 
 func discoveredProfiles(discovered []gitopsflow.DiscoveredResource) []string {
@@ -1761,6 +1962,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
+	fmt.Fprintln(out, "  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out, "  cub-gen bridge <ingest|decision|promote> [flags]")
@@ -1791,6 +1993,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen verify-attestation --in attestation.json --bundle bundle.json")
 	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
+	fmt.Fprintln(out, "  cub-gen change explain --space my-space --wet-path \"Deployment/spec/template/spec/containers[name=main]/image\" ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen bridge ingest --in bundle.json --base-url https://confighub.example")
 	fmt.Fprintln(out, "  cub-gen bridge decision query --change-id chg_123 --base-url https://confighub.example")
 	fmt.Fprintln(out, "  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123")
@@ -1808,11 +2011,13 @@ func printChangeUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintln(out, "  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
+	fmt.Fprintln(out, "  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Examples:")
 	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/helm-paas ./examples/helm-paas")
 	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/swamp-automation ./examples/swamp-automation")
 	fmt.Fprintln(out, "  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
+	fmt.Fprintln(out, "  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas")
 }
 
 func printGitOpsUsage(out io.Writer) {

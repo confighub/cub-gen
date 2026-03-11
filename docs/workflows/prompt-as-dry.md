@@ -88,13 +88,13 @@ This path performs real backend ingest/query and writes per-phase summaries:
 
 Each summary includes the governed decision state for the same `change_id` lifecycle.
 
-## Where "preview / run / explain" fits today
+## Where "preview / run / explain" fits
 
-Until first-class `cub-gen change ...` commands land, use this mapping:
+Use the first-class commands directly:
 
-- `change preview` -> `cub-gen gitops import --json ...` (look at provenance + inverse pointers)
-- `change run` -> `app-ai-change-run.sh` (local) or `run-confighub-lifecycle-connected.sh` (connected)
-- `change explain` -> inspect `inverse_edit_pointers` / `mutation-card.json` edit recommendation
+- `change preview` -> compact mutation card and evidence summary
+- `change run` -> local or connected governed execution in one command
+- `change explain` -> direct inverse-edit answer for a selected field/owner filter
 
 ## Why this is compelling
 
