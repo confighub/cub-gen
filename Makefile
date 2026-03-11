@@ -21,19 +21,19 @@ test-examples:
 	go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$$' -count=1 -v
 
 test-connected-entrypoints:
-	./examples/demo/run-all-connected-entrypoints.sh
+	CONNECTED_FALLBACK_MODE=off ./examples/demo/run-all-connected-entrypoints.sh
 
 test-connected-lifecycles:
-	./examples/demo/run-all-connected-lifecycles.sh
+	CONNECTED_FALLBACK_MODE=off ./examples/demo/run-all-connected-lifecycles.sh
 
 test-phase-3-stories:
-	./examples/demo/run-phase-3-connected-stories.sh
+	CONNECTED_FALLBACK_MODE=off ./examples/demo/run-phase-3-connected-stories.sh
 
 test-phase-4-stories:
-	./examples/demo/run-phase-4-connected-stories.sh
+	CONNECTED_FALLBACK_MODE=off ./examples/demo/run-phase-4-connected-stories.sh
 
 test-connected-governed-reconcile-helm:
-	RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
+	CONNECTED_FALLBACK_MODE=off RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 
 test-live-reconcile-flux:
 	./examples/demo/e2e-live-reconcile-flux.sh

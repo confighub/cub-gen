@@ -230,4 +230,7 @@ make ci-connected
 make ci-connected-troubleshoot
 ```
 
+`make ci-connected` enforces strict backend-authoritative mode (`CONNECTED_FALLBACK_MODE=off`).
+Use `make ci-connected-troubleshoot` only for fallback diagnostics.
+
 Contributing guide: [CONTRIBUTING.md](CONTRIBUTING.md)
