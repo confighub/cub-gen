@@ -69,25 +69,26 @@ Expected output fields (`ChangeRunResult`):
 Purpose:
 - Explain exactly what to edit for a specific field/resource.
 
-Proposed flags:
+Supported invocation modes:
 
-- `--change-id <id>` (required)
-- `--wet-path <path>` (optional, one of `--wet-path` or `--resource` required)
-- `--resource <kind/name>` (optional)
-- `--mode <local|connected>` (required)
-- `--base-url <url>` (required for `connected` unless resolved from context)
-- `--token <token>` (required for `connected` unless resolved from auth)
+1. Fresh analysis mode (mints a new lifecycle):
+- `cub-gen change explain [filters] <target-slug> <render-target-slug>`
+
+2. Existing lifecycle mode (no new lifecycle minted):
+- `cub-gen change explain --change-id <id> --bundle <bundle.json> [filters]`
+
+Filters:
+
+- `--wet-path <path>` (optional)
+- `--dry-path <path>` (optional)
+- `--owner <owner>` (optional)
 - `--json` (default output format)
 
 Expected output fields (`ChangeExplainResult`):
 
-- `change_id`
-- `query.{wet_path,resource}`
-- `owner`
-- `source.{file,path,line}`
-- `confidence`
-- `edit_hint`
-- `evidence_refs[]`
+- `change.{change_id,bundle_digest,attestation_digest}`
+- `query.{wet_path_filter,dry_path_filter,owner_filter,match_count}`
+- `explanation.{owner,wet_path,dry_path,edit_hint,confidence,source_path,source_transform,generator_name,generator_profile}`
 
 ## Exit code contract
 
