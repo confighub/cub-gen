@@ -11,6 +11,14 @@ You already have a deployment pipeline: Git, Helm, Flux, Argo, Spring Boot, Scor
 
 Each example in this directory is runnable and maps to a real platform/app pattern.
 
+**Who this is for:** Platform engineers, SREs, and app developers who want config
+traceability without changing their existing deployment workflow.
+
+**What runs locally vs what needs ConfigHub:** Everything in these examples runs
+locally with no backend. Generator detection, field-origin tracing, and evidence
+bundles work offline. Cross-repo queries, policy enforcement, and governed decisions
+require [ConfigHub](https://confighub.github.io/cub-gen/platform/).
+
 ## What `cub-gen` does
 
 `cub-gen` is a deterministic, Git-native generator importer. It reads existing config and emits:

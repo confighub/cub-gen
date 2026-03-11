@@ -9,11 +9,18 @@ containers:
     image: ghcr.io/example/checkout-api:v1.0.0
     variables:
       LOG_LEVEL: info
+      DB_HOST: ${resources.db.host}
+      DB_PORT: ${resources.db.port}
+      CACHE_HOST: ${resources.cache.host}
 service:
   ports:
     web:
       port: 8080
       targetPort: 8080
 resources:
-  postgres:
+  db:
     type: postgres
+  cache:
+    type: redis
+  dns:
+    type: dns

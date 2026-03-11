@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/inventory_dev
+    username: dev_user
+server:
+  port: 8080
+logging:
+  level:
+    root: DEBUG
+    com.example.inventory: TRACE

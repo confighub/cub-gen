@@ -25,6 +25,11 @@
           "name": "input_03",
           "required": true,
           "schema_ref": "https://json.schemastore.org/spring-configuration-metadata"
+        },
+        {
+          "name": "input_04",
+          "required": true,
+          "schema_ref": "https://json.schemastore.org/spring-configuration-metadata"
         }
       ],
       "kind": "springboot",
@@ -47,6 +52,7 @@
       "generator_profile": "springboot-paas",
       "inputs": [
         "pom.xml",
+        "src/main/resources/application-dev.yaml",
         "src/main/resources/application-prod.yaml",
         "src/main/resources/application.yaml"
       ],
@@ -65,6 +71,14 @@
       "profile": "springboot-paas",
       "required": true,
       "role": "app-config-base"
+    },
+    {
+      "generator_id": "gen_73ed79c3c8b65360",
+      "owner": "app-team",
+      "path": "src/main/resources/application-dev.yaml",
+      "profile": "springboot-paas",
+      "required": true,
+      "role": "app-config-profile"
     },
     {
       "generator_id": "gen_73ed79c3c8b65360",
@@ -176,7 +190,7 @@
         {
           "confidence": 0.88,
           "dry_path": "server.port",
-          "source_path": "src/main/resources/application-prod.yaml",
+          "source_path": "src/main/resources/application-dev.yaml",
           "transform": "spring-profile-overlay",
           "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
         }
@@ -184,7 +198,7 @@
       "generator_id": "gen_73ed79c3c8b65360",
       "generator_name": "springboot-paas",
       "generator_profile": "springboot-paas",
-      "input_digest": "sha256:f996825a673f1865dee25269566b575fa5e6f97609f368e2c44742f7fa9758c6",
+      "input_digest": "sha256:5bca6dd0fcb20f32628706275ad41375be280a647473658347bff8522e3139e8",
       "inverse_edit_pointers": [
         {
           "confidence": 0.89,
@@ -196,7 +210,7 @@
         {
           "confidence": 0.91,
           "dry_path": "server.port",
-          "edit_hint": "Edit server.port in src/main/resources/application-prod.yaml for environment overrides; use src/main/resources/application.yaml for the default.",
+          "edit_hint": "Edit server.port in src/main/resources/application-dev.yaml for environment overrides; use src/main/resources/application.yaml for the default.",
           "owner": "app-team",
           "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
         },
@@ -244,13 +258,19 @@
           "name": "springboot-paas",
           "namespace": "apps",
           "source_dry_path": "server.port",
-          "source_path": "src/main/resources/application-prod.yaml"
+          "source_path": "src/main/resources/application-dev.yaml"
         }
       ],
       "schema_version": "cub.confighub.io/provenance/v1",
       "sources": [
         {
           "path": "pom.xml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "src/main/resources/application-dev.yaml",
           "revision": "HEAD",
           "role": "generator-input",
           "uri": "\u003csource_uri\u003e"
@@ -279,7 +299,7 @@
   "summary": {
     "contracts": 1,
     "discovered_resources": 1,
-    "dry_inputs": 3,
+    "dry_inputs": 4,
     "dry_units": 1,
     "generator_profiles": [
       "springboot-paas"

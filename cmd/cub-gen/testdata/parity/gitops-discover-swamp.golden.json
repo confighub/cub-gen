@@ -6,7 +6,8 @@
       "id": "gen_124d7fbd01e19b49",
       "inputs": [
         ".swamp.yaml",
-        "workflow-deploy.yaml"
+        "workflow-deploy.yaml",
+        "workflow-rotate-creds.yaml"
       ],
       "kind": "swamp",
       "name": "swamp-automation",
@@ -25,7 +26,8 @@
       "generator_profile": "swamp",
       "inputs": [
         ".swamp.yaml",
-        "workflow-deploy.yaml"
+        "workflow-deploy.yaml",
+        "workflow-rotate-creds.yaml"
       ],
       "resource_body": "kind: Workflow\nmetadata:\n  name: swamp-automation\nspec:\n  root: \n",
       "resource_kind": "Workflow",

@@ -1,236 +1,145 @@
 # cub-gen
 
-`cub-gen` answers one operational question:
+See where every deployed config value came from.
 
-`a deployed field changed; which file/path should I edit, who owns it, and what evidence proves this change was safe?`
+`cub-gen` is a local CLI that scans your repo, classifies config files by generator type, and traces every rendered field back to the source file, line, and owner that produced it.
 
-Point it at config you already have (Helm, Score, Spring Boot, Backstage, ops workflows, c3agent, provider config), and it emits:
+## What it looks like
 
-- provenance (`what generated this`)
-- field-origin maps (`which source field controls this deployed field`)
-- inverse-edit guidance (`edit this file/path`)
-- optional governed change bundles for ConfigHub (`publish -> verify -> attest`)
-
-It is for two teams:
-
-- teams with existing platform/app patterns (Helm, Score, Spring Boot, workflows) that need governance and traceability,
-- teams rolling out a new internal platform quickly with clear ownership boundaries.
-
-## What It Is
-
-- A deterministic CLI for `discover -> import -> publish -> verify -> attest`.
-- A DRY -> WET analysis/import layer that keeps source ownership explicit.
-- A dual-mode workflow:
-  - `Local mode`: no login; analyze and generate evidence in place.
-  - `Connected mode`: send the same artifacts to ConfigHub decision APIs.
-
-## What It Is Not
-
-- Not a Kubernetes reconciler.
-- Not a Flux/Argo replacement.
-- Not a standalone policy runtime by itself.
-
-Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability after deploy.
-
-## Change Verbs (Canonical)
-
-- `change preview`: show the proposed change, ownership, and edit guidance.
-- `change run`: execute the full governed flow (local or connected).
-- `change explain`: answer "what should I edit and why?" for a specific field.
-
-`change preview`, `change run`, and `change explain` are available as first-class CLI commands.
-
-## Core Value in 10 Seconds
-
-Take a deployed field and trace it to the exact source edit path:
+```bash
+./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+  | jq '{origin: .provenance[0].field_origin_map[0], inverse: .provenance[0].inverse_edit_pointers[0]}'
+```
 
 ```json
 {
-  "wet_path": "Deployment/spec/template/spec/containers[name=main]/image",
-  "dry_path": "containers.main.image",
-  "source_file": "score.yaml",
-  "owner": "app-team",
-  "edit_hint": "Edit the Score container image in score.yaml.",
-  "confidence": 0.94
+  "origin": {
+    "dry_path": "values.image.tag",
+    "wet_path": "Deployment/spec/template/spec/containers[0]/image",
+    "source_path": "values.yaml",
+    "transform": "helm-template",
+    "confidence": 0.86
+  },
+  "inverse": {
+    "wet_path": "Deployment/spec/template/spec/containers[0]/image",
+    "dry_path": "values.image.tag",
+    "owner": "app-team",
+    "edit_hint": "Edit chart values file and keep chart template unchanged.",
+    "confidence": 0.86
+  }
 }
 ```
 
-That is the day-to-day workflow this tool optimizes.
+You see exactly which source field produced each deployed value, who owns it, and where to edit it safely.
 
-## Confidence Guide
+## What you get
 
-Use confidence to decide routing speed:
+- **Generator detection** — recognizes 8 config styles: Helm, Score.dev, Spring Boot, Backstage, Ably, ops-workflow, c3agent, Swamp
+- **DRY/WET classification** — separates human-authored intent from rendered deployment artifacts
+- **Field-origin tracing** — maps every deployed field back to its source file, line, and owner
+- **Inverse-edit guidance** — tells you where to edit DRY source to change a deployed value
+- **Change CLI** — `change preview`, `change run`, `change explain` for day-to-day workflows
 
-- `>= 0.90`: proceed with normal app/team edit flow.
-- `0.75 - 0.89`: run `change preview` and `change explain` before merge.
-- `< 0.75`: escalate for platform review.
-
-Full interpretation guide: [docs/workflows/confidence-scores.md](docs/workflows/confidence-scores.md)
-
-## ConfigHub Is Real (Today)
-
-Connected mode targets a live ConfigHub backend. Backend OSS repo:
-
-- [confighubai/confighub](https://github.com/confighubai/confighub)
-
-## Quickstart: Local Mode (No Login)
+## Quickstart (local, no login)
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
-./examples/demo/run-all-modules.sh
-./examples/demo/run-all-confighub-lifecycles.sh
-```
 
-This gives immediate value with local evidence and lifecycle outputs.
-
-## Use Your Repo in 3 Commands
-
-Run against an existing repo without changing your deployment workflow:
-
-```bash
-REPO=/path/to/your/repo
-./cub-gen change preview --space platform "$REPO" "$REPO"
-./cub-gen change run --mode local --space platform "$REPO" "$REPO"
-./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
-```
-
-This gives you:
-
-- `change_id` and evidence digests,
-- top inverse-edit recommendation (`what to edit`),
-- ownership and confidence on mapped fields.
-
-Connected mode for the same repo:
-
-```bash
-cub auth login
-BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
-TOKEN="$(cub auth get-token)"
-./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO" "$REPO"
-```
-
-## One-Command Change Run (App/AI)
-
-If you want one command that returns the edit recommendation plus evidence artifacts:
-
-```bash
+# One-command change preview
 ./cub-gen change preview --space platform ./examples/scoredev-paas ./examples/scoredev-paas
-./examples/demo/app-ai-change-run.sh ./examples/scoredev-paas
+
+# Or the core flow
+./cub-gen gitops discover --space platform ./examples/helm-paas
+./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+  | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
 ```
 
-Output:
-
-- `change_id`, `bundle_digest`, `attestation_digest`
-- detected profile(s) and target counts
-- highest-confidence edit recommendation (`owner`, `wet_path`, `dry_path`, `edit_hint`)
-- artifact paths in `.tmp/app-ai-change-run/...`
-
-## Quickstart: Connected Mode (ConfigHub)
-
-All connected paths start with login.
+## Quickstart (connected, ConfigHub)
 
 ```bash
-# 1) Authenticate
 cub auth login
 TOKEN="$(cub auth get-token)"
-cub context get --json | jq -r '.coordinate.user'
-
-# 2) Run connected lifecycle coverage
-./examples/demo/run-all-connected-lifecycles.sh
-./examples/demo/run-all-connected-entrypoints.sh
-
-# 3) Optional: run one connected example directly
-./examples/helm-paas/demo-connected.sh
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" \
+  --space platform ./examples/helm-paas ./examples/helm-paas
 ```
 
-If ingest returns `404`, your configured base URL does not expose the governed bridge endpoint used by this demo flow. Set `CONFIGHUB_BASE_URL` to a backend endpoint that supports ingest/query.
-If your backend uses non-default paths, set:
+## Confidence scores
 
-- `BRIDGE_INGEST_ENDPOINT` (for `bridge ingest`)
-- `BRIDGE_DECISION_ENDPOINT` (for `bridge decision query`)
+Use confidence to decide routing speed:
 
-## Live Reconciler Proofs
+- `>= 0.90`: proceed with normal app/team edit flow
+- `0.75 - 0.89`: run `change preview` and `change explain` before merge
+- `< 0.75`: escalate for platform review
 
-We ship live reconcile E2E scripts for both controllers:
+Full guide: [docs/workflows/confidence-scores.md](docs/workflows/confidence-scores.md)
 
-- Flux: `./examples/demo/e2e-live-reconcile-flux.sh`
-- Argo CD: `./examples/demo/e2e-live-reconcile-argo.sh`
-- Connected governed + reconcile (helm-paas): `./examples/demo/e2e-connected-governed-reconcile-helm.sh`
+## Supported generators
 
-Both prove create, update, and drift-correction on a real `kind` cluster.
+| Generator | Detects | Example |
+|-----------|---------|---------|
+| Helm | `Chart.yaml` + `values.yaml` | [helm-paas](examples/helm-paas/) |
+| Score.dev | `score.yaml` | [scoredev-paas](examples/scoredev-paas/) |
+| Spring Boot | `application.yaml` | [springboot-paas](examples/springboot-paas/) |
+| Backstage | `catalog-info.yaml` | [backstage-idp](examples/backstage-idp/) |
+| Ably | `app.yaml` provider config | [just-apps-no-platform-config](examples/just-apps-no-platform-config/) |
+| Ops Workflow | `ops-workflow.yaml` | [ops-workflow](examples/ops-workflow/) |
+| C3 Agent | `c3agent.yaml` | [c3agent](examples/c3agent/) |
+| Swamp | `.swamp.yaml` + `workflow-*.yaml` | [swamp-automation](examples/swamp-automation/) |
 
-## Example Entry Points
+Per-generator recipes and bridge flow examples: [CLI Reference](https://confighub.github.io/cub-gen/cli-reference/)
 
-Every example has both wrappers:
+## Part of the ConfigHub platform
 
-- Local: `./examples/<example>/demo-local.sh`
-- Connected: `cub auth login` then `./examples/<example>/demo-connected.sh`
+`cub-gen` is the local-first on-ramp. It runs standalone with no backend required.
 
-Start with the catalog:
+When you need cross-repo queries, policy enforcement, and governed decisions, connect to [ConfigHub](https://github.com/confighubai/confighub). The flow: DRY files in Git &rarr; `cub-gen` classifies and traces &rarr; `publish` produces change bundles &rarr; ConfigHub ingests, enforces policy (ALLOW/ESCALATE/BLOCK) &rarr; bridge workers connect to clusters &rarr; Flux/Argo reconciles as before.
 
-- [examples/README.md](examples/README.md)
-- Includes a persona-first quick navigator (`Choose your starting view`) for Helm, Spring Boot, Score, AI, and Ops users.
-- 5-minute stack-specific entry paths: [persona-5-minute-runbooks.md](docs/workflows/persona-5-minute-runbooks.md)
+See the [platform docs](https://confighub.github.io/cub-gen/platform/) for the full story.
 
-### Workflow-First Start (Ops + Swamp)
+## Who this is for
 
-If your platform is workflow-heavy (operations workflows or agent-authored workflows), start here:
+Platform engineers, SREs, and app developers who want to know exactly what changed, who owns it, and where to fix it — without changing their existing deployment workflow.
+
+## What cub-gen does vs what requires ConfigHub
+
+| Capability | cub-gen (local) | ConfigHub (connected) |
+|-----------|----------------|----------------------|
+| Generator detection + DRY/WET classification | Yes | Yes |
+| Field-origin tracing + inverse-edit guidance | Yes | Yes |
+| Change CLI (preview, run, explain) | Yes | Yes |
+| Evidence bundles (publish, verify, attest) | Yes | Yes |
+| Cross-repo queries + policy enforcement | -- | Yes |
+| Governed decisions (ALLOW/ESCALATE/BLOCK) | -- | Yes |
+| Bridge workers + cluster integration | -- | Yes |
+
+## Documentation
+
+Full docs: **https://confighub.github.io/cub-gen/**
+
+- [Getting Started](https://confighub.github.io/cub-gen/getting-started/) — 10-minute quickstart
+- [CLI Reference](https://confighub.github.io/cub-gen/cli-reference/) — all commands, flags, and generator recipes
+- [Demo Guide](https://confighub.github.io/cub-gen/demo-guide/) — runnable demo scripts and scenarios
+- [Examples](examples/README.md) — complete runnable scenarios for every generator
+- [Platform](https://confighub.github.io/cub-gen/platform/) — how cub-gen connects to ConfigHub
+- [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md) — stack-specific entry paths
+- [Change CLI contract](docs/contracts/change-cli-v1.md) — change preview/run/explain specification
+
+## Live reconciler proofs
 
 ```bash
-# Ops workflow structural governance
-./examples/ops-workflow/demo-local.sh
-./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
-  | jq '.provenance[0].ops_workflow_analysis'
-
-# Swamp workflow-graph governance
-./examples/swamp-automation/demo-local.sh
-./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation \
-  | jq '.provenance[0].swamp_workflow_analysis'
+./examples/demo/e2e-live-reconcile-flux.sh     # Flux on kind cluster
+./examples/demo/e2e-live-reconcile-argo.sh     # Argo CD on kind cluster
 ```
 
-## Operation Registry Examples (Not AI-Ops Only)
+Both prove create, update, and drift-correction on a real cluster.
 
-`FrameworkRegistry` is used across multiple example types:
-
-- Helm platform: `examples/helm-paas/platform/registry.yaml`
-- Spring Boot platform: `examples/springboot-paas/platform/registry.yaml`
-- AI Ops platform: `examples/ai-ops-paas/platform/registry.yaml`
-- Ops workflow platform: `examples/ops-workflow/platform/registry.yaml`
-- Swamp workflow platform: `examples/swamp-automation/platform/registry.yaml`
-
-Guide: [docs/workflows/operation-registry-real-apps.md](docs/workflows/operation-registry-real-apps.md)
-
-This shows structural change governance first: actions/schedules/approval gates for Ops, and models/methods/required steps for Swamp.
-
-## Read Next
-
-- [Build your own Heroku in a weekend](docs/workflows/build-your-own-heroku-in-a-weekend.md)
-- [Prompt as DRY (worked example)](docs/workflows/prompt-as-dry.md)
-- [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md)
-- [AI-only guardrails](docs/workflows/ai-only-guardrails.md)
-- [Examples catalog](examples/README.md)
-- [Demo scripts index](examples/demo/README.md)
-- [User-story acceptance matrix](docs/workflows/user-story-acceptance.md)
-- [Change CLI contract](docs/contracts/change-cli-v1.md)
-- [Connected CI bootstrap](docs/workflows/connected-ci-bootstrap.md)
-
-## User-Story Coverage Snapshot
-
-| Status | User stories | Notes |
-|---|---|---|
-| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 | Connected lifecycle is backend-authoritative for decision state, Story 8/11 source signals come from connected lifecycle artifacts, and Story 10 captures real GitHub signed-commit + branch-protection evidence. |
-| Partial (simulated/local-first, not full backend/runtime integration) | None | Remaining connected fallback mode is available only as explicit troubleshooting path. |
-| Deferred | None | Deferred stories now have connected acceptance scripts and evidence outputs. |
-
-## CI Shortcuts
+## Test and contribute
 
 ```bash
-make ci-local
-make ci-connected
-make ci-connected-troubleshoot
+make ci                # build + all tests (local)
+make ci-connected      # connected mode tests (requires cub auth login)
+go test ./...          # unit + golden + parity tests
 ```
 
-`make ci-connected` enforces strict backend-authoritative mode (`CONNECTED_FALLBACK_MODE=off`).
-Use `make ci-connected-troubleshoot` only for fallback diagnostics.
-
-Contributing guide: [CONTRIBUTING.md](CONTRIBUTING.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development rules, test requirements, and how to add a new generator.

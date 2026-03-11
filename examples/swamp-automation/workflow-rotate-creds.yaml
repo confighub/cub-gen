@@ -1,0 +1,23 @@
+id: rotate-creds
+name: credential-rotation
+jobs:
+  - name: rotation-flow
+    steps:
+      - name: generate
+        task:
+          type: model_method
+          modelIdOrName: secret-manager
+          methodName: generate_credentials
+      - name: distribute
+        task:
+          type: model_method
+          modelIdOrName: secret-manager
+          methodName: distribute
+        depends_on: [generate]
+      - name: verify-access
+        task:
+          type: model_method
+          modelIdOrName: app-validator
+          methodName: verify_connectivity
+        depends_on: [distribute]
+        retries: 3

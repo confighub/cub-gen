@@ -20,6 +20,11 @@
           "name": "input_02",
           "required": true,
           "schema_ref": "https://schema.confighub.dev/generators/swamp-workflow-v1"
+        },
+        {
+          "name": "input_03",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/swamp-workflow-v1"
         }
       ],
       "kind": "swamp",
@@ -42,7 +47,8 @@
       "generator_profile": "swamp",
       "inputs": [
         ".swamp.yaml",
-        "workflow-deploy.yaml"
+        "workflow-deploy.yaml",
+        "workflow-rotate-creds.yaml"
       ],
       "resource_body": "kind: Workflow\nmetadata:\n  name: swamp-automation\nspec:\n  root: \n",
       "resource_kind": "Workflow",
@@ -64,6 +70,14 @@
       "generator_id": "gen_124d7fbd01e19b49",
       "owner": "app-team",
       "path": "workflow-deploy.yaml",
+      "profile": "swamp",
+      "required": true,
+      "role": "swamp-workflow"
+    },
+    {
+      "generator_id": "gen_124d7fbd01e19b49",
+      "owner": "app-team",
+      "path": "workflow-rotate-creds.yaml",
       "profile": "swamp",
       "required": true,
       "role": "swamp-workflow"
@@ -170,7 +184,7 @@
       "generator_id": "gen_124d7fbd01e19b49",
       "generator_name": "swamp-automation",
       "generator_profile": "swamp",
-      "input_digest": "sha256:88342ced7e0cc9b402d6e6fa04e119b700d9565c5ba19dba0253165cac8f2b59",
+      "input_digest": "sha256:b2fcc4b234b234da7f0ececc12dc67adce057ce5fd29f0f379c19a994eb0cd7a",
       "inverse_edit_pointers": [
         {
           "confidence": 0.9,
@@ -239,6 +253,12 @@
           "revision": "HEAD",
           "role": "generator-input",
           "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "workflow-rotate-creds.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
         }
       ],
       "swamp_workflow_analysis": {
@@ -298,7 +318,7 @@
   "summary": {
     "contracts": 1,
     "discovered_resources": 1,
-    "dry_inputs": 2,
+    "dry_inputs": 3,
     "dry_units": 1,
     "generator_profiles": [
       "swamp"
