@@ -21,6 +21,9 @@ Each example in this directory is runnable and maps to a real platform/app patte
 4. inverse-edit guidance (where to edit),
 5. evidence bundles (`publish`, `verify`, `attest`).
 
+If confidence scores are new to your team, use:
+- [Confidence score guide](../docs/workflows/confidence-scores.md)
+
 ## Run modes
 
 ## Local mode (fastest, no login required)
