@@ -327,10 +327,10 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		FieldOriginTransform:        "no-config-platform-to-runtime",
 		FieldOriginOverlayTransform: "no-config-platform-overlay-merge",
-			InputRoleRules: []InputRoleRule{
-				{Role: "provider-config-base", ExactBasenames: []string{"no-config-platform.yaml", "no-config-platform.yml", "no-config-platform.json"}},
-				{Role: "provider-config-overlay", Prefixes: []string{"no-config-platform-"}, Extensions: []string{".yaml", ".yml", ".json"}},
-			},
+		InputRoleRules: []InputRoleRule{
+			{Role: "provider-config-base", ExactBasenames: []string{"no-config-platform.yaml", "no-config-platform.yml", "no-config-platform.json"}},
+			{Role: "provider-config-overlay", Prefixes: []string{"no-config-platform-"}, Extensions: []string{".yaml", ".yml", ".json"}},
+		},
 		DefaultInputRole: "provider-config",
 		DefaultOwner:     "app-team",
 		WetTargets: []WetTargetTemplate{

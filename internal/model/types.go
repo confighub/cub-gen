@@ -3,14 +3,14 @@ package model
 type GeneratorKind string
 
 const (
-	GeneratorHelm       GeneratorKind = "helm"
-	GeneratorScore      GeneratorKind = "score"
-	GeneratorSpringBoot GeneratorKind = "springboot"
-	GeneratorBackstage  GeneratorKind = "backstage"
-	GeneratorNoConfigPlatform       GeneratorKind = "no-config-platform"
-	GeneratorOpsFlow    GeneratorKind = "opsworkflow"
-	GeneratorC3Agent    GeneratorKind = "c3agent"
-	GeneratorSwamp      GeneratorKind = "swamp"
+	GeneratorHelm             GeneratorKind = "helm"
+	GeneratorScore            GeneratorKind = "score"
+	GeneratorSpringBoot       GeneratorKind = "springboot"
+	GeneratorBackstage        GeneratorKind = "backstage"
+	GeneratorNoConfigPlatform GeneratorKind = "no-config-platform"
+	GeneratorOpsFlow          GeneratorKind = "opsworkflow"
+	GeneratorC3Agent          GeneratorKind = "c3agent"
+	GeneratorSwamp            GeneratorKind = "swamp"
 )
 
 type GeneratorDetection struct {

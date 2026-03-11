@@ -618,14 +618,14 @@ func setupAliases(t *testing.T) map[string]string {
 	// Render target metadata (no repo path required in this prototype).
 	cfgAny := map[string]any{
 		"targets": map[string]any{
-			"helm":      helmAbs,
-			"score":     scoreAbs,
-			"spring":    springAbs,
-			"backstage": backstageAbs,
+			"helm":               helmAbs,
+			"score":              scoreAbs,
+			"spring":             springAbs,
+			"backstage":          backstageAbs,
 			"no-config-platform": noConfigPlatformAbs,
-			"ops":       opsAbs,
-			"c3agent":   c3agentAbs,
-			"swamp":     swampAbs,
+			"ops":                opsAbs,
+			"c3agent":            c3agentAbs,
+			"swamp":              swampAbs,
 			"render-target": map[string]any{
 				"toolchain": "kubernetes/yaml",
 				"providers": []string{"fluxrenderer", "argocdrenderer"},
@@ -642,14 +642,14 @@ func setupAliases(t *testing.T) map[string]string {
 	t.Setenv("CUB_GEN_TARGETS_FILE", cfgPath)
 
 	return map[string]string{
-		"helm":      helmAbs,
-		"score":     scoreAbs,
-		"spring":    springAbs,
-		"backstage": backstageAbs,
+		"helm":               helmAbs,
+		"score":              scoreAbs,
+		"spring":             springAbs,
+		"backstage":          backstageAbs,
 		"no-config-platform": noConfigPlatformAbs,
-		"ops":       opsAbs,
-		"c3agent":   c3agentAbs,
-		"swamp":     swampAbs,
+		"ops":                opsAbs,
+		"c3agent":            c3agentAbs,
+		"swamp":              swampAbs,
 	}
 }
 
