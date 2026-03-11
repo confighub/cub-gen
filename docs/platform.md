@@ -1,6 +1,13 @@
 # The ConfigHub Platform
 
-cub-gen is the local-first entry point to the ConfigHub platform. It works standalone — no backend, no accounts, no cluster access needed. But everything it produces is designed to feed into ConfigHub when you're ready.
+cub-gen is the local-first entry point to the ConfigHub platform.
+
+- Local mode: standalone, no backend login required.
+- Connected mode: `cub auth login` + ConfigHub backend APIs.
+
+ConfigHub backend OSS is available today:
+
+- [confighubai/confighub](https://github.com/confighubai/confighub)
 
 ---
 
