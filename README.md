@@ -54,6 +54,15 @@ go build -o ./cub-gen ./cmd/cub-gen
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
 ```
 
+## Use Your Repo in 3 Commands
+
+```bash
+REPO=/path/to/your/repo
+./cub-gen change preview --space platform "$REPO" "$REPO"
+./cub-gen change run --mode local --space platform "$REPO" "$REPO"
+./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
+```
+
 ## Quickstart (connected, ConfigHub)
 
 ```bash
@@ -124,6 +133,7 @@ Full docs: **https://confighub.github.io/cub-gen/**
 - [Platform](https://confighub.github.io/cub-gen/platform/) — how cub-gen connects to ConfigHub
 - [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md) — stack-specific entry paths
 - [Change CLI contract](docs/contracts/change-cli-v1.md) — change preview/run/explain specification
+- [Operation registry for real apps](docs/workflows/operation-registry-real-apps.md) — registry-backed platform governance
 
 ## Live reconciler proofs
 
@@ -133,6 +143,14 @@ Full docs: **https://confighub.github.io/cub-gen/**
 ```
 
 Both prove create, update, and drift-correction on a real cluster.
+
+## User-story coverage
+
+| Status | User stories |
+|---|---|
+| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 |
+| Partial (simulated/local-first, not full backend/runtime integration) | None |
+| Deferred | None |
 
 ## Test and contribute
 
