@@ -24,7 +24,7 @@ echo "[story-7] example: $EXAMPLE_SLUG"
 echo "[story-7] output: $OUT_DIR"
 
 VERIFIER="${VERIFIER:-ci-bot}" \
-./examples/demo/simulate-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
+./examples/demo/run-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
 
 jq -n \
   --arg story "7-ci-centric-api-flow" \

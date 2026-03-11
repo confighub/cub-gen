@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 source "$ROOT_DIR/examples/demo/lib/connected-preflight.sh"
+export CONNECTED_FALLBACK_MODE="${CONNECTED_FALLBACK_MODE:-off}"
 
 echo "[connected-entrypoints] preflight (requires cub auth login)"
 require_connected_preflight

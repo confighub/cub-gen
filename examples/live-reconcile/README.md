@@ -6,8 +6,8 @@ This example proves LIVE reconciliation loops with both Flux and Argo CD using a
 
 - `flux/manifests-v1`: initial desired state (`replicas=1`, revision `v1`)
 - `flux/manifests-v2`: updated desired state (`replicas=2`, revision `v2`)
-- `helm-paas/manifests-v1`: Helm-derived desired state v1 (`payments-api`, `podinfo:6.6.0`)
-- `helm-paas/manifests-v2`: Helm-derived desired state v2 (`payments-api`, `podinfo:6.6.2`)
+- `helm-paas/manifests-v1`: Helm-derived desired state v1 (`payments-api`, `ghcr.io/example/payments-api:v1.0.3`, `replicas=4`)
+- `helm-paas/manifests-v2`: Helm-derived desired state v2 (`payments-api`, `ghcr.io/example/payments-api:v1.0.9-canary`, `replicas=3`)
 - `examples/demo/e2e-live-reconcile-flux.sh`: Flux create -> update -> drift-correction
 - `examples/demo/e2e-live-reconcile-argo.sh`: Argo create -> update -> drift-correction
 - `examples/demo/e2e-connected-governed-reconcile-helm.sh`: connected ConfigHub governance + Flux/Argo live reconcile using `helm-paas`-derived manifests

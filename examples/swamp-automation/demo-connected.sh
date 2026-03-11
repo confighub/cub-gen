@@ -4,4 +4,4 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
-./examples/demo/simulate-confighub-lifecycle-connected.sh "./examples/swamp-automation" "./examples/swamp-automation" "swamp-automation"
+./examples/demo/run-confighub-lifecycle-connected.sh "./examples/swamp-automation" "./examples/swamp-automation" "swamp-automation"

@@ -33,7 +33,7 @@ for example in "${EXAMPLES[@]}"; do
   echo "[story-9] $example decision=backend-driven"
 
   VERIFIER="wave-bot" \
-  ./examples/demo/simulate-confighub-lifecycle-connected.sh "$repo" "$repo" "$example" "$out_dir"
+  ./examples/demo/run-confighub-lifecycle-connected.sh "$repo" "$repo" "$example" "$out_dir"
 
   summary_file="$out_dir/story-9-summary.json"
   actual_state="$(jq -r '.state // "UNKNOWN"' "$out_dir/update/decision-final.json")"

@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 source "$ROOT_DIR/examples/demo/lib/connected-preflight.sh"
+source "$ROOT_DIR/examples/demo/lib/helm-live-reconcile-manifests.sh"
 
 REPO_PATH="${1:-./examples/helm-paas}"
 RENDER_TARGET="${2:-$REPO_PATH}"
@@ -35,6 +36,13 @@ query_changesets() {
   cub changeset list --space "$CONFIGHUB_SPACE" --json --where "$where_expr" > "$output"
 }
 
+slugify_label() {
+  local value="$1"
+  value="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')"
+  value="$(printf '%s' "$value" | sed -E 's/^-+//; s/-+$//; s/-+/-/g')"
+  printf '%s' "$value"
+}
+
 if [ ! -d "$REPO_PATH" ]; then
   echo "error: repo path not found: $REPO_PATH" >&2
   exit 1
@@ -47,15 +55,31 @@ mkdir -p "$OUT_DIR"
 echo "[story-11] LIVE break-glass accept/revert proposal flow"
 echo "[story-11] output: $OUT_DIR"
 
-./examples/demo/simulate-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
+./examples/demo/run-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
 
 change_id="$(jq -r .change_id "$OUT_DIR/update/bundle.json")"
 backend_decision_state="$(jq -r '.state // "UNKNOWN"' "$OUT_DIR/update/decision-final.json")"
-workload="Deployment/helm-paas-sample"
-path="spec.template.spec.containers[0].image"
-before="ghcr.io/acme-corp/sample-app:v1.2.3"
-after="ghcr.io/acme-corp/sample-app:v1.2.4-hotfix"
-reason="on-call break-glass patch to mitigate incident INC-4821"
+deployment_name="$(jq -r '[.wet_manifest_targets[] | select(.kind=="Deployment") | .name][0] // "payments-api"' "$OUT_DIR/update/import.json")"
+workload="Deployment/${deployment_name}"
+path="$(jq -r '[.inverse_transform_plans[]?.patches[]? | select((.wet_path // "") | test("image")) | .wet_path][0] // "Deployment/spec/template/spec/containers[0]/image"' "$OUT_DIR/update/import.json")"
+
+before_repo="$(resolve_helm_value "$OUT_DIR/create/repo" "image.repository")"
+before_tag="$(resolve_helm_value "$OUT_DIR/create/repo" "image.tag")"
+after_repo="$(resolve_helm_value "$OUT_DIR/update/repo" "image.repository")"
+after_tag="$(resolve_helm_value "$OUT_DIR/update/repo" "image.tag")"
+
+if [ -z "$before_repo" ] || [ -z "$before_tag" ] || [ -z "$after_repo" ] || [ -z "$after_tag" ]; then
+  echo "error: failed to resolve image values from connected lifecycle repo snapshots for Story 11." >&2
+  exit 1
+fi
+
+before="${before_repo}:${before_tag}"
+after="${after_repo}:${after_tag}"
+reason="connected lifecycle image delta detected for ${deployment_name} (${before} -> ${after})"
+field_path_label="$(slugify_label "$path")"
+workload_label="$(slugify_label "$deployment_name")"
+before_label="$(slugify_label "$before_tag")"
+after_label="$(slugify_label "$after_tag")"
 
 observation_slug="$(sanitize_slug "story11-live-observation-${EXAMPLE_SLUG}-${RUN_ID}")"
 live_observation="$OUT_DIR/update/live-observation-backend.json"
@@ -66,10 +90,10 @@ create_backend_changeset \
   --label "story=11" \
   --label "change_id=${change_id}" \
   --label "proposal_role=live_observation" \
-  --label "workload=helm-paas-sample" \
-  --label "field_path=image_tag" \
-  --label "from=v1-2-3" \
-  --label "to=v1-2-4-hotfix"
+  --label "workload=${workload_label}" \
+  --label "field_path=${field_path_label}" \
+  --label "from=${before_label}" \
+  --label "to=${after_label}"
 
 observation_changeset_id="$(jq -r '.ChangeSetID // .ChangeSet.ChangeSetID // empty' "$live_observation")"
 if [ -z "$observation_changeset_id" ]; then
@@ -90,7 +114,7 @@ create_backend_changeset \
   --label "observation_changeset_id=${observation_changeset_id}" \
   --label "dry_file=examples-helm-paas-values-prod-yaml" \
   --label "dry_path=image-tag" \
-  --label "dry_value=v1-2-4-hotfix"
+  --label "dry_value=${after_label}"
 
 revert_slug="$(sanitize_slug "story11-revert-${EXAMPLE_SLUG}-${RUN_ID}")"
 revert_proposal="$OUT_DIR/update/proposal-revert-backend.json"
@@ -105,7 +129,7 @@ create_backend_changeset \
   --label "observation_changeset_id=${observation_changeset_id}" \
   --label "dry_file=examples-helm-paas-values-prod-yaml" \
   --label "dry_path=image-tag" \
-  --label "dry_value=v1-2-3"
+  --label "dry_value=${before_label}"
 
 accept_where="Labels.story = '11' AND Labels.change_id = '${change_id}' AND Labels.proposal_action = 'accept'"
 revert_where="Labels.story = '11' AND Labels.change_id = '${change_id}' AND Labels.proposal_action = 'revert'"

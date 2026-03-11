@@ -143,7 +143,7 @@ echo "[story-10] output: $OUT_DIR"
 echo "[story-10] app PR: ${APP_PR_REPO}#${APP_PR_NUMBER}"
 echo "[story-10] promotion PR: ${PROMOTION_PR_REPO}#${PROMOTION_PR_NUMBER}"
 
-./examples/demo/simulate-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
+./examples/demo/run-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
 
 decision_state="$(jq -r '.state // "UNKNOWN"' "$OUT_DIR/update/decision-final.json")"
 if [ "$decision_state" != "ALLOW" ]; then

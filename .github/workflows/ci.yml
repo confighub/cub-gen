@@ -39,6 +39,8 @@ jobs:
       CONFIGHUB_SPACE: ${{ secrets.CONFIGHUB_SPACE }}
       CONFIGHUB_TOKEN: ${{ secrets.CONFIGHUB_TOKEN }}
       CONFIGHUB_USER: ci-bot
+      CONNECTED_FALLBACK_MODE: off
+      REQUIRE_TERMINAL_DECISION: "1"
       CLEANUP_CLUSTER: "1"
     steps:
       - uses: actions/checkout@v4

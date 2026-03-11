@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 source "$ROOT_DIR/examples/demo/lib/connected-preflight.sh"
+export CONNECTED_FALLBACK_MODE="${CONNECTED_FALLBACK_MODE:-off}"
 
 echo "[connected-lifecycle] preflight (requires cub auth login)"
 require_connected_preflight
@@ -36,7 +37,7 @@ for example in "${examples[@]}"; do
   echo "[connected-lifecycle] running: $example"
   echo "============================================================"
 
-  if SKIP_BUILD=1 ./examples/demo/simulate-confighub-lifecycle-connected.sh "./examples/$example" "./examples/$example" "$example"; then
+  if SKIP_BUILD=1 ./examples/demo/run-confighub-lifecycle-connected.sh "./examples/$example" "./examples/$example" "$example"; then
     echo "[connected-lifecycle] PASS: $example"
   else
     echo "[connected-lifecycle] FAIL: $example"

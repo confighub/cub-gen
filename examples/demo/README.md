@@ -54,7 +54,7 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 | `app-ai-fastpath.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card output |
 | `simulate-confighub-lifecycle.sh <repo> <target> [slug]` | Full local lifecycle simulation |
 | `run-all-confighub-lifecycles.sh` | Lifecycle simulation across current fixtures |
-| `simulate-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle: real ConfigHub ingest/query when bridge endpoints are available, with backend `changeset` fallback when they are not |
+| `run-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle: real ConfigHub ingest/query when bridge endpoints are available, with backend `changeset` fallback when they are not |
 | `run-all-connected-lifecycles.sh` | Connected lifecycle run across current fixtures with pass/fail summary |
 | `run-all-connected-entrypoints.sh` | Runs every `examples/*/demo-connected.sh` entrypoint (all examples, optional `live-reconcile`) |
 | `simulate-repo-wizard.sh <repo> <target> [hint]` | GUI wizard simulation path |
@@ -119,9 +119,9 @@ Local contract simulation is limited to explicit local-only demos (`simulate-con
 
 Bridge endpoint behavior:
 
-- Default (`CONNECTED_FALLBACK_MODE=auto`): if ingest returns `404 Not Found`, the scripts switch to backend `changeset` fallback and still persist evidence in ConfigHub.
-- Strict (`CONNECTED_FALLBACK_MODE=off`): fail fast unless bridge ingest/query endpoints are reachable.
-- Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`): always use backend `changeset` fallback.
+- Default (`CONNECTED_FALLBACK_MODE=off`): fail fast unless bridge ingest/query endpoints are reachable.
+- Auto fallback (`CONNECTED_FALLBACK_MODE=auto`): if ingest returns `404 Not Found`, scripts switch to backend `changeset` fallback and still persist evidence in ConfigHub.
+- Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`): always use backend `changeset` fallback (troubleshooting only).
 
 Fallback mode records `ingest.json`/`decision-final.json` in the standard contract shape with `source=confighub-backend-changeset-fallback`, so story scripts and CI gates remain deterministic.
 
@@ -188,6 +188,6 @@ References:
 
 | Status | User stories |
 |---|---|
-| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13 |
-| Partial (simulated/local-first, not full backend/runtime integration) | 8, 11 |
+| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 |
+| Partial (simulated/local-first, not full backend/runtime integration) | None |
 | Deferred | None |

@@ -27,6 +27,38 @@ query_changesets() {
   cub changeset list --space "$CONFIGHUB_SPACE" --json --where "$where_expr" > "$output"
 }
 
+extract_spec_lifecycle() {
+  local repo_dir="$1"
+  local candidate
+  for candidate in "$repo_dir/catalog-info.yaml" "$repo_dir/catalog-info.yml"; do
+    if [ -f "$candidate" ]; then
+      awk '
+        $0 ~ /^spec:[[:space:]]*$/ {in_spec=1; next}
+        in_spec && $0 ~ /^[^[:space:]]/ {in_spec=0}
+        in_spec && $0 ~ /^[[:space:]]*lifecycle:[[:space:]]*/ {
+          value=$0
+          sub(/^[[:space:]]*lifecycle:[[:space:]]*/, "", value)
+          gsub(/[[:space:]]+$/, "", value)
+          print value
+          exit
+        }
+      ' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+map_environment_tier() {
+  local lifecycle="$1"
+  case "$lifecycle" in
+    production) printf '%s' "prod" ;;
+    staging) printf '%s' "stage" ;;
+    development) printf '%s' "dev" ;;
+    *) printf '%s' "$lifecycle" ;;
+  esac
+}
+
 if [ ! -d "$REPO_PATH" ]; then
   echo "error: repo path not found: $REPO_PATH" >&2
   exit 1
@@ -39,7 +71,7 @@ mkdir -p "$OUT_DIR"
 echo "[story-8] label/taxonomy evolution without repo surgery"
 echo "[story-8] output: $OUT_DIR"
 
-./examples/demo/simulate-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
+./examples/demo/run-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
 
 label_fields="$OUT_DIR/update/label-field-origins.json"
 jq '
@@ -56,6 +88,17 @@ jq '
 ' "$OUT_DIR/update/import.json" > "$label_fields"
 
 change_id="$(jq -r .change_id "$OUT_DIR/update/bundle.json")"
+update_repo_snapshot="$OUT_DIR/update/repo"
+legacy_label_key="$(jq -r 'first(.[]?.wet_path // empty) as $w | (try ($w | capture("labels\\[(?<k>[^]]+)\\]").k) catch "")' "$label_fields")"
+if [ -z "$legacy_label_key" ]; then
+  legacy_label_key="lifecycle"
+fi
+legacy_label_value="$(extract_spec_lifecycle "$update_repo_snapshot" || true)"
+if [ -z "$legacy_label_value" ]; then
+  legacy_label_value="production"
+fi
+new_label_key="${MIGRATION_TARGET_LABEL:-environment_tier}"
+new_label_value="$(map_environment_tier "$legacy_label_value")"
 migration_slug="$(sanitize_slug "story8-taxonomy-${EXAMPLE_SLUG}-${RUN_ID}")"
 backend_changeset="$OUT_DIR/update/migration-changeset.json"
 
@@ -66,8 +109,8 @@ cub changeset create \
   --description "Story 8 taxonomy migration anchor for change_id=${change_id}" \
   --label "story=8" \
   --label "change_id=${change_id}" \
-  --label "lifecycle=production" \
-  --label "environment_tier=prod" \
+  --label "${legacy_label_key}=${legacy_label_value}" \
+  --label "${new_label_key}=${new_label_value}" \
   --label "migration_phase=dual_read" \
   > "$backend_changeset"
 
@@ -77,8 +120,8 @@ if [ -z "$migration_changeset_id" ]; then
   exit 1
 fi
 
-legacy_where="ChangeSetID = '${migration_changeset_id}' AND Labels.lifecycle = 'production'"
-new_where="ChangeSetID = '${migration_changeset_id}' AND Labels.environment_tier = 'prod'"
+legacy_where="ChangeSetID = '${migration_changeset_id}' AND Labels.${legacy_label_key} = '${legacy_label_value}'"
+new_where="ChangeSetID = '${migration_changeset_id}' AND Labels.${new_label_key} = '${new_label_value}'"
 
 legacy_query="$OUT_DIR/update/migration-query-legacy.json"
 new_query="$OUT_DIR/update/migration-query-new.json"
@@ -102,8 +145,10 @@ jq -n \
   --arg changeset_id "$migration_changeset_id" \
   --arg changeset_slug "$migration_slug" \
   --arg changeset_file "$backend_changeset" \
-  --arg from_key "metadata.labels.lifecycle" \
-  --arg to_key "metadata.labels.environment_tier" \
+  --arg from_key "metadata.labels.${legacy_label_key}" \
+  --arg to_key "metadata.labels.${new_label_key}" \
+  --arg from_value "$legacy_label_value" \
+  --arg to_value "$new_label_value" \
   --arg legacy_where "$legacy_where" \
   --arg new_where "$new_where" \
   --arg union_where "legacy-query-union + new-query-union (computed in script)" \
@@ -124,6 +169,8 @@ jq -n \
     migration: {
       from: $from_key,
       to: $to_key,
+      source_value: $from_value,
+      target_value: $to_value,
       strategy: "dual-read-then-cutover",
       repo_surgery_required: false
     },

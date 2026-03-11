@@ -30,7 +30,7 @@ while IFS= read -r readme; do
   fi
 
   if [ -x "$connected_script" ]; then
-    if ! rg -q 'simulate-confighub-lifecycle-connected\.sh|connected-preflight\.sh' "$connected_script"; then
+    if ! rg -q 'run-confighub-lifecycle-connected\.sh|connected-preflight\.sh' "$connected_script"; then
       failures+=("$example_name: demo-connected.sh must use shared connected preflight path")
     fi
   fi

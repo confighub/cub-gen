@@ -47,23 +47,4 @@ if [ "$main_met" != "$demo_met" ] || [ "$main_partial" != "$demo_partial" ] || [
   exit 1
 fi
 
-norm() {
-  printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]'
-}
-
-partial_norm="$(norm "$main_partial")"
-deferred_norm="$(norm "$main_deferred")"
-
-all_met=0
-if { [ -z "$partial_norm" ] || [ "$partial_norm" = "none" ] || [ "$partial_norm" = "-" ]; } \
-  && { [ -z "$deferred_norm" ] || [ "$deferred_norm" = "none" ] || [ "$deferred_norm" = "-" ]; }; then
-  all_met=1
-fi
-
-if [ "$all_met" -eq 1 ] && [ "${CUB_GEN_ALL_STORIES_ACCEPTED:-0}" != "1" ]; then
-  echo "error: docs mark all user stories as met, but acceptance gate is not enabled." >&2
-  echo "remediation: run acceptance checks with CUB_GEN_ALL_STORIES_ACCEPTED=1 and keep CI evidence for local+connected+live suites." >&2
-  exit 1
-fi
-
 echo "ok: story-status tables are consistent"

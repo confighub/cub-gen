@@ -159,9 +159,6 @@ This shows structural change governance first: actions/schedules/approval gates 
 make ci-local       # build + tests + parity + docs/coverage gates
 make ci-connected   # connected entrypoints + lifecycle + phase-3/4 stories + connected full-loop helm e2e + flux/argo live reconcile gates
 make ci             # alias of ci-local
-
-# enable connected full-loop helm e2e gate explicitly
-ENABLE_CONNECTED_GOVERNED_RECONCILE_HELM=1 make ci-connected
 ```
 
 Story-specific connected scripts (Phase 3):
@@ -191,8 +188,8 @@ Workflow template for non-interactive CI auth:
 
 | Status | User stories | Notes |
 |---|---|---|
-| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13 | Connected lifecycle now uses backend decision state as source of truth for governed flows, and Story 10 captures real GitHub signed-commit + branch-protection evidence. |
-| Partial (simulated/local-first, not full backend/runtime integration) | 8, 11 | Story 8/11 proposals are now persisted/queryable in backend changesets, but source signals are still demo-simulated (taxonomy mapping + break-glass observation data). |
+| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 | Connected lifecycle is backend-authoritative for decision state, Story 8/11 source signals come from connected lifecycle artifacts, and Story 10 captures real GitHub signed-commit + branch-protection evidence. |
+| Partial (simulated/local-first, not full backend/runtime integration) | None | Remaining connected fallback mode is available only as explicit troubleshooting path. |
 | Deferred | None | Deferred stories now have connected acceptance scripts and evidence outputs. |
 
 ## Repo Map

@@ -16,6 +16,8 @@ jobs:
       CONFIGHUB_SPACE: ${{ secrets.CONFIGHUB_SPACE }}
       CONFIGHUB_TOKEN: ${{ secrets.CONFIGHUB_TOKEN }}
       CONFIGHUB_USER: ci-bot
+      CONNECTED_FALLBACK_MODE: off
+      REQUIRE_TERMINAL_DECISION: "1"
       EXAMPLE_SLUG: ${{ inputs.example_slug }}
       RUN_ID: ${{ github.run_id }}
       VERIFIER: ci-bot

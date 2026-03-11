@@ -21,7 +21,7 @@ mkdir -p "$OUT_DIR"
 echo "[story-1] existing repo import + connected query"
 echo "[story-1] output: $OUT_DIR"
 
-./examples/demo/simulate-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
+./examples/demo/run-confighub-lifecycle-connected.sh "$REPO_PATH" "$RENDER_TARGET" "$EXAMPLE_SLUG" "$OUT_DIR"
 
 jq -n \
   --arg repo "$EXAMPLE_SLUG" \
