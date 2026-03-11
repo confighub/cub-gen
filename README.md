@@ -200,51 +200,17 @@ Guide: [docs/workflows/operation-registry-real-apps.md](docs/workflows/operation
 
 This shows structural change governance first: actions/schedules/approval gates for Ops, and models/methods/required steps for Swamp.
 
-## Which Story Should You Read First?
+## Read Next
 
-- New to cub-gen: [Build your own Heroku in a weekend](docs/workflows/build-your-own-heroku-in-a-weekend.md)
-- Prompt-native story: [Prompt as DRY (worked example)](docs/workflows/prompt-as-dry.md)
-- AI-only pilot policy: [AI-only guardrails](docs/workflows/ai-only-guardrails.md)
-- Fastest persona-based starts: [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md)
-- Demo scripts index: [examples/demo/README.md](examples/demo/README.md)
-- User-story acceptance matrix: [user-story-acceptance.md](docs/workflows/user-story-acceptance.md)
-- Generator contract boundary: [canonical-triple-and-storage-boundary.md](docs/contracts/canonical-triple-and-storage-boundary.md)
-- Change CLI contract (draft): [change-cli-v1.md](docs/contracts/change-cli-v1.md)
-- Contributor issue pack (v0.2 change surface): [2026-03-11-change-surface-issue-pack.md](docs/plans/2026-03-11-change-surface-issue-pack.md)
-
-## CI Targets
-
-```bash
-make ci-local       # build + tests + parity + docs/coverage gates
-make ci-connected   # connected entrypoints + lifecycle + phase-3/4 stories + connected full-loop helm e2e + flux/argo live reconcile gates + ai-only scope gate
-make ci-connected-troubleshoot # non-release diagnostics (changeset fallback + Story 10 skip allowed)
-make ci             # alias of ci-local
-```
-
-Story-specific connected scripts (Phase 3):
-
-- `./examples/demo/story-1-existing-repo-connected.sh`
-- `./examples/demo/story-7-ci-api-flow-connected.sh`
-- `./examples/demo/story-7-agent-tool-call-connected.sh`
-- `./examples/demo/story-9-multi-repo-wave-connected.sh`
-- `./examples/demo/story-12-unified-actor-evidence.sh`
-- `./examples/demo/run-phase-3-connected-stories.sh`
-
-Story-specific connected scripts (Phase 4):
-
-- `./examples/demo/story-8-label-evolution-connected.sh`
-- `./examples/demo/story-10-signed-writeback-proof-connected.sh`
-- `./examples/demo/story-11-live-breakglass-proposal-connected.sh`
-- `./examples/demo/run-phase-4-connected-stories.sh`
-
-Story 10 (signed write-back proof) requires real GitHub PR coordinates:
-`APP_PR_REPO`, `APP_PR_NUMBER`, `PROMOTION_PR_REPO`, `PROMOTION_PR_NUMBER`
-and `gh` auth (`GH_TOKEN`/`GITHUB_TOKEN` or `gh auth login`).
-
-Workflow template for non-interactive CI auth:
-
-- [connected-story7.yml](.github/workflows/connected-story7.yml)
-- Connected CI bootstrap/runbook: [connected-ci-bootstrap.md](docs/workflows/connected-ci-bootstrap.md)
+- [Build your own Heroku in a weekend](docs/workflows/build-your-own-heroku-in-a-weekend.md)
+- [Prompt as DRY (worked example)](docs/workflows/prompt-as-dry.md)
+- [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md)
+- [AI-only guardrails](docs/workflows/ai-only-guardrails.md)
+- [Examples catalog](examples/README.md)
+- [Demo scripts index](examples/demo/README.md)
+- [User-story acceptance matrix](docs/workflows/user-story-acceptance.md)
+- [Change CLI contract](docs/contracts/change-cli-v1.md)
+- [Connected CI bootstrap](docs/workflows/connected-ci-bootstrap.md)
 
 ## User-Story Coverage Snapshot
 
@@ -254,22 +220,12 @@ Workflow template for non-interactive CI auth:
 | Partial (simulated/local-first, not full backend/runtime integration) | None | Remaining connected fallback mode is available only as explicit troubleshooting path. |
 | Deferred | None | Deferred stories now have connected acceptance scripts and evidence outputs. |
 
-## Repo Map
-
-- CLI code: `cmd/cub-gen`, `internal/*`
-- Example suites: `examples/*`
-- Demo runners: `examples/demo/*`
-- Contracts and decisions: `docs/contracts`, `docs/decisions`
-- Change API contract: `docs/contracts/change-api-v1.md`
-- Workflow docs: `docs/workflows`
-
-## Development
+## CI Shortcuts
 
 ```bash
-go test ./...
 make ci-local
+make ci-connected
+make ci-connected-troubleshoot
 ```
 
-For contribution details, see:
-
-- [CONTRIBUTING.md](CONTRIBUTING.md)
+Contributing guide: [CONTRIBUTING.md](CONTRIBUTING.md)
