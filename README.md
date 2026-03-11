@@ -212,6 +212,7 @@ Workflow template for non-interactive CI auth:
 - Example suites: `examples/*`
 - Demo runners: `examples/demo/*`
 - Contracts and decisions: `docs/contracts`, `docs/decisions`
+- Change API contract: `docs/contracts/change-api-v1.md`
 - Workflow docs: `docs/workflows`
 
 ## Development
