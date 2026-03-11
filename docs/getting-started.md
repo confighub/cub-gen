@@ -15,6 +15,24 @@ cd cub-gen
 go build -o cub-gen ./cmd/cub-gen
 ```
 
+## Use your own repo in 3 commands
+
+```bash
+REPO=/path/to/your/repo
+./cub-gen change preview --space platform "$REPO" "$REPO"
+./cub-gen change run --mode local --space platform "$REPO" "$REPO"
+./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
+```
+
+Connected mode for the same repo:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO" "$REPO"
+```
+
 ## Your first import (Helm)
 
 The three core commands mirror `cub gitops`:
