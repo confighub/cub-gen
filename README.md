@@ -161,6 +161,7 @@ This shows structural change governance first: actions/schedules/approval gates 
 - Demo scripts index: [examples/demo/README.md](examples/demo/README.md)
 - User-story acceptance matrix: [user-story-acceptance.md](docs/workflows/user-story-acceptance.md)
 - Generator contract boundary: [canonical-triple-and-storage-boundary.md](docs/contracts/canonical-triple-and-storage-boundary.md)
+- Change CLI contract (draft): [change-cli-v1.md](docs/contracts/change-cli-v1.md)
 - Contributor issue pack (v0.2 change surface): [2026-03-11-change-surface-issue-pack.md](docs/plans/2026-03-11-change-surface-issue-pack.md)
 
 ## CI Targets
