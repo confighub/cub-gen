@@ -45,6 +45,8 @@ require_file_pattern "docs/index.md" "cub auth login" "connected auth step (cub 
 require_file_pattern "docs/index.md" "confighubai/confighub" "ConfigHub OSS backend link"
 require_file_pattern "docs/platform.md" "cub auth login" "connected auth step (cub auth login)"
 require_file_pattern "docs/platform.md" "confighubai/confighub" "ConfigHub OSS backend link"
+require_file_pattern "docs/getting-started.md" "Use your own repo in 3 commands" "own-repo quickstart section"
+require_file_pattern "docs/getting-started.md" "cub auth login" "connected auth step (cub auth login)"
 
 # Examples landing page must keep own-repo entry and confidence guidance.
 require_file_pattern "examples/README.md" "Use your own repo quickly" "own-repo quickstart section"
