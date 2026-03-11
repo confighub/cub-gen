@@ -42,9 +42,11 @@ Goal: make `DRY -> WET -> LIVE` feel native for app/AI developers, with verifica
 
 5. `docs(workflows): add AI-only guardrails section to prompt-as-dry and user-story acceptance`
 - Why: keep docs synchronized with safety policy.
-- Done when: both docs reference the same enforcement matrix and failure behavior.
+- Status: done; enforced by `test/checks/check-ai-only-scope.sh` (requires both docs to reference `ai-only-guardrails.md`).
 
 ## PR sequence (recommended)
+
+Completed:
 
 1. PR-A: `feat(cli): add change explain --change-id mode`
 2. PR-B: `examples(agent): add tool-call lifecycle proof script + summary artifact`

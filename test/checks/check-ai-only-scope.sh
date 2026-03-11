@@ -9,6 +9,8 @@ if [ ! -f "$DOC" ]; then
   echo "error: missing AI-only guardrails doc: $DOC" >&2
   exit 1
 fi
+PROMPT_DOC="docs/workflows/prompt-as-dry.md"
+STORY_DOC="docs/workflows/user-story-acceptance.md"
 
 has_pattern() {
   local pattern="$1"
@@ -32,6 +34,23 @@ require_doc_text() {
 require_doc_text "Allowed Scope Matrix" "Allowed Scope Matrix section"
 require_doc_text "Hard Deny List" "Hard Deny List section"
 require_doc_text "Mandatory Rollback Hooks" "Mandatory Rollback Hooks section"
+
+if [ ! -f "$PROMPT_DOC" ]; then
+  echo "error: missing prompt-as-dry doc: $PROMPT_DOC" >&2
+  exit 1
+fi
+if [ ! -f "$STORY_DOC" ]; then
+  echo "error: missing user-story acceptance doc: $STORY_DOC" >&2
+  exit 1
+fi
+if ! has_pattern "ai-only-guardrails\\.md" "$PROMPT_DOC"; then
+  echo "error: prompt-as-dry doc missing AI-only guardrails reference" >&2
+  exit 1
+fi
+if ! has_pattern "ai-only-guardrails\\.md" "$STORY_DOC"; then
+  echo "error: user-story acceptance doc missing AI-only guardrails reference" >&2
+  exit 1
+fi
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT

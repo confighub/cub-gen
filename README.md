@@ -170,7 +170,7 @@ This shows structural change governance first: actions/schedules/approval gates 
 
 ```bash
 make ci-local       # build + tests + parity + docs/coverage gates
-make ci-connected   # connected entrypoints + lifecycle + phase-3/4 stories + connected full-loop helm e2e + flux/argo live reconcile gates
+make ci-connected   # connected entrypoints + lifecycle + phase-3/4 stories + connected full-loop helm e2e + flux/argo live reconcile gates + ai-only scope gate
 make ci-connected-troubleshoot # non-release diagnostics (changeset fallback + Story 10 skip allowed)
 make ci             # alias of ci-local
 ```
