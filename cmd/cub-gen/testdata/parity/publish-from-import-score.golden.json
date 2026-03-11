@@ -79,12 +79,12 @@
       "patches": [
         {
           "confidence": 0.9,
-          "dry_path": "containers.main.variables.LOG_LEVEL",
+          "dry_path": "containers.main.variables.DB_HOST",
           "editable_by": "app-team",
           "op": "replace",
           "reason": "Score variable maps to a single Kubernetes env var.",
           "requires_review": false,
-          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value"
+          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=DB_HOST]/value"
         }
       ],
       "plan_id": "\u003cplan_id\u003e",
@@ -115,10 +115,10 @@
         },
         {
           "confidence": 0.9,
-          "dry_path": "containers.main.variables.LOG_LEVEL",
+          "dry_path": "containers.main.variables.DB_HOST",
           "source_path": "score.yaml",
           "transform": "score-to-k8s",
-          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value"
+          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=DB_HOST]/value"
         },
         {
           "confidence": 0.91,
@@ -142,10 +142,10 @@
         },
         {
           "confidence": 0.9,
-          "dry_path": "containers.main.variables.LOG_LEVEL",
-          "edit_hint": "Edit LOG_LEVEL under containers.main.variables in score.yaml.",
+          "dry_path": "containers.main.variables.DB_HOST",
+          "edit_hint": "Edit DB_HOST under containers.main.variables in score.yaml.",
           "owner": "app-team",
-          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value"
+          "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=DB_HOST]/value"
         },
         {
           "confidence": 0.91,

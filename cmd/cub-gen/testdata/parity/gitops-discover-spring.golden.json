@@ -6,6 +6,7 @@
       "id": "gen_73ed79c3c8b65360",
       "inputs": [
         "pom.xml",
+        "src/main/resources/application-dev.yaml",
         "src/main/resources/application-prod.yaml",
         "src/main/resources/application.yaml"
       ],
@@ -26,6 +27,7 @@
       "generator_profile": "springboot-paas",
       "inputs": [
         "pom.xml",
+        "src/main/resources/application-dev.yaml",
         "src/main/resources/application-prod.yaml",
         "src/main/resources/application.yaml"
       ],

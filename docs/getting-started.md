@@ -162,11 +162,36 @@ Or all at once:
 ./examples/demo/run-all-modules.sh
 ```
 
-## What stays unchanged
+## 10-minute adoption path (Helm/Flux/Argo)
 
-- Flux/Argo remains the reconciler for WET to LIVE
+What stays unchanged:
+
+- Flux/Argo remains the reconciler for WET &rarr; LIVE
 - Git/OCI remains the transport path
 - Existing cluster/controller permissions and PR workflow stay in place
+
+What you add:
+
+- `cub-gen gitops discover` to classify generator roots
+- `cub-gen gitops import` to emit DRY/WET contracts + provenance/inverse pointers
+- `cub-gen gitops cleanup` to clear local discover state
+
+Boundary language (aligned with [PARITY.md](parity.md)):
+
+- **matched**: `gitops discover|import|cleanup` command shape and output contracts
+- **matched**: bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 8 generators
+- **partial**: local state/artifacts stand in for server-side units during this phase
+- **partial**: bridge flow commands (`ingest`, `decision`, `promote`) produce correct contract shapes; [ConfigHub backend integration](platform.md) is the next step
+
+## Terminology
+
+| Term | Meaning in cub-gen |
+|------|-------------------|
+| DRY source | Human-editable app/platform intent (`values.yaml`, `score.yaml`, `application.yaml`) |
+| WET rendered units | Explicit rendered deployment-facing units/manifests |
+| Provenance | Record of DRY inputs, rendered outputs, field-origin map, inverse-edit pointers |
+| Inverse map | Guidance from changed WET field &rarr; where to edit DRY safely |
+| Pre-sync | `cub-gen` stops before WET&rarr;LIVE; Flux/Argo own reconciliation |
 
 ## Next steps
 

@@ -107,6 +107,7 @@ nav:
   - Getting Started:
       - getting-started.md
       - "CLI Reference": cli-reference.md
+      - "Demo Guide": demo-guide.md
       - "The ConfigHub Platform": platform.md
       - "Confidence Scores": workflows/confidence-scores.md
       - "Operation Registry in Real Apps": workflows/operation-registry-real-apps.md

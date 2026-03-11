@@ -13,11 +13,13 @@ spec:
     - app-deployer
     - app-healthcheck
     - credential-rotator
+    - secret-manager
   approved_model_methods:
-    app-validator: [check]
+    app-validator: [check, verify_deployment, verify_connectivity]
     app-deployer: [apply, rollback]
     app-healthcheck: [verify]
     credential-rotator: [rotate]
+    secret-manager: [generate_credentials, distribute]
   execution_windows:
     production:
       allowed: "Mon-Fri 06:00-22:00 UTC"

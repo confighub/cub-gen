@@ -8,8 +8,17 @@ jobs:
           type: model_method
           modelIdOrName: app-validator
           methodName: check
+        retries: 2
       - name: apply
         task:
           type: model_method
           modelIdOrName: app-deployer
           methodName: apply
+        depends_on: [validate]
+        condition: "validate.status == 'passed'"
+      - name: verify
+        task:
+          type: model_method
+          modelIdOrName: app-validator
+          methodName: verify_deployment
+        depends_on: [apply]

@@ -417,7 +417,7 @@ func TestGitOpsImportTableIncludesSwampWorkflowSummary(t *testing.T) {
 	if !strings.Contains(out, "Swamp workflow analysis") {
 		t.Fatalf("expected swamp workflow analysis section in output, got:\n%s", out)
 	}
-	if !strings.Contains(out, "swamp-automation\tswamp\t1\t2\t2\t0\t0\t0") {
+	if !strings.Contains(out, "swamp-automation\tswamp\t2\t6\t3\t0\t0\t0") {
 		t.Fatalf("expected swamp workflow summary row in output, got:\n%s", out)
 	}
 }

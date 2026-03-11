@@ -203,6 +203,37 @@ What you lose is the platform layer:
 
 ---
 
+## Plain-English collaboration story
+
+A practical app-team/platform-team path in a Spring Boot repo:
+
+1. App team changes `server.port` in `application-prod.yaml` for a feature rollout.
+2. Platform team runs `cub-gen gitops import --json` and sees:
+   - app-owned DRY inputs (`app-config-base`, `app-config-profile`)
+   - platform-owned WET targets (`wet_manifest_targets.owner = platform-runtime`)
+   - inverse pointers showing app-editable fields (`spring.application.name`, `server.port`) vs platform-governed field (`spring.datasource.url`)
+3. Flux/Argo reconciliation path stays unchanged for deployment.
+4. Teams keep app velocity while preserving governance boundaries.
+
+The pattern is the same for Helm, Score.dev, Backstage, AI agents, and operational workflows. Only the adapter changes.
+
+---
+
+## What cub-gen does vs what requires ConfigHub
+
+| Capability | cub-gen (local) | ConfigHub (connected) |
+|-----------|----------------|----------------------|
+| Generator detection + DRY/WET classification | Yes | Yes |
+| Field-origin tracing + inverse-edit guidance | Yes | Yes |
+| Evidence bundles (publish, verify, attest) | Yes | Yes |
+| Cross-repo queries + policy enforcement | -- | Yes |
+| Governed decisions (ALLOW/ESCALATE/BLOCK) | -- | Yes |
+| Bridge workers + cluster integration | -- | Yes |
+
+cub-gen is designed to be useful on its own. You get full traceability without a backend. ConfigHub adds the governance layer when you need it.
+
+---
+
 ## Links
 
 - [ConfigHub](https://github.com/confighubai/confighub) — the platform
