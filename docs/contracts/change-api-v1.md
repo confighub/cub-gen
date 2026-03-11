@@ -7,6 +7,12 @@ This contract defines the HTTP API surface that mirrors `cub-gen change preview|
 
 Goal: CI systems, agents, and UIs can consume one JSON contract without shelling across multiple files.
 
+Run the compatibility server locally:
+
+```bash
+./cub-gen change api serve --listen 127.0.0.1:8787 --space platform --ref HEAD --verifier ci-bot
+```
+
 ## Endpoints
 
 ### 1) Create or execute a change
@@ -100,6 +106,20 @@ Schema:
 }
 ```
 
+### `POST /v1/changes` (run local)
+
+```json
+{
+  "action": "run",
+  "mode": "local",
+  "input": {
+    "target_slug": "./examples/scoredev-paas",
+    "render_target_slug": "./examples/scoredev-paas",
+    "space": "platform"
+  }
+}
+```
+
 ### `GET /v1/changes/{change_id}/explanations?wet_path=...`
 
 ```json
@@ -159,7 +179,8 @@ Error body shape:
 
 Compatibility adapter in this repo:
 
-- `examples/demo/change-api-adapter.sh`
+- Native HTTP server: `cub-gen change api serve ...`
+- CI sample using direct HTTP calls: `examples/demo/change-api-http-e2e.sh`
 
 ## See also
 

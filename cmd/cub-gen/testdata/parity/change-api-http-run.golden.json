@@ -1,0 +1,90 @@
+{
+  "explain": {
+    "change": {
+      "attestation_digest": "sha256:REDACTED",
+      "bundle_digest": "sha256:REDACTED",
+      "change_id": "chg_REDACTED"
+    },
+    "explanation": {
+      "confidence": 0.94,
+      "dry_path": "containers.main.image",
+      "edit_hint": "Edit the Score container image in score.yaml.",
+      "generator_name": "scoredev-paas",
+      "generator_profile": "scoredev-paas",
+      "owner": "app-team",
+      "source_path": "score.yaml",
+      "source_transform": "score-to-k8s",
+      "wet_path": "Deployment/spec/template/spec/containers[name=main]/image"
+    },
+    "input": {
+      "ref": "HEAD",
+      "render_target_slug": "render-target",
+      "space": "platform",
+      "target_slug": "score"
+    },
+    "query": {
+      "match_count": 3,
+      "owner_filter": "app-team"
+    }
+  },
+  "get": {
+    "artifacts": {
+      "attestation": "change://chg_REDACTED/attestation",
+      "bundle": "change://chg_REDACTED/bundle",
+      "provenance": "change://chg_REDACTED/provenance"
+    },
+    "change": {
+      "attestation_digest": "sha256:REDACTED",
+      "bundle_digest": "sha256:REDACTED",
+      "change_id": "chg_REDACTED"
+    },
+    "decision": {
+      "authority": "ci-bot",
+      "source": "local-preview",
+      "state": "ALLOW"
+    },
+    "edit_recommendation": {
+      "confidence": 0.94,
+      "dry_path": "containers.main.image",
+      "edit_hint": "Edit the Score container image in score.yaml.",
+      "owner": "app-team",
+      "wet_path": "Deployment/spec/template/spec/containers[name=main]/image"
+    },
+    "promotion_ready": true,
+    "verification": {
+      "attestation_valid": true,
+      "bundle_valid": true,
+      "verifier": "ci-bot"
+    }
+  },
+  "post": {
+    "artifacts": {
+      "attestation": "change://chg_REDACTED/attestation",
+      "bundle": "change://chg_REDACTED/bundle",
+      "provenance": "change://chg_REDACTED/provenance"
+    },
+    "change": {
+      "attestation_digest": "sha256:REDACTED",
+      "bundle_digest": "sha256:REDACTED",
+      "change_id": "chg_REDACTED"
+    },
+    "decision": {
+      "authority": "ci-bot",
+      "source": "local-preview",
+      "state": "ALLOW"
+    },
+    "edit_recommendation": {
+      "confidence": 0.94,
+      "dry_path": "containers.main.image",
+      "edit_hint": "Edit the Score container image in score.yaml.",
+      "owner": "app-team",
+      "wet_path": "Deployment/spec/template/spec/containers[name=main]/image"
+    },
+    "promotion_ready": true,
+    "verification": {
+      "attestation_valid": true,
+      "bundle_valid": true,
+      "verifier": "ci-bot"
+    }
+  }
+}

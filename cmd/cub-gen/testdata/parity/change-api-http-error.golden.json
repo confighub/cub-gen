@@ -1,0 +1,9 @@
+{
+  "error": {
+    "code": "INVALID_REQUEST",
+    "details": {
+      "field": "mode"
+    },
+    "message": "mode is required for action=run"
+  }
+}

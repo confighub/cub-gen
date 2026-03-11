@@ -315,6 +315,16 @@ func TestChangeCommandErrorModes(t *testing.T) {
 			args: []string{"change", "explain", "--change-id", "chg_123"},
 			sub:  "requires --bundle FILE",
 		},
+		{
+			name: "api-missing-subcommand",
+			args: []string{"change", "api"},
+			sub:  "change api subcommand required",
+		},
+		{
+			name: "api-unknown-subcommand",
+			args: []string{"change", "api", "unknown"},
+			sub:  "unknown change api subcommand",
+		},
 	}
 
 	for _, tc := range tests {

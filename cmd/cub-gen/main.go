@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -12,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/confighub/cub-gen/internal/attest"
-	bridgeflow "github.com/confighub/cub-gen/internal/bridge"
 	"github.com/confighub/cub-gen/internal/detect"
 	gitopsflow "github.com/confighub/cub-gen/internal/gitops"
 	"github.com/confighub/cub-gen/internal/importer"
@@ -1053,6 +1051,8 @@ func runChange(args []string) error {
 		return runChangeRun(args[1:])
 	case "explain":
 		return runChangeExplain(args[1:])
+	case "api":
+		return runChangeAPI(args[1:])
 	default:
 		printChangeUsage(os.Stderr)
 		return fmt.Errorf("unknown change subcommand: %s", args[0])
@@ -1142,83 +1142,19 @@ func runChangeRun(args []string) error {
 		return errors.New("change run --mode must be local|connected")
 	}
 
-	preview, bundle, _, err := buildChangePreviewResult(
-		targetSlug,
-		renderTargetSlug,
-		*space,
-		*ref,
-		*whereResource,
-		*verifier,
-	)
+	result, _, err := executeChangeRun(targetSlug, renderTargetSlug, changeRunOptions{
+		Space:            *space,
+		Ref:              *ref,
+		WhereResource:    *whereResource,
+		Mode:             runMode,
+		BaseURL:          *baseURL,
+		Token:            *token,
+		IngestEndpoint:   *ingestEndpoint,
+		DecisionEndpoint: *decisionEndpoint,
+		Verifier:         *verifier,
+	})
 	if err != nil {
 		return err
-	}
-
-	decision := changeRunDecision{
-		State:     "ALLOW",
-		Authority: *verifier,
-		Source:    "local-preview",
-	}
-	promotionReady := true
-
-	if runMode == "connected" {
-		resolvedBaseURL := strings.TrimSpace(*baseURL)
-		if resolvedBaseURL == "" {
-			resolvedBaseURL = strings.TrimSpace(os.Getenv("CONFIGHUB_BASE_URL"))
-		}
-		if resolvedBaseURL == "" {
-			return errors.New("change run --mode connected requires --base-url or CONFIGHUB_BASE_URL")
-		}
-
-		resolvedToken := strings.TrimSpace(*token)
-		if resolvedToken == "" {
-			resolvedToken = strings.TrimSpace(os.Getenv("CONFIGHUB_TOKEN"))
-		}
-
-		ingestRes, err := bridgeflow.IngestBundle(context.Background(), bridgeflow.Client{
-			BaseURL:      resolvedBaseURL,
-			BearerToken:  resolvedToken,
-			EndpointPath: strings.TrimSpace(*ingestEndpoint),
-		}, bundle)
-		if err != nil {
-			return fmt.Errorf("connected ingest: %w", err)
-		}
-
-		decisionRec, err := bridgeflow.QueryDecisionByChangeID(context.Background(), bridgeflow.DecisionClient{
-			BaseURL:      resolvedBaseURL,
-			BearerToken:  resolvedToken,
-			EndpointPath: strings.TrimSpace(*decisionEndpoint),
-		}, preview.Change.ChangeID)
-		if err != nil {
-			return fmt.Errorf("connected decision query: %w", err)
-		}
-
-		authority := strings.TrimSpace(decisionRec.ApprovedBy)
-		if authority == "" {
-			authority = strings.TrimSpace(decisionRec.PolicyDecisionRef)
-		}
-		if authority == "" {
-			authority = "confighub-policy"
-		}
-
-		decision = changeRunDecision{
-			State:     string(decisionRec.State),
-			Authority: authority,
-			Source:    "confighub-backend",
-		}
-		if decision.State != "ALLOW" {
-			promotionReady = false
-		}
-		if ingestRes.ChangeID == "" {
-			promotionReady = false
-		}
-	}
-
-	result := changeRunResult{
-		Mode:           runMode,
-		Preview:        preview,
-		Decision:       decision,
-		PromotionReady: promotionReady,
 	}
 
 	if *out == "-" {
@@ -2017,6 +1953,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]")
 	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out, "  cub-gen bridge <ingest|decision|promote> [flags]")
@@ -2049,6 +1986,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen change explain --space my-space --wet-path \"Deployment/spec/template/spec/containers[name=main]/image\" ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen change explain --change-id chg_123 --bundle bundle.json --owner app-team")
+	fmt.Fprintln(out, "  cub-gen change api serve --listen 127.0.0.1:8787 --space my-space")
 	fmt.Fprintln(out, "  cub-gen bridge ingest --in bundle.json --base-url https://confighub.example")
 	fmt.Fprintln(out, "  cub-gen bridge decision query --change-id chg_123 --base-url https://confighub.example")
 	fmt.Fprintln(out, "  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123")
@@ -2068,6 +2006,7 @@ func printChangeUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]")
+	fmt.Fprintln(out, "  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Examples:")
 	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/helm-paas ./examples/helm-paas")
@@ -2075,6 +2014,7 @@ func printChangeUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen change explain --change-id chg_123 --bundle bundle.json --wet-path \"Deployment/spec/template/spec/containers[name=main]/image\"")
+	fmt.Fprintln(out, "  cub-gen change api serve --listen 127.0.0.1:8787 --space my-space")
 }
 
 func printGitOpsUsage(out io.Writer) {
