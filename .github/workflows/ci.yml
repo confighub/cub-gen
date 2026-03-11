@@ -12,10 +12,10 @@ jobs:
     name: Build + Unit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -51,7 +51,7 @@ jobs:
       PROMOTION_PR_NUMBER: ${{ vars.PROMOTION_PR_NUMBER || secrets.PROMOTION_PR_NUMBER }}
       GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Determine connected prerequisites
         id: connected-preflight
@@ -99,7 +99,7 @@ jobs:
 
       - name: Set up Go
         if: steps.connected-preflight.outputs.can_run == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
