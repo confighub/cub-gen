@@ -89,8 +89,8 @@ export PROMOTION_PR_NUMBER=456
 export GH_TOKEN=...
 ```
 
-If you run `run-phase-4-connected-stories.sh` without these inputs, Story 10 is skipped by default.
-Set `REQUIRE_STORY_10=1` to fail fast instead of skipping.
+`run-phase-4-connected-stories.sh` enforces Story 10 by default and fails fast if these inputs are missing.
+Set `ALLOW_STORY_10_SKIP=1` only for local troubleshooting.
 
 ## Connected mode (ConfigHub)
 
@@ -173,7 +173,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 Persona-first quick starts:
 
-- [Persona 5-minute runbooks](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/persona-5-minute-runbooks.md)
+- [Persona 5-minute runbooks](../../docs/workflows/persona-5-minute-runbooks.md)
 
 ## Qualification caveat
 

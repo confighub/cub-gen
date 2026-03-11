@@ -33,7 +33,7 @@ jobs:
     name: CI Connected
     needs: local
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && secrets.CONFIGHUB_BASE_URL != '' && secrets.CONFIGHUB_SPACE != '' && secrets.CONFIGHUB_TOKEN != '' }}
+    if: ${{ secrets.CONFIGHUB_BASE_URL != '' && secrets.CONFIGHUB_SPACE != '' && secrets.CONFIGHUB_TOKEN != '' }}
     env:
       CONFIGHUB_BASE_URL: ${{ secrets.CONFIGHUB_BASE_URL }}
       CONFIGHUB_SPACE: ${{ secrets.CONFIGHUB_SPACE }}
@@ -42,6 +42,11 @@ jobs:
       CONNECTED_FALLBACK_MODE: off
       REQUIRE_TERMINAL_DECISION: "1"
       CLEANUP_CLUSTER: "1"
+      APP_PR_REPO: ${{ vars.APP_PR_REPO || secrets.APP_PR_REPO }}
+      APP_PR_NUMBER: ${{ vars.APP_PR_NUMBER || secrets.APP_PR_NUMBER }}
+      PROMOTION_PR_REPO: ${{ vars.PROMOTION_PR_REPO || secrets.PROMOTION_PR_REPO }}
+      PROMOTION_PR_NUMBER: ${{ vars.PROMOTION_PR_NUMBER || secrets.PROMOTION_PR_NUMBER }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -63,6 +68,14 @@ jobs:
           git clone --depth 1 https://github.com/confighubai/confighub.git /tmp/confighub
           make -C /tmp/confighub build-cli
           echo "/tmp/confighub/bin" >> "$GITHUB_PATH"
+
+      - name: Validate Story 10 proof inputs
+        run: |
+          test -n "$APP_PR_REPO"
+          test -n "$APP_PR_NUMBER"
+          test -n "$PROMOTION_PR_REPO"
+          test -n "$PROMOTION_PR_NUMBER"
+          test -n "$GH_TOKEN"
 
       - name: Run connected CI suite
         run: make ci-connected

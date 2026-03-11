@@ -37,7 +37,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 cub auth login
 TOKEN="$(cub auth get-token)"
 cub context get --json | jq -r '.coordinate.user'
-BASE_URL="https://confighub.example"
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
@@ -89,7 +89,7 @@ When you run `cub-gen attest --verifier <name>`, the verifier name records who/w
 
 If you want copy/paste 5-minute paths per persona, use:
 
-- [Persona 5-minute runbooks](/Users/alexis/Public/github-repos/cub-gen/docs/workflows/persona-5-minute-runbooks.md)
+- [Persona 5-minute runbooks](../docs/workflows/persona-5-minute-runbooks.md)
 
 ## Workflow-first quick path (Ops + Swamp)
 
