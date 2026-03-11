@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 source "$ROOT_DIR/examples/demo/lib/connected-preflight.sh"
+source "$ROOT_DIR/examples/demo/lib/ai-only-guardrails.sh"
 
 REPO_PATH="${1:-./examples/swamp-automation}"
 RENDER_TARGET="${2:-$REPO_PATH}"
@@ -18,6 +19,8 @@ if [ ! -d "$RENDER_TARGET" ]; then
   echo "error: render target path not found: $RENDER_TARGET" >&2
   exit 1
 fi
+
+enforce_ai_only_scope "$REPO_PATH" "$RENDER_TARGET"
 
 require_connected_preflight
 print_connected_context

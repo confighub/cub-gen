@@ -88,6 +88,23 @@ This path performs real backend ingest/query and writes per-phase summaries:
 
 Each summary includes the governed decision state for the same `change_id` lifecycle.
 
+## AI-only guardrails (pilot)
+
+Prompt-first AI-only lanes are intentionally narrow during rollout:
+
+- allowed repos/examples: `swamp-automation`, `ops-workflow`
+- hard deny patterns: `cluster-admin`, `system:masters`, destructive namespace deletion patterns
+- mandatory rollback/revert hook in workflow YAML
+
+Guardrails are enforced by demo scripts before import/publish:
+
+- `examples/demo/prompt-as-dry-local.sh`
+- `examples/demo/prompt-as-dry-connected.sh`
+
+Policy details:
+
+- [AI-only guardrails](ai-only-guardrails.md)
+
 ## Where "preview / run / explain" fits
 
 Use the first-class commands directly:

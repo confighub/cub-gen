@@ -158,6 +158,7 @@ This shows structural change governance first: actions/schedules/approval gates 
 
 - New to cub-gen: [Build your own Heroku in a weekend](docs/workflows/build-your-own-heroku-in-a-weekend.md)
 - Prompt-native story: [Prompt as DRY (worked example)](docs/workflows/prompt-as-dry.md)
+- AI-only pilot policy: [AI-only guardrails](docs/workflows/ai-only-guardrails.md)
 - Fastest persona-based starts: [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md)
 - Demo scripts index: [examples/demo/README.md](examples/demo/README.md)
 - User-story acceptance matrix: [user-story-acceptance.md](docs/workflows/user-story-acceptance.md)
@@ -178,6 +179,7 @@ Story-specific connected scripts (Phase 3):
 
 - `./examples/demo/story-1-existing-repo-connected.sh`
 - `./examples/demo/story-7-ci-api-flow-connected.sh`
+- `./examples/demo/story-7-agent-tool-call-connected.sh`
 - `./examples/demo/story-9-multi-repo-wave-connected.sh`
 - `./examples/demo/story-12-unified-actor-evidence.sh`
 - `./examples/demo/run-phase-3-connected-stories.sh`

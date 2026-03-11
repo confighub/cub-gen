@@ -53,8 +53,8 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 |--------|---------------------|
 | `change-api-adapter.sh --request <json> [--out <json>]` | Thin compatibility adapter mapping API-style JSON requests to `change preview|run|explain` (including explain by `change_id + bundle`) |
 | `app-ai-change-run.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card output |
-| `prompt-as-dry-local.sh [repo]` | Canonical prompt-as-DRY local path (Swamp workflow intent -> governed mutation card) |
-| `prompt-as-dry-connected.sh [repo] [target] [slug]` | Canonical prompt-as-DRY connected path (`cub auth login` + backend ingest/query lifecycle) |
+| `prompt-as-dry-local.sh [repo]` | Canonical prompt-as-DRY local path with AI-only scope guardrails (Swamp workflow intent -> governed mutation card) |
+| `prompt-as-dry-connected.sh [repo] [target] [slug]` | Canonical prompt-as-DRY connected path with AI-only scope guardrails (`cub auth login` + backend ingest/query lifecycle) |
 | `simulate-confighub-lifecycle.sh <repo> <target> [slug]` | Full local lifecycle simulation |
 | `run-all-confighub-lifecycles.sh` | Lifecycle simulation across current fixtures |
 | `run-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle: real ConfigHub ingest/query when bridge endpoints are available, with backend `changeset` fallback when they are not |
@@ -184,6 +184,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 Persona-first quick starts:
 
 - [Persona 5-minute runbooks](../../docs/workflows/persona-5-minute-runbooks.md)
+- [AI-only guardrails](../../docs/workflows/ai-only-guardrails.md)
 
 ## Qualification caveat
 
