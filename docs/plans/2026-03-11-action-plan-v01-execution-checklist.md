@@ -15,7 +15,7 @@ Goal: make `DRY -> WET -> LIVE` feel native for app/AI developers, with verifica
 | 4. First-class CLI contract | Done | [docs/contracts/change-cli-v1.md](../contracts/change-cli-v1.md) |
 | 5. First-class API contract | Done | [docs/contracts/change-api-v1.md](../contracts/change-api-v1.md) + schemas in `docs/contracts/schemas/` |
 | 6. Thin MVP over existing pipeline | Done | first-class `change preview/run/explain` in `cmd/cub-gen/main.go` |
-| 7. Prove in real invocation contexts | Partial | terminal + CI are wired; agent/tool-call path exists via adapter but lifecycle proof needs same `change_id` binding |
+| 7. Prove in real invocation contexts | Done | terminal + CI + agent tool-call proof with shared `change_id` (`story-7-ci-api-flow-connected.sh`, `story-7-agent-tool-call-connected.sh`) |
 | 8. Gate AI-only rollout | Not started | policy/matrix + enforcement hooks not yet merged |
 
 ## Concrete issue titles (next filing set)
@@ -24,11 +24,11 @@ Goal: make `DRY -> WET -> LIVE` feel native for app/AI developers, with verifica
 
 1. `feat(cli): add change explain --change-id mode for stable lifecycle drilldown`
 - Why: item 7 success requires one `change_id` lifecycle across terminal, CI, and agent paths.
-- Done when: `change explain --change-id <id>` reads prior artifacts/state and returns explanation without minting a new lifecycle.
+- Status: done via `cmd/cub-gen/main.go` and tests in `cmd/cub-gen/change_command_test.go`.
 
 2. `examples(agent): add runnable tool-call path proving same change_id across preview/run/explain`
 - Why: complete item 7 with explicit agent proof.
-- Done when: one script under `examples/demo/` runs adapter request/response flow and emits a single summary showing shared `change_id`.
+- Status: done via `examples/demo/story-7-agent-tool-call-connected.sh`.
 
 3. `policy(ai-only): publish allowed-scope matrix + mandatory rollback hooks`
 - Why: item 8 direct deliverable.
@@ -60,7 +60,7 @@ Run locally:
 make ci-local
 ./examples/demo/app-ai-change-run.sh ./examples/scoredev-paas
 ./examples/demo/story-7-ci-api-flow-connected.sh
-./examples/demo/<agent-tool-call-proof>.sh
+./examples/demo/story-7-agent-tool-call-connected.sh
 ```
 
 Release gate for this action plan:

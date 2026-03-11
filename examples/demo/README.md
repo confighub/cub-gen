@@ -51,7 +51,7 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 
 | Script | What it demonstrates |
 |--------|---------------------|
-| `change-api-adapter.sh --request <json> [--out <json>]` | Thin compatibility adapter mapping API-style JSON requests to `change preview|run|explain` |
+| `change-api-adapter.sh --request <json> [--out <json>]` | Thin compatibility adapter mapping API-style JSON requests to `change preview|run|explain` (including explain by `change_id + bundle`) |
 | `app-ai-change-run.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card output |
 | `prompt-as-dry-local.sh [repo]` | Canonical prompt-as-DRY local path (Swamp workflow intent -> governed mutation card) |
 | `prompt-as-dry-connected.sh [repo] [target] [slug]` | Canonical prompt-as-DRY connected path (`cub auth login` + backend ingest/query lifecycle) |
@@ -68,6 +68,7 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 |--------|------------|---------------------|
 | `story-1-existing-repo-connected.sh` | 1 | Existing repo import + connected change query by `change_id` |
 | `story-7-ci-api-flow-connected.sh` | 7 | Non-interactive CI flow using `CONFIGHUB_TOKEN` |
+| `story-7-agent-tool-call-connected.sh` | 7 | Agent/tool-call adapter flow proving one shared `change_id` across `preview -> run -> explain` |
 | `story-9-multi-repo-wave-connected.sh` | 9 | Multi-repo wave with per-target ALLOW/ESCALATE/BLOCK outcomes |
 | `story-12-unified-actor-evidence.sh` | 12 | Unified human/CI/AI attestation chain under one `change_id` |
 | `run-phase-3-connected-stories.sh` | 1,7,9,12 | Runs all four connected Phase 3 stories |
