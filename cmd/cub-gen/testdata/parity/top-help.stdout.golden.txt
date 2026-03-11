@@ -12,6 +12,7 @@ Usage:
   cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>
   cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-slug> <render-target-slug>
   cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]
+  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]
   cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]
   cub-gen gitops <discover|import|cleanup> [flags]
   cub-gen bridge <ingest|decision|promote> [flags]
@@ -44,6 +45,7 @@ GitOps parity examples:
   cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas
   cub-gen change explain --space my-space --wet-path "Deployment/spec/template/spec/containers[name=main]/image" ./examples/scoredev-paas ./examples/scoredev-paas
   cub-gen change explain --change-id chg_123 --bundle bundle.json --owner app-team
+  cub-gen change api serve --listen 127.0.0.1:8787 --space my-space
   cub-gen bridge ingest --in bundle.json --base-url https://confighub.example
   cub-gen bridge decision query --change-id chg_123 --base-url https://confighub.example
   cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123

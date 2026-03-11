@@ -52,6 +52,7 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 | Script | What it demonstrates |
 |--------|---------------------|
 | `change-api-adapter.sh --request <json> [--out <json>]` | Thin compatibility adapter mapping API-style JSON requests to `change preview|run|explain` (including explain by `change_id + bundle`) |
+| `change-api-http-e2e.sh [repo] [target]` | Native HTTP compatibility flow using `POST /v1/changes`, `GET /v1/changes/{change_id}`, and `GET /v1/changes/{change_id}/explanations` |
 | `app-ai-change-run.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card output |
 | `prompt-as-dry-local.sh [repo]` | Canonical prompt-as-DRY local path with AI-only scope guardrails (Swamp workflow intent -> governed mutation card) |
 | `prompt-as-dry-connected.sh [repo] [target] [slug]` | Canonical prompt-as-DRY connected path with AI-only scope guardrails (`cub auth login` + backend ingest/query lifecycle) |
