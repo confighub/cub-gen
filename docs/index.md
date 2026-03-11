@@ -82,6 +82,12 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
     [Getting Started](getting-started.md)
 
+-   **Interpret confidence quickly**
+
+    Understand when to auto-route edits and when to escalate for review.
+
+    [Confidence Scores](workflows/confidence-scores.md)
+
 -   **Start with workflows (Ops + Swamp)**
 
     See structural workflow governance first: actions, schedules, approval gates, model/method bindings, and required-step checks.

@@ -57,6 +57,16 @@ Take a deployed field and trace it to the exact source edit path:
 
 That is the day-to-day workflow this tool optimizes.
 
+## Confidence Guide
+
+Use confidence to decide routing speed:
+
+- `>= 0.90`: proceed with normal app/team edit flow.
+- `0.75 - 0.89`: run `change preview` and `change explain` before merge.
+- `< 0.75`: escalate for platform review.
+
+Full interpretation guide: [docs/workflows/confidence-scores.md](docs/workflows/confidence-scores.md)
+
 ## ConfigHub Is Real (Today)
 
 Connected mode targets a live ConfigHub backend. Backend OSS repo:

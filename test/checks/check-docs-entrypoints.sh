@@ -36,6 +36,8 @@ require_file_pattern() {
 # Main README must keep clear connected onboarding and backend reality.
 require_file_pattern "README.md" "cub auth login" "connected auth step (cub auth login)"
 require_file_pattern "README.md" "confighubai/confighub" "ConfigHub OSS backend link"
+require_file_pattern "README.md" "Use Your Repo in 3 Commands" "own-repo quickstart section"
+require_file_pattern "README.md" "confidence-scores\\.md" "confidence interpretation link"
 
 # Docs-site landing pages must preserve the same message.
 require_file_pattern "docs/index.md" "cub auth login" "connected auth step (cub auth login)"
@@ -43,4 +45,8 @@ require_file_pattern "docs/index.md" "confighubai/confighub" "ConfigHub OSS back
 require_file_pattern "docs/platform.md" "cub auth login" "connected auth step (cub auth login)"
 require_file_pattern "docs/platform.md" "confighubai/confighub" "ConfigHub OSS backend link"
 
-echo "ok: core docs keep explicit local-vs-connected onboarding and backend availability"
+# Examples landing page must keep own-repo entry and confidence guidance.
+require_file_pattern "examples/README.md" "Use your own repo quickly" "own-repo quickstart section"
+require_file_pattern "examples/README.md" "confidence-scores\\.md" "confidence interpretation link"
+
+echo "ok: core docs keep local-vs-connected onboarding, backend availability, own-repo quickstart, and confidence guidance"
