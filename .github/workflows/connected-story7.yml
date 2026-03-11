@@ -22,7 +22,7 @@ jobs:
       RUN_ID: ${{ github.run_id }}
       VERIFIER: ci-bot
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Validate required secrets
         run: |
@@ -31,7 +31,7 @@ jobs:
           test -n "$CONFIGHUB_TOKEN"
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
