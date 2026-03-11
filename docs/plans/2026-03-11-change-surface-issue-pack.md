@@ -3,6 +3,9 @@
 Status: Draft issue pack
 Owner persona: successful OSS project owner (developer-first adoption, clear value, low-friction onboarding)
 
+Execution/status companion:
+- `docs/plans/2026-03-11-action-plan-v01-execution-checklist.md`
+
 ## Product posture (applies to every issue)
 
 - Lead with developer outcomes, not framework jargon.
