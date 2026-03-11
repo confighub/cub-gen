@@ -156,6 +156,7 @@ This shows structural change governance first: actions/schedules/approval gates 
 ## Which Story Should You Read First?
 
 - New to cub-gen: [Build your own Heroku in a weekend](docs/workflows/build-your-own-heroku-in-a-weekend.md)
+- Prompt-native story: [Prompt as DRY (worked example)](docs/workflows/prompt-as-dry.md)
 - Fastest persona-based starts: [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md)
 - Demo scripts index: [examples/demo/README.md](examples/demo/README.md)
 - User-story acceptance matrix: [user-story-acceptance.md](docs/workflows/user-story-acceptance.md)
