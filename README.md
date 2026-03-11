@@ -188,6 +188,16 @@ If your platform is workflow-heavy (operations workflows or agent-authored workf
   | jq '.provenance[0].swamp_workflow_analysis'
 ```
 
+## Operation Registry Examples (Not AI-Ops Only)
+
+`FrameworkRegistry` is used across multiple example types:
+
+- AI Ops platform: `examples/ai-ops-paas/platform/registry.yaml`
+- Ops workflow platform: `examples/ops-workflow/platform/registry.yaml`
+- Swamp workflow platform: `examples/swamp-automation/platform/registry.yaml`
+
+Guide: [docs/workflows/operation-registry-real-apps.md](docs/workflows/operation-registry-real-apps.md)
+
 This shows structural change governance first: actions/schedules/approval gates for Ops, and models/methods/required steps for Swamp.
 
 ## Which Story Should You Read First?

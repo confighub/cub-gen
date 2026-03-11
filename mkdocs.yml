@@ -109,6 +109,7 @@ nav:
       - "CLI Reference": cli-reference.md
       - "The ConfigHub Platform": platform.md
       - "Confidence Scores": workflows/confidence-scores.md
+      - "Operation Registry in Real Apps": workflows/operation-registry-real-apps.md
       - "Adoption Path & FAQ": agentic-gitops/05-rollout/40-adoption-and-reference.md
 
   - Architecture:
