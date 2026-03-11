@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/confighub/cub-gen/internal/attest"
+	bridgeflow "github.com/confighub/cub-gen/internal/bridge"
 	"github.com/confighub/cub-gen/internal/detect"
 	gitopsflow "github.com/confighub/cub-gen/internal/gitops"
 	"github.com/confighub/cub-gen/internal/importer"
@@ -990,10 +992,23 @@ type changePreviewVerification struct {
 type changePreviewResult struct {
 	Input              changePreviewInput        `json:"input"`
 	Change             changePreviewSummary      `json:"change"`
-	DiscoveredProfile  []string                  `json:"discovered_profiles"`
+	DiscoveredProfiles []string                  `json:"discovered_profiles"`
 	Counts             changePreviewCounts       `json:"counts"`
 	EditRecommendation model.InverseEditPointer  `json:"edit_recommendation"`
 	Verification       changePreviewVerification `json:"verification"`
+}
+
+type changeRunDecision struct {
+	State     string `json:"state"`
+	Authority string `json:"authority"`
+	Source    string `json:"source"`
+}
+
+type changeRunResult struct {
+	Mode           string              `json:"mode"`
+	Preview        changePreviewResult `json:"preview"`
+	Decision       changeRunDecision   `json:"decision"`
+	PromotionReady bool                `json:"promotion_ready"`
 }
 
 func runChange(args []string) error {
@@ -1008,6 +1023,8 @@ func runChange(args []string) error {
 		return nil
 	case "preview":
 		return runChangePreview(args[1:])
+	case "run":
+		return runChangeRun(args[1:])
 	default:
 		printChangeUsage(os.Stderr)
 		return fmt.Errorf("unknown change subcommand: %s", args[0])
@@ -1038,58 +1055,16 @@ func runChangePreview(args []string) error {
 	targetSlug := fs.Arg(0)
 	renderTargetSlug := fs.Arg(1)
 
-	imported, err := gitopsflow.Import(targetSlug, renderTargetSlug, *ref, *space, *whereResource)
+	result, _, err := buildChangePreviewResult(
+		targetSlug,
+		renderTargetSlug,
+		*space,
+		*ref,
+		*whereResource,
+		*verifier,
+	)
 	if err != nil {
 		return err
-	}
-
-	bundle := publish.BuildBundle(imported)
-	if err := publish.VerifyBundle(bundle); err != nil {
-		return fmt.Errorf("verify generated bundle: %w", err)
-	}
-
-	attestationRecord, err := attest.Build(bundle, *verifier)
-	if err != nil {
-		return fmt.Errorf("build attestation: %w", err)
-	}
-	if err := attest.VerifyRecordAgainstBundle(attestationRecord, bundle); err != nil {
-		return fmt.Errorf("verify generated attestation: %w", err)
-	}
-
-	topEdit, ok := bestInverseEditPointer(imported.Provenance)
-	if !ok {
-		topEdit = model.InverseEditPointer{
-			Owner:    "unknown",
-			EditHint: "No inverse edit hint produced.",
-		}
-	}
-
-	result := changePreviewResult{
-		Input: changePreviewInput{
-			TargetSlug:       targetSlug,
-			RenderTargetSlug: renderTargetSlug,
-			Space:            *space,
-			Ref:              *ref,
-			WhereResource:    strings.TrimSpace(*whereResource),
-		},
-		Change: changePreviewSummary{
-			ChangeID:          bundle.ChangeID,
-			BundleDigest:      bundle.BundleDigest,
-			AttestationDigest: attestationRecord.AttestationDigest,
-		},
-		DiscoveredProfile: discoveredProfiles(imported.Discovered),
-		Counts: changePreviewCounts{
-			DiscoveredResources: len(imported.Discovered),
-			DryInputs:           len(imported.DryInputs),
-			WetTargets:          len(imported.WetManifestTargets),
-			InversePatches:      countInversePatches(imported.InversePlans),
-		},
-		EditRecommendation: topEdit,
-		Verification: changePreviewVerification{
-			BundleValid:      true,
-			AttestationValid: true,
-			Verifier:         *verifier,
-		},
 	}
 
 	if *out == "-" {
@@ -1104,6 +1079,192 @@ func runChangePreview(args []string) error {
 		_ = f.Close()
 	}()
 	return writeJSON(f, result, *pretty)
+}
+
+func runChangeRun(args []string) error {
+	fs := flag.NewFlagSet("change run", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	space := fs.String("space", "default", "ConfigHub space label")
+	ref := fs.String("ref", "HEAD", "Git ref label to include in output")
+	whereResource := fs.String("where-resource", "", "Additional resource filter expression")
+	mode := fs.String("mode", "local", "Execution mode: local or connected")
+	baseURL := fs.String("base-url", "", "ConfigHub base URL (connected mode)")
+	token := fs.String("token", "", "ConfigHub token (connected mode)")
+	ingestEndpoint := fs.String("ingest-endpoint", "", "Override bridge ingest endpoint path (connected mode)")
+	decisionEndpoint := fs.String("decision-endpoint", "", "Override bridge decision query endpoint path (connected mode)")
+	out := fs.String("out", "-", "Output file path, or '-' for stdout")
+	verifier := fs.String("verifier", "cub-gen", "Verifier identity label")
+	jsonOut := fs.Bool("json", true, "Output JSON")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	_ = jsonOut
+
+	if fs.NArg() != 2 {
+		return errors.New("usage: cub-gen change run [flags] <target-slug> <render-target-slug>")
+	}
+	targetSlug := fs.Arg(0)
+	renderTargetSlug := fs.Arg(1)
+	runMode := strings.ToLower(strings.TrimSpace(*mode))
+	if runMode != "local" && runMode != "connected" {
+		return errors.New("change run --mode must be local|connected")
+	}
+
+	preview, bundle, err := buildChangePreviewResult(
+		targetSlug,
+		renderTargetSlug,
+		*space,
+		*ref,
+		*whereResource,
+		*verifier,
+	)
+	if err != nil {
+		return err
+	}
+
+	decision := changeRunDecision{
+		State:     "ALLOW",
+		Authority: *verifier,
+		Source:    "local-preview",
+	}
+	promotionReady := true
+
+	if runMode == "connected" {
+		resolvedBaseURL := strings.TrimSpace(*baseURL)
+		if resolvedBaseURL == "" {
+			resolvedBaseURL = strings.TrimSpace(os.Getenv("CONFIGHUB_BASE_URL"))
+		}
+		if resolvedBaseURL == "" {
+			return errors.New("change run --mode connected requires --base-url or CONFIGHUB_BASE_URL")
+		}
+
+		resolvedToken := strings.TrimSpace(*token)
+		if resolvedToken == "" {
+			resolvedToken = strings.TrimSpace(os.Getenv("CONFIGHUB_TOKEN"))
+		}
+
+		ingestRes, err := bridgeflow.IngestBundle(context.Background(), bridgeflow.Client{
+			BaseURL:      resolvedBaseURL,
+			BearerToken:  resolvedToken,
+			EndpointPath: strings.TrimSpace(*ingestEndpoint),
+		}, bundle)
+		if err != nil {
+			return fmt.Errorf("connected ingest: %w", err)
+		}
+
+		decisionRec, err := bridgeflow.QueryDecisionByChangeID(context.Background(), bridgeflow.DecisionClient{
+			BaseURL:      resolvedBaseURL,
+			BearerToken:  resolvedToken,
+			EndpointPath: strings.TrimSpace(*decisionEndpoint),
+		}, preview.Change.ChangeID)
+		if err != nil {
+			return fmt.Errorf("connected decision query: %w", err)
+		}
+
+		authority := strings.TrimSpace(decisionRec.ApprovedBy)
+		if authority == "" {
+			authority = strings.TrimSpace(decisionRec.PolicyDecisionRef)
+		}
+		if authority == "" {
+			authority = "confighub-policy"
+		}
+
+		decision = changeRunDecision{
+			State:     string(decisionRec.State),
+			Authority: authority,
+			Source:    "confighub-backend",
+		}
+		if decision.State != "ALLOW" {
+			promotionReady = false
+		}
+		if ingestRes.ChangeID == "" {
+			promotionReady = false
+		}
+	}
+
+	result := changeRunResult{
+		Mode:           runMode,
+		Preview:        preview,
+		Decision:       decision,
+		PromotionReady: promotionReady,
+	}
+
+	if *out == "-" {
+		return writeJSON(os.Stdout, result, *pretty)
+	}
+
+	f, err := os.Create(*out)
+	if err != nil {
+		return fmt.Errorf("create output file: %w", err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	return writeJSON(f, result, *pretty)
+}
+
+func buildChangePreviewResult(
+	targetSlug, renderTargetSlug, space, ref, whereResource, verifier string,
+) (changePreviewResult, publish.ChangeBundle, error) {
+	imported, err := gitopsflow.Import(targetSlug, renderTargetSlug, ref, space, whereResource)
+	if err != nil {
+		return changePreviewResult{}, publish.ChangeBundle{}, err
+	}
+
+	bundle := publish.BuildBundle(imported)
+	if err := publish.VerifyBundle(bundle); err != nil {
+		return changePreviewResult{}, publish.ChangeBundle{}, fmt.Errorf("verify generated bundle: %w", err)
+	}
+
+	attestationRecord, err := attest.Build(bundle, verifier)
+	if err != nil {
+		return changePreviewResult{}, publish.ChangeBundle{}, fmt.Errorf("build attestation: %w", err)
+	}
+	if err := attest.VerifyRecordAgainstBundle(attestationRecord, bundle); err != nil {
+		return changePreviewResult{}, publish.ChangeBundle{}, fmt.Errorf("verify generated attestation: %w", err)
+	}
+
+	topEdit, ok := bestInverseEditPointer(imported.Provenance)
+	if !ok {
+		topEdit = model.InverseEditPointer{
+			Owner:    "unknown",
+			EditHint: "No inverse edit hint produced.",
+		}
+	}
+
+	result := changePreviewResult{
+		Input: changePreviewInput{
+			TargetSlug:       targetSlug,
+			RenderTargetSlug: renderTargetSlug,
+			Space:            space,
+			Ref:              ref,
+			WhereResource:    strings.TrimSpace(whereResource),
+		},
+		Change: changePreviewSummary{
+			ChangeID:          bundle.ChangeID,
+			BundleDigest:      bundle.BundleDigest,
+			AttestationDigest: attestationRecord.AttestationDigest,
+		},
+		DiscoveredProfiles: discoveredProfiles(imported.Discovered),
+		Counts: changePreviewCounts{
+			DiscoveredResources: len(imported.Discovered),
+			DryInputs:           len(imported.DryInputs),
+			WetTargets:          len(imported.WetManifestTargets),
+			InversePatches:      countInversePatches(imported.InversePlans),
+		},
+		EditRecommendation: topEdit,
+		Verification: changePreviewVerification{
+			BundleValid:      true,
+			AttestationValid: true,
+			Verifier:         verifier,
+		},
+	}
+
+	return result, bundle, nil
 }
 
 func bestInverseEditPointer(provenance []model.ProvenanceRecord) (model.InverseEditPointer, bool) {
@@ -1599,6 +1760,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
+	fmt.Fprintln(out, "  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out, "  cub-gen bridge <ingest|decision|promote> [flags]")
@@ -1628,6 +1790,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen attest --in - --verifier ci-bot")
 	fmt.Fprintln(out, "  cub-gen verify-attestation --in attestation.json --bundle bundle.json")
 	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
+	fmt.Fprintln(out, "  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen bridge ingest --in bundle.json --base-url https://confighub.example")
 	fmt.Fprintln(out, "  cub-gen bridge decision query --change-id chg_123 --base-url https://confighub.example")
 	fmt.Fprintln(out, "  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123")
@@ -1644,10 +1807,12 @@ func printChangeUsage(out io.Writer) {
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintln(out, "  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
+	fmt.Fprintln(out, "  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Examples:")
 	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/helm-paas ./examples/helm-paas")
 	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/swamp-automation ./examples/swamp-automation")
+	fmt.Fprintln(out, "  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
 }
 
 func printGitOpsUsage(out io.Writer) {

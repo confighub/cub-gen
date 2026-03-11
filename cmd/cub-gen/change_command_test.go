@@ -58,6 +58,61 @@ func TestChangePreviewJSON(t *testing.T) {
 	}
 }
 
+func TestChangeRunLocalJSON(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{
+		"change", "run",
+		"--mode", "local",
+		"--space", "platform",
+		"score",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("change run returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal change run output: %v\noutput=%s", err, out)
+	}
+	if mode, ok := got["mode"].(string); !ok || mode != "local" {
+		t.Fatalf("expected mode=local, got %v", got["mode"])
+	}
+	decision, ok := got["decision"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected decision object, got %T", got["decision"])
+	}
+	if state, ok := decision["state"].(string); !ok || state != "ALLOW" {
+		t.Fatalf("expected decision state ALLOW, got %v", decision["state"])
+	}
+	if source, ok := decision["source"].(string); !ok || source != "local-preview" {
+		t.Fatalf("expected decision source local-preview, got %v", decision["source"])
+	}
+}
+
+func TestChangeRunConnectedMissingBaseURL(t *testing.T) {
+	setupAliases(t)
+	t.Setenv("CONFIGHUB_BASE_URL", "")
+
+	_, _, err := runWithCapturedIO([]string{
+		"change", "run",
+		"--mode", "connected",
+		"--space", "platform",
+		"score",
+		"render-target",
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "requires --base-url or CONFIGHUB_BASE_URL") {
+		t.Fatalf("unexpected error: %q", err.Error())
+	}
+}
+
 func TestChangeCommandErrorModes(t *testing.T) {
 	tests := []struct {
 		name string
@@ -71,13 +126,18 @@ func TestChangeCommandErrorModes(t *testing.T) {
 		},
 		{
 			name: "unknown-subcommand",
-			args: []string{"change", "run"},
+			args: []string{"change", "explain"},
 			sub:  "unknown change subcommand",
 		},
 		{
 			name: "preview-missing-targets",
 			args: []string{"change", "preview"},
 			sub:  "usage: cub-gen change preview",
+		},
+		{
+			name: "run-missing-targets",
+			args: []string{"change", "run"},
+			sub:  "usage: cub-gen change run",
 		},
 	}
 

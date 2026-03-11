@@ -9,6 +9,7 @@ Usage:
   cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]
   cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]
   cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>
+  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>
   cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]
   cub-gen gitops <discover|import|cleanup> [flags]
   cub-gen bridge <ingest|decision|promote> [flags]
@@ -38,6 +39,7 @@ GitOps parity examples:
   cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen attest --in - --verifier ci-bot
   cub-gen verify-attestation --in attestation.json --bundle bundle.json
   cub-gen change preview --space my-space ./examples/scoredev-paas ./examples/scoredev-paas
+  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas
   cub-gen bridge ingest --in bundle.json --base-url https://confighub.example
   cub-gen bridge decision query --change-id chg_123 --base-url https://confighub.example
   cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123
