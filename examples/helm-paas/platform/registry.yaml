@@ -1,0 +1,122 @@
+# NOTE: This registry is illustrative. ConfigHub evaluates policy decisions server-side.
+# cub-gen imports this operation contract so teams can trace ownership and intent.
+
+apiVersion: confighub.io/v1
+kind: FrameworkRegistry
+
+metadata:
+  name: helm-platform
+  version: 1.0.0
+
+spec:
+  description: "Typed platform operations for Helm-based application delivery"
+  homepage: "https://docs.acme-corp.com/platforms/helm"
+
+  operations:
+    - name: setImageTag
+      description: "Update release image tag in values overlays"
+      inputs:
+        type: object
+        properties:
+          image_tag:
+            type: string
+            required: true
+          environment:
+            type: string
+            enum: [dev, staging, prod]
+            required: true
+      outputs:
+        resources: [Deployment]
+      constraints:
+        - semver-image-tags
+      validation:
+        rules:
+          - condition: "inputs.image_tag == 'latest'"
+            message: "latest image tag is not allowed"
+            severity: error
+
+    - name: scaleRelease
+      description: "Set replica targets by environment"
+      inputs:
+        type: object
+        properties:
+          replicas:
+            type: integer
+            required: true
+          environment:
+            type: string
+            enum: [dev, staging, prod]
+            required: true
+      outputs:
+        resources: [Deployment]
+      constraints:
+        - min-2-replicas-prod
+      validation:
+        rules:
+          - condition: "inputs.environment == 'prod' && inputs.replicas < 2"
+            message: "Production releases require at least 2 replicas"
+            severity: error
+
+    - name: configureIngress
+      description: "Expose app routes using ingress configuration"
+      inputs:
+        type: object
+        properties:
+          host:
+            type: string
+            required: true
+          tls:
+            type: boolean
+            default: true
+      outputs:
+        resources: [Ingress, Service]
+      constraints:
+        - tls-required-prod
+      validation:
+        rules:
+          - condition: "inputs.tls == false && labels.variant == 'prod'"
+            message: "TLS is required for production ingress"
+            severity: error
+
+    - name: setValuesOverlay
+      description: "Apply environment-specific values override source"
+      inputs:
+        type: object
+        properties:
+          values_file:
+            type: string
+            required: true
+          owner_team:
+            type: string
+            required: true
+      outputs:
+        resources: [ConfigMap]
+
+    - name: upgradeChartVersion
+      description: "Promote chart version within approved registries"
+      inputs:
+        type: object
+        properties:
+          chart_version:
+            type: string
+            required: true
+          registry:
+            type: string
+            required: true
+      outputs:
+        resources: [HelmRelease]
+      constraints:
+        - approved-chart-registries
+
+  constraints:
+    - semver-image-tags
+    - min-2-replicas-prod
+    - tls-required-prod
+    - approved-chart-registries
+
+  produces:
+    - Deployment
+    - Service
+    - Ingress
+    - ConfigMap
+    - HelmRelease

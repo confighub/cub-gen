@@ -130,6 +130,7 @@ If your users mostly run workflows (not app manifests), start with these two:
 
 Operation-registry walkthrough (AI Ops + Ops Workflow + Swamp):
 - [docs/workflows/operation-registry-real-apps.md](../docs/workflows/operation-registry-real-apps.md)
+Now includes Helm + Spring Boot registry-backed platform examples too.
 
 ## Platform + app patterns (Kubernetes workloads)
 

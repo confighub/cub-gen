@@ -192,6 +192,8 @@ If your platform is workflow-heavy (operations workflows or agent-authored workf
 
 `FrameworkRegistry` is used across multiple example types:
 
+- Helm platform: `examples/helm-paas/platform/registry.yaml`
+- Spring Boot platform: `examples/springboot-paas/platform/registry.yaml`
 - AI Ops platform: `examples/ai-ops-paas/platform/registry.yaml`
 - Ops workflow platform: `examples/ops-workflow/platform/registry.yaml`
 - Swamp workflow platform: `examples/swamp-automation/platform/registry.yaml`

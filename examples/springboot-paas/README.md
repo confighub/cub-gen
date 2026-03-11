@@ -54,6 +54,7 @@ manifests to LIVE state. cub-gen doesn't touch your reconciler.
 | `src/main/java/.../InventoryApplication.java` | App team | Service implementation |
 | `platform/base/runtime-policy.yaml` | Platform | Required actuator health, managed datasource |
 | `platform/overlays/prod/slo-policy.yaml` | Platform | Production SLO targets (99.9%, p95 250ms) |
+| `platform/registry.yaml` | Platform | FrameworkRegistry typed operations + constraints for Spring platform APIs |
 | `gitops/flux/kustomization.yaml` | Platform | Flux Kustomization transport |
 | `gitops/argo/application.yaml` | Platform | ArgoCD Application transport |
 
@@ -234,6 +235,7 @@ WET:  Deployment/spec/template/spec/containers[0]/env[name=SERVER_PORT]/value = 
 | `application-prod.yaml` | Shared | Prod overrides — port (app), datasource (platform) |
 | `platform/base/runtime-policy.yaml` | Platform | Required actuator, managed datasource |
 | `platform/overlays/prod/slo-policy.yaml` | Platform | SLO targets — 99.9%, p95 250ms |
+| `platform/registry.yaml` | Platform | FrameworkRegistry for Spring operations/constraints |
 | `gitops/flux/kustomization.yaml` | Platform | Flux Kustomization transport |
 | `gitops/argo/application.yaml` | Platform | ArgoCD Application transport |
 
