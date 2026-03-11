@@ -10,10 +10,20 @@ if [ ! -f "$DOC" ]; then
   exit 1
 fi
 
+has_pattern() {
+  local pattern="$1"
+  local file="$2"
+  if command -v rg >/dev/null 2>&1; then
+    rg -q "$pattern" "$file"
+    return $?
+  fi
+  grep -Eq "$pattern" "$file"
+}
+
 require_doc_text() {
   local pattern="$1"
   local label="$2"
-  if ! rg -q "$pattern" "$DOC"; then
+  if ! has_pattern "$pattern" "$DOC"; then
     echo "error: AI-only guardrails doc missing $label" >&2
     exit 1
   fi
@@ -34,7 +44,7 @@ if SKIP_BUILD=1 ./examples/demo/prompt-as-dry-local.sh ./examples/helm-paas >"$T
   echo "error: expected AI-only out-of-scope check to fail for helm-paas" >&2
   exit 1
 fi
-if ! rg -q "outside allowed AI-only scope" "$TMP_DIR/outscope.err"; then
+if ! has_pattern "outside allowed AI-only scope" "$TMP_DIR/outscope.err"; then
   echo "error: out-of-scope failure did not report expected reason" >&2
   cat "$TMP_DIR/outscope.err" >&2
   exit 1
@@ -54,7 +64,7 @@ if AI_ONLY_ALLOWED_REPOS="no-rollback-workflow" SKIP_BUILD=1 ./examples/demo/pro
   echo "error: expected missing rollback hook check to fail" >&2
   exit 1
 fi
-if ! rg -q "requires at least one rollback/revert hook" "$TMP_DIR/no-rollback.err"; then
+if ! has_pattern "requires at least one rollback/revert hook" "$TMP_DIR/no-rollback.err"; then
   echo "error: rollback guard failure did not report expected reason" >&2
   cat "$TMP_DIR/no-rollback.err" >&2
   exit 1

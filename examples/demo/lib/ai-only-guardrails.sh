@@ -21,6 +21,16 @@ ai_only_is_allowed_repo() {
   return 1
 }
 
+ai_only_search_yaml() {
+  local pattern="$1"
+  local repo_abs="$2"
+  if command -v rg >/dev/null 2>&1; then
+    rg -n -i "$pattern" "$repo_abs" -g '*.yaml' -g '*.yml'
+    return $?
+  fi
+  grep -RInE --include='*.yaml' --include='*.yml' "$pattern" "$repo_abs"
+}
+
 enforce_ai_only_scope() {
   local repo_path="$1"
   local render_target="${2:-$repo_path}"
@@ -49,8 +59,8 @@ enforce_ai_only_scope() {
   fi
 
   local hard_deny_regex
-  hard_deny_regex="${AI_ONLY_HARD_DENY_REGEX:-cluster-admin|system:masters|\bdeleteEverything\b|\bdelete\s+namespace\b}"
-  if rg -n -i "$hard_deny_regex" "$repo_abs" -g '*.yaml' -g '*.yml' >/dev/null 2>&1; then
+  hard_deny_regex="${AI_ONLY_HARD_DENY_REGEX:-cluster-admin|system:masters|deleteEverything|delete[[:space:]]+namespace}"
+  if ai_only_search_yaml "$hard_deny_regex" "$repo_abs" >/dev/null 2>&1; then
     echo "error: AI-only scope hard deny rule matched in $repo_name." >&2
     echo "matched regex: $hard_deny_regex" >&2
     return 1
@@ -59,7 +69,7 @@ enforce_ai_only_scope() {
   local require_rollback
   require_rollback="${AI_ONLY_REQUIRE_ROLLBACK_HOOK:-1}"
   if [ "$require_rollback" = "1" ]; then
-    if ! rg -n -i "rollback|revert" "$repo_abs" -g '*.yaml' -g '*.yml' >/dev/null 2>&1; then
+    if ! ai_only_search_yaml "rollback|revert" "$repo_abs" >/dev/null 2>&1; then
       echo "error: AI-only scope requires at least one rollback/revert hook in workflow files." >&2
       echo "remediation: add an explicit rollback/revert step before using AI-only lane." >&2
       return 1
