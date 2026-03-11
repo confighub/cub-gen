@@ -69,3 +69,25 @@ Release gate for this action plan:
 
 1. Item 7 is marked `Done` with one shared `change_id` proof artifact.
 2. Item 8 is marked `Done` with policy + CI enforcement merged.
+
+## Post-checkpoint hardening (completed)
+
+These shipped after the core v0.1 checklist completion to reduce new-user confusion and prevent docs drift:
+
+1. Confidence interpretation is now first-class and linked from entry docs.
+   - `docs/workflows/confidence-scores.md`
+   - enforced by `test/checks/check-docs-entrypoints.sh`
+2. Operation Registry discoverability expanded beyond AI Ops.
+   - Added Helm + Spring Boot registry examples:
+     - `examples/helm-paas/platform/registry.yaml`
+     - `examples/springboot-paas/platform/registry.yaml`
+   - Central guide:
+     - `docs/workflows/operation-registry-real-apps.md`
+3. Naming decision is now enforced in CI.
+   - `test/checks/check-no-legacy-provider-terms.sh`
+4. Connected auth contract is now enforced in CI.
+   - `test/checks/check-connected-auth-contract.sh`
+5. Registry discoverability is now enforced in CI.
+   - `test/checks/check-registry-discoverability.sh`
+6. Docs-site getting started now includes own-repo local+connected path.
+   - `docs/getting-started.md` ("Use your own repo in 3 commands")
