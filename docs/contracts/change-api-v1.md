@@ -157,6 +157,10 @@ Error body shape:
 - `POST /v1/changes {action:"run"}` ↔ `cub-gen change run ...`
 - `GET /v1/changes/{change_id}/explanations` ↔ `cub-gen change explain ...`
 
+Compatibility adapter in this repo:
+
+- `examples/demo/change-api-adapter.sh`
+
 ## See also
 
 - `docs/contracts/change-cli-v1.md`

@@ -50,6 +50,8 @@ jobs:
         with:
           name: story-7-summary-${{ inputs.example_slug }}
           path: |
+            ${{ env.OUT_DIR }}/change-run-request.json
             ${{ env.OUT_DIR }}/change-run.json
+            ${{ env.OUT_DIR }}/change-explain-request.json
             ${{ env.OUT_DIR }}/change-explain.json
             ${{ env.OUT_DIR }}/story-7-summary.json
