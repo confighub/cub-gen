@@ -128,6 +128,11 @@ Bridge endpoint behavior:
 - Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`): always use backend `changeset` fallback (troubleshooting only).
 - Release qualification policy: keep `ALLOW_FALLBACK_INGEST=0` and `ALLOW_STORY_10_SKIP=0` (strict mode).
 
+CI behavior:
+
+- `make ci-connected` enforces strict mode (`CONNECTED_FALLBACK_MODE=off`).
+- `make ci-connected-troubleshoot` is the only fallback-enabled lane.
+
 Fallback mode records `ingest.json`/`decision-final.json` in the standard contract shape with `source=confighub-backend-changeset-fallback`, so story scripts and CI gates remain deterministic.
 
 If your backend exposes non-default paths, set `BRIDGE_INGEST_ENDPOINT` and `BRIDGE_DECISION_ENDPOINT`.
