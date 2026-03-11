@@ -38,7 +38,8 @@ Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and t
 - `change run`: execute the full governed flow (local or connected).
 - `change explain`: answer "what should I edit and why?" for a specific field.
 
-Today these are exposed via demo wrappers while the first-class CLI surface lands.
+`change preview` is available as a first-class CLI command.
+`change run` and `change explain` are mapped through the demo wrappers until their native subcommands land.
 
 ## Core Value in 10 Seconds
 
@@ -78,6 +79,7 @@ This gives immediate value with local evidence and lifecycle outputs.
 If you want one command that returns the edit recommendation plus evidence artifacts:
 
 ```bash
+./cub-gen change preview --space platform ./examples/scoredev-paas ./examples/scoredev-paas
 ./examples/demo/app-ai-change-run.sh ./examples/scoredev-paas
 ```
 
