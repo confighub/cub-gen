@@ -36,7 +36,8 @@ go build -o ./cub-gen ./cmd/cub-gen
 ```bash
 cub auth login
 TOKEN="$(cub auth get-token)"
-BASE_URL="https://confighub.example"
+cub context get --json | jq -r '.coordinate.user'
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
@@ -45,6 +46,18 @@ BASE_URL="https://confighub.example"
 ```
 
 Use local mode for first value. Use connected mode for centralized governance state and cross-repo visibility.
+
+Connected full-entrypoint runner:
+
+```bash
+cub auth login
+./examples/demo/run-all-connected-entrypoints.sh
+```
+
+Per-example wrappers:
+
+- Local: `./examples/<example>/demo-local.sh`
+- Connected: `./examples/<example>/demo-connected.sh` (starts with `cub auth login`)
 
 ## Verifier identity
 
@@ -58,6 +71,41 @@ When you run `cub-gen attest --verifier <name>`, the verifier name records who/w
 | `deploy-agent` | Automated deployment agent |
 
 ## Pick your starting point
+
+## Choose your starting view
+
+| If you are... | Start here | Direct viewpoint section | First command |
+|---------|-----------|--------------------------|---------------|
+| Helm / umbrella-chart platform team | [helm-paas](helm-paas/) | [If you already run Helm heavily](helm-paas/README.md#if-you-already-run-helm-heavily) | `./examples/helm-paas/demo-local.sh` |
+| Spring Boot platform/app lead | [springboot-paas](springboot-paas/) | [If you already ship Spring Boot services](springboot-paas/README.md#if-you-already-ship-spring-boot-services) | `./examples/springboot-paas/demo-local.sh` |
+| Score.dev platform team | [scoredev-paas](scoredev-paas/) | [If you already use Score.dev in production](scoredev-paas/README.md#if-you-already-use-scoredev-in-production) | `./examples/scoredev-paas/demo-local.sh` |
+| Backstage/IDP owner | [backstage-idp](backstage-idp/) | [If you already run Backstage catalogs at scale](backstage-idp/README.md#if-you-already-run-backstage-catalogs-at-scale) | `./examples/backstage-idp/demo-local.sh` |
+| Ops workflow/SRE automation team | [ops-workflow](ops-workflow/) | [If you already run operational workflows at scale](ops-workflow/README.md#if-you-already-run-operational-workflows-at-scale) | `./examples/ops-workflow/demo-local.sh` |
+| AI agent fleet platform team | [c3agent](c3agent/) | [If you already run agent fleets operationally](c3agent/README.md#if-you-already-run-agent-fleets-operationally) | `./examples/c3agent/demo-local.sh` |
+| Full AI PaaS builder | [ai-ops-paas](ai-ops-paas/) | [If you already run AI/ops platforms on Kubernetes](ai-ops-paas/README.md#if-you-already-run-aiops-platforms-on-kubernetes) | `./examples/ai-ops-paas/demo-local.sh` |
+| Workflow automation platform team | [swamp-automation](swamp-automation/) | [If you already build workflow automation systems](swamp-automation/README.md#if-you-already-build-workflow-automation-systems) | `./examples/swamp-automation/demo-local.sh` |
+| Helm-based AI runtime team | [swamp-project](swamp-project/) | [If you already operate Helm-based AI runtimes](swamp-project/README.md#if-you-already-operate-helm-based-ai-runtimes) | `./examples/swamp-project/demo-local.sh` |
+| Reconciler/platform reliability engineer | [live-reconcile](live-reconcile/) | [If you already operate Flux/Argo at scale](live-reconcile/README.md#if-you-already-operate-fluxargo-at-scale) | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
+
+If you want copy/paste 5-minute paths per persona, use:
+
+- [Persona 5-minute runbooks](../docs/workflows/persona-5-minute-runbooks.md)
+
+## Workflow-first quick path (Ops + Swamp)
+
+If your users mostly run workflows (not app manifests), start with these two:
+
+```bash
+# Ops workflows: actions/schedules/approval-gates as governed config
+./examples/ops-workflow/demo-local.sh
+./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+  | jq '.provenance[0].ops_workflow_analysis'
+
+# Swamp workflows: model/method/required-step structural governance
+./examples/swamp-automation/demo-local.sh
+./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation \
+  | jq '.provenance[0].swamp_workflow_analysis'
+```
 
 ## Platform + app patterns (Kubernetes workloads)
 
@@ -80,21 +128,21 @@ When you run `cub-gen attest --verifier <name>`, the verifier name records who/w
 |---------|-----------|---------------------|
 | [**c3agent**](c3agent/) | AI agent fleets | Fleet config governance, model policy, budget controls |
 | [**ai-ops-paas**](ai-ops-paas/) | Full AI platform + constraints | Registry + constraints + governed lifecycle |
-| [**swamp-automation**](swamp-automation/) | Swamp workflow orchestration | DAG/model binding governance |
+| [**swamp-automation**](swamp-automation/) | Swamp agent-authored workflows | Workflow-graph change governance (models/methods/required steps) |
 | [**swamp-project**](swamp-project/) | Helm chart for AI runtime | Helm-based runtime policy mapping |
 
 ## Operations patterns
 
 | Example | You use... | cub-gen shows you... |
 |---------|-----------|---------------------|
-| [**ops-workflow**](ops-workflow/) | Scheduled maintenance workflows | Approval and execution policy mapping |
+| [**ops-workflow**](ops-workflow/) | Scheduled maintenance workflows | Structural workflow governance (actions/schedules/approval gates) |
 | [**confighub-actions**](confighub-actions/) | ConfigHub lifecycle automation | Recursive governance (ConfigHub governing itself) |
 
 ## Infrastructure
 
 | Example | Purpose |
 |---------|---------|
-| [**live-reconcile**](live-reconcile/) | Flux e2e fixture proving WET->LIVE reconciliation |
+| [**live-reconcile**](live-reconcile/) | Flux + Argo e2e fixtures proving WET->LIVE reconciliation |
 | [**demo**](demo/) | Runnable demo script index |
 
 ## How to read each example

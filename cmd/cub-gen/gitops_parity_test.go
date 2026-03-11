@@ -101,12 +101,12 @@ func TestGitOpsParityGoldenDiscoverBackstage(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-backstage.golden.json"), got)
 }
 
-func TestGitOpsParityGoldenDiscoverAbly(t *testing.T) {
+func TestGitOpsParityGoldenDiscoverNoConfigPlatform(t *testing.T) {
 	aliases := setupAliases(t)
 
-	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "ably"})
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", "no-config-platform"})
 	if err != nil {
-		t.Fatalf("run ably discover returned error: %v\nstderr=%s", err, stderr)
+		t.Fatalf("run no-config-platform discover returned error: %v\nstderr=%s", err, stderr)
 	}
 	if strings.TrimSpace(stderr) != "" {
 		t.Fatalf("expected empty stderr, got: %s", stderr)
@@ -114,14 +114,14 @@ func TestGitOpsParityGoldenDiscoverAbly(t *testing.T) {
 
 	var got map[string]any
 	if err := json.Unmarshal([]byte(out), &got); err != nil {
-		t.Fatalf("unmarshal ably discover json: %v\noutput=%s", err, out)
+		t.Fatalf("unmarshal no-config-platform discover json: %v\noutput=%s", err, out)
 	}
 	normalizeDiscover(got)
 
 	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("examples", "just-apps-no-platform-config"))
-	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["ably"]), filepath.ToSlash(filepath.Join("examples", "just-apps-no-platform-config")))
+	got["alias_path_suffix"] = trimToSuffix(filepath.ToSlash(aliases["no-config-platform"]), filepath.ToSlash(filepath.Join("examples", "just-apps-no-platform-config")))
 
-	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-ably.golden.json"), got)
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-no-config-platform.golden.json"), got)
 }
 
 func TestGitOpsParityGoldenDiscoverOps(t *testing.T) {
@@ -273,12 +273,12 @@ func TestGitOpsParityGoldenImportBackstage(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-backstage.golden.json"), got)
 }
 
-func TestGitOpsParityGoldenImportAbly(t *testing.T) {
+func TestGitOpsParityGoldenImportNoConfigPlatform(t *testing.T) {
 	setupAliases(t)
 
-	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "ably", "render-target"})
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", "no-config-platform", "render-target"})
 	if err != nil {
-		t.Fatalf("run ably import returned error: %v\nstderr=%s", err, stderr)
+		t.Fatalf("run no-config-platform import returned error: %v\nstderr=%s", err, stderr)
 	}
 	if strings.TrimSpace(stderr) != "" {
 		t.Fatalf("expected empty stderr, got: %s", stderr)
@@ -286,11 +286,11 @@ func TestGitOpsParityGoldenImportAbly(t *testing.T) {
 
 	var got map[string]any
 	if err := json.Unmarshal([]byte(out), &got); err != nil {
-		t.Fatalf("unmarshal ably import json: %v\noutput=%s", err, out)
+		t.Fatalf("unmarshal no-config-platform import json: %v\noutput=%s", err, out)
 	}
 	normalizeImport(got)
 
-	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-ably.golden.json"), got)
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-no-config-platform.golden.json"), got)
 }
 
 func TestGitOpsParityGoldenImportOps(t *testing.T) {
@@ -402,6 +402,42 @@ func TestGitOpsParityGoldenImportTable(t *testing.T) {
 		t.Fatalf("expected empty stderr, got: %s", stderr)
 	}
 	assertGoldenText(t, filepath.Join("testdata", "parity", "gitops-import.table.golden.txt"), out)
+}
+
+func TestGitOpsImportTableIncludesSwampWorkflowSummary(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "swamp", "render-target"})
+	if err != nil {
+		t.Fatalf("run swamp import table returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+	if !strings.Contains(out, "Swamp workflow analysis") {
+		t.Fatalf("expected swamp workflow analysis section in output, got:\n%s", out)
+	}
+	if !strings.Contains(out, "swamp-automation\tswamp\t1\t2\t2\t0\t0\t0") {
+		t.Fatalf("expected swamp workflow summary row in output, got:\n%s", out)
+	}
+}
+
+func TestGitOpsImportTableIncludesOpsWorkflowSummary(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "ops", "render-target"})
+	if err != nil {
+		t.Fatalf("run ops import table returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+	if !strings.Contains(out, "Ops workflow analysis") {
+		t.Fatalf("expected ops workflow analysis section in output, got:\n%s", out)
+	}
+	if !strings.Contains(out, "ops-workflow\tops-workflow\t2\t2\t1\t2\t0\t0") {
+		t.Fatalf("expected ops workflow summary row in output, got:\n%s", out)
+	}
 }
 
 func TestGitOpsParityGoldenHelp(t *testing.T) {
@@ -560,9 +596,9 @@ func setupAliases(t *testing.T) map[string]string {
 	if err != nil {
 		t.Fatalf("resolve backstage path: %v", err)
 	}
-	ablyAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "just-apps-no-platform-config"))
+	noConfigPlatformAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "just-apps-no-platform-config"))
 	if err != nil {
-		t.Fatalf("resolve ably path: %v", err)
+		t.Fatalf("resolve no-config-platform path: %v", err)
 	}
 	opsAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "ops-workflow"))
 	if err != nil {
@@ -582,14 +618,14 @@ func setupAliases(t *testing.T) map[string]string {
 	// Render target metadata (no repo path required in this prototype).
 	cfgAny := map[string]any{
 		"targets": map[string]any{
-			"helm":      helmAbs,
-			"score":     scoreAbs,
-			"spring":    springAbs,
-			"backstage": backstageAbs,
-			"ably":      ablyAbs,
-			"ops":       opsAbs,
-			"c3agent":   c3agentAbs,
-			"swamp":     swampAbs,
+			"helm":               helmAbs,
+			"score":              scoreAbs,
+			"spring":             springAbs,
+			"backstage":          backstageAbs,
+			"no-config-platform": noConfigPlatformAbs,
+			"ops":                opsAbs,
+			"c3agent":            c3agentAbs,
+			"swamp":              swampAbs,
 			"render-target": map[string]any{
 				"toolchain": "kubernetes/yaml",
 				"providers": []string{"fluxrenderer", "argocdrenderer"},
@@ -606,14 +642,14 @@ func setupAliases(t *testing.T) map[string]string {
 	t.Setenv("CUB_GEN_TARGETS_FILE", cfgPath)
 
 	return map[string]string{
-		"helm":      helmAbs,
-		"score":     scoreAbs,
-		"spring":    springAbs,
-		"backstage": backstageAbs,
-		"ably":      ablyAbs,
-		"ops":       opsAbs,
-		"c3agent":   c3agentAbs,
-		"swamp":     swampAbs,
+		"helm":               helmAbs,
+		"score":              scoreAbs,
+		"spring":             springAbs,
+		"backstage":          backstageAbs,
+		"no-config-platform": noConfigPlatformAbs,
+		"ops":                opsAbs,
+		"c3agent":            c3agentAbs,
+		"swamp":              swampAbs,
 	}
 }
 

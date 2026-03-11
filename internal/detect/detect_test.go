@@ -50,9 +50,9 @@ func TestScanRepoExamples(t *testing.T) {
 		{
 			name:            "just-apps-no-platform-config",
 			repoDir:         "just-apps-no-platform-config",
-			expectedKind:    model.GeneratorAbly,
-			expectedProfile: "ably-config",
-			expectedFile:    "ably.yaml",
+			expectedKind:    model.GeneratorNoConfigPlatform,
+			expectedProfile: "no-config-platform",
+			expectedFile:    "no-config-platform.yaml",
 		},
 		{
 			name:            "ops-workflow",

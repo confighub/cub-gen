@@ -103,13 +103,16 @@ cub-gen bridge ingest --in <bundle.json> --base-url <url>
 
 ### `bridge decision`
 
-Manage decision state for a change.
+Decision commands support two modes:
+
+- Connected authoritative lookup via `query` against ConfigHub.
+- Local/offline contract simulation via `create`, `attach`, and `apply`.
 
 ```
+cub-gen bridge decision query --base-url <url> --change-id <id>
 cub-gen bridge decision create --ingest <ingest-result.json>
 cub-gen bridge decision attach --decision <decision.json> --attestation <attestation.json>
 cub-gen bridge decision apply --decision <decision.json> --state ALLOW --approved-by <who> --reason <why>
-cub-gen bridge decision query --base-url <url> --change-id <id>
 ```
 
 ### `bridge promote`

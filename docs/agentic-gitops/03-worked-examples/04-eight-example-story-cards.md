@@ -12,7 +12,7 @@ Use `Agentic GitOps` only when an active inner reconciliation loop (`WET -> LIVE
 | 1 | Helm PaaS | "Keep existing Helm + GitOps, add governance." | No migration, explicit DRY/WET governance. | `examples/demo/module-1-helm-import.sh` |
 | 2 | Score.dev PaaS | "Keep Score abstraction, gain provenance + field map." | DRY intent remains simple; WET is auditable. | `examples/demo/module-2-score-field-map.sh` |
 | 3 | Spring Boot PaaS | "App teams stay in framework config." | Framework config to governed WET with ownership routing. | `examples/demo/module-3-spring-ownership.sh` |
-| 4 | Ably config | "App-config platforms need same controls." | Non-K8s style config still fits DRY/WET + inverse mapping. | `examples/demo/module-5-ably-platform.sh` |
+| 4 | No-config platform | "App-config platforms need same controls." | Non-K8s style config still fits DRY/WET + inverse mapping. | `examples/demo/module-5-no-config-platform.sh` |
 | 5 | C3 Agent | "AI agent fleet config needs governed orchestration path." | Fleet DRY config to full manifest-set metadata coverage (11 WET targets) with provenance and inverse ownership routing. | `examples/demo/ai-work-platform/scenario-1-c3agent.sh` |
 | 6 | Swamp automation | "AI-native workflows need provenance and model binding governance." | Workflow definition + vault config with inverse-edit model orchestration. | `examples/demo/ai-work-platform/scenario-2-swamp.sh` |
 | 7 | ConfigHub Actions | "Execution must be tokened and attested." | Decision authority separated from execution runtime. | `examples/demo/ai-work-platform/scenario-3-confighub-actions.sh` |
@@ -23,7 +23,7 @@ Use `Agentic GitOps` only when an active inner reconciliation loop (`WET -> LIVE
 ```mermaid
 flowchart LR
   subgraph Track1["Platform/App"]
-    E1["Helm"] --> E2["Score"] --> E3["Spring"] --> E4["Ably"]
+    E1["Helm"] --> E2["Score"] --> E3["Spring"] --> E4["No Config Platform"]
   end
 
   subgraph Track2["AI Work Platform"]

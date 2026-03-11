@@ -3,14 +3,14 @@
   "detections": [
     {
       "confidence": 0.9,
-      "id": "gen_8c38d405bdc97967",
+      "id": "gen_7e61057fca5184ad",
       "inputs": [
-        "ably-prod.yaml",
-        "ably.yaml"
+        "no-config-platform-prod.yaml",
+        "no-config-platform.yaml"
       ],
-      "kind": "ably",
+      "kind": "no-config-platform",
       "name": "just-apps-no-platform-config",
-      "profile": "ably-config",
+      "profile": "no-config-platform",
       "root": ""
     }
   ],
@@ -20,12 +20,12 @@
   "ref": "HEAD",
   "resources": [
     {
-      "generator_id": "gen_8c38d405bdc97967",
-      "generator_kind": "ably",
-      "generator_profile": "ably-config",
+      "generator_id": "gen_7e61057fca5184ad",
+      "generator_kind": "no-config-platform",
+      "generator_profile": "no-config-platform",
       "inputs": [
-        "ably-prod.yaml",
-        "ably.yaml"
+        "no-config-platform-prod.yaml",
+        "no-config-platform.yaml"
       ],
       "resource_body": "kind: ConfigMap\nmetadata:\n  name: just-apps-no-platform-config\nspec:\n  root: \n",
       "resource_kind": "ConfigMap",
@@ -37,5 +37,5 @@
   "space": "platform",
   "target_path": "\u003ctarget_path\u003e",
   "target_path_expected_suffix": "examples/just-apps-no-platform-config",
-  "target_slug": "ably"
+  "target_slug": "no-config-platform"
 }

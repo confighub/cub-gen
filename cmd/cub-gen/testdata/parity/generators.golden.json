@@ -3,17 +3,6 @@
   "families": [
     {
       "capabilities": [
-        "app-config-only",
-        "provider-config",
-        "inverse-provider-config-patch"
-      ],
-      "kind": "ably",
-      "profile": "ably-config",
-      "resource_kind": "ConfigMap",
-      "resource_type": "v1/ConfigMap"
-    },
-    {
-      "capabilities": [
         "catalog-metadata",
         "render-manifests",
         "inverse-catalog-patch"
@@ -44,6 +33,17 @@
       "profile": "helm-paas",
       "resource_kind": "HelmRelease",
       "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease"
+    },
+    {
+      "capabilities": [
+        "app-config-only",
+        "provider-config",
+        "inverse-provider-config-patch"
+      ],
+      "kind": "no-config-platform",
+      "profile": "no-config-platform",
+      "resource_kind": "ConfigMap",
+      "resource_type": "v1/ConfigMap"
     },
     {
       "capabilities": [

@@ -56,6 +56,47 @@ reconciler stays in control.
 | `gitops/flux/kustomization.yaml` | Platform | Flux Kustomization transport |
 | `gitops/argo/application.yaml` | Platform | ArgoCD Application transport |
 
+## If you already use Score.dev in production
+
+This example is for teams already committed to Score-style app specs:
+
+- Developers define workload intent in `score.yaml`.
+- Platform teams map that intent into runtime policy and infrastructure.
+- Incidents still require tracing rendered behavior back to Score fields.
+
+cub-gen keeps Score as the app-team interface and adds deterministic provenance
+and ownership routing so debugging and governance use the same contract.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing Score concept | cub-gen concept | Why it matters |
+|------|------|------|
+| `score.yaml` | DRY app intent | Teams keep writing one high-level workload spec. |
+| Score-to-K8s expansion | WET targets with lineage | Rendered manifests stop being opaque. |
+| Platform contracts/policies | Governance layer | Rules run before deploy, not as after-the-fact review. |
+| Flux/Argo deployment loop | LIVE state | Runtime remains unchanged while visibility improves. |
+
+## Advanced reality check: provisioner fan-out and environment context
+
+In mature Score platforms, one DRY resource declaration often fans out into
+multiple runtime objects. Example:
+
+`resources.db.type: postgres` may imply a credential secret, network policy,
+runtime env wiring, and database provisioning metadata.
+
+The governance requirement is the same: each generated field needs a traceable
+source and owner, even when one Score field expands to many WET objects.
+
+The same applies to environment context. The same `score.yaml` can produce
+different WET output in dev vs prod due to platform contracts and provisioner
+rules. This is why provenance must include both:
+
+1. the app-authored DRY source (`score.yaml`), and
+2. the platform-authored contract/policy layer that influenced rendering.
+
+That combined trace is what makes Score practical at scale without forcing app
+teams to learn Kubernetes internals.
+
 ## Try it
 
 ```bash
@@ -101,7 +142,8 @@ resources:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # Decision: workload class allows Redis, network policy permits egress → ALLOW
@@ -156,3 +198,16 @@ WET:  Deployment/spec/template/spec/containers[name=main]/image
   config with ownership boundaries
 - **E2E demo**: `../demo/module-2-score-field-map.sh`
 - **Worked example**: `../../docs/agentic-gitops/03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/scoredev-paas/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/scoredev-paas/demo-connected.sh
+```

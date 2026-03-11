@@ -9,10 +9,10 @@ import (
 
 func TestRegistryHasSpecForAllKinds(t *testing.T) {
 	expected := []model.GeneratorKind{
-		model.GeneratorAbly,
 		model.GeneratorBackstage,
 		model.GeneratorC3Agent,
 		model.GeneratorHelm,
+		model.GeneratorNoConfigPlatform,
 		model.GeneratorOpsFlow,
 		model.GeneratorScore,
 		model.GeneratorSpringBoot,
@@ -121,8 +121,8 @@ func TestRegistryInputRoleAndOwnerClassification(t *testing.T) {
 		{name: "spring-profile", kind: model.GeneratorSpringBoot, path: "application-prod.yml", expectedRole: "app-config-profile", expectedOwner: "app-team"},
 		{name: "backstage-catalog", kind: model.GeneratorBackstage, path: "catalog-info.yaml", expectedRole: "catalog-spec", expectedOwner: "platform-engineer"},
 		{name: "backstage-app-config", kind: model.GeneratorBackstage, path: "app-config.yaml", expectedRole: "app-config", expectedOwner: "app-team"},
-		{name: "ably-base", kind: model.GeneratorAbly, path: "ably.yaml", expectedRole: "provider-config-base", expectedOwner: "app-team"},
-		{name: "ably-overlay", kind: model.GeneratorAbly, path: "ably-prod.json", expectedRole: "provider-config-overlay", expectedOwner: "app-team"},
+		{name: "no-config-platform-base", kind: model.GeneratorNoConfigPlatform, path: "no-config-platform.yaml", expectedRole: "provider-config-base", expectedOwner: "app-team"},
+		{name: "no-config-platform-overlay", kind: model.GeneratorNoConfigPlatform, path: "no-config-platform-prod.json", expectedRole: "provider-config-overlay", expectedOwner: "app-team"},
 		{name: "ops-base", kind: model.GeneratorOpsFlow, path: "operations.yaml", expectedRole: "operations-base", expectedOwner: "platform-engineer"},
 		{name: "ops-overlay", kind: model.GeneratorOpsFlow, path: "workflow-prod.yml", expectedRole: "operations-overlay", expectedOwner: "platform-engineer"},
 	}
@@ -153,8 +153,8 @@ func TestRegistrySchemaRef(t *testing.T) {
 		{name: "spring-app", kind: model.GeneratorSpringBoot, path: "application.yaml", expected: "https://json.schemastore.org/spring-configuration-metadata"},
 		{name: "backstage-catalog", kind: model.GeneratorBackstage, path: "catalog-info.yaml", expected: "https://json.schemastore.org/backstage-catalog-info"},
 		{name: "backstage-app-config", kind: model.GeneratorBackstage, path: "app-config.yaml", expected: "https://json.schemastore.org/backstage-app-config"},
-		{name: "ably-yaml", kind: model.GeneratorAbly, path: "ably.yaml", expected: "https://schema.confighub.dev/generators/ably-config-v1"},
-		{name: "ably-json", kind: model.GeneratorAbly, path: "ably-prod.json", expected: "https://schema.confighub.dev/generators/ably-config-v1"},
+		{name: "no-config-platform-yaml", kind: model.GeneratorNoConfigPlatform, path: "no-config-platform.yaml", expected: "https://schema.confighub.dev/generators/no-config-platform-v1"},
+		{name: "no-config-platform-json", kind: model.GeneratorNoConfigPlatform, path: "no-config-platform-prod.json", expected: "https://schema.confighub.dev/generators/no-config-platform-v1"},
 		{name: "ops", kind: model.GeneratorOpsFlow, path: "operations.yaml", expected: "https://schema.confighub.dev/generators/ops-workflow-v1"},
 		{name: "xml-maven", kind: model.GeneratorSpringBoot, path: "pom.xml", expected: "https://maven.apache.org/xsd/maven-4.0.0.xsd"},
 		{name: "default", kind: model.GeneratorSpringBoot, path: "README.md", expected: "https://json-schema.org/draft/2020-12/schema"},
@@ -255,8 +255,8 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := InversePatchReason(model.GeneratorBackstage, "identity", "fallback"); got != "Backstage component identity is sourced from {{catalog_path}}." {
 		t.Fatalf("expected backstage inverse patch reason template, got %q", got)
 	}
-	if got := InversePatchReason(model.GeneratorAbly, "channels", "fallback"); got != "Channel mapping is app-level runtime behavior." {
-		t.Fatalf("expected ably channels inverse patch reason, got %q", got)
+	if got := InversePatchReason(model.GeneratorNoConfigPlatform, "channels", "fallback"); got != "Channel mapping is app-level runtime behavior." {
+		t.Fatalf("expected no-config-platform channels inverse patch reason, got %q", got)
 	}
 	if got := FieldOriginConfidenceFor(model.GeneratorOpsFlow, "schedule_overlay", 0.0); got != 0.80 {
 		t.Fatalf("expected ops schedule overlay field origin confidence 0.80, got %v", got)

@@ -239,6 +239,52 @@
           "uri": "\u003csource_uri\u003e"
         }
       ],
+      "swamp_workflow_analysis": {
+        "approved_model_methods": [
+          "app-deployer.apply",
+          "app-deployer.rollback",
+          "app-healthcheck.verify",
+          "app-validator.check",
+          "credential-rotator.rotate"
+        ],
+        "approved_models": [
+          "app-deployer",
+          "app-healthcheck",
+          "app-validator",
+          "credential-rotator"
+        ],
+        "base_workflow_path": "workflow-deploy.yaml",
+        "forbidden_step_names": [
+          "delete-production-database"
+        ],
+        "max_parallel_jobs": 5,
+        "max_steps_per_job": 20,
+        "method_refs": [
+          "apply",
+          "check"
+        ],
+        "model_method_refs": [
+          "app-deployer.apply",
+          "app-validator.check"
+        ],
+        "model_refs": [
+          "app-deployer",
+          "app-validator"
+        ],
+        "policy_path": "platform/swamp-constraints.yaml",
+        "required_steps": [
+          "validate"
+        ],
+        "step_names": [
+          "apply",
+          "validate"
+        ],
+        "total_jobs": 1,
+        "total_steps": 2,
+        "workflow_paths": [
+          "workflow-deploy.yaml"
+        ]
+      },
       "version": "0.1.0"
     }
   ],

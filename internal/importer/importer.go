@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -169,6 +170,8 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 		RenderedLineage:     renderedLineageForGenerator(detection, g),
 		FieldOriginMap:      fieldOriginsForGenerator(detection, g),
 		InverseEditPointers: inversePointersForGenerator(detection, g),
+		OpsWorkflow:         opsWorkflowAnalysisForGenerator(detection, g),
+		SwampWorkflow:       swampWorkflowAnalysisForGenerator(detection, g),
 		RenderedAt:          renderedAt,
 	}
 }
@@ -312,8 +315,8 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Reason:         registry.InversePatchReason(g.Kind, "lifecycle", "Lifecycle changes impact platform ownership and support policy."),
 			},
 		}
-	case model.GeneratorAbly:
-		hints := ablyPathHintsFromInputs(g.Inputs)
+	case model.GeneratorNoConfigPlatform:
+		hints := noConfigPlatformPathHintsFromInputs(g.Inputs)
 		environmentPolicy := registry.InversePatchTemplateFor(g.Kind, "environment", registry.InversePatchTemplate{
 			EditableBy: "app-team", Confidence: 0.90, RequiresReview: false,
 		})
@@ -324,7 +327,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 			{
 				Operation:      "replace",
 				DryPath:        "app.environment",
-				WetPath:        "ConfigMap/data/ABLY_ENVIRONMENT",
+				WetPath:        "ConfigMap/data/PROVIDER_ENVIRONMENT",
 				EditableBy:     environmentPolicy.EditableBy,
 				Confidence:     environmentPolicy.Confidence,
 				RequiresReview: environmentPolicy.RequiresReview,
@@ -336,7 +339,7 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 			{
 				Operation:      "replace",
 				DryPath:        "channels.inbound",
-				WetPath:        "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				WetPath:        "ConfigMap/data/PROVIDER_CHANNEL_INBOUND",
 				EditableBy:     channelsPolicy.EditableBy,
 				Confidence:     channelsPolicy.Confidence,
 				RequiresReview: channelsPolicy.RequiresReview,
@@ -604,19 +607,19 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "lifecycle", 0.82),
 			},
 		}
-	case model.GeneratorAbly:
-		hints := ablyPathHintsFromInputs(g.Inputs)
+	case model.GeneratorNoConfigPlatform:
+		hints := noConfigPlatformPathHintsFromInputs(g.Inputs)
 		origins := []model.FieldOrigin{
 			{
 				DryPath:    "app.environment",
-				WetPath:    "ConfigMap/data/ABLY_ENVIRONMENT",
+				WetPath:    "ConfigMap/data/PROVIDER_ENVIRONMENT",
 				SourcePath: hints.BaseConfigPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "environment", 0.90),
 			},
 			{
 				DryPath:    "channels.inbound",
-				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				WetPath:    "ConfigMap/data/PROVIDER_CHANNEL_INBOUND",
 				SourcePath: hints.BaseConfigPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "channels_base", 0.88),
@@ -625,7 +628,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 		if hints.OverlayConfigPath != "" {
 			origins = append(origins, model.FieldOrigin{
 				DryPath:    "channels.inbound",
-				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				WetPath:    "ConfigMap/data/PROVIDER_CHANNEL_INBOUND",
 				SourcePath: hints.OverlayConfigPath,
 				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "channels_overlay", 0.84),
@@ -931,8 +934,8 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				Confidence: lifecyclePolicy.Confidence,
 			},
 		}
-	case model.GeneratorAbly:
-		hints := ablyPathHintsFromInputs(g.Inputs)
+	case model.GeneratorNoConfigPlatform:
+		hints := noConfigPlatformPathHintsFromInputs(g.Inputs)
 		environmentPolicy := registry.InversePointerTemplateFor(g.Kind, "environment", registry.InversePointerTemplate{
 			Owner: "app-team", Confidence: 0.90,
 		})
@@ -951,14 +954,14 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 		}
 		return []model.InverseEditPointer{
 			{
-				WetPath:    "ConfigMap/data/ABLY_ENVIRONMENT",
+				WetPath:    "ConfigMap/data/PROVIDER_ENVIRONMENT",
 				DryPath:    "app.environment",
 				Owner:      environmentPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "environment", "Edit app.environment in {{base_config_path}}."), vars),
 				Confidence: environmentPolicy.Confidence,
 			},
 			{
-				WetPath:    "ConfigMap/data/ABLY_CHANNEL_INBOUND",
+				WetPath:    "ConfigMap/data/PROVIDER_CHANNEL_INBOUND",
 				DryPath:    "channels.inbound",
 				Owner:      channelsPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, channelsHintKey, channelsHintFallback), vars),
@@ -1468,8 +1471,8 @@ func lineageTemplateContext(detection model.DetectionResult, g model.GeneratorDe
 	case model.GeneratorBackstage:
 		hints := backstagePathHintsFromInputs(g.Inputs)
 		singleHints["catalog_path"] = hints.CatalogPath
-	case model.GeneratorAbly:
-		hints := ablyPathHintsFromInputs(g.Inputs)
+	case model.GeneratorNoConfigPlatform:
+		hints := noConfigPlatformPathHintsFromInputs(g.Inputs)
 		singleHints["base_config_path"] = hints.BaseConfigPath
 		singleHints["overlay_config_path"] = hints.OverlayConfigPath
 	case model.GeneratorOpsFlow:
@@ -1573,22 +1576,22 @@ func backstagePathHintsFromInputs(inputs []string) backstageHints {
 	return h
 }
 
-type ablyHints struct {
+type noConfigPlatformHints struct {
 	BaseConfigPath    string
 	OverlayConfigPath string
 }
 
-func ablyPathHintsFromInputs(inputs []string) ablyHints {
-	h := ablyHints{
-		BaseConfigPath: registry.HintDefault(model.GeneratorAbly, "base_config_path", "ably.yaml"),
+func noConfigPlatformPathHintsFromInputs(inputs []string) noConfigPlatformHints {
+	h := noConfigPlatformHints{
+		BaseConfigPath: registry.HintDefault(model.GeneratorNoConfigPlatform, "base_config_path", "no-config-platform.yaml"),
 	}
 	for _, in := range inputs {
 		p := filepath.ToSlash(in)
 		base := strings.ToLower(filepath.Base(in))
 		switch {
-		case base == "ably.yaml" || base == "ably.yml" || base == "ably.json":
+		case base == "no-config-platform.yaml" || base == "no-config-platform.yml" || base == "no-config-platform.json":
 			h.BaseConfigPath = p
-		case strings.HasPrefix(base, "ably-"):
+		case strings.HasPrefix(base, "no-config-platform-"):
 			if h.OverlayConfigPath == "" || p < h.OverlayConfigPath {
 				h.OverlayConfigPath = p
 			}
@@ -1645,6 +1648,361 @@ func c3agentPathHintsFromInputs(inputs []string) c3agentHints {
 	return h
 }
 
+type opsWorkflowDoc struct {
+	Path         string
+	WorkflowName string
+	Schedule     string
+	ActionNames  []string
+}
+
+type opsExecutionPolicy struct {
+	Path           string
+	AllowedActions []string
+	BlockedActions []string
+	ApprovalGates  []string
+}
+
+func opsWorkflowAnalysisForGenerator(detection model.DetectionResult, g model.GeneratorDetection) *model.OpsWorkflowAnalysis {
+	if g.Kind != model.GeneratorOpsFlow {
+		return nil
+	}
+
+	workflowPaths := opsWorkflowPathsFromInputs(g.Inputs)
+	if len(workflowPaths) == 0 {
+		return nil
+	}
+
+	docs := make([]opsWorkflowDoc, 0, len(workflowPaths))
+	for _, path := range workflowPaths {
+		doc, err := parseOpsWorkflowFile(detection.Repo, path)
+		if err != nil {
+			continue
+		}
+		docs = append(docs, doc)
+	}
+	if len(docs) == 0 {
+		return nil
+	}
+
+	baseDoc := opsBaseWorkflowDoc(docs)
+	if baseDoc.Path == "" {
+		baseDoc = docs[0]
+	}
+
+	policyPath := opsExecutionPolicyPathFromRepo(detection.Repo, g.Inputs)
+	policy := opsExecutionPolicy{}
+	if policyPath != "" {
+		if parsed, err := parseOpsExecutionPolicyFile(detection.Repo, policyPath); err == nil {
+			policy = parsed
+		}
+	}
+
+	workflowPathValues := make([]string, 0, len(docs))
+	overlayPaths := make([]string, 0, len(docs))
+	workflowNames := make([]string, 0, len(docs))
+	schedules := make([]string, 0, len(docs))
+	scheduleOverrides := make([]string, 0)
+	actionSet := map[string]struct{}{}
+	baseActionSet := map[string]struct{}{}
+	addedActions := make([]string, 0)
+	removedActions := make([]string, 0)
+
+	for _, action := range baseDoc.ActionNames {
+		baseActionSet[action] = struct{}{}
+	}
+
+	for _, doc := range docs {
+		workflowPathValues = append(workflowPathValues, doc.Path)
+		if doc.Path != baseDoc.Path {
+			overlayPaths = append(overlayPaths, doc.Path)
+		}
+		if doc.WorkflowName != "" {
+			workflowNames = append(workflowNames, doc.WorkflowName)
+		}
+		if doc.Schedule != "" {
+			schedules = append(schedules, doc.Schedule)
+		}
+		if doc.Path != baseDoc.Path && doc.Schedule != "" && doc.Schedule != baseDoc.Schedule {
+			scheduleOverrides = append(scheduleOverrides, doc.Path+":"+doc.Schedule)
+		}
+		for _, action := range doc.ActionNames {
+			actionSet[action] = struct{}{}
+		}
+		if doc.Path != baseDoc.Path {
+			addedActions = append(addedActions, differenceStrings(doc.ActionNames, baseDoc.ActionNames)...)
+			removedActions = append(removedActions, differenceStrings(baseDoc.ActionNames, doc.ActionNames)...)
+		}
+	}
+
+	actionNames := sortedStringSet(actionSet)
+	allowedActions := uniqueSortedStrings(policy.AllowedActions)
+	blockedActions := uniqueSortedStrings(policy.BlockedActions)
+	unapprovedActions := differenceAgainstAllowList(actionNames, allowedActions)
+	blockedActionsUsed := intersectionStrings(actionNames, blockedActions)
+
+	return &model.OpsWorkflowAnalysis{
+		WorkflowPaths:        uniqueSortedStrings(workflowPathValues),
+		BaseWorkflowPath:     baseDoc.Path,
+		OverlayWorkflowPaths: uniqueSortedStrings(overlayPaths),
+		PolicyPath:           policy.Path,
+		WorkflowNames:        uniqueSortedStrings(workflowNames),
+		Schedules:            uniqueSortedStrings(schedules),
+		ScheduleOverrides:    uniqueSortedStrings(scheduleOverrides),
+		ActionNames:          actionNames,
+		AllowedActions:       allowedActions,
+		BlockedActions:       blockedActions,
+		ApprovalGates:        uniqueSortedStrings(policy.ApprovalGates),
+		UnapprovedActions:    unapprovedActions,
+		BlockedActionsUsed:   blockedActionsUsed,
+		AddedActions:         uniqueSortedStrings(addedActions),
+		RemovedActions:       uniqueSortedStrings(removedActions),
+	}
+}
+
+func opsWorkflowPathsFromInputs(inputs []string) []string {
+	paths := make([]string, 0, len(inputs))
+	for _, in := range inputs {
+		base := strings.ToLower(filepath.Base(in))
+		ext := strings.ToLower(filepath.Ext(base))
+		if ext != ".yaml" && ext != ".yml" {
+			continue
+		}
+		if !strings.HasPrefix(base, "operations") && !strings.HasPrefix(base, "workflow") {
+			continue
+		}
+		paths = append(paths, filepath.ToSlash(in))
+	}
+	return uniqueSortedStrings(paths)
+}
+
+func opsBaseWorkflowDoc(docs []opsWorkflowDoc) opsWorkflowDoc {
+	for _, doc := range docs {
+		base := strings.ToLower(filepath.Base(doc.Path))
+		if base == "operations.yaml" || base == "operations.yml" || base == "workflow.yaml" || base == "workflow.yml" {
+			return doc
+		}
+	}
+	return opsWorkflowDoc{}
+}
+
+func opsExecutionPolicyPathFromRepo(repo string, inputs []string) string {
+	knownBasenames := map[string]struct{}{
+		"execution-policy.yaml": {},
+		"execution-policy.yml":  {},
+		"workflow-policy.yaml":  {},
+		"workflow-policy.yml":   {},
+	}
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		base := strings.ToLower(filepath.Base(in))
+		if _, ok := knownBasenames[base]; !ok {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(repo, filepath.FromSlash(p))); err == nil {
+			return p
+		}
+	}
+
+	candidates := []string{
+		"platform/execution-policy.yaml",
+		"platform/execution-policy.yml",
+		"execution-policy.yaml",
+		"execution-policy.yml",
+		"platform/workflow-policy.yaml",
+		"platform/workflow-policy.yml",
+		"workflow-policy.yaml",
+		"workflow-policy.yml",
+	}
+	for _, candidate := range candidates {
+		if _, err := os.Stat(filepath.Join(repo, filepath.FromSlash(candidate))); err == nil {
+			return candidate
+		}
+	}
+	return ""
+}
+
+func parseOpsWorkflowFile(repo, path string) (opsWorkflowDoc, error) {
+	content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+	if err != nil {
+		return opsWorkflowDoc{}, err
+	}
+
+	doc := opsWorkflowDoc{Path: filepath.ToSlash(path)}
+	actionSet := map[string]struct{}{}
+
+	lines := strings.Split(string(content), "\n")
+	inWorkflow := false
+	workflowIndent := 0
+	inTriggers := false
+	triggersIndent := 0
+	inActions := false
+	actionsIndent := 0
+
+	for _, line := range lines {
+		raw := strings.TrimRight(line, "\r")
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		indent := len(raw) - len(strings.TrimLeft(raw, " "))
+
+		if inWorkflow && indent <= workflowIndent && !strings.HasPrefix(trimmed, "workflow:") {
+			inWorkflow = false
+		}
+		if inTriggers && indent <= triggersIndent && !strings.HasPrefix(trimmed, "triggers:") {
+			inTriggers = false
+		}
+		if inActions && indent <= actionsIndent && !strings.HasPrefix(trimmed, "actions:") {
+			inActions = false
+		}
+
+		if strings.HasPrefix(trimmed, "workflow:") {
+			inWorkflow = true
+			workflowIndent = indent
+			continue
+		}
+		if strings.HasPrefix(trimmed, "triggers:") {
+			inTriggers = true
+			triggersIndent = indent
+			continue
+		}
+		if strings.HasPrefix(trimmed, "actions:") {
+			inActions = true
+			actionsIndent = indent
+			continue
+		}
+
+		if inWorkflow && strings.HasPrefix(trimmed, "name:") && indent >= workflowIndent+2 {
+			doc.WorkflowName = parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "name:")))
+			continue
+		}
+		if inTriggers && strings.HasPrefix(trimmed, "schedule:") && indent >= triggersIndent+2 {
+			doc.Schedule = parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "schedule:")))
+			continue
+		}
+		if inActions && indent == actionsIndent+2 && strings.HasSuffix(trimmed, ":") {
+			action := strings.TrimSpace(strings.TrimSuffix(trimmed, ":"))
+			if action != "" {
+				actionSet[action] = struct{}{}
+			}
+			continue
+		}
+	}
+
+	doc.ActionNames = sortedStringSet(actionSet)
+	return doc, nil
+}
+
+func parseOpsExecutionPolicyFile(repo, path string) (opsExecutionPolicy, error) {
+	content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+	if err != nil {
+		return opsExecutionPolicy{}, err
+	}
+
+	policy := opsExecutionPolicy{Path: filepath.ToSlash(path)}
+	allowedSet := map[string]struct{}{}
+	blockedSet := map[string]struct{}{}
+	approvalSet := map[string]struct{}{}
+
+	lines := strings.Split(string(content), "\n")
+	inSpec := false
+	specIndent := 0
+	mode := ""
+	currentApprovalEnv := ""
+	currentApprovalCount := ""
+
+	for _, line := range lines {
+		raw := strings.TrimRight(line, "\r")
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		indent := len(raw) - len(strings.TrimLeft(raw, " "))
+
+		if strings.HasPrefix(trimmed, "spec:") {
+			inSpec = true
+			specIndent = indent
+			mode = ""
+			currentApprovalEnv = ""
+			currentApprovalCount = ""
+			continue
+		}
+		if !inSpec {
+			continue
+		}
+		if indent <= specIndent {
+			inSpec = false
+			mode = ""
+			currentApprovalEnv = ""
+			currentApprovalCount = ""
+			continue
+		}
+
+		if indent == specIndent+2 && strings.Contains(trimmed, ":") {
+			if mode == "approval_gates" && currentApprovalEnv != "" && currentApprovalCount != "" {
+				approvalSet[currentApprovalEnv+":"+currentApprovalCount] = struct{}{}
+			}
+			parts := strings.SplitN(trimmed, ":", 2)
+			mode = strings.TrimSpace(parts[0])
+			value := ""
+			if len(parts) == 2 {
+				value = strings.TrimSpace(parts[1])
+			}
+			currentApprovalEnv = ""
+			currentApprovalCount = ""
+
+			switch mode {
+			case "allowed_actions":
+				for _, item := range parseYAMLInlineList(value) {
+					allowedSet[item] = struct{}{}
+				}
+			case "blocked_actions":
+				for _, item := range parseYAMLInlineList(value) {
+					blockedSet[item] = struct{}{}
+				}
+			}
+			continue
+		}
+
+		switch mode {
+		case "allowed_actions":
+			if strings.HasPrefix(trimmed, "- ") {
+				value := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "- ")))
+				if value != "" {
+					allowedSet[value] = struct{}{}
+				}
+			}
+		case "blocked_actions":
+			if strings.HasPrefix(trimmed, "- ") {
+				value := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "- ")))
+				if value != "" {
+					blockedSet[value] = struct{}{}
+				}
+			}
+		case "approval_gates":
+			if indent == specIndent+4 && strings.HasSuffix(trimmed, ":") {
+				if currentApprovalEnv != "" && currentApprovalCount != "" {
+					approvalSet[currentApprovalEnv+":"+currentApprovalCount] = struct{}{}
+				}
+				currentApprovalEnv = parseYAMLScalar(strings.TrimSuffix(trimmed, ":"))
+				currentApprovalCount = ""
+				continue
+			}
+			if currentApprovalEnv != "" && strings.HasPrefix(trimmed, "required_approvals:") {
+				currentApprovalCount = parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "required_approvals:")))
+			}
+		}
+	}
+	if currentApprovalEnv != "" && currentApprovalCount != "" {
+		approvalSet[currentApprovalEnv+":"+currentApprovalCount] = struct{}{}
+	}
+
+	policy.AllowedActions = sortedStringSet(allowedSet)
+	policy.BlockedActions = sortedStringSet(blockedSet)
+	policy.ApprovalGates = sortedStringSet(approvalSet)
+	return policy, nil
+}
+
 type swampHints struct {
 	BaseConfigPath string
 	WorkflowPath   string
@@ -1667,6 +2025,647 @@ func swampPathHintsFromInputs(inputs []string) swampHints {
 		}
 	}
 	return h
+}
+
+type swampWorkflowDoc struct {
+	Path            string
+	StepNames       []string
+	ModelRefs       []string
+	MethodRefs      []string
+	ModelMethodRefs []string
+	JobStepCounts   map[string]int
+}
+
+type swampPolicy struct {
+	Path                 string
+	ApprovedModels       []string
+	ApprovedModelMethods []string
+	RequiredSteps        []string
+	ForbiddenStepNames   []string
+	MaxStepsPerJob       int
+	MaxParallelJobs      int
+}
+
+func swampWorkflowAnalysisForGenerator(detection model.DetectionResult, g model.GeneratorDetection) *model.SwampWorkflowAnalysis {
+	if g.Kind != model.GeneratorSwamp {
+		return nil
+	}
+
+	workflowPaths := swampWorkflowPathsFromInputs(g.Inputs)
+	if len(workflowPaths) == 0 {
+		return nil
+	}
+
+	docs := make([]swampWorkflowDoc, 0, len(workflowPaths))
+	for _, path := range workflowPaths {
+		doc, err := parseSwampWorkflowFile(detection.Repo, path)
+		if err != nil {
+			continue
+		}
+		docs = append(docs, doc)
+	}
+	if len(docs) == 0 {
+		return nil
+	}
+
+	policyPath := swampPolicyPathFromRepo(detection.Repo, g.Inputs)
+	policy := swampPolicy{}
+	if policyPath != "" {
+		if parsed, err := parseSwampPolicyFile(detection.Repo, policyPath); err == nil {
+			policy = parsed
+		}
+	}
+
+	stepSet := map[string]struct{}{}
+	modelSet := map[string]struct{}{}
+	methodSet := map[string]struct{}{}
+	modelMethodSet := map[string]struct{}{}
+	jobsExceedingMax := make([]string, 0)
+
+	totalJobs := 0
+	totalSteps := 0
+	maxJobsInWorkflow := 0
+
+	for _, doc := range docs {
+		totalJobs += len(doc.JobStepCounts)
+		totalSteps += len(doc.StepNames)
+		if len(doc.JobStepCounts) > maxJobsInWorkflow {
+			maxJobsInWorkflow = len(doc.JobStepCounts)
+		}
+
+		for _, step := range doc.StepNames {
+			stepSet[step] = struct{}{}
+		}
+		for _, modelRef := range doc.ModelRefs {
+			modelSet[modelRef] = struct{}{}
+		}
+		for _, methodRef := range doc.MethodRefs {
+			methodSet[methodRef] = struct{}{}
+		}
+		for _, modelMethodRef := range doc.ModelMethodRefs {
+			modelMethodSet[modelMethodRef] = struct{}{}
+		}
+
+		if policy.MaxStepsPerJob > 0 {
+			jobNames := make([]string, 0, len(doc.JobStepCounts))
+			for jobName := range doc.JobStepCounts {
+				jobNames = append(jobNames, jobName)
+			}
+			sort.Strings(jobNames)
+			for _, jobName := range jobNames {
+				stepCount := doc.JobStepCounts[jobName]
+				if stepCount <= policy.MaxStepsPerJob {
+					continue
+				}
+				jobsExceedingMax = append(
+					jobsExceedingMax,
+					fmt.Sprintf("%s:%s(%d)", doc.Path, jobName, stepCount),
+				)
+			}
+		}
+	}
+
+	stepNames := sortedStringSet(stepSet)
+	modelRefs := sortedStringSet(modelSet)
+	methodRefs := sortedStringSet(methodSet)
+	modelMethodRefs := sortedStringSet(modelMethodSet)
+
+	requiredSteps := uniqueSortedStrings(policy.RequiredSteps)
+	approvedModels := uniqueSortedStrings(policy.ApprovedModels)
+	approvedModelMethods := uniqueSortedStrings(policy.ApprovedModelMethods)
+	forbiddenStepNames := uniqueSortedStrings(policy.ForbiddenStepNames)
+	jobsExceedingMax = uniqueSortedStrings(jobsExceedingMax)
+
+	missingRequiredSteps := differenceStrings(requiredSteps, stepNames)
+	forbiddenStepsPresent := intersectionStrings(stepNames, forbiddenStepNames)
+	unapprovedModels := differenceAgainstAllowList(modelRefs, approvedModels)
+	unapprovedModelMethods := differenceAgainstAllowList(modelMethodRefs, approvedModelMethods)
+
+	baseDoc := docs[0]
+	addedSteps := make([]string, 0)
+	removedSteps := make([]string, 0)
+	addedModelMethods := make([]string, 0)
+	removedModelMethods := make([]string, 0)
+	for _, doc := range docs[1:] {
+		addedSteps = append(addedSteps, differenceStrings(doc.StepNames, baseDoc.StepNames)...)
+		removedSteps = append(removedSteps, differenceStrings(baseDoc.StepNames, doc.StepNames)...)
+		addedModelMethods = append(addedModelMethods, differenceStrings(doc.ModelMethodRefs, baseDoc.ModelMethodRefs)...)
+		removedModelMethods = append(removedModelMethods, differenceStrings(baseDoc.ModelMethodRefs, doc.ModelMethodRefs)...)
+	}
+
+	workflowPathValues := make([]string, 0, len(docs))
+	for _, doc := range docs {
+		workflowPathValues = append(workflowPathValues, doc.Path)
+	}
+
+	return &model.SwampWorkflowAnalysis{
+		WorkflowPaths:          uniqueSortedStrings(workflowPathValues),
+		BaseWorkflowPath:       baseDoc.Path,
+		PolicyPath:             policy.Path,
+		StepNames:              stepNames,
+		ModelRefs:              modelRefs,
+		MethodRefs:             methodRefs,
+		ModelMethodRefs:        modelMethodRefs,
+		ApprovedModels:         approvedModels,
+		ApprovedModelMethods:   approvedModelMethods,
+		RequiredSteps:          requiredSteps,
+		MissingRequiredSteps:   missingRequiredSteps,
+		UnapprovedModels:       unapprovedModels,
+		UnapprovedModelMethods: unapprovedModelMethods,
+		ForbiddenStepNames:     forbiddenStepNames,
+		ForbiddenStepsPresent:  forbiddenStepsPresent,
+		MaxStepsPerJob:         policy.MaxStepsPerJob,
+		MaxParallelJobs:        policy.MaxParallelJobs,
+		TotalJobs:              totalJobs,
+		TotalSteps:             totalSteps,
+		JobsExceedingMaxSteps:  jobsExceedingMax,
+		ExceedsMaxParallelJobs: policy.MaxParallelJobs > 0 && maxJobsInWorkflow > policy.MaxParallelJobs,
+		AddedSteps:             uniqueSortedStrings(addedSteps),
+		RemovedSteps:           uniqueSortedStrings(removedSteps),
+		AddedModelMethodRefs:   uniqueSortedStrings(addedModelMethods),
+		RemovedModelMethodRefs: uniqueSortedStrings(removedModelMethods),
+	}
+}
+
+func swampWorkflowPathsFromInputs(inputs []string) []string {
+	paths := make([]string, 0, len(inputs))
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		base := strings.ToLower(filepath.Base(in))
+		ext := strings.ToLower(filepath.Ext(base))
+		if !strings.HasPrefix(base, "workflow-") {
+			continue
+		}
+		if ext != ".yaml" && ext != ".yml" {
+			continue
+		}
+		paths = append(paths, p)
+	}
+	return uniqueSortedStrings(paths)
+}
+
+func swampPolicyPathFromRepo(repo string, inputs []string) string {
+	knownBasenames := map[string]struct{}{
+		"swamp-constraints.yaml": {},
+		"swamp-constraints.yml":  {},
+		"workflow-policy.yaml":   {},
+		"workflow-policy.yml":    {},
+	}
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		base := strings.ToLower(filepath.Base(in))
+		if _, ok := knownBasenames[base]; !ok {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(repo, filepath.FromSlash(p))); err == nil {
+			return p
+		}
+	}
+
+	candidates := []string{
+		"platform/swamp-constraints.yaml",
+		"platform/swamp-constraints.yml",
+		"swamp-constraints.yaml",
+		"swamp-constraints.yml",
+		"platform/workflow-policy.yaml",
+		"platform/workflow-policy.yml",
+		"workflow-policy.yaml",
+		"workflow-policy.yml",
+	}
+	for _, candidate := range candidates {
+		if _, err := os.Stat(filepath.Join(repo, filepath.FromSlash(candidate))); err == nil {
+			return candidate
+		}
+	}
+	return ""
+}
+
+func parseSwampWorkflowFile(repo, path string) (swampWorkflowDoc, error) {
+	content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+	if err != nil {
+		return swampWorkflowDoc{}, err
+	}
+
+	doc := swampWorkflowDoc{
+		Path:          filepath.ToSlash(path),
+		JobStepCounts: map[string]int{},
+	}
+	stepSet := map[string]struct{}{}
+	modelSet := map[string]struct{}{}
+	methodSet := map[string]struct{}{}
+	modelMethodSet := map[string]struct{}{}
+
+	lines := strings.Split(string(content), "\n")
+	inJobs := false
+	jobsIndent := 0
+	inSteps := false
+	stepsIndent := 0
+	currentJob := ""
+	inTask := false
+	taskIndent := 0
+	taskModel := ""
+	taskMethod := ""
+
+	finalizeTask := func() {
+		if taskModel != "" && taskMethod != "" {
+			modelMethodSet[taskModel+"."+taskMethod] = struct{}{}
+		}
+		taskModel = ""
+		taskMethod = ""
+	}
+
+	for _, line := range lines {
+		raw := strings.TrimRight(line, "\r")
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		indent := len(raw) - len(strings.TrimLeft(raw, " "))
+
+		if inTask && indent <= taskIndent && !strings.HasPrefix(trimmed, "task:") {
+			finalizeTask()
+			inTask = false
+		}
+		if inSteps && indent <= stepsIndent && !strings.HasPrefix(trimmed, "steps:") {
+			inSteps = false
+		}
+		if inJobs && indent <= jobsIndent && !strings.HasPrefix(trimmed, "jobs:") {
+			inJobs = false
+			currentJob = ""
+		}
+
+		if strings.HasPrefix(trimmed, "jobs:") {
+			inJobs = true
+			jobsIndent = indent
+			continue
+		}
+
+		if inJobs && indent == jobsIndent+2 && strings.HasPrefix(trimmed, "- name:") {
+			currentJob = parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "- name:")))
+			if currentJob == "" {
+				currentJob = fmt.Sprintf("job-%d", len(doc.JobStepCounts)+1)
+			}
+			if _, ok := doc.JobStepCounts[currentJob]; !ok {
+				doc.JobStepCounts[currentJob] = 0
+			}
+			continue
+		}
+
+		if inJobs && strings.HasPrefix(trimmed, "steps:") {
+			inSteps = true
+			stepsIndent = indent
+			continue
+		}
+
+		if inSteps {
+			if strings.HasPrefix(trimmed, "- name:") {
+				step := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "- name:")))
+				if step != "" {
+					stepSet[step] = struct{}{}
+					if currentJob != "" {
+						doc.JobStepCounts[currentJob]++
+					}
+				}
+				continue
+			}
+			if strings.HasPrefix(trimmed, "name:") && indent >= stepsIndent+2 {
+				step := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "name:")))
+				if step != "" {
+					stepSet[step] = struct{}{}
+					if currentJob != "" {
+						doc.JobStepCounts[currentJob]++
+					}
+				}
+				continue
+			}
+		}
+
+		if strings.HasPrefix(trimmed, "task:") {
+			inTask = true
+			taskIndent = indent
+			taskModel = ""
+			taskMethod = ""
+			continue
+		}
+
+		if inTask && strings.HasPrefix(trimmed, "modelIdOrName:") {
+			modelRef := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "modelIdOrName:")))
+			if modelRef != "" {
+				modelSet[modelRef] = struct{}{}
+				taskModel = modelRef
+			}
+			continue
+		}
+		if inTask && strings.HasPrefix(trimmed, "methodName:") {
+			methodRef := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "methodName:")))
+			if methodRef != "" {
+				methodSet[methodRef] = struct{}{}
+				taskMethod = methodRef
+			}
+			continue
+		}
+	}
+
+	if inTask {
+		finalizeTask()
+	}
+
+	doc.StepNames = sortedStringSet(stepSet)
+	doc.ModelRefs = sortedStringSet(modelSet)
+	doc.MethodRefs = sortedStringSet(methodSet)
+	doc.ModelMethodRefs = sortedStringSet(modelMethodSet)
+	return doc, nil
+}
+
+func parseSwampPolicyFile(repo, path string) (swampPolicy, error) {
+	content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+	if err != nil {
+		return swampPolicy{}, err
+	}
+
+	policy := swampPolicy{
+		Path: filepath.ToSlash(path),
+	}
+	approvedModelSet := map[string]struct{}{}
+	approvedModelMethodSet := map[string]struct{}{}
+	requiredStepSet := map[string]struct{}{}
+	forbiddenStepSet := map[string]struct{}{}
+
+	lines := strings.Split(string(content), "\n")
+	inSpec := false
+	specIndent := 0
+	mode := ""
+	currentModelMethodsKey := ""
+
+	for _, line := range lines {
+		raw := strings.TrimRight(line, "\r")
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		indent := len(raw) - len(strings.TrimLeft(raw, " "))
+
+		if strings.HasPrefix(trimmed, "spec:") {
+			inSpec = true
+			specIndent = indent
+			mode = ""
+			currentModelMethodsKey = ""
+			continue
+		}
+		if !inSpec {
+			continue
+		}
+		if indent <= specIndent {
+			inSpec = false
+			mode = ""
+			currentModelMethodsKey = ""
+			continue
+		}
+
+		if indent == specIndent+2 && strings.Contains(trimmed, ":") {
+			parts := strings.SplitN(trimmed, ":", 2)
+			mode = strings.TrimSpace(parts[0])
+			value := ""
+			if len(parts) == 2 {
+				value = strings.TrimSpace(parts[1])
+			}
+			currentModelMethodsKey = ""
+
+			switch mode {
+			case "max_steps_per_job":
+				if parsed, parseErr := strconv.Atoi(parseYAMLScalar(value)); parseErr == nil {
+					policy.MaxStepsPerJob = parsed
+				}
+			case "max_parallel_jobs":
+				if parsed, parseErr := strconv.Atoi(parseYAMLScalar(value)); parseErr == nil {
+					policy.MaxParallelJobs = parsed
+				}
+			case "approved_models":
+				for _, item := range parseYAMLInlineList(value) {
+					if item == "" {
+						continue
+					}
+					approvedModelSet[item] = struct{}{}
+				}
+			case "forbidden_step_names":
+				for _, item := range parseYAMLInlineList(value) {
+					if item == "" {
+						continue
+					}
+					forbiddenStepSet[item] = struct{}{}
+				}
+			case "required_steps":
+				for _, item := range parseYAMLInlineList(value) {
+					if item == "" {
+						continue
+					}
+					requiredStepSet[item] = struct{}{}
+				}
+			}
+			continue
+		}
+
+		switch mode {
+		case "approved_models":
+			if strings.HasPrefix(trimmed, "- ") {
+				modelRef := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "- ")))
+				if modelRef != "" {
+					approvedModelSet[modelRef] = struct{}{}
+				}
+			}
+		case "approved_model_methods":
+			if indent == specIndent+4 && strings.Contains(trimmed, ":") {
+				parts := strings.SplitN(trimmed, ":", 2)
+				currentModelMethodsKey = parseYAMLScalar(parts[0])
+				inline := ""
+				if len(parts) == 2 {
+					inline = strings.TrimSpace(parts[1])
+				}
+				for _, method := range parseYAMLInlineList(inline) {
+					if currentModelMethodsKey == "" || method == "" {
+						continue
+					}
+					approvedModelMethodSet[currentModelMethodsKey+"."+method] = struct{}{}
+				}
+				continue
+			}
+			if indent >= specIndent+6 && strings.HasPrefix(trimmed, "- ") && currentModelMethodsKey != "" {
+				method := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "- ")))
+				if method != "" {
+					approvedModelMethodSet[currentModelMethodsKey+"."+method] = struct{}{}
+				}
+			}
+		case "required_steps":
+			if strings.HasPrefix(trimmed, "- name:") {
+				step := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "- name:")))
+				if step != "" {
+					requiredStepSet[step] = struct{}{}
+				}
+				continue
+			}
+			if strings.HasPrefix(trimmed, "name:") && indent >= specIndent+4 {
+				step := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "name:")))
+				if step != "" {
+					requiredStepSet[step] = struct{}{}
+				}
+				continue
+			}
+			if strings.HasPrefix(trimmed, "- ") {
+				step := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "- ")))
+				if step != "" {
+					requiredStepSet[step] = struct{}{}
+				}
+			}
+		case "forbidden_step_names":
+			if strings.HasPrefix(trimmed, "- ") {
+				step := parseYAMLScalar(strings.TrimSpace(strings.TrimPrefix(trimmed, "- ")))
+				if step != "" {
+					forbiddenStepSet[step] = struct{}{}
+				}
+			}
+		}
+	}
+
+	policy.ApprovedModels = sortedStringSet(approvedModelSet)
+	policy.ApprovedModelMethods = sortedStringSet(approvedModelMethodSet)
+	policy.RequiredSteps = sortedStringSet(requiredStepSet)
+	policy.ForbiddenStepNames = sortedStringSet(forbiddenStepSet)
+	return policy, nil
+}
+
+func parseYAMLScalar(raw string) string {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return ""
+	}
+	if idx := strings.Index(value, " #"); idx >= 0 {
+		value = strings.TrimSpace(value[:idx])
+	}
+	if len(value) >= 2 {
+		if (value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'') {
+			value = value[1 : len(value)-1]
+		}
+	}
+	return strings.TrimSpace(value)
+}
+
+func parseYAMLInlineList(raw string) []string {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return nil
+	}
+	if !strings.HasPrefix(value, "[") || !strings.HasSuffix(value, "]") {
+		return nil
+	}
+	body := strings.TrimSpace(value[1 : len(value)-1])
+	if body == "" {
+		return nil
+	}
+	parts := strings.Split(body, ",")
+	items := make([]string, 0, len(parts))
+	for _, part := range parts {
+		item := parseYAMLScalar(part)
+		if item == "" {
+			continue
+		}
+		items = append(items, item)
+	}
+	return uniqueSortedStrings(items)
+}
+
+func sortedStringSet(in map[string]struct{}) []string {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(in))
+	for value := range in {
+		if strings.TrimSpace(value) == "" {
+			continue
+		}
+		out = append(out, value)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func uniqueSortedStrings(values []string) []string {
+	if len(values) == 0 {
+		return nil
+	}
+	set := map[string]struct{}{}
+	for _, value := range values {
+		key := strings.TrimSpace(value)
+		if key == "" {
+			continue
+		}
+		set[key] = struct{}{}
+	}
+	return sortedStringSet(set)
+}
+
+func differenceStrings(values, baseline []string) []string {
+	if len(values) == 0 {
+		return nil
+	}
+	baselineSet := map[string]struct{}{}
+	for _, v := range baseline {
+		baselineSet[strings.TrimSpace(v)] = struct{}{}
+	}
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		key := strings.TrimSpace(value)
+		if key == "" {
+			continue
+		}
+		if _, ok := baselineSet[key]; ok {
+			continue
+		}
+		out = append(out, key)
+	}
+	return uniqueSortedStrings(out)
+}
+
+func intersectionStrings(a, b []string) []string {
+	if len(a) == 0 || len(b) == 0 {
+		return nil
+	}
+	setB := map[string]struct{}{}
+	for _, value := range b {
+		setB[strings.TrimSpace(value)] = struct{}{}
+	}
+	out := make([]string, 0, len(a))
+	for _, value := range a {
+		key := strings.TrimSpace(value)
+		if key == "" {
+			continue
+		}
+		if _, ok := setB[key]; ok {
+			out = append(out, key)
+		}
+	}
+	return uniqueSortedStrings(out)
+}
+
+func differenceAgainstAllowList(observed, allowList []string) []string {
+	if len(observed) == 0 || len(allowList) == 0 {
+		return nil
+	}
+	allowedSet := map[string]struct{}{}
+	for _, value := range allowList {
+		allowedSet[strings.TrimSpace(value)] = struct{}{}
+	}
+	out := make([]string, 0, len(observed))
+	for _, value := range observed {
+		key := strings.TrimSpace(value)
+		if key == "" {
+			continue
+		}
+		if _, ok := allowedSet[key]; ok {
+			continue
+		}
+		out = append(out, key)
+	}
+	return uniqueSortedStrings(out)
 }
 
 func inferInputSchema(kind model.GeneratorKind, inputPath string) string {

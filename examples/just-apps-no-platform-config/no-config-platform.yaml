@@ -1,4 +1,4 @@
-service: ably
+service: no-config-platform
 app:
   name: checkout-api
   environment: production
@@ -6,4 +6,4 @@ channels:
   inbound: checkout.inbound
   outbound: checkout.outbound
 credentials:
-  api_key_ref: ABLY_API_KEY
+  api_key_ref: PROVIDER_API_KEY

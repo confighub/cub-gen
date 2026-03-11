@@ -169,6 +169,48 @@
           "wet_path": "Workflow/spec/schedule"
         }
       ],
+      "ops_workflow_analysis": {
+        "action_names": [
+          "deploy",
+          "restart"
+        ],
+        "allowed_actions": [
+          "deploy",
+          "restart",
+          "rollback",
+          "scale"
+        ],
+        "approval_gates": [
+          "production:1",
+          "staging:0"
+        ],
+        "base_workflow_path": "operations.yaml",
+        "blocked_actions": [
+          "destroy",
+          "force-restart"
+        ],
+        "overlay_workflow_paths": [
+          "operations-prod.yaml"
+        ],
+        "policy_path": "platform/execution-policy.yaml",
+        "removed_actions": [
+          "restart"
+        ],
+        "schedule_overrides": [
+          "operations-prod.yaml:0 3 * * *"
+        ],
+        "schedules": [
+          "0 2 * * *",
+          "0 3 * * *"
+        ],
+        "workflow_names": [
+          "release-maintenance"
+        ],
+        "workflow_paths": [
+          "operations-prod.yaml",
+          "operations.yaml"
+        ]
+      },
       "outputs": [
         {
           "digest": "\u003cdigest\u003e",

@@ -75,8 +75,8 @@ func TestVerifyAttestationGoldenLinkedBackstageJSON(t *testing.T) {
 	assertVerifyAttestationLinkedGolden(t, "backstage", "testdata/parity/verify-attestation-linked-backstage.json.golden.json")
 }
 
-func TestVerifyAttestationGoldenLinkedAblyJSON(t *testing.T) {
-	assertVerifyAttestationLinkedGolden(t, "ably", "testdata/parity/verify-attestation-linked-ably.json.golden.json")
+func TestVerifyAttestationGoldenLinkedNoConfigPlatformJSON(t *testing.T) {
+	assertVerifyAttestationLinkedGolden(t, "no-config-platform", "testdata/parity/verify-attestation-linked-no-config-platform.json.golden.json")
 }
 
 func TestVerifyAttestationGoldenLinkedOpsJSON(t *testing.T) {

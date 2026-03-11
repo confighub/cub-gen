@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-api
+  labels:
+    app.kubernetes.io/name: payments-api
+    app.kubernetes.io/part-of: commerce-platform
+    demo.confighub.io/revision: v2
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: payments-api
+  template:
+    metadata:
+      labels:
+        app: payments-api
+        demo.confighub.io/revision: v2
+    spec:
+      containers:
+        - name: payments-api
+          image: ghcr.io/example/payments-api:v1.0.9-canary
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080

@@ -53,6 +53,49 @@ cub-gen doesn't touch this layer — your existing reconciler stays in control.
 | `gitops/flux/helmrelease.yaml` | Platform team | Flux HelmRelease transport |
 | `gitops/argo/application.yaml` | Platform team | ArgoCD Application transport |
 
+## If you already run Helm heavily
+
+This example is written for teams that already depend on Helm conventions:
+
+- You keep app settings in `values*.yaml` and chart structure in `templates/`.
+- You use env overlays and still get disputes about "who should edit what".
+- You have drift incidents where people patch rendered manifests instead of DRY inputs.
+
+cub-gen is additive: it does not replace Helm templating or your reconciler. It
+adds ownership-aware tracing so Helm users can answer "which values key controls
+this deployed field?" without manual chart archaeology.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing Helm concept | cub-gen concept | Why it matters |
+|------|------|------|
+| `values.yaml` / `values-prod.yaml` | DRY app intent | Keep app-team edits in values files, not rendered manifests. |
+| `templates/*.yaml` | DRY platform contract | Platform structure stays explicit and reviewable. |
+| Rendered Kubernetes objects | WET targets with provenance | Every WET field is traced back to values or templates with confidence. |
+| Flux/Argo applying Helm output | LIVE state | Existing runtime path stays unchanged; only governance visibility is added. |
+
+## Advanced reality check: umbrella charts, overlays, and GitOps transports
+
+If you run Helm at enterprise scale, the pain is usually in merge precedence,
+not in writing templates:
+
+- umbrella chart values overriding subchart defaults,
+- environment overlays overriding umbrella defaults,
+- Flux/Argo transport layers adding extra value sources (`valuesFrom`, inline overrides),
+- OCI chart/version drift across many repos and clusters.
+
+This example is intentionally a single-chart baseline so new users can see the
+mapping quickly. In real environments, apply the same cub-gen flow at each
+layer where DRY intent exists:
+
+1. Chart + subchart value defaults (platform-owned contract layer).
+2. Environment overlays (app/ops-owned intent layer).
+3. Reconciler transport config (Flux `HelmRelease`, Argo `Application`).
+
+The key outcome does not change: every WET field should have one clear edit
+path and owner. That is what prevents "edit rendered manifests and hope" during
+incidents.
+
 ## Try it
 
 ```bash
@@ -100,7 +143,8 @@ featureFlags:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # Decision engine: image tag + feature flag are app-team owned → ALLOW
@@ -130,7 +174,8 @@ resources:
 
 # Produce evidence
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # Decision engine: template change is platform-owned → BLOCK
@@ -198,3 +243,16 @@ WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payme
   deploying an AI model orchestration runtime
 - **E2E demo script**: `../demo/module-1-helm-import.sh`
 - **Bridge governance demo**: `../demo/module-4-bridge-governance.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/helm-paas/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/helm-paas/demo-connected.sh
+```

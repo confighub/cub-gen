@@ -1,0 +1,151 @@
+# NOTE: This registry is illustrative. ConfigHub stores and serves these
+# operation schemas so portals/automation can discover operations, validate
+# inputs, and attach governance decisions before execution.
+
+apiVersion: confighub.io/v1
+kind: FrameworkRegistry
+
+metadata:
+  name: ops-workflow-platform
+  version: 1.0.0
+
+spec:
+  description: "Typed operations for governed operational workflows (deploy, restart, scale, rollback)"
+  homepage: "https://docs.acme-corp.com/ops-workflow-platform"
+
+  operations:
+    - name: defineWorkflow
+      description: "Create or update the workflow identity and default actions"
+      inputs:
+        type: object
+        properties:
+          name:
+            type: string
+            description: "Workflow name"
+            required: true
+          owner_team:
+            type: string
+            description: "Owning operations team"
+            required: true
+          actions:
+            type: array
+            description: "Allowed action list for this workflow"
+            required: true
+      outputs:
+        resources: [ConfigMap]
+      constraints:
+        - approved-workflow-actions
+        - no-destructive-actions
+      validation:
+        rules:
+          - condition: "inputs.actions.includes('destroy')"
+            message: "Destroy action is forbidden for standard operations workflows"
+            severity: error
+
+    - name: scheduleWorkflow
+      description: "Set execution schedule and environment target"
+      inputs:
+        type: object
+        properties:
+          cron:
+            type: string
+            description: "Cron schedule expression"
+            required: true
+          environment:
+            type: string
+            enum: [dev, staging, prod]
+            required: true
+      outputs:
+        resources: [CronJob]
+      constraints:
+        - maintenance-window-prod
+      validation:
+        rules:
+          - condition: "inputs.environment == 'prod' && inputs.cron == '*/5 * * * *'"
+            message: "High-frequency prod workflows require platform approval"
+            severity: error
+
+    - name: deployServiceAction
+      description: "Configure service image deployment action"
+      inputs:
+        type: object
+        properties:
+          service:
+            type: string
+            required: true
+          image_tag:
+            type: string
+            required: true
+      outputs:
+        resources: [Job]
+      constraints:
+        - semver-image-tags
+      validation:
+        rules:
+          - condition: "inputs.image_tag == 'latest'"
+            message: "latest image tag is blocked; use a semver tag"
+            severity: error
+
+    - name: restartServiceAction
+      description: "Configure controlled restart action"
+      inputs:
+        type: object
+        properties:
+          service:
+            type: string
+            required: true
+          reason:
+            type: string
+            required: false
+      outputs:
+        resources: [Job]
+      constraints:
+        - approved-workflow-actions
+
+    - name: scaleServiceAction
+      description: "Configure horizontal scaling action"
+      inputs:
+        type: object
+        properties:
+          service:
+            type: string
+            required: true
+          replicas:
+            type: integer
+            required: true
+      outputs:
+        resources: [Job]
+      constraints:
+        - approved-workflow-actions
+      validation:
+        rules:
+          - condition: "inputs.replicas < 1"
+            message: "Replica count must be at least 1"
+            severity: error
+
+    - name: rollbackServiceAction
+      description: "Configure rollback action to known-good version"
+      inputs:
+        type: object
+        properties:
+          service:
+            type: string
+            required: true
+          target_tag:
+            type: string
+            required: true
+      outputs:
+        resources: [Job]
+      constraints:
+        - semver-image-tags
+
+  constraints:
+    - approved-workflow-actions
+    - no-destructive-actions
+    - maintenance-window-prod
+    - semver-image-tags
+
+  produces:
+    - ConfigMap
+    - CronJob
+    - Job

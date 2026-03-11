@@ -43,10 +43,10 @@ func bridgeSymmetryMatrix() []exampleFamilyFixture {
 			expectedKind:    "backstage",
 		},
 		{
-			name:            "ably",
+			name:            "no-config-platform",
 			repoSuffix:      filepath.Join("examples", "just-apps-no-platform-config"),
-			expectedProfile: "ably-config",
-			expectedKind:    "ably",
+			expectedProfile: "no-config-platform",
+			expectedKind:    "no-config-platform",
 		},
 		{
 			name:            "ops",

@@ -5,9 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
-  unit:
+  local:
     name: Build + Unit
     runs-on: ubuntu-latest
     steps:
@@ -22,29 +23,112 @@ jobs:
         run: |
           test -z "$(gofmt -l .)" || (echo "Run gofmt on listed files" && gofmt -l . && exit 1)
 
-      - name: Build
-        run: go build ./cmd/cub-gen
-
       - name: Vet
         run: go vet ./...
 
-      - name: Unit tests
-        run: go test ./... -v
+      - name: Run local CI suite
+        run: make ci-local
 
-  parity:
+  connected:
     name: CLI Parity
+    needs: local
     runs-on: ubuntu-latest
-    needs: unit
+    env:
+      CONFIGHUB_BASE_URL: ${{ secrets.CONFIGHUB_BASE_URL }}
+      CONFIGHUB_SPACE: ${{ secrets.CONFIGHUB_SPACE }}
+      CONFIGHUB_TOKEN: ${{ secrets.CONFIGHUB_TOKEN }}
+      CONFIGHUB_USER: ci-bot
+      CONNECTED_FALLBACK_MODE: off
+      REQUIRE_TERMINAL_DECISION: "1"
+      ALLOW_FALLBACK_INGEST: "0"
+      ALLOW_STORY_10_SKIP: "0"
+      CLEANUP_CLUSTER: "1"
+      RUN_ID: ${{ github.run_id }}
+      WAVE_ID: wave-${{ github.run_id }}
+      APP_PR_REPO: ${{ vars.APP_PR_REPO || secrets.APP_PR_REPO }}
+      APP_PR_NUMBER: ${{ vars.APP_PR_NUMBER || secrets.APP_PR_NUMBER }}
+      PROMOTION_PR_REPO: ${{ vars.PROMOTION_PR_REPO || secrets.PROMOTION_PR_REPO }}
+      PROMOTION_PR_NUMBER: ${{ vars.PROMOTION_PR_NUMBER || secrets.PROMOTION_PR_NUMBER }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Determine connected prerequisites
+        id: connected-preflight
+        run: |
+          missing=()
+          for v in \
+            CONFIGHUB_BASE_URL \
+            CONFIGHUB_SPACE \
+            CONFIGHUB_TOKEN \
+            APP_PR_REPO \
+            APP_PR_NUMBER \
+            PROMOTION_PR_REPO \
+            PROMOTION_PR_NUMBER \
+            GH_TOKEN; do
+            if [ -z "${!v}" ]; then
+              missing+=("$v")
+            fi
+          done
+
+          if [ "${#missing[@]}" -eq 0 ]; then
+            echo "can_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "can_run=false" >> "$GITHUB_OUTPUT"
+          missing_csv="$(IFS=,; echo "${missing[*]}")"
+          echo "missing=$missing_csv" >> "$GITHUB_OUTPUT"
+
+      - name: Skip connected suite (missing credentials or fixture IDs)
+        if: steps.connected-preflight.outputs.can_run != 'true'
+        run: |
+          echo "Skipping connected CI suite."
+          echo "Missing required values: ${{ steps.connected-preflight.outputs.missing }}"
+          {
+            echo "### CI Connected skipped";
+            echo "";
+            echo "Missing required values:";
+            echo "";
+            echo '```';
+            echo "${{ steps.connected-preflight.outputs.missing }}";
+            echo '```';
+            echo "";
+            echo "To run connected CI, set ConfigHub credentials and Story 10 fixture identifiers.";
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Set up Go
+        if: steps.connected-preflight.outputs.can_run == 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
 
-      - name: Run contract tests
-        run: make test-contracts
+      - name: Install kind
+        if: steps.connected-preflight.outputs.can_run == 'true'
+        run: |
+          go install sigs.k8s.io/kind@v0.23.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
-      - name: Run bridge symmetry matrix
-        run: make test-bridge-symmetry
+      - name: Install Flux CLI
+        if: steps.connected-preflight.outputs.can_run == 'true'
+        run: curl -s https://fluxcd.io/install.sh | sudo bash
+
+      - name: Build cub CLI for connected scripts
+        if: steps.connected-preflight.outputs.can_run == 'true'
+        run: |
+          git clone --depth 1 https://github.com/confighubai/confighub.git /tmp/confighub
+          make -C /tmp/confighub build-cli
+          echo "/tmp/confighub/bin" >> "$GITHUB_PATH"
+
+      - name: Validate Story 10 proof inputs
+        if: steps.connected-preflight.outputs.can_run == 'true'
+        run: |
+          test -n "$APP_PR_REPO"
+          test -n "$APP_PR_NUMBER"
+          test -n "$PROMOTION_PR_REPO"
+          test -n "$PROMOTION_PR_NUMBER"
+          test -n "$GH_TOKEN"
+
+      - name: Run connected CI suite
+        if: steps.connected-preflight.outputs.can_run == 'true'
+        run: make ci-connected

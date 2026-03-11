@@ -135,7 +135,7 @@ Five self-contained demo modules, each runnable independently:
 ./examples/demo/module-2-score-field-map.sh
 ./examples/demo/module-3-spring-ownership.sh
 ./examples/demo/module-4-bridge-governance.sh
-./examples/demo/module-5-ably-platform.sh
+./examples/demo/module-5-no-config-platform.sh
 ```
 
 Or all at once:

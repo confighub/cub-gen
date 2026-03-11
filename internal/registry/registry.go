@@ -285,18 +285,18 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			{Kind: "ConfigMap", NameTemplate: "{{name}}-catalog", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "spec.lifecycle"},
 		},
 	},
-	model.GeneratorAbly: {
-		Kind:         model.GeneratorAbly,
-		Profile:      "ably-config",
+	model.GeneratorNoConfigPlatform: {
+		Kind:         model.GeneratorNoConfigPlatform,
+		Profile:      "no-config-platform",
 		ResourceKind: "ConfigMap",
 		ResourceType: "v1/ConfigMap",
 		Capabilities: []string{"app-config-only", "provider-config", "inverse-provider-config-patch"},
 		RoleSchemaRefs: map[string]string{
-			"provider-config-base":    "https://schema.confighub.dev/generators/ably-config-v1",
-			"provider-config-overlay": "https://schema.confighub.dev/generators/ably-config-v1",
+			"provider-config-base":    "https://schema.confighub.dev/generators/no-config-platform-v1",
+			"provider-config-overlay": "https://schema.confighub.dev/generators/no-config-platform-v1",
 		},
 		HintDefaults: map[string]string{
-			"base_config_path": "ably.yaml",
+			"base_config_path": "no-config-platform.yaml",
 		},
 		InversePatchReasons: map[string]string{
 			"environment": "Environment is sourced from {{base_config_path}}.",
@@ -321,21 +321,21 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"channels_overlay": 0.84,
 		},
 		RenderedLineageTemplates: []RenderedLineageTemplate{
-			{Kind: "ConfigMap", NameTemplate: "{{name}}-ably", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "app.environment"},
-			{Kind: "Secret", NameTemplate: "{{name}}-ably-credentials", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "credentials.api_key_ref"},
-			{Kind: "ConfigMap", NameTemplate: "{{name}}-ably", Namespace: "apps", SourcePathHint: "overlay_config_path", SourceDryPathTemplate: "channels.inbound", Optional: true},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-provider-config", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "app.environment"},
+			{Kind: "Secret", NameTemplate: "{{name}}-provider-credentials", Namespace: "apps", SourcePathHint: "base_config_path", SourceDryPathTemplate: "credentials.api_key_ref"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-provider-config", Namespace: "apps", SourcePathHint: "overlay_config_path", SourceDryPathTemplate: "channels.inbound", Optional: true},
 		},
-		FieldOriginTransform:        "ably-config-to-runtime",
-		FieldOriginOverlayTransform: "ably-overlay-merge",
+		FieldOriginTransform:        "no-config-platform-to-runtime",
+		FieldOriginOverlayTransform: "no-config-platform-overlay-merge",
 		InputRoleRules: []InputRoleRule{
-			{Role: "provider-config-base", ExactBasenames: []string{"ably.yaml", "ably.yml", "ably.json"}},
-			{Role: "provider-config-overlay", Prefixes: []string{"ably-"}, Extensions: []string{".yaml", ".yml", ".json"}},
+			{Role: "provider-config-base", ExactBasenames: []string{"no-config-platform.yaml", "no-config-platform.yml", "no-config-platform.json"}},
+			{Role: "provider-config-overlay", Prefixes: []string{"no-config-platform-"}, Extensions: []string{".yaml", ".yml", ".json"}},
 		},
 		DefaultInputRole: "provider-config",
 		DefaultOwner:     "app-team",
 		WetTargets: []WetTargetTemplate{
-			{Kind: "ConfigMap", NameTemplate: "{{name}}-ably", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "app.environment"},
-			{Kind: "Secret", NameTemplate: "{{name}}-ably-credentials", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "credentials.api_key_ref"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-provider-config", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "app.environment"},
+			{Kind: "Secret", NameTemplate: "{{name}}-provider-credentials", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "credentials.api_key_ref"},
 		},
 	},
 	model.GeneratorOpsFlow: {

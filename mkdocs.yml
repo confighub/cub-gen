@@ -1,5 +1,4 @@
 site_name: cub-gen
-site_url: https://confighub.github.io/cub-gen/
 site_description: Deterministic Git-native generator importer with command-shape parity to cub gitops
 repo_url: https://github.com/confighub/cub-gen
 repo_name: confighub/cub-gen
@@ -137,7 +136,7 @@ nav:
           - "Score.dev": triple-styles/style-b-markdown/score.md
           - "Spring Boot": triple-styles/style-b-markdown/springboot.md
           - "Backstage IDP": triple-styles/style-b-markdown/backstage.md
-          - "Ably Config": triple-styles/style-b-markdown/ably.md
+          - "No Config Platform Config": triple-styles/style-b-markdown/no-config-platform.md
           - "Ops Workflow": triple-styles/style-b-markdown/opsworkflow.md
           - "C3 Agent": triple-styles/style-b-markdown/c3agent.md
           - "Swamp": triple-styles/style-b-markdown/swamp.md
@@ -146,7 +145,7 @@ nav:
           - "Score.dev": triple-styles/style-c-yaml-plus-docs/score/triple.md
           - "Spring Boot": triple-styles/style-c-yaml-plus-docs/springboot/triple.md
           - "Backstage IDP": triple-styles/style-c-yaml-plus-docs/backstage/triple.md
-          - "Ably Config": triple-styles/style-c-yaml-plus-docs/ably/triple.md
+          - "No Config Platform Config": triple-styles/style-c-yaml-plus-docs/no-config-platform/triple.md
           - "Ops Workflow": triple-styles/style-c-yaml-plus-docs/opsworkflow/triple.md
           - "C3 Agent": triple-styles/style-c-yaml-plus-docs/c3agent/triple.md
           - "Swamp": triple-styles/style-c-yaml-plus-docs/swamp/triple.md

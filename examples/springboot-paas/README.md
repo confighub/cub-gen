@@ -57,6 +57,53 @@ manifests to LIVE state. cub-gen doesn't touch your reconciler.
 | `gitops/flux/kustomization.yaml` | Platform | Flux Kustomization transport |
 | `gitops/argo/application.yaml` | Platform | ArgoCD Application transport |
 
+## If you already ship Spring Boot services
+
+This example targets teams that already standardize around Spring profiles and
+application config:
+
+- Developers own `application.yaml` behavior and feature toggles.
+- Platform teams enforce datasource, SLO, and operational controls.
+- Production issues still require brittle mapping from runtime fields back to
+  Spring config keys.
+
+cub-gen keeps Spring config as the source contract and makes the mapping to
+runtime manifests explicit, including ownership boundaries by field.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing Spring model | cub-gen concept | Why it matters |
+|------|------|------|
+| `application*.yaml` + profiles | DRY intent | Spring remains the authoring interface for app teams. |
+| Spring-to-K8s transformation | WET targets with provenance | Each runtime field can be traced back to a Spring property. |
+| Datasource and secret controls | Ownership + policy gates | Sensitive changes can be blocked/escalated before deploy. |
+| Flux/Argo deployment path | LIVE state | Existing deployment runtime remains unchanged. |
+
+## Advanced reality check: profile chains and developer workflow
+
+Real Spring Boot shops rely on profile resolution, and that is where ownership
+bugs hide. A practical trace should answer:
+
+```
+application.yaml        -> server.port = 8080   (base)
+application-dev.yaml    -> server.port = 9090   (dev override)
+application-prod.yaml   -> server.port = 8081   (prod override)
+active profile: prod
+effective value: 8081 (origin: application-prod.yaml)
+```
+
+For developer adoption, keep cub-gen in CI and return decisions in Spring terms
+instead of Kubernetes terms. The useful message is:
+
+`spring.datasource.hikari.maximum-pool-size` is platform-managed -> BLOCK.
+
+Not:
+
+`Deployment/spec/template/...` changed.
+
+That is why this example treats Spring property namespaces as first-class
+ownership boundaries.
+
 ## Try it
 
 ```bash
@@ -104,7 +151,8 @@ feature:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # Decision engine: server.port + feature.* are app-owned → ALLOW
@@ -130,7 +178,8 @@ spring:
 
 # Evidence chain
 ./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas > bundle.json
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # Decision engine: spring.datasource.* is platform-owned → BLOCK
@@ -196,3 +245,16 @@ WET:  Deployment/spec/template/spec/containers[0]/env[name=SERVER_PORT]/value = 
   workload specs
 - **E2E demo**: `../demo/module-3-spring-ownership.sh`
 - **Worked example**: `../../docs/agentic-gitops/03-worked-examples/03-spring-boot-dry-wet-unit-worked-example.md`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/springboot-paas/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/springboot-paas/demo-connected.sh
+```

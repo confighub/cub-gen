@@ -56,6 +56,26 @@ confidence, inverse-edit hints, and provenance digest.
 | `storage.*` | PersistentVolumeClaim | Task data volume |
 | (implicit) | ServiceAccount, ClusterRole, CRB | RBAC for agent workloads |
 
+## If you already run AI/ops platforms on Kubernetes
+
+This example is for platform teams supporting autonomous agent workloads:
+
+- App and AI teams want a short, high-level fleet interface.
+- Platform teams still need strict policy on model, budget, credentials, and RBAC.
+- Runtime fan-out (1 DRY spec -> many Kubernetes resources) must remain auditable.
+
+cub-gen lets app teams stay in high-level fleet config while platform teams keep
+deterministic control of generated runtime and governance decisions.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing AI platform model | cub-gen concept | Why it matters |
+|------|------|------|
+| Fleet config (`c3agent*.yaml`) | DRY intent | Teams declare desired behavior, not low-level Kubernetes objects. |
+| Fleet runtime resources (11 targets) | WET targets with provenance | Every generated object is linked to the source field and owner. |
+| Registry + constraints | Verification/governance loop | Policy checks and attestable decisions can gate autonomous changes. |
+| Flux/Argo reconciliation | LIVE state | Existing GitOps runtime still executes deploys and drift correction. |
+
 ## Try it
 
 ```bash
@@ -103,7 +123,8 @@ agent_runtime:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by platform-owner --reason "ML review fleet approved"
@@ -155,3 +176,16 @@ Platform guardrails with enforcement levels:
 - **AI workflow governance**: [`swamp-automation`](../swamp-automation/) —
   DAG workflows with model binding governance
 - **E2E demo**: `../demo/ai-work-platform/scenario-1-c3agent.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/ai-ops-paas/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/ai-ops-paas/demo-connected.sh
+```

@@ -1,0 +1,126 @@
+# NOTE: This registry is illustrative. It declares the workflow operations
+# teams expose for Swamp-based automation so ConfigHub can validate and audit
+# workflow changes using typed schemas.
+
+apiVersion: confighub.io/v1
+kind: FrameworkRegistry
+
+metadata:
+  name: swamp-workflow-platform
+  version: 1.0.0
+
+spec:
+  description: "Typed operations for AI-authored Swamp workflow changes"
+  homepage: "https://docs.acme-corp.com/swamp-workflow-platform"
+
+  operations:
+    - name: defineWorkflow
+      description: "Create or update workflow identity and job graph metadata"
+      inputs:
+        type: object
+        properties:
+          workflow_id:
+            type: string
+            description: "Workflow identifier"
+            required: true
+          workflow_name:
+            type: string
+            description: "Human-readable workflow name"
+            required: true
+      outputs:
+        resources: [ConfigMap]
+
+    - name: addModelMethodStep
+      description: "Add a typed model-method step to a workflow job"
+      inputs:
+        type: object
+        properties:
+          job:
+            type: string
+            description: "Job name receiving the new step"
+            required: true
+          step_name:
+            type: string
+            description: "Step identifier"
+            required: true
+          model:
+            type: string
+            description: "Swamp model ID/name"
+            required: true
+          method:
+            type: string
+            description: "Model method name"
+            required: true
+      outputs:
+        resources: [ConfigMap]
+      constraints:
+        - approved-model-methods
+      validation:
+        rules:
+          - condition: "inputs.model == 'credential-rotator' && inputs.method != 'rotate'"
+            message: "credential-rotator may only use rotate method"
+            severity: error
+
+    - name: requireValidationStep
+      description: "Ensure validate step remains in each deployment flow"
+      inputs:
+        type: object
+        properties:
+          required_step:
+            type: string
+            description: "Required step name"
+            default: validate
+      outputs:
+        resources: [ConfigMap]
+      constraints:
+        - required-validate-step
+
+    - name: setExecutionWindow
+      description: "Define when production workflows are allowed to run"
+      inputs:
+        type: object
+        properties:
+          environment:
+            type: string
+            enum: [dev, staging, prod]
+            required: true
+          window:
+            type: string
+            description: "Allowed execution window"
+            required: true
+      outputs:
+        resources: [ConfigMap]
+      constraints:
+        - execution-window-policy
+
+    - name: configureVaultPolicy
+      description: "Set local vault requirements for workflow repos"
+      inputs:
+        type: object
+        properties:
+          required_type:
+            type: string
+            enum: [local-encryption]
+            required: true
+          key_rotation_days:
+            type: integer
+            required: true
+      outputs:
+        resources: [Secret]
+      constraints:
+        - local-vault-encryption
+      validation:
+        rules:
+          - condition: "inputs.key_rotation_days > 90"
+            message: "Vault key rotation must be 90 days or less"
+            severity: error
+
+  constraints:
+    - approved-model-methods
+    - required-validate-step
+    - execution-window-policy
+    - local-vault-encryption
+
+  produces:
+    - ConfigMap
+    - Secret

@@ -51,6 +51,27 @@ no Flux or ArgoCD needed for catalog entities.
 | `app-config.yaml` | Platform | Portal config — base URLs, backend endpoints |
 | `platform/catalog-standards.yaml` | Platform | Required fields, valid lifecycles, naming conventions |
 
+## If you already run Backstage catalogs at scale
+
+This example is for platform teams and service owners who already depend on
+catalog metadata quality:
+
+- Teams treat `catalog-info.yaml` as the source of service ownership and lifecycle.
+- Reorgs create high-volume owner/lifecycle edits across many repos.
+- Reviewers need fast answers about whether changes violate catalog standards.
+
+cub-gen keeps the Backstage authoring model and adds explicit provenance plus
+policy-aware ownership routing for catalog mutations.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing Backstage model | cub-gen concept | Why it matters |
+|------|------|------|
+| `catalog-info.yaml` entity spec | DRY service metadata intent | Service teams keep editing canonical Backstage files. |
+| Normalized entity data | WET records with provenance | Owner/lifecycle fields become auditable by source line. |
+| Catalog standards | Governance policy layer | Invalid ownership or lifecycle transitions can be blocked. |
+| Backstage sync from Git | LIVE catalog state | Catalog runtime behavior remains unchanged. |
+
 ## Try it
 
 ```bash
@@ -97,7 +118,8 @@ spec:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # Platform validates: "team-payments-core" is in the approved team list → ALLOW
@@ -138,3 +160,16 @@ cub-gen's `backstage-idp` generator detects `catalog-info.yaml` containing a
 - **Helm + Backstage**: [`helm-paas`](../helm-paas/) — catalog entries often
   live alongside Helm charts in the same repo
 - **Full platform story**: see the [platform architecture](../../docs/platform.md)
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/backstage-idp/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/backstage-idp/demo-connected.sh
+```

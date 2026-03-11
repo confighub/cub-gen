@@ -15,3 +15,7 @@ The team wants to add a `scale` action to the workflow. The platform's execution
 ## 4. Audit across all maintenance workflows
 
 Compliance asks: "which services have maintenance workflows targeting production?" ConfigHub's provenance index answers this instantly — every ops-workflow unit with `triggers.schedule` set traces back to the team that authored it, the approval that allowed it, and the last time the schedule was changed.
+
+## 5. IDP portal renders operation forms from registry
+
+Platform engineering publishes `platform/registry.yaml` with typed operations such as `scheduleWorkflow` and `deployServiceAction`. An internal portal can fetch the schema directly and render safe forms for ops teams without asking them to hand-edit every YAML path.

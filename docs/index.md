@@ -29,10 +29,10 @@ AI-assisted changes make this gap wider because more changes happen faster. cub-
 | Score.dev | `scoredev-paas` | `score.yaml` | Stable |
 | Spring Boot | `springboot-paas` | `application.yaml` | Stable |
 | Backstage IDP | `backstage-idp` | `catalog-info.yaml` | v0.2 preview |
-| Ably Config | `ably-config` | Provider config | v0.2 preview |
-| Ops Workflow | `ops-workflow` | Operations config | v0.2 preview |
+| No Config Platform | `no-config-platform` | Provider config | v0.2 preview |
+| Ops Workflow | `ops-workflow` | Operations config (structural workflow governance) | v0.2 preview |
 | C3 Agent | `c3agent` | Fleet config | v0.2 preview |
-| Swamp | `swamp` | Workflow config | v0.2 preview |
+| Swamp | `swamp` | Workflow config (graph/model-method governance) | v0.2 preview |
 
 ---
 
@@ -74,6 +74,12 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
     Build, discover, import, and inspect provenance from a Helm repo.
 
     [Getting Started](getting-started.md)
+
+-   **Start with workflows (Ops + Swamp)**
+
+    See structural workflow governance first: actions, schedules, approval gates, model/method bindings, and required-step checks.
+
+    [Ops Workflow Generator](triple-styles/style-b-markdown/opsworkflow.md) · [Swamp Generator](triple-styles/style-b-markdown/swamp.md)
 
 -   **Explore the architecture**
 

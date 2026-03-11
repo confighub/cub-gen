@@ -28,7 +28,8 @@ ALLOW decision.
 ┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
 │ operations.yaml     │          │ Execution plan       │         │ Scheduled jobs   │
 │ operations-prod     │──import─▶│ Action manifest      │──exec──▶│ Running deploys  │
-│ platform/execution- │          │ with provenance      │         │ Service restarts │
+│ platform/registry   │          │ with provenance      │         │ Service restarts │
+│ platform/execution- │          │                      │         │                 │
 │   policy.yaml       │          │                      │         │                 │
 └─────────────────────┘          └──────────────────────┘         └─────────────────┘
   Ops team: workflow definition.   Governed execution plan           What actually
@@ -50,7 +51,30 @@ artifact, and ConfigHub's decision engine controls when and how it runs.
 |------|-------|-----------------|
 | `operations.yaml` | Ops team | Workflow name, actions (deploy, restart), schedule trigger |
 | `operations-prod.yaml` | Ops team | Prod overlay — schedule timing, prod image tags |
+| `platform/registry.yaml` | Platform | Typed operation contracts for workflow APIs and portals |
 | `platform/execution-policy.yaml` | Platform | Allowed/blocked actions, scheduling windows, approval gates |
+
+## If you already run operational workflows at scale
+
+This example is aimed at SRE and operations teams that already manage scheduled
+deploy/restart/maintenance workflows:
+
+- Workflow YAML defines intent, but ownership and safety boundaries are implicit.
+- Schedule or action changes can have broad operational impact.
+- Post-incident review needs a clear source-of-truth for "who changed what".
+
+cub-gen keeps the operations workflow interface and adds explicit provenance,
+decision-state gating, and attestable evidence for each operational mutation.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing ops workflow model | cub-gen concept | Why it matters |
+|------|------|------|
+| `operations*.yaml` | DRY operational intent | Ops teams keep authoring high-level workflow steps. |
+| `platform/registry.yaml` | Operation registry contract | Portals/agents can discover typed operations instead of guessing fields. |
+| Execution plan/action manifest | WET governed output | Schedules and actions become traceable and reviewable. |
+| Execution policy | Governance layer | Risky schedule/action changes can be blocked or escalated. |
+| Actual job execution | LIVE state | Runtime execution remains separate while governance becomes explicit. |
 
 ## Try it
 
@@ -63,6 +87,10 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Import with field-origin tracing
 ./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs}'
+
+# Inspect structural ops workflow analysis
+./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+  | jq '.provenance[0].ops_workflow_analysis'
 ```
 
 cub-gen detects `operations.yaml` with `actions:` structure and classifies it
@@ -94,7 +122,8 @@ triggers:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # New schedule is within allowed window → ALLOW
@@ -116,11 +145,14 @@ cub-gen's `ops-workflow` generator detects `operations.yaml` containing
 
 1. **Classifies inputs** — `operations.yaml` (role: workflow-definition),
    `operations-prod.yaml` (role: workflow-overlay)
-2. **Maps field origins** — action types, schedule triggers, and image tags
+2. **Loads operation contracts** — `platform/registry.yaml` defines typed
+   operations like `scheduleWorkflow`, `deployServiceAction`, and
+   `rollbackServiceAction`
+3. **Maps field origins** — action types, schedule triggers, and image tags
    trace to their source file with ownership metadata
-3. **Validates execution policy** — allowed/blocked actions, scheduling windows,
+4. **Validates execution policy** — allowed/blocked actions, scheduling windows,
    and approval thresholds
-4. **Emits inverse guidance** — "to change the deploy image tag in production,
+5. **Emits inverse guidance** — "to change the deploy image tag in production,
    edit `operations-prod.yaml` actions.deploy section"
 
 ## Key files
@@ -129,6 +161,7 @@ cub-gen's `ops-workflow` generator detects `operations.yaml` containing
 |------|-------|---------|
 | `operations.yaml` | Ops team | Workflow definition — actions, schedule, targets |
 | `operations-prod.yaml` | Ops team | Prod overlay — schedule timing, prod image tags |
+| `platform/registry.yaml` | Platform | FrameworkRegistry v1 operation contracts for ops workflows |
 | `platform/execution-policy.yaml` | Platform | Allowed/blocked actions, windows, approvals |
 
 ## Next steps
@@ -138,3 +171,16 @@ cub-gen's `ops-workflow` generator detects `operations.yaml` containing
 - **AI workflow governance**: [`swamp-automation`](../swamp-automation/) —
   AI-agent-driven workflows with model binding governance
 - **E2E demo**: `../demo/ai-work-platform/scenario-4-operations.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/ops-workflow/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/ops-workflow/demo-connected.sh
+```

@@ -1,6 +1,7 @@
-# NOTE: This policy is illustrative. ConfigHub's decision engine evaluates
-# these constraints server-side. cub-gen reads them for field-origin tracing
-# and documentation but does not enforce them at import time.
+# NOTE: This policy is illustrative. The primary Swamp fit is structural
+# workflow-change governance (model/method usage, required steps, vault safety).
+# Local cub-gen flows produce evidence quickly; connected flows publish the same
+# evidence for centralized audit/reporting.
 
 apiVersion: confighub.io/v1
 kind: WorkflowPolicy
@@ -12,6 +13,11 @@ spec:
     - app-deployer
     - app-healthcheck
     - credential-rotator
+  approved_model_methods:
+    app-validator: [check]
+    app-deployer: [apply, rollback]
+    app-healthcheck: [verify]
+    credential-rotator: [rotate]
   execution_windows:
     production:
       allowed: "Mon-Fri 06:00-22:00 UTC"
@@ -19,6 +25,9 @@ spec:
   required_steps:
     - name: validate
       reason: "All deployment workflows must include a validation step"
+  forbidden_step_names:
+    - delete-production-database
+  max_steps_per_job: 20
   max_parallel_jobs: 5
   vault_policy:
     required_type: local-encryption

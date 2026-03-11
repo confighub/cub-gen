@@ -138,13 +138,13 @@ These three commands work offline. The bundle and attestation are portable JSON 
 
 ```bash
 # Submit bundle to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 
-# Build decision state and attach attestation
-./cub-gen bridge decision create --ingest ingest.json > decision.json
-./cub-gen bridge decision attach --decision decision.json --attestation attestation.json > decision.json
-./cub-gen bridge decision apply --decision decision.json \
-  --state ALLOW --approved-by platform-owner --reason "policy passed" > decision.json
+# Query backend decision state (authoritative)
+./cub-gen bridge decision query \
+  --base-url "$BASE_URL" \
+  --change-id "$(jq -r .change_id bundle.json)" > decision.json
 
 # Promotion flow (app PR → ConfigHub MR → platform DRY PR)
 ./cub-gen bridge promote init --change-id chg_123 ...
@@ -155,7 +155,8 @@ These three commands work offline. The bundle and attestation are portable JSON 
 ./cub-gen bridge promote merge --flow flow.json --by platform-owner
 ```
 
-The decision engine enforces a five-state machine: `INGESTED → ATTESTED → ALLOW | ESCALATE | BLOCK`. No terminal decision without attestation linkage. No direct jump from ingested to terminal.
+Connected demos and CI treat ConfigHub decision query output as the source of truth.
+Local `bridge decision create|attach|apply` commands are still available for offline contract simulation.
 
 ---
 

@@ -23,8 +23,8 @@ func TestPublishGoldenFromImportBackstage(t *testing.T) {
 	assertPublishFromImportGolden(t, "backstage", filepath.Join("testdata", "parity", "publish-from-import-backstage.golden.json"))
 }
 
-func TestPublishGoldenFromImportAbly(t *testing.T) {
-	assertPublishFromImportGolden(t, "ably", filepath.Join("testdata", "parity", "publish-from-import-ably.golden.json"))
+func TestPublishGoldenFromImportNoConfigPlatform(t *testing.T) {
+	assertPublishFromImportGolden(t, "no-config-platform", filepath.Join("testdata", "parity", "publish-from-import-no-config-platform.golden.json"))
 }
 
 func TestPublishGoldenFromImportOps(t *testing.T) {
@@ -86,8 +86,8 @@ func TestPublishGoldenDirectBackstage(t *testing.T) {
 	assertPublishDirectGolden(t, "backstage", filepath.Join("testdata", "parity", "publish-direct-backstage.golden.json"))
 }
 
-func TestPublishGoldenDirectAbly(t *testing.T) {
-	assertPublishDirectGolden(t, "ably", filepath.Join("testdata", "parity", "publish-direct-ably.golden.json"))
+func TestPublishGoldenDirectNoConfigPlatform(t *testing.T) {
+	assertPublishDirectGolden(t, "no-config-platform", filepath.Join("testdata", "parity", "publish-direct-no-config-platform.golden.json"))
 }
 
 func TestPublishGoldenDirectOps(t *testing.T) {

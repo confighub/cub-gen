@@ -1,17 +1,38 @@
 # Swamp Automation — User Stories
 
-## 1. Team adds a workflow step
+## 1. Agent proposes a workflow step
 
-The SRE team wants to add a health check before deployment. They edit `workflow-deploy.yaml`, adding a new step that calls the `app-healthcheck` model. `cub-gen` detects the change, traces the new step back to the DRY workflow file, and produces a change bundle. The platform's workflow policy confirms `app-healthcheck` is in the approved models list.
+An agent adds `healthcheck` before `validate` in `workflow-deploy.yaml`.
+`cub-gen` captures the structural change (new step + model/method reference),
+produces a governed bundle, and checks policy inputs such as approved
+model-method pairs.
 
-## 2. Platform enforces execution windows
+## 2. Required safety step cannot be removed
 
-The platform team updates `platform/workflow-policy.yaml` to restrict production deployments to business hours. When the SRE team next publishes a workflow change targeting production, the decision engine checks the execution window policy. Workflows scheduled outside the window get an ESCALATE decision requiring platform-owner approval.
+A change removes the `validate` step. The policy declares `validate` as
+required. The change should be surfaced as BLOCK/ESCALATE instead of silently
+passing review.
 
-## 3. Vault credential rotation
+## 3. Vault safety remains local-first
 
-Security policy requires vault encryption keys to rotate every 90 days. The platform team updates `.swamp.yaml` with a new key reference. `cub-gen` traces the change through the DRY/WET boundary — the vault config is platform-owned DRY, so the change bundle shows platform-team ownership. The attestation record links the rotation to the CI verification that ran.
+The team rotates vault keys in `.swamp.yaml`. Local verify/attest runs fast and
+records evidence. Connected mode can ingest the same evidence so security teams
+can audit rotation history across repos.
 
-## 4. Cross-repo workflow audit
+## 4. Org-wide model/method audit
 
-Compliance asks: "which workflows across all teams reference the `app-deployer` model?" ConfigHub's provenance index answers this from governed decision history — every workflow that imports `app-deployer` has a provenance record linking the model reference back to the DRY workflow file, the team that authored it, and the decision that approved it.
+Security asks: "Which workflows reference `app-deployer.apply` across all
+teams?" Connected provenance history answers this by `change_id`, repo, and
+policy outcome.
+
+## 5. DRY-to-LIVE visibility for Swamp
+
+For Swamp workflows, the important trace is not template field expansion; it is
+"which workflow step caused which live mutation." This example focuses on
+structural workflow governance and sets up that runtime-provenance direction.
+
+## 6. Typed operation discovery for workflow UIs/agents
+
+`platform/registry.yaml` publishes typed operations (for example `addModelMethodStep`
+and `configureVaultPolicy`) so an internal UI or agent can discover valid input
+schemas before proposing workflow changes.

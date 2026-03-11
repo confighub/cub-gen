@@ -50,6 +50,26 @@ approval threshold, and deploy window traced back to its DRY source.
 | `operations-prod.yaml` | Platform | Prod overlay — approval count, deploy window |
 | `platform/lifecycle-policy.yaml` | Platform | Required actions, sequence, approvals, windows, break-glass |
 
+## If you already automate platform lifecycles
+
+This example is for teams running policy-driven operational pipelines already:
+
+- You model lifecycle stages (verify, policy-check, apply) as explicit steps.
+- You frequently adjust approval thresholds and deployment windows.
+- You need auditable proof that governance changes were themselves governed.
+
+cub-gen keeps your operations model intact and adds deterministic provenance for
+every lifecycle field so recursive governance is practical, not theoretical.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing lifecycle model | cub-gen concept | Why it matters |
+|------|------|------|
+| `operations*.yaml` workflow definitions | DRY operational intent | Teams keep editing explicit workflow config. |
+| Execution plan/action manifest | WET governed plan | Each action/approval field is traceable by source and owner. |
+| Lifecycle policy constraints | Governance layer | Policy changes can be reviewed with explicit ALLOW/BLOCK outcomes. |
+| ConfigHub action execution | LIVE workflow run | Runtime execution remains in ConfigHub decision engine. |
+
 ## Try it
 
 ```bash
@@ -94,7 +114,8 @@ actions:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub — the lifecycle change is itself governed
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by security-lead --reason "SOC2 compliance: 3 approvals for prod"
@@ -150,3 +171,16 @@ This example uses the `ops-workflow` generator — the same generator used by
 - **AI workflow governance**: [`swamp-automation`](../swamp-automation/) —
   AI-agent-driven workflows
 - **E2E demo**: `../demo/ai-work-platform/scenario-3-confighub-actions.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/confighub-actions/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/confighub-actions/demo-connected.sh
+```

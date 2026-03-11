@@ -1,90 +1,88 @@
-# Swamp Automation — Governed AI Workflow Orchestration
+# Swamp Automation — Governed Changes for Agent-Written Workflows
 
-Your AI-agent-driven workflows — validate, deploy, health-check, rotate
-credentials — run through [Swamp](https://github.com/systeminit/swamp), a
-Git-native workflow engine with typed models of external systems. ConfigHub
-adds the governance layer: every workflow definition change gets provenance,
-every model binding gets policy enforcement, and every execution gets an
-audit trail.
+Swamp teams use AI agents to compose workflows from typed models, then run those workflows against real systems.
 
-Together they form a complete agentic app platform: ConfigHub declares *what
-should exist* (governance), Swamp executes *how to make it so* (automation),
-and cub-gen connects the two with traceable change bundles.
+For this pattern, `cub-gen` is most useful as a **workflow change classifier and policy gate**:
 
-> For deploying the Swamp runtime itself on Kubernetes, see
-> [`swamp-project`](../swamp-project/).
+- what changed in the workflow graph,
+- which models/methods were introduced,
+- whether required steps were removed,
+- whether the change is allowed.
+
+> For deploying the Swamp runtime itself on Kubernetes, see [`swamp-project`](../swamp-project/).
 
 ## What you get
 
-- **Workflow-as-config governance**: DAG steps, model bindings, and vault
-  config are traced with full provenance
-- **Model binding policy**: platform controls which models (app-validator,
-  app-deployer, app-healthcheck) are approved
-- **Execution windows**: production workflows restricted to business hours
-- **Vault policy**: encryption key rotation and local-encryption enforcement
+- **Structural workflow diffing**: step graph and model-method changes are visible in one governed bundle.
+- **Policy-ready metadata**: approved model/method checks, required-step checks, vault safety checks.
+- **Fast local loop**: run `import -> publish -> verify -> attest` locally before any backend call.
+- **Optional connected reporting**: send bundles to ConfigHub for centralized audit/search.
 
-## How Swamp workflows map to DRY / WET / LIVE
+## How Swamp maps to DRY / WET / LIVE
 
 ```
-  YOU EDIT (DRY)                    cub-gen TRACES (WET)              SWAMP (LIVE)
-┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
-│ .swamp.yaml         │          │ Workflow manifest    │         │ DAG execution    │
-│ workflow-deploy.yaml │──import─▶│ Model bindings       │──exec──▶│ Model calls      │
-│ platform/swamp-     │          │ Vault config         │         │ Infrastructure   │
-│   constraints.yaml  │          │ with provenance      │         │   mutations      │
-└─────────────────────┘          └──────────────────────┘         └─────────────────┘
-  App team: workflow definitions.  Governed workflow manifest        What Swamp
-  Platform: model + vault policy.  with field-origin tracing.       actually runs.
+  AUTHORING (DRY)                  GOVERNED BUNDLE (WET)            EXECUTION (LIVE)
+┌─────────────────────┐         ┌─────────────────────────┐       ┌──────────────────────┐
+│ workflow-deploy.yaml│         │ change_id + provenance  │       │ Swamp runs steps     │
+│ .swamp.yaml         │──import▶│ structural change view  │──run─▶│ model methods mutate │
+│ platform/registry   │         │ ALLOW/ESCALATE/BLOCK    │       │ real infrastructure  │
+│ constraints policy  │         │                         │       │                      │
+└─────────────────────┘         └─────────────────────────┘       └──────────────────────┘
 ```
 
-**DRY** is what teams author: `workflow-deploy.yaml` defines the DAG — job
-steps, model method bindings, execution order. `.swamp.yaml` configures the
-Swamp runtime (vault, logging, version). Platform constraints define approved
-models and execution windows.
+Important nuance for Swamp:
 
-**WET** is what cub-gen traces: a structured workflow manifest with every step,
-model binding, and configuration traced back to its DRY source.
+- Workflow YAML is already executable intent; it is not a Helm-style template render.
+- Field-origin is usually straightforward.
+- The high-value governance question is **"what changed structurally, and is it allowed?"**
 
-**LIVE** is what Swamp executes against external systems — cloud APIs, clusters,
-managed services.
+## If you already build workflow automation systems
 
-| File | Owner | What it controls |
-|------|-------|-----------------|
-| `.swamp.yaml` | Platform | Swamp repo config — vault type, encryption, logging |
-| `workflow-deploy.yaml` | App team | Deployment workflow — validate → deploy steps |
-| `platform/swamp-constraints.yaml` | Platform | Approved models, execution windows, vault policy |
+This example matches teams that already run local-first, model-driven automation:
+
+- Agents compose workflows from typed models.
+- Teams review workflow changes in Git.
+- Safety comes from model availability + policy checks on workflow changes.
+
+`cub-gen` adds a reproducible governance loop around that workflow change process.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing Swamp concern | cub-gen concept | Why it matters |
+|------|------|------|
+| Agent modifies workflow steps | DRY change import | Captures exact workflow mutation in a governed record. |
+| `platform/registry.yaml` operations | Typed contract surface | Portals and agents can discover allowed operation schemas. |
+| New model/method references | Policy evaluation input | Enables ALLOW/BLOCK on risky capability expansion. |
+| Required validation steps | Structural constraint checks | Prevents unsafe workflow edits from merging unnoticed. |
+| Team wants fast iteration | Local verify/attest loop | Keeps agent/human loop fast without backend latency. |
+| Org wants central audit | Connected ingest/query | Enables cross-repo compliance reporting. |
 
 ## Try it
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
 
-# Detect Swamp workflow
+# 1) Detect/import workflow config
 ./cub-gen gitops discover --space platform --json ./examples/swamp-automation
+./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation > /tmp/swamp-import.json
 
-# Import with field-origin tracing
-./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation \
-  | jq '{profile: .discovered[0].generator_profile, dry_inputs}'
+# 2) Build local governed evidence (fast loop)
+./cub-gen publish --in /tmp/swamp-import.json > /tmp/swamp-bundle.json
+./cub-gen verify --json --in /tmp/swamp-bundle.json
+./cub-gen attest --in /tmp/swamp-bundle.json --verifier ci-bot > /tmp/swamp-attestation.json
 ```
 
-cub-gen detects `.swamp.yaml` as a Swamp source and collects `workflow-*.yaml`
-files as workflow definitions. The import traces every job step and model
-binding back to its DRY source.
+## Real-world scenario: agent adds a new model method step
 
-## Real-world scenario: adding a pre-deploy health check
+A team asks an agent to add a pre-deploy health verification step.
 
-**Who**: An SRE team at a fintech company using Swamp for infrastructure
-automation. They have workflows for deploying services, rotating credentials,
-and scaling compute.
-
-### The change — new health check step
+Workflow change:
 
 ```yaml
-# workflow-deploy.yaml — add healthcheck before validate
 jobs:
   - name: deploy-flow
     steps:
-      - name: healthcheck           # new step
+      - name: healthcheck
         task:
           type: model_method
           modelIdOrName: app-healthcheck
@@ -101,77 +99,67 @@ jobs:
           methodName: apply
 ```
 
-### Governed pipeline
+Governance outcome:
 
-```bash
-# cub-gen detects the workflow change
-./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation
+- `app-healthcheck.verify` is in approved model-method policy.
+- Required `validate` step is still present.
+- Decision can be `ALLOW`.
 
-# Evidence chain
-./cub-gen publish --space platform ./examples/swamp-automation ./examples/swamp-automation > bundle.json
-./cub-gen verify --in bundle.json
-./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
-
-# Bridge to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
-./cub-gen bridge decision create --ingest ingest.json > decision.json
-
-# Platform checks: is app-healthcheck in approved models? → ALLOW
-./cub-gen bridge decision apply --decision decision.json --state ALLOW \
-  --approved-by sre-lead --reason "added pre-deploy health check"
-```
-
-The platform's `swamp-constraints.yaml` checks: is `app-healthcheck` in the
-approved models list? Is the required `validate` step still present? Both
-pass → **ALLOW**.
-
-If someone tried to add an unapproved model or remove the required validate
-step, the decision engine would **BLOCK**.
+If the agent removed `validate` or introduced an unapproved model/method, decision should be `BLOCK` (or `ESCALATE`).
 
 ## How it works
 
-cub-gen's `swamp` generator detects `.swamp.yaml` and collects sibling files
-matching the `workflow-*` prefix. On import:
+For Swamp, use `cub-gen` mainly for **structural classification** of workflow changes:
 
-1. **Classifies inputs** — `.swamp.yaml` (role: runtime-config),
-   `workflow-deploy.yaml` (role: workflow-definition)
-2. **Maps field origins** — job names, step tasks, and model bindings trace
-   to their workflow definition file
-3. **Validates constraints** — approved models, execution windows, required
-   steps, vault policy
-4. **Emits inverse guidance** — "to change the deployer model, edit
-   `workflow-deploy.yaml` steps section"
+1. Parse workflow and Swamp repo config.
+2. Load `platform/registry.yaml` operation contracts (for typed operation discovery).
+3. Capture model/method references and step structure.
+4. Compare change against policy constraints.
+5. Produce evidence bundle and attestation.
+6. Optionally ingest/query in ConfigHub for org-wide reporting.
 
-## The ConfigHub + Swamp stack
+## What this is not
 
-```
-ConfigHub (governance)     ←→    cub-gen (bridge)    ←→    Swamp (execution)
-  Decision state                   DRY/WET tracing            AI-agent workflows
-  Provenance index                 Change bundles              Typed model calls
-  Policy enforcement               Verification               DAG orchestration
-  Audit + attestation                                          Git-native state
-```
+- Not a Swamp runtime replacement.
+- Not a DAG executor.
+- Not a mandatory backend round-trip for every agent iteration.
+
+Recommended pattern:
+
+- Use local loop for fast agent iteration.
+- Use connected mode when you need centralized governance history and cross-repo queries.
 
 ## Key files
 
-| File | Owner | Purpose |
-|------|-------|---------|
-| `.swamp.yaml` | Platform | Swamp config — vault, logging, version |
-| `workflow-deploy.yaml` | App team | Deployment workflow — validate → deploy |
-| `platform/swamp-constraints.yaml` | Platform | Approved models, windows, vault policy |
+| File | Typical owner in Swamp teams | Purpose |
+|------|-------------------------------|---------|
+| `.swamp.yaml` | Team owning the workflow repo | Local Swamp runtime config (vault/logging/version). |
+| `workflow-deploy.yaml` | Team owning the workflow repo | Workflow graph and model-method tasks. |
+| `platform/registry.yaml` | Org/platform/security | FrameworkRegistry v1 operation contracts for workflow updates. |
+| `platform/swamp-constraints.yaml` | Org/platform/security | Organizational guardrails for workflow changes. |
 
 ## The complete Swamp + ConfigHub picture
 
 | Layer | Example | Generator | What it governs |
 |-------|---------|-----------|-----------------|
-| **Workflow** | `swamp-automation` (this) | `swamp` | Workflow definitions, model bindings |
-| **Runtime** | [`swamp-project`](../swamp-project/) | `helm-paas` | Swamp engine deployment on K8s |
+| Workflow changes | `swamp-automation` (this) | `swamp` | Workflow graph/method change governance |
+| Runtime deployment | [`swamp-project`](../swamp-project/) | `helm-paas` | Swamp runtime on Kubernetes |
 
 ## Next steps
 
-- **Swamp runtime deployment**: [`swamp-project`](../swamp-project/) — Helm
-  chart deploying the Swamp engine
-- **Operations workflows**: [`ops-workflow`](../ops-workflow/) — same governed
-  operations pattern, different engine
-- **AI agent fleets**: [`c3agent`](../c3agent/) — standalone fleet config
-- **E2E demo**: `../demo/ai-work-platform/scenario-2-swamp.sh`
+- Runtime side: [`swamp-project`](../swamp-project/)
+- Ops policy analog: [`ops-workflow`](../ops-workflow/)
+- Connected demo script index: [`../demo/README.md`](../demo/README.md)
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/swamp-automation/demo-local.sh
+
+echo "connected"
+cub auth login
+./examples/swamp-automation/demo-connected.sh
+```

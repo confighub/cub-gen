@@ -1,6 +1,4 @@
 {
-  "bundle_digest": "\u003cbundle_digest\u003e",
-  "change_id": "\u003cchange_id\u003e",
   "contracts": [
     {
       "capabilities": [
@@ -9,23 +7,23 @@
         "inverse-provider-config-patch"
       ],
       "deterministic": true,
-      "generator_id": "gen_8c38d405bdc97967",
+      "generator_id": "gen_7e61057fca5184ad",
       "inputs": [
         {
           "name": "input_01",
           "required": true,
-          "schema_ref": "https://schema.confighub.dev/generators/ably-config-v1"
+          "schema_ref": "https://schema.confighub.dev/generators/no-config-platform-v1"
         },
         {
           "name": "input_02",
           "required": true,
-          "schema_ref": "https://schema.confighub.dev/generators/ably-config-v1"
+          "schema_ref": "https://schema.confighub.dev/generators/no-config-platform-v1"
         }
       ],
-      "kind": "ably",
+      "kind": "no-config-platform",
       "name": "just-apps-no-platform-config",
       "output_format": "kubernetes/yaml",
-      "profile": "ably-config",
+      "profile": "no-config-platform",
       "schema_version": "cub.confighub.io/generator-contract/v1",
       "source_path": "",
       "source_ref": "HEAD",
@@ -34,15 +32,15 @@
       "version": "0.1.0"
     }
   ],
-  "digest_algorithm": "sha256",
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
   "discovered": [
     {
-      "generator_id": "gen_8c38d405bdc97967",
-      "generator_kind": "ably",
-      "generator_profile": "ably-config",
+      "generator_id": "gen_7e61057fca5184ad",
+      "generator_kind": "no-config-platform",
+      "generator_profile": "no-config-platform",
       "inputs": [
-        "ably-prod.yaml",
-        "ably.yaml"
+        "no-config-platform-prod.yaml",
+        "no-config-platform.yaml"
       ],
       "resource_body": "kind: ConfigMap\nmetadata:\n  name: just-apps-no-platform-config\nspec:\n  root: \n",
       "resource_kind": "ConfigMap",
@@ -53,39 +51,39 @@
   ],
   "dry_inputs": [
     {
-      "generator_id": "gen_8c38d405bdc97967",
+      "generator_id": "gen_7e61057fca5184ad",
       "owner": "app-team",
-      "path": "ably.yaml",
-      "profile": "ably-config",
+      "path": "no-config-platform.yaml",
+      "profile": "no-config-platform",
       "required": true,
       "role": "provider-config-base"
     },
     {
-      "generator_id": "gen_8c38d405bdc97967",
+      "generator_id": "gen_7e61057fca5184ad",
       "owner": "app-team",
-      "path": "ably-prod.yaml",
-      "profile": "ably-config",
+      "path": "no-config-platform-prod.yaml",
+      "profile": "no-config-platform",
       "required": true,
       "role": "provider-config-overlay"
     }
   ],
   "dry_units": [
     {
-      "id": "dry_81d31492577f5656",
+      "id": "dry_076b3b989c3c453a",
       "kind": "dry-unit",
       "layer": "dry",
       "name": "just-apps-no-platform-config-dry"
     }
   ],
-  "generated_at": "\u003ctimestamp\u003e",
   "generator_units": [
     {
-      "id": "gen_e140b47854b90c71",
+      "id": "gen_e7a46b877ec21616",
       "kind": "generator-unit",
       "layer": "generator",
       "name": "just-apps-no-platform-config-generator"
     }
   ],
+  "imported_at": "\u003ctimestamp\u003e",
   "inverse_transform_plans": [
     {
       "change_id": "\u003cchange_id\u003e",
@@ -96,9 +94,9 @@
           "dry_path": "app.environment",
           "editable_by": "app-team",
           "op": "replace",
-          "reason": "Environment is sourced from ably.yaml.",
+          "reason": "Environment is sourced from no-config-platform.yaml.",
           "requires_review": false,
-          "wet_path": "ConfigMap/data/ABLY_ENVIRONMENT"
+          "wet_path": "ConfigMap/data/PROVIDER_ENVIRONMENT"
         },
         {
           "confidence": 0.88,
@@ -107,22 +105,22 @@
           "op": "replace",
           "reason": "Channel mapping is app-level runtime behavior.",
           "requires_review": false,
-          "wet_path": "ConfigMap/data/ABLY_CHANNEL_INBOUND"
+          "wet_path": "ConfigMap/data/PROVIDER_CHANNEL_INBOUND"
         }
       ],
       "plan_id": "\u003cplan_id\u003e",
       "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
-      "source_kind": "ably",
+      "source_kind": "no-config-platform",
       "source_ref": "",
       "status": "draft",
-      "target_unit_id": "dry_81d31492577f5656"
+      "target_unit_id": "dry_076b3b989c3c453a"
     }
   ],
   "links": [
     {
-      "dry_unit_id": "dry_81d31492577f5656",
-      "generator_unit_id": "gen_e140b47854b90c71",
-      "wet_unit_id": "wet_3e91016693281ace"
+      "dry_unit_id": "dry_076b3b989c3c453a",
+      "generator_unit_id": "gen_e7a46b877ec21616",
+      "wet_unit_id": "wet_0aa71d8de9fa91e9"
     }
   ],
   "provenance": [
@@ -132,43 +130,43 @@
         {
           "confidence": 0.9,
           "dry_path": "app.environment",
-          "source_path": "ably.yaml",
-          "transform": "ably-config-to-runtime",
-          "wet_path": "ConfigMap/data/ABLY_ENVIRONMENT"
+          "source_path": "no-config-platform.yaml",
+          "transform": "no-config-platform-to-runtime",
+          "wet_path": "ConfigMap/data/PROVIDER_ENVIRONMENT"
         },
         {
           "confidence": 0.88,
           "dry_path": "channels.inbound",
-          "source_path": "ably.yaml",
-          "transform": "ably-config-to-runtime",
-          "wet_path": "ConfigMap/data/ABLY_CHANNEL_INBOUND"
+          "source_path": "no-config-platform.yaml",
+          "transform": "no-config-platform-to-runtime",
+          "wet_path": "ConfigMap/data/PROVIDER_CHANNEL_INBOUND"
         },
         {
           "confidence": 0.84,
           "dry_path": "channels.inbound",
-          "source_path": "ably-prod.yaml",
-          "transform": "ably-overlay-merge",
-          "wet_path": "ConfigMap/data/ABLY_CHANNEL_INBOUND"
+          "source_path": "no-config-platform-prod.yaml",
+          "transform": "no-config-platform-overlay-merge",
+          "wet_path": "ConfigMap/data/PROVIDER_CHANNEL_INBOUND"
         }
       ],
-      "generator_id": "gen_8c38d405bdc97967",
+      "generator_id": "gen_7e61057fca5184ad",
       "generator_name": "just-apps-no-platform-config",
-      "generator_profile": "ably-config",
-      "input_digest": "sha256:0ebf188c0dbbd6554b5789fa2f7a63be2c0599273aa6b25ae38d4dc17813ba18",
+      "generator_profile": "no-config-platform",
+      "input_digest": "sha256:44bc26890960d4f9459bfde6c3508bdfe8de91d4eeb73725aea3694720756f2e",
       "inverse_edit_pointers": [
         {
           "confidence": 0.9,
           "dry_path": "app.environment",
-          "edit_hint": "Edit app.environment in ably.yaml.",
+          "edit_hint": "Edit app.environment in no-config-platform.yaml.",
           "owner": "app-team",
-          "wet_path": "ConfigMap/data/ABLY_ENVIRONMENT"
+          "wet_path": "ConfigMap/data/PROVIDER_ENVIRONMENT"
         },
         {
           "confidence": 0.88,
           "dry_path": "channels.inbound",
-          "edit_hint": "Edit channels.inbound in ably-prod.yaml for environment-specific behavior; use ably.yaml for defaults.",
+          "edit_hint": "Edit channels.inbound in no-config-platform-prod.yaml for environment-specific behavior; use no-config-platform.yaml for defaults.",
           "owner": "app-team",
-          "wet_path": "ConfigMap/data/ABLY_CHANNEL_INBOUND"
+          "wet_path": "ConfigMap/data/PROVIDER_CHANNEL_INBOUND"
         }
       ],
       "outputs": [
@@ -183,36 +181,36 @@
       "rendered_object_lineage": [
         {
           "kind": "ConfigMap",
-          "name": "just-apps-no-platform-config-ably",
+          "name": "just-apps-no-platform-config-provider-config",
           "namespace": "apps",
           "source_dry_path": "app.environment",
-          "source_path": "ably.yaml"
+          "source_path": "no-config-platform.yaml"
         },
         {
           "kind": "Secret",
-          "name": "just-apps-no-platform-config-ably-credentials",
+          "name": "just-apps-no-platform-config-provider-credentials",
           "namespace": "apps",
           "source_dry_path": "credentials.api_key_ref",
-          "source_path": "ably.yaml"
+          "source_path": "no-config-platform.yaml"
         },
         {
           "kind": "ConfigMap",
-          "name": "just-apps-no-platform-config-ably",
+          "name": "just-apps-no-platform-config-provider-config",
           "namespace": "apps",
           "source_dry_path": "channels.inbound",
-          "source_path": "ably-prod.yaml"
+          "source_path": "no-config-platform-prod.yaml"
         }
       ],
       "schema_version": "cub.confighub.io/provenance/v1",
       "sources": [
         {
-          "path": "ably-prod.yaml",
+          "path": "no-config-platform-prod.yaml",
           "revision": "HEAD",
           "role": "generator-input",
           "uri": "\u003csource_uri\u003e"
         },
         {
-          "path": "ably.yaml",
+          "path": "no-config-platform.yaml",
           "revision": "HEAD",
           "role": "generator-input",
           "uri": "\u003csource_uri\u003e"
@@ -223,39 +221,22 @@
   ],
   "ref": "HEAD",
   "render_target_slug": "render-target",
-  "schema_version": "cub.confighub.io/change-bundle/v1",
-  "source": "cub-gen",
   "space": "platform",
-  "summary": {
-    "contracts": 1,
-    "discovered_resources": 1,
-    "dry_inputs": 2,
-    "dry_units": 1,
-    "generator_profiles": [
-      "ably-config"
-    ],
-    "generator_units": 1,
-    "inverse_transform_plans": 1,
-    "links": 1,
-    "provenance_records": 1,
-    "wet_manifest_targets": 2,
-    "wet_units": 1
-  },
   "target_path": "\u003ctarget_path\u003e",
-  "target_slug": "ably",
+  "target_slug": "no-config-platform",
   "wet_manifest_targets": [
     {
-      "generator_id": "gen_8c38d405bdc97967",
+      "generator_id": "gen_7e61057fca5184ad",
       "kind": "ConfigMap",
-      "name": "just-apps-no-platform-config-ably",
+      "name": "just-apps-no-platform-config-provider-config",
       "namespace": "apps",
       "owner": "platform-runtime",
       "source_dry_path": "app.environment"
     },
     {
-      "generator_id": "gen_8c38d405bdc97967",
+      "generator_id": "gen_7e61057fca5184ad",
       "kind": "Secret",
-      "name": "just-apps-no-platform-config-ably-credentials",
+      "name": "just-apps-no-platform-config-provider-credentials",
       "namespace": "apps",
       "owner": "platform-runtime",
       "source_dry_path": "credentials.api_key_ref"
@@ -263,7 +244,7 @@
   ],
   "wet_units": [
     {
-      "id": "wet_3e91016693281ace",
+      "id": "wet_0aa71d8de9fa91e9",
       "kind": "wet-unit",
       "layer": "wet",
       "name": "just-apps-no-platform-config-wet"

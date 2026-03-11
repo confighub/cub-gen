@@ -53,6 +53,26 @@ mapped back to its DRY source — values file, chart template, or platform polic
 | `templates/deployment.yaml` | Platform | K8s Deployment structure |
 | `platform/runtime-policy.yaml` | Platform | Resource limits, model gateway allowlist, min replicas, required probes |
 
+## If you already operate Helm-based AI runtimes
+
+This example targets teams already managing AI runtime delivery with Helm:
+
+- Project teams tune runtime values (gateway, replicas, image).
+- Platform teams own chart structure and runtime safety constraints.
+- Production changes need clear ownership and policy checks before rollout.
+
+cub-gen keeps Helm workflows familiar while adding policy-aware tracing for
+runtime-specific knobs like model gateway selection.
+
+## Why this maps cleanly to the cub-gen framework
+
+| Existing Helm runtime model | cub-gen concept | Why it matters |
+|------|------|------|
+| `values*.yaml` for runtime tuning | DRY app/project intent | Teams edit only high-level runtime knobs. |
+| Rendered Deployment/Service/HelmRelease | WET targets with provenance | Runtime rollouts can be traced to exact values keys. |
+| Runtime policy constraints | Governance layer | Unsafe gateway or capacity changes can be blocked/escalated. |
+| Flux/Argo reconcile path | LIVE state | Existing release and reconciliation tooling remains intact. |
+
 ## Try it
 
 ```bash
@@ -94,7 +114,8 @@ runtime:
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # Bridge to ConfigHub
-./cub-gen bridge ingest --in bundle.json --base-url https://confighub.example > ingest.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
 # Platform checks: is mistral-gateway in the allowlist?
@@ -147,3 +168,16 @@ the workflows it runs to the infrastructure it runs on.
   the workflows that run on this Swamp instance
 - **AI agent fleets**: [`c3agent`](../c3agent/) — standalone agent fleet config
 - **E2E Helm demo**: `../demo/module-1-helm-import.sh`
+
+## Local and Connected Entrypoints
+
+From repo root:
+
+```bash
+echo "local/offline"
+./examples/swamp-project/demo-local.sh
+
+echo "connected (requires ConfigHub auth)"
+cub auth login
+./examples/swamp-project/demo-connected.sh
+```
