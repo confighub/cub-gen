@@ -1,6 +1,6 @@
 # Change Surface v0.2 - Ready-to-File Issue Pack
 
-Status: Active issue pack (partially executed)
+Status: Active issue pack (executed through follow-up hardening set)
 Owner persona: successful OSS project owner (developer-first adoption, clear value, low-friction onboarding)
 
 Execution/status companion:
@@ -18,10 +18,10 @@ Completed in repo:
 - Issue 6/7/8 (CLI thin MVP): done (`change preview|run|explain`).
 - Issue 11/12/13 (terminal+CI+agent proofs): done.
 
-Partially addressed:
+Executed in follow-up hardening:
 
-- Issue 9 (API contract): contract docs/schemas exist and are exercised via adapter scripts.
-- Issue 10 (API adapter): compatibility adapter exists in demo path; production API server surface remains backlog.
+- Issue 9 (API contract): completed with contract docs/schemas and runnable server usage docs.
+- Issue 10 (API adapter/server): completed with native `change api serve` HTTP compatibility surface and CI e2e sample.
 
 New hardening delivered after initial pack:
 
@@ -30,11 +30,11 @@ New hardening delivered after initial pack:
 - Connected auth contract gate.
 - Legacy naming gate (`no-config-platform` consistency).
 
-## Filed follow-up issues
+## Filed follow-up issues (all closed)
 
-- #160 feat(ci): enforce DRY ownership with PR gate for WET edits
-- #161 feat(api): add compatibility `/v1/changes` surface for change lifecycle
-- #162 feat(connected): enforce strict backend-authoritative mode for release paths
+- #160 feat(ci): enforce DRY ownership with PR gate for WET edits (closed)
+- #161 feat(api): add compatibility `/v1/changes` surface for change lifecycle (closed)
+- #162 feat(connected): enforce strict backend-authoritative mode for release paths (closed)
 
 ## Product posture (applies to every issue)
 

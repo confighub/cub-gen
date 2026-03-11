@@ -91,3 +91,10 @@ These shipped after the core v0.1 checklist completion to reduce new-user confus
    - `test/checks/check-registry-discoverability.sh`
 6. Docs-site getting started now includes own-repo local+connected path.
    - `docs/getting-started.md` ("Use your own repo in 3 commands")
+7. PR DRY ownership gate is now first-class and merge-blocking ready.
+   - `test/checks/pr-dry-ownership-gate.sh`
+   - `.github/workflows/pr-dry-ownership-gate.yml`
+8. HTTP compatibility API is now native and CI-proven.
+   - `cub-gen change api serve` (`POST/GET /v1/changes*`)
+   - `examples/demo/change-api-http-e2e.sh`
+   - golden contract tests in `cmd/cub-gen/change_api_server_test.go`
