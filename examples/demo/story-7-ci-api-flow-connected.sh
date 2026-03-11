@@ -52,40 +52,49 @@ jq -n \
     }
   }' > "$OUT_DIR/change-run-request.json"
 
-./examples/demo/change-api-adapter.sh \
+SKIP_BUILD=1 ./examples/demo/change-api-adapter.sh \
   --request "$OUT_DIR/change-run-request.json" \
   --out "$OUT_DIR/change-run.json"
 
 WET_PATH="$(jq -r '.preview.edit_recommendation.wet_path // empty' "$OUT_DIR/change-run.json")"
-if [ -n "$WET_PATH" ]; then
-  jq -n \
-    --arg action "explain" \
-    --arg target_slug "$REPO_PATH" \
-    --arg render_target_slug "$RENDER_TARGET" \
-    --arg space "$SPACE" \
-    --arg wet_path "$WET_PATH" \
-    '{
-      action: $action,
-      input: {
-        target_slug: $target_slug,
-        render_target_slug: $render_target_slug,
-        space: $space
-      },
-      filters: {
-        wet_path: $wet_path
-      }
-    }' > "$OUT_DIR/change-explain-request.json"
+RUN_CHANGE_ID="$(jq -r '.preview.change.change_id // empty' "$OUT_DIR/change-run.json")"
 
-  ./examples/demo/change-api-adapter.sh \
-    --request "$OUT_DIR/change-explain-request.json" \
-    --out "$OUT_DIR/change-explain.json"
+./cub-gen publish --space "$SPACE" "$REPO_PATH" "$RENDER_TARGET" > "$OUT_DIR/bundle.json"
+BUNDLE_CHANGE_ID="$(jq -r '.change_id // empty' "$OUT_DIR/bundle.json")"
+if [ -z "$RUN_CHANGE_ID" ] || [ -z "$BUNDLE_CHANGE_ID" ]; then
+  echo "error: missing change_id in run or bundle outputs" >&2
+  exit 1
 fi
+if [ "$RUN_CHANGE_ID" != "$BUNDLE_CHANGE_ID" ]; then
+  echo "error: run change_id ($RUN_CHANGE_ID) does not match bundle change_id ($BUNDLE_CHANGE_ID)" >&2
+  exit 1
+fi
+
+jq -n \
+  --arg action "explain" \
+  --arg change_id "$RUN_CHANGE_ID" \
+  --arg bundle "$OUT_DIR/bundle.json" \
+  --arg wet_path "$WET_PATH" \
+  '{
+    action: $action,
+    change: {
+      change_id: $change_id,
+      bundle: $bundle
+    },
+    filters: (if $wet_path == "" then {} else {wet_path: $wet_path} end)
+  }' > "$OUT_DIR/change-explain-request.json"
+
+SKIP_BUILD=1 ./examples/demo/change-api-adapter.sh \
+  --request "$OUT_DIR/change-explain-request.json" \
+  --out "$OUT_DIR/change-explain.json"
 
 jq -n \
   --arg story "7-ci-centric-api-flow" \
   --arg run_id "$RUN_ID" \
   --arg example "$EXAMPLE_SLUG" \
-  --arg change_id "$(jq -r '.preview.change.change_id' "$OUT_DIR/change-run.json")" \
+  --arg change_id "$RUN_CHANGE_ID" \
+  --arg explain_change_id "$(jq -r '.change.change_id // \"\"' "$OUT_DIR/change-explain.json")" \
+  --arg bundle_change_id "$BUNDLE_CHANGE_ID" \
   --arg decision_state "$(jq -r '.decision.state // "UNKNOWN"' "$OUT_DIR/change-run.json")" \
   --arg decision_authority "$(jq -r '.decision.authority // ""' "$OUT_DIR/change-run.json")" \
   --arg decision_source "$(jq -r '.decision.source // ""' "$OUT_DIR/change-run.json")" \
@@ -100,6 +109,9 @@ jq -n \
     run_id: $run_id,
     example: $example,
     change_id: $change_id,
+    explain_change_id: $explain_change_id,
+    bundle_change_id: $bundle_change_id,
+    lifecycle_consistent: ($change_id == $explain_change_id and $change_id == $bundle_change_id),
     decision_state: $decision_state,
     decision_authority: $decision_authority,
     decision_source: $decision_source,
@@ -112,3 +124,5 @@ jq -n \
       edit_hint: $edit_hint
     }
   }' | tee "$OUT_DIR/story-7-summary.json"
+
+jq -e '.lifecycle_consistent == true' "$OUT_DIR/story-7-summary.json" >/dev/null

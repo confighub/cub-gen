@@ -45,6 +45,11 @@ jobs:
       - name: Run story 7 connected CI flow
         run: ./examples/demo/story-7-ci-api-flow-connected.sh
 
+      - name: Run story 7 agent tool-call flow
+        env:
+          OUT_DIR: .tmp/agent-tool-call/${{ github.run_id }}/${{ inputs.example_slug }}
+        run: ./examples/demo/story-7-agent-tool-call-connected.sh "${EXAMPLE_SLUG}"
+
       - name: Upload story 7 summary artifact
         uses: actions/upload-artifact@v4
         with:
@@ -52,6 +57,15 @@ jobs:
           path: |
             ${{ env.OUT_DIR }}/change-run-request.json
             ${{ env.OUT_DIR }}/change-run.json
+            ${{ env.OUT_DIR }}/bundle.json
             ${{ env.OUT_DIR }}/change-explain-request.json
             ${{ env.OUT_DIR }}/change-explain.json
             ${{ env.OUT_DIR }}/story-7-summary.json
+            .tmp/agent-tool-call/${{ github.run_id }}/${{ inputs.example_slug }}/preview-request.json
+            .tmp/agent-tool-call/${{ github.run_id }}/${{ inputs.example_slug }}/preview.json
+            .tmp/agent-tool-call/${{ github.run_id }}/${{ inputs.example_slug }}/run-request.json
+            .tmp/agent-tool-call/${{ github.run_id }}/${{ inputs.example_slug }}/run.json
+            .tmp/agent-tool-call/${{ github.run_id }}/${{ inputs.example_slug }}/bundle.json
+            .tmp/agent-tool-call/${{ github.run_id }}/${{ inputs.example_slug }}/explain-request.json
+            .tmp/agent-tool-call/${{ github.run_id }}/${{ inputs.example_slug }}/explain.json
+            .tmp/agent-tool-call/${{ github.run_id }}/${{ inputs.example_slug }}/story-7-agent-summary.json
