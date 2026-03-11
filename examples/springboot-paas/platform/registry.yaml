@@ -1,0 +1,120 @@
+# NOTE: This registry is illustrative. ConfigHub evaluates constraints server-side.
+# cub-gen imports and traces these operation contracts for governance visibility.
+
+apiVersion: confighub.io/v1
+kind: FrameworkRegistry
+
+metadata:
+  name: springboot-platform
+  version: 1.0.0
+
+spec:
+  description: "Typed platform operations for Spring Boot services on Kubernetes"
+  homepage: "https://docs.acme-corp.com/platforms/springboot"
+
+  operations:
+    - name: configureRuntime
+      description: "Set Spring runtime identity and profile-level defaults"
+      inputs:
+        type: object
+        properties:
+          app_name:
+            type: string
+            required: true
+          server_port:
+            type: integer
+            required: true
+          profile:
+            type: string
+            enum: [dev, staging, prod]
+            required: true
+      outputs:
+        resources: [ConfigMap]
+
+    - name: configureActuatorHealth
+      description: "Require health endpoints and readiness/liveness checks"
+      inputs:
+        type: object
+        properties:
+          health_path:
+            type: string
+            default: /actuator/health
+          readiness_path:
+            type: string
+            default: /actuator/health/readiness
+          liveness_path:
+            type: string
+            default: /actuator/health/liveness
+      outputs:
+        resources: [Deployment]
+      constraints:
+        - actuator-required-prod
+
+    - name: bindDatasource
+      description: "Bind datasource secret refs and enforce managed datasource policy"
+      inputs:
+        type: object
+        properties:
+          datasource_secret_ref:
+            type: string
+            required: true
+          max_pool_size:
+            type: integer
+            required: false
+            default: 20
+      outputs:
+        resources: [Secret, ConfigMap]
+      constraints:
+        - managed-datasource-policy
+      validation:
+        rules:
+          - condition: "inputs.max_pool_size > 50"
+            message: "Pool sizes above 50 require platform-dba review"
+            severity: error
+
+    - name: scaleService
+      description: "Set deployment replicas per environment tier"
+      inputs:
+        type: object
+        properties:
+          replicas:
+            type: integer
+            required: true
+          environment:
+            type: string
+            enum: [dev, staging, prod]
+            required: true
+      outputs:
+        resources: [Deployment]
+      constraints:
+        - min-2-replicas-prod
+      validation:
+        rules:
+          - condition: "inputs.environment == 'prod' && inputs.replicas < 2"
+            message: "Production requires at least 2 replicas"
+            severity: error
+
+    - name: exposeService
+      description: "Expose Spring service with stable service contract"
+      inputs:
+        type: object
+        properties:
+          service_port:
+            type: integer
+            default: 80
+          target_port:
+            type: integer
+            required: true
+      outputs:
+        resources: [Service]
+
+  constraints:
+    - actuator-required-prod
+    - managed-datasource-policy
+    - min-2-replicas-prod
+
+  produces:
+    - Deployment
+    - Service
+    - ConfigMap
+    - Secret

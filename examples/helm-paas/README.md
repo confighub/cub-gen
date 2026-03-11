@@ -50,6 +50,7 @@ cub-gen doesn't touch this layer — your existing reconciler stays in control.
 | `platform/base/runtime-policy.yaml` | Platform team | Required probes and resource limits |
 | `platform/base/network-policy.yaml` | Platform team | Egress rules and namespace boundaries |
 | `platform/overlays/prod/resource-baseline.yaml` | Platform team | Production resource floors |
+| `platform/registry.yaml` | Platform team | FrameworkRegistry typed operations + constraints for Helm platform APIs |
 | `gitops/flux/helmrelease.yaml` | Platform team | Flux HelmRelease transport |
 | `gitops/argo/application.yaml` | Platform team | ArgoCD Application transport |
 
@@ -229,6 +230,7 @@ WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payme
 | `platform/base/runtime-policy.yaml` | Platform | Required probes, resource limits |
 | `platform/base/network-policy.yaml` | Platform | Egress rules |
 | `platform/overlays/prod/resource-baseline.yaml` | Platform | Prod resource floors |
+| `platform/registry.yaml` | Platform | FrameworkRegistry for Helm operations/constraints |
 | `gitops/flux/helmrelease.yaml` | Platform | Flux v2 HelmRelease transport |
 | `gitops/argo/application.yaml` | Platform | ArgoCD Application transport |
 | `docs/user-stories.md` | — | Narrative user stories |

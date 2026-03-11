@@ -7,6 +7,8 @@ This repo includes three runnable platform patterns using registry-driven operat
 
 | Example | Registry file | What it models |
 |---|---|---|
+| Helm PaaS | `examples/helm-paas/platform/registry.yaml` | Helm app lifecycle operations (image tag, scaling, ingress, chart upgrade). |
+| Spring Boot PaaS | `examples/springboot-paas/platform/registry.yaml` | Spring service operations (runtime config, actuator health, datasource, scaling). |
 | AI Ops PaaS | `examples/ai-ops-paas/platform/registry.yaml` | Agent fleet platform operations (fleet config, runtime, credentials, RBAC). |
 | Ops Workflow Platform | `examples/ops-workflow/platform/registry.yaml` | Operational workflows (deploy/restart/scale/rollback) with schedule and policy checks. |
 | Swamp Workflow Platform | `examples/swamp-automation/platform/registry.yaml` | Agent-authored workflow graph changes with model/method and required-step constraints. |
@@ -24,6 +26,12 @@ This works for app workloads and ops/workflow workloads.
 ## Quick run paths
 
 ```bash
+# Helm registry-backed platform
+./examples/helm-paas/demo-local.sh
+
+# Spring Boot registry-backed platform
+./examples/springboot-paas/demo-local.sh
+
 # AI Ops registry-backed platform
 ./examples/ai-ops-paas/demo-local.sh
 
