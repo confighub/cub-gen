@@ -1241,6 +1241,8 @@ func runChangeExplain(args []string) error {
 	space := fs.String("space", "default", "ConfigHub space label")
 	ref := fs.String("ref", "HEAD", "Git ref label to include in output")
 	whereResource := fs.String("where-resource", "", "Additional resource filter expression")
+	changeID := fs.String("change-id", "", "Existing change ID to explain without creating a new lifecycle")
+	bundlePath := fs.String("bundle", "", "Existing change bundle JSON file to use with --change-id")
 	wetPath := fs.String("wet-path", "", "Filter explanations to a specific WET path")
 	dryPath := fs.String("dry-path", "", "Filter explanations to a specific DRY path")
 	owner := fs.String("owner", "", "Filter explanations to a specific owner")
@@ -1255,36 +1257,87 @@ func runChangeExplain(args []string) error {
 	}
 	_ = jsonOut
 
-	if fs.NArg() != 2 {
-		return errors.New("usage: cub-gen change explain [flags] <target-slug> <render-target-slug>")
-	}
-	targetSlug := fs.Arg(0)
-	renderTargetSlug := fs.Arg(1)
-
-	preview, _, imported, err := buildChangePreviewResult(
-		targetSlug,
-		renderTargetSlug,
-		*space,
-		*ref,
-		*whereResource,
-		"cub-gen",
-	)
-	if err != nil {
-		return err
-	}
-
 	wetFilter := strings.TrimSpace(*wetPath)
 	dryFilter := strings.TrimSpace(*dryPath)
 	ownerFilter := strings.TrimSpace(*owner)
+	changeIDFilter := strings.TrimSpace(*changeID)
 
-	suggestion, matchCount, ok := pickInverseSuggestion(imported.Provenance, wetFilter, dryFilter, ownerFilter)
+	var (
+		input      changePreviewInput
+		change     changePreviewSummary
+		provenance []model.ProvenanceRecord
+		err        error
+	)
+
+	if changeIDFilter != "" {
+		if fs.NArg() != 0 {
+			return errors.New("usage: cub-gen change explain --change-id ID --bundle FILE [flags]")
+		}
+		bundleRaw := strings.TrimSpace(*bundlePath)
+		if bundleRaw == "" {
+			return errors.New("change explain --change-id requires --bundle FILE")
+		}
+		var bundle publish.ChangeBundle
+		if err := readJSONInput(bundleRaw, &bundle); err != nil {
+			return fmt.Errorf("read bundle json: %w", err)
+		}
+		if err := publish.VerifyBundle(bundle); err != nil {
+			return fmt.Errorf("verify bundle before explain: %w", err)
+		}
+		if bundle.ChangeID == "" {
+			return errors.New("bundle does not contain change_id")
+		}
+		if bundle.ChangeID != changeIDFilter {
+			return fmt.Errorf("bundle change_id mismatch: expected %s, got %s", changeIDFilter, bundle.ChangeID)
+		}
+		input = changePreviewInput{
+			TargetSlug:       bundle.TargetSlug,
+			RenderTargetSlug: bundle.RenderTargetSlug,
+			Space:            bundle.Space,
+			Ref:              bundle.Ref,
+		}
+		change = changePreviewSummary{
+			ChangeID:          bundle.ChangeID,
+			BundleDigest:      bundle.BundleDigest,
+			AttestationDigest: "",
+		}
+		provenance = bundle.Provenance
+	} else {
+		if strings.TrimSpace(*bundlePath) != "" {
+			return errors.New("change explain --bundle requires --change-id")
+		}
+		if fs.NArg() != 2 {
+			return errors.New("usage: cub-gen change explain [flags] <target-slug> <render-target-slug>")
+		}
+		targetSlug := fs.Arg(0)
+		renderTargetSlug := fs.Arg(1)
+
+		var preview changePreviewResult
+		var imported gitopsflow.ImportFlowResult
+		preview, _, imported, err = buildChangePreviewResult(
+			targetSlug,
+			renderTargetSlug,
+			*space,
+			*ref,
+			*whereResource,
+			"cub-gen",
+		)
+		if err != nil {
+			return err
+		}
+		input = preview.Input
+		change = preview.Change
+		provenance = imported.Provenance
+	}
+
+	suggestion, matchCount, ok := pickInverseSuggestion(provenance, wetFilter, dryFilter, ownerFilter)
 	if !ok {
 		return fmt.Errorf("no inverse edit explanation matched filters (wet_path=%q dry_path=%q owner=%q)", wetFilter, dryFilter, ownerFilter)
 	}
 
 	result := changeExplainResult{
-		Input:  preview.Input,
-		Change: preview.Change,
+		Input:  input,
+		Change: change,
 		Query: changeExplainQuery{
 			WetPathFilter: wetFilter,
 			DryPathFilter: dryFilter,
@@ -1963,6 +2016,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-slug> <render-target-slug>")
+	fmt.Fprintln(out, "  cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]")
 	fmt.Fprintln(out, "  cub-gen gitops <discover|import|cleanup> [flags]")
 	fmt.Fprintln(out, "  cub-gen bridge <ingest|decision|promote> [flags]")
@@ -1994,6 +2048,7 @@ func printUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen change explain --space my-space --wet-path \"Deployment/spec/template/spec/containers[name=main]/image\" ./examples/scoredev-paas ./examples/scoredev-paas")
+	fmt.Fprintln(out, "  cub-gen change explain --change-id chg_123 --bundle bundle.json --owner app-team")
 	fmt.Fprintln(out, "  cub-gen bridge ingest --in bundle.json --base-url https://confighub.example")
 	fmt.Fprintln(out, "  cub-gen bridge decision query --change-id chg_123 --base-url https://confighub.example")
 	fmt.Fprintln(out, "  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123")
@@ -2012,12 +2067,14 @@ func printChangeUsage(out io.Writer) {
 	fmt.Fprintln(out, "  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
 	fmt.Fprintln(out, "  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-slug> <render-target-slug>")
+	fmt.Fprintln(out, "  cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Examples:")
 	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/helm-paas ./examples/helm-paas")
 	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/swamp-automation ./examples/swamp-automation")
 	fmt.Fprintln(out, "  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
 	fmt.Fprintln(out, "  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas")
+	fmt.Fprintln(out, "  cub-gen change explain --change-id chg_123 --bundle bundle.json --wet-path \"Deployment/spec/template/spec/containers[name=main]/image\"")
 }
 
 func printGitOpsUsage(out io.Writer) {

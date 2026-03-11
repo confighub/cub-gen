@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -197,6 +199,86 @@ func TestChangeExplainWetPathFilter(t *testing.T) {
 	}
 }
 
+func TestChangeExplainByChangeIDFromBundle(t *testing.T) {
+	setupAliases(t)
+
+	publishOut, stderr, err := runWithCapturedIO([]string{
+		"publish",
+		"--space", "platform",
+		"score",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("publish returned error: %v\nstderr=%s", err, stderr)
+	}
+
+	var bundle map[string]any
+	if err := json.Unmarshal([]byte(publishOut), &bundle); err != nil {
+		t.Fatalf("unmarshal publish output: %v", err)
+	}
+	changeID, ok := bundle["change_id"].(string)
+	if !ok || strings.TrimSpace(changeID) == "" {
+		t.Fatalf("missing change_id in bundle: %v", bundle["change_id"])
+	}
+
+	bundlePath := filepath.Join(t.TempDir(), "bundle.json")
+	if err := os.WriteFile(bundlePath, []byte(publishOut), 0o600); err != nil {
+		t.Fatalf("write bundle file: %v", err)
+	}
+
+	out, explainErr, err := runWithCapturedIO([]string{
+		"change", "explain",
+		"--change-id", changeID,
+		"--bundle", bundlePath,
+		"--owner", "app-team",
+	})
+	if err != nil {
+		t.Fatalf("change explain by change-id returned error: %v\nstderr=%s", err, explainErr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal change explain output: %v\noutput=%s", err, out)
+	}
+	change, ok := got["change"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected change object, got %T", got["change"])
+	}
+	if gotID, ok := change["change_id"].(string); !ok || gotID != changeID {
+		t.Fatalf("expected change_id=%q, got %v", changeID, change["change_id"])
+	}
+}
+
+func TestChangeExplainByChangeIDMismatch(t *testing.T) {
+	setupAliases(t)
+
+	publishOut, stderr, err := runWithCapturedIO([]string{
+		"publish",
+		"--space", "platform",
+		"score",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("publish returned error: %v\nstderr=%s", err, stderr)
+	}
+	bundlePath := filepath.Join(t.TempDir(), "bundle.json")
+	if err := os.WriteFile(bundlePath, []byte(publishOut), 0o600); err != nil {
+		t.Fatalf("write bundle file: %v", err)
+	}
+
+	_, _, err = runWithCapturedIO([]string{
+		"change", "explain",
+		"--change-id", "chg_mismatch",
+		"--bundle", bundlePath,
+	})
+	if err == nil {
+		t.Fatal("expected mismatch error")
+	}
+	if !strings.Contains(err.Error(), "bundle change_id mismatch") {
+		t.Fatalf("unexpected error: %q", err.Error())
+	}
+}
+
 func TestChangeCommandErrorModes(t *testing.T) {
 	tests := []struct {
 		name string
@@ -227,6 +309,11 @@ func TestChangeCommandErrorModes(t *testing.T) {
 			name: "explain-missing-targets",
 			args: []string{"change", "explain"},
 			sub:  "usage: cub-gen change explain",
+		},
+		{
+			name: "explain-change-id-missing-bundle",
+			args: []string{"change", "explain", "--change-id", "chg_123"},
+			sub:  "requires --bundle FILE",
 		},
 	}
 
