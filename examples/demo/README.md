@@ -62,6 +62,17 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 | `run-all-connected-entrypoints.sh` | Runs every `examples/*/demo-connected.sh` entrypoint (all examples, optional `live-reconcile`) |
 | `simulate-repo-wizard.sh <repo> <target> [hint]` | GUI wizard simulation path |
 
+## CI policy gates (PR path)
+
+Use these when you want merge-blocking enforcement, not just local guidance:
+
+- `test/checks/pr-dry-ownership-gate.sh <repo-path> <base-ref> <head-ref> [actor-role] --report-json <path>`
+  - Blocks direct WET edits by requiring recognized DRY input files.
+  - Emits JSON with failures plus inverse-edit suggestions (`wet_path`, `dry_path`, owner, confidence).
+- `.github/workflows/pr-dry-ownership-gate.yml`
+  - Runs the gate for Helm + Spring examples.
+  - Posts a PR comment with actionable DRY edit guidance and fails status on BLOCK.
+
 ## Phase 3 connected story scripts
 
 | Script | User story | What it demonstrates |
