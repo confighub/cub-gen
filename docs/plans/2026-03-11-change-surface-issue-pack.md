@@ -1,10 +1,34 @@
 # Change Surface v0.2 - Ready-to-File Issue Pack
 
-Status: Draft issue pack
+Status: Active issue pack (partially executed)
 Owner persona: successful OSS project owner (developer-first adoption, clear value, low-friction onboarding)
 
 Execution/status companion:
 - `docs/plans/2026-03-11-action-plan-v01-execution-checklist.md`
+
+## Current execution state
+
+Completed in repo:
+
+- Issue 1 (language): done (`change preview|run|explain` canonicalized in entry docs).
+- Issue 2 (segmentation): done (persona/segment mapping in acceptance docs + examples index).
+- Issue 3 (prompt as DRY worked example): done.
+- Issue 4 (prompt-first local+connected demos): done.
+- Issue 5 (CLI contract): done (`docs/contracts/change-cli-v1.md`).
+- Issue 6/7/8 (CLI thin MVP): done (`change preview|run|explain`).
+- Issue 11/12/13 (terminal+CI+agent proofs): done.
+
+Partially addressed:
+
+- Issue 9 (API contract): contract docs/schemas exist and are exercised via adapter scripts.
+- Issue 10 (API adapter): compatibility adapter exists in demo path; production API server surface remains backlog.
+
+New hardening delivered after initial pack:
+
+- Confidence guidance + entrypoint gating.
+- Operation-registry discoverability expansion (Helm + Spring + AI/Ops/Swamp).
+- Connected auth contract gate.
+- Legacy naming gate (`no-config-platform` consistency).
 
 ## Product posture (applies to every issue)
 
