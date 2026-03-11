@@ -21,6 +21,7 @@ jobs:
       EXAMPLE_SLUG: ${{ inputs.example_slug }}
       RUN_ID: ${{ github.run_id }}
       VERIFIER: ci-bot
+      OUT_DIR: .tmp/ci-connected/${{ github.run_id }}/${{ inputs.example_slug }}
     steps:
       - uses: actions/checkout@v5
 
@@ -43,3 +44,12 @@ jobs:
 
       - name: Run story 7 connected CI flow
         run: ./examples/demo/story-7-ci-api-flow-connected.sh
+
+      - name: Upload story 7 summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: story-7-summary-${{ inputs.example_slug }}
+          path: |
+            ${{ env.OUT_DIR }}/change-run.json
+            ${{ env.OUT_DIR }}/change-explain.json
+            ${{ env.OUT_DIR }}/story-7-summary.json
