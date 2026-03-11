@@ -128,6 +128,9 @@ If your users mostly run workflows (not app manifests), start with these two:
   | jq '.provenance[0].swamp_workflow_analysis'
 ```
 
+Operation-registry walkthrough (AI Ops + Ops Workflow + Swamp):
+- [docs/workflows/operation-registry-real-apps.md](../docs/workflows/operation-registry-real-apps.md)
+
 ## Platform + app patterns (Kubernetes workloads)
 
 | Example | You use... | cub-gen shows you... |
