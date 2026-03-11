@@ -16,7 +16,7 @@ It is intentionally core-first: Helm, score.dev, and Spring Boot.
 2. `cub-gen` does not deploy to clusters.
 3. Output here demonstrates deterministic metadata, lineage, and governance artifacts.
 
-## Fast path (single command)
+## One-command path
 
 Run the bundled persona script:
 
