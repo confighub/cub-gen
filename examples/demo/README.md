@@ -51,7 +51,7 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 
 | Script | What it demonstrates |
 |--------|---------------------|
-| `app-ai-fastpath.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card output |
+| `app-ai-change-run.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card output |
 | `simulate-confighub-lifecycle.sh <repo> <target> [slug]` | Full local lifecycle simulation |
 | `run-all-confighub-lifecycles.sh` | Lifecycle simulation across current fixtures |
 | `run-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle: real ConfigHub ingest/query when bridge endpoints are available, with backend `changeset` fallback when they are not |
@@ -171,7 +171,7 @@ Connected CI bootstrap/runbook:
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
-./examples/demo/app-ai-fastpath.sh ./examples/scoredev-paas
+./examples/demo/app-ai-change-run.sh ./examples/scoredev-paas
 ./examples/demo/run-all-modules.sh
 ./examples/demo/ai-work-platform/run-all.sh
 ```

@@ -32,6 +32,14 @@ It is for two teams:
 
 Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability after deploy.
 
+## Change Verbs (Canonical)
+
+- `change preview`: show the proposed change, ownership, and edit guidance.
+- `change run`: execute the full governed flow (local or connected).
+- `change explain`: answer "what should I edit and why?" for a specific field.
+
+Today these are exposed via demo wrappers while the first-class CLI surface lands.
+
 ## Core Value in 10 Seconds
 
 Take a deployed field and trace it to the exact source edit path:
@@ -65,12 +73,12 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 This gives immediate value with local evidence and lifecycle outputs.
 
-## Fast Path: App/AI Programmer (One Command)
+## One-Command Change Run (App/AI)
 
 If you want one command that returns the edit recommendation plus evidence artifacts:
 
 ```bash
-./examples/demo/app-ai-fastpath.sh ./examples/scoredev-paas
+./examples/demo/app-ai-change-run.sh ./examples/scoredev-paas
 ```
 
 Output:
@@ -78,7 +86,7 @@ Output:
 - `change_id`, `bundle_digest`, `attestation_digest`
 - detected profile(s) and target counts
 - highest-confidence edit recommendation (`owner`, `wet_path`, `dry_path`, `edit_hint`)
-- artifact paths in `.tmp/app-ai-fastpath/...`
+- artifact paths in `.tmp/app-ai-change-run/...`
 
 ## Quickstart: Connected Mode (ConfigHub)
 
