@@ -30,6 +30,12 @@ New hardening delivered after initial pack:
 - Connected auth contract gate.
 - Legacy naming gate (`no-config-platform` consistency).
 
+## Filed follow-up issues
+
+- #160 feat(ci): enforce DRY ownership with PR gate for WET edits
+- #161 feat(api): add compatibility `/v1/changes` surface for change lifecycle
+- #162 feat(connected): enforce strict backend-authoritative mode for release paths
+
 ## Product posture (applies to every issue)
 
 - Lead with developer outcomes, not framework jargon.
