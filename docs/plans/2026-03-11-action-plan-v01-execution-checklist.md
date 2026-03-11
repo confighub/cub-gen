@@ -16,7 +16,7 @@ Goal: make `DRY -> WET -> LIVE` feel native for app/AI developers, with verifica
 | 5. First-class API contract | Done | [docs/contracts/change-api-v1.md](../contracts/change-api-v1.md) + schemas in `docs/contracts/schemas/` |
 | 6. Thin MVP over existing pipeline | Done | first-class `change preview/run/explain` in `cmd/cub-gen/main.go` |
 | 7. Prove in real invocation contexts | Done | terminal + CI + agent tool-call proof with shared `change_id` (`story-7-ci-api-flow-connected.sh`, `story-7-agent-tool-call-connected.sh`) |
-| 8. Gate AI-only rollout | Not started | policy/matrix + enforcement hooks not yet merged |
+| 8. Gate AI-only rollout | Done | `docs/workflows/ai-only-guardrails.md` + guardrail enforcement in prompt-as-dry scripts + `test/checks/check-ai-only-scope.sh` CI gate |
 
 ## Concrete issue titles (next filing set)
 
@@ -32,11 +32,11 @@ Goal: make `DRY -> WET -> LIVE` feel native for app/AI developers, with verifica
 
 3. `policy(ai-only): publish allowed-scope matrix + mandatory rollback hooks`
 - Why: item 8 direct deliverable.
-- Done when: new policy doc defines in-scope/out-of-scope mutations, required approvals, rollback proposal path, and hard deny list.
+- Status: done via `docs/workflows/ai-only-guardrails.md` and `examples/demo/lib/ai-only-guardrails.sh`.
 
 4. `ci(policy): fail AI-only demo lanes on out-of-scope mutations`
 - Why: ensure AI-only cannot bypass governance.
-- Done when: CI check blocks when AI-only scripts violate allowed-scope matrix rules.
+- Status: done via `test/checks/check-ai-only-scope.sh` wired into `make ci-local`.
 
 ### P1 (hardening)
 

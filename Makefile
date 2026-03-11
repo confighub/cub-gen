@@ -1,4 +1,4 @@
-.PHONY: build test test-parity test-contracts test-bridge-symmetry test-examples test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo lint-dual-mode check-story-status check-story-evidence update-goldens sync-triple-styles ci ci-local ci-connected ci-connected-troubleshoot docs docs-serve
+.PHONY: build test test-parity test-contracts test-bridge-symmetry test-examples test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo lint-dual-mode check-story-status check-story-evidence check-ai-only-scope update-goldens sync-triple-styles ci ci-local ci-connected ci-connected-troubleshoot docs docs-serve
 
 PARITY_TEST_PATTERN := ^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand|TestGeneratorsGolden)
 BRIDGE_SYMMETRY_PATTERN := ^(TestBridgeSymmetryMatrix|TestExamplesPathModeBridgeFlow)$
@@ -50,13 +50,16 @@ check-story-status:
 check-story-evidence:
 	./test/checks/check-story-evidence.sh
 
+check-ai-only-scope:
+	./test/checks/check-ai-only-scope.sh
+
 update-goldens:
 	UPDATE_GOLDEN=1 go test ./cmd/cub-gen -run 'Golden' -count=1 -v
 
 sync-triple-styles:
 	go run ./cmd/cub-gen-style-sync
 
-ci-local: build test test-contracts test-bridge-symmetry test-examples lint-dual-mode check-story-status
+ci-local: build test test-contracts test-bridge-symmetry test-examples lint-dual-mode check-story-status check-ai-only-scope
 
 ci-connected: build test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo check-story-evidence
 

@@ -68,3 +68,4 @@ export PROMOTION_PR_NUMBER=456
 - Connected scripts require `cub auth login` or `CONFIGHUB_TOKEN` in CI.
 - Story 10 requires real GitHub PR coordinates (`APP_PR_REPO`, `APP_PR_NUMBER`, `PROMOTION_PR_REPO`, `PROMOTION_PR_NUMBER`) and `gh` auth (`GH_TOKEN`/`GITHUB_TOKEN` or `gh auth login`).
 - If ingest endpoint is unavailable at the configured base URL, connected scripts fail fast with remediation text.
+- AI-only pilot lanes are restricted by [ai-only-guardrails.md](ai-only-guardrails.md) and enforced in CI by `test/checks/check-ai-only-scope.sh`.
