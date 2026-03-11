@@ -4,10 +4,38 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
-if ! command -v rg >/dev/null 2>&1; then
-  echo "error: required command not found: rg" >&2
-  exit 1
+USE_RG=0
+if command -v rg >/dev/null 2>&1; then
+  USE_RG=1
 fi
+
+file_has_pattern() {
+  local pattern="$1"
+  local file="$2"
+  if [ "$USE_RG" -eq 1 ]; then
+    rg -q -- "$pattern" "$file"
+  else
+    grep -Eq -- "$pattern" "$file"
+  fi
+}
+
+stdin_has_pattern() {
+  local pattern="$1"
+  if [ "$USE_RG" -eq 1 ]; then
+    rg -q -- "$pattern"
+  else
+    grep -Eq -- "$pattern"
+  fi
+}
+
+stdin_first_match_line() {
+  local pattern="$1"
+  if [ "$USE_RG" -eq 1 ]; then
+    rg -n -- "$pattern" | head -n1 | cut -d: -f1
+  else
+    grep -En -- "$pattern" | head -n1 | cut -d: -f1
+  fi
+}
 
 declare -a failures=()
 
@@ -30,28 +58,28 @@ while IFS= read -r readme; do
   fi
 
   if [ -x "$connected_script" ]; then
-    if ! rg -q 'run-confighub-lifecycle-connected\.sh|connected-preflight\.sh' "$connected_script"; then
+    if ! file_has_pattern 'run-confighub-lifecycle-connected\.sh|connected-preflight\.sh' "$connected_script"; then
       failures+=("$example_name: demo-connected.sh must use shared connected preflight path")
     fi
   fi
 
-  if ! rg -q 'demo-local\.sh' "$readme"; then
+  if ! file_has_pattern 'demo-local\.sh' "$readme"; then
     failures+=("$example_name: README missing demo-local.sh usage")
   fi
 
-  if ! rg -q 'demo-connected\.sh' "$readme"; then
+  if ! file_has_pattern 'demo-connected\.sh' "$readme"; then
     failures+=("$example_name: README missing demo-connected.sh usage")
   fi
 
-  if ! rg -q 'cub auth login' "$readme"; then
+  if ! file_has_pattern 'cub auth login' "$readme"; then
     failures+=("$example_name: README missing connected login step (cub auth login)")
   fi
 
-  if ! rg -q '^## If you already' "$readme"; then
+  if ! file_has_pattern '^## If you already' "$readme"; then
     failures+=("$example_name: README missing expert-user viewpoint section (## If you already ...)")
   fi
 
-  if ! rg -q '^## Why this maps' "$readme"; then
+  if ! file_has_pattern '^## Why this maps' "$readme"; then
     failures+=("$example_name: README missing model-mapping section (## Why this maps ...)")
   fi
 
@@ -66,19 +94,19 @@ while IFS= read -r readme; do
     continue
   fi
 
-  if ! printf '%s\n' "$entrypoint_section" | rg -q 'demo-local\.sh'; then
+  if ! printf '%s\n' "$entrypoint_section" | stdin_has_pattern 'demo-local\.sh'; then
     failures+=("$example_name: entrypoint section missing demo-local.sh command")
   fi
 
-  if ! printf '%s\n' "$entrypoint_section" | rg -q 'demo-connected\.sh'; then
+  if ! printf '%s\n' "$entrypoint_section" | stdin_has_pattern 'demo-connected\.sh'; then
     failures+=("$example_name: entrypoint section missing demo-connected.sh command")
   fi
 
-  if ! printf '%s\n' "$entrypoint_section" | rg -q 'cub auth login'; then
+  if ! printf '%s\n' "$entrypoint_section" | stdin_has_pattern 'cub auth login'; then
     failures+=("$example_name: entrypoint section missing cub auth login command")
   else
-    login_line="$(printf '%s\n' "$entrypoint_section" | rg -n 'cub auth login' | head -n1 | cut -d: -f1)"
-    connected_line="$(printf '%s\n' "$entrypoint_section" | rg -n 'demo-connected\.sh' | head -n1 | cut -d: -f1)"
+    login_line="$(printf '%s\n' "$entrypoint_section" | stdin_first_match_line 'cub auth login')"
+    connected_line="$(printf '%s\n' "$entrypoint_section" | stdin_first_match_line 'demo-connected\.sh')"
     if [ -n "$login_line" ] && [ -n "$connected_line" ] && [ "$login_line" -gt "$connected_line" ]; then
       failures+=("$example_name: entrypoint section must list cub auth login before demo-connected.sh")
     fi
