@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.confighub.dev/contracts/change-request-v1",
+  "title": "ChangeRequestV1",
+  "type": "object",
+  "required": ["action", "input"],
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": ["preview", "run"]
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["local", "connected"]
+    },
+    "input": {
+      "type": "object",
+      "required": ["target_slug", "render_target_slug"],
+      "additionalProperties": false,
+      "properties": {
+        "target_slug": {"type": "string", "minLength": 1},
+        "render_target_slug": {"type": "string", "minLength": 1},
+        "space": {"type": "string"},
+        "ref": {"type": "string"},
+        "where_resource": {"type": "string"}
+      }
+    },
+    "connected": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "base_url": {"type": "string", "format": "uri"},
+        "token": {"type": "string"},
+        "ingest_endpoint": {"type": "string"},
+        "decision_endpoint": {"type": "string"}
+      }
+    },
+    "filters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "wet_path": {"type": "string"},
+        "dry_path": {"type": "string"},
+        "owner": {"type": "string"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "action": {"const": "run"}
+        }
+      },
+      "then": {
+        "required": ["mode"]
+      }
+    }
+  ]
+}

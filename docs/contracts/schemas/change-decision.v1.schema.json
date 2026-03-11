@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.confighub.dev/contracts/change-decision-v1",
+  "title": "ChangeDecisionV1",
+  "type": "object",
+  "required": ["change", "verification"],
+  "additionalProperties": false,
+  "properties": {
+    "change": {
+      "type": "object",
+      "required": ["change_id", "bundle_digest", "attestation_digest"],
+      "additionalProperties": false,
+      "properties": {
+        "change_id": {"type": "string", "pattern": "^chg_"},
+        "bundle_digest": {"type": "string", "pattern": "^sha256:"},
+        "attestation_digest": {"type": "string", "pattern": "^sha256:"}
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "state": {"type": "string", "enum": ["INGESTED", "ATTESTED", "ALLOW", "ESCALATE", "BLOCK"]},
+        "authority": {"type": "string"},
+        "source": {"type": "string"}
+      }
+    },
+    "promotion_ready": {"type": "boolean"},
+    "verification": {
+      "type": "object",
+      "required": ["bundle_valid", "attestation_valid"],
+      "additionalProperties": false,
+      "properties": {
+        "bundle_valid": {"type": "boolean"},
+        "attestation_valid": {"type": "boolean"},
+        "verifier": {"type": "string"}
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

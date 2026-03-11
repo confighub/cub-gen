@@ -125,3 +125,7 @@ Compatibility wrappers remain useful for demo packaging and story scripts:
 1. Replacing Flux/Argo reconciliation.
 2. Defining backend HTTP API schemas (handled in API contract doc).
 3. Hiding policy outcomes (`BLOCK`/`ESCALATE` remain explicit).
+
+## See also
+
+- `docs/contracts/change-api-v1.md`

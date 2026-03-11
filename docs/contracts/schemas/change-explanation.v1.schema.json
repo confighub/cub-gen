@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.confighub.dev/contracts/change-explanation-v1",
+  "title": "ChangeExplanationV1",
+  "type": "object",
+  "required": ["change", "query", "explanation"],
+  "additionalProperties": false,
+  "properties": {
+    "change": {
+      "type": "object",
+      "required": ["change_id"],
+      "additionalProperties": false,
+      "properties": {
+        "change_id": {"type": "string", "pattern": "^chg_"},
+        "bundle_digest": {"type": "string", "pattern": "^sha256:"},
+        "attestation_digest": {"type": "string", "pattern": "^sha256:"}
+      }
+    },
+    "query": {
+      "type": "object",
+      "required": ["match_count"],
+      "additionalProperties": false,
+      "properties": {
+        "wet_path_filter": {"type": "string"},
+        "dry_path_filter": {"type": "string"},
+        "owner_filter": {"type": "string"},
+        "match_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "explanation": {
+      "type": "object",
+      "required": ["owner", "wet_path", "dry_path", "edit_hint", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "owner": {"type": "string"},
+        "wet_path": {"type": "string"},
+        "dry_path": {"type": "string"},
+        "edit_hint": {"type": "string"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "source_path": {"type": "string"},
+        "source_transform": {"type": "string"},
+        "generator_name": {"type": "string"},
+        "generator_profile": {"type": "string"}
+      }
+    }
+  }
+}
