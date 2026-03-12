@@ -11,6 +11,24 @@ ConfigHub backend OSS is available today:
 
 ---
 
+## Two loops, not a triangle
+
+```
+Inner loop (seconds/minutes, automated):
+  WET ←→ LIVE    Flux/Argo reconcile continuously
+
+Outer loop (hours/days, human or agent-mediated):
+  LIVE → observe → decide → edit DRY → render WET → apply LIVE
+```
+
+DRY→WET is a one-way deterministic transform (the generator function). There is no automatic LIVE→DRY path — that would undermine the entire governance model.
+
+But there *is* an outer loop: someone observes a live value, asks "where do I change this?", and cub-gen's inverse-edit map points them back to the right DRY source file and line. A human or agent then edits DRY, the generator re-renders WET, and Flux/Argo apply to LIVE.
+
+The inner loop is what classical GitOps already does well. The outer loop is where teams lose time — and where AI agents compress cycle time dangerously if there is no verification step. cub-gen adds the traceability and governed gating that makes the outer loop safe at speed.
+
+---
+
 ## The full picture
 
 ```mermaid
