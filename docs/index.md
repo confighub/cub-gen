@@ -34,9 +34,11 @@ cub-gen adds the import/provenance layer that answers these questions while keep
 
 ## What cub-gen is not
 
-- Not a Kubernetes reconciler
+- Not a Kubernetes reconciler — Flux/Argo still own WET→LIVE
 - Not a Flux/Argo replacement
 - Not an OCI replacement
+
+DRY→WET is a one-way deterministic transform. There is no automatic LIVE→DRY path. But there is an outer loop: observe live state → decide what to change → edit DRY → re-render WET → reconcile to LIVE. cub-gen makes that outer loop safe by tracing every field back to its source and gating changes through governed decisions. See [Two loops, not a triangle](platform.md#two-loops-not-a-triangle).
 
 ---
 
