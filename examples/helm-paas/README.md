@@ -5,6 +5,17 @@ The platform owns the chart structure; app teams own their values overlays.
 ConfigHub makes that contract explicit, traceable, and auditable — without
 changing how you use Helm.
 
+## Domain POV (Helm platform teams)
+
+This example is written for teams like IITS customer environments:
+
+- umbrella charts + subcharts + environment overlays,
+- Flux/Argo reconciliation from Git/OCI,
+- repeated incidents caused by unclear value precedence and ownership.
+
+The first win is visibility, not policy complexity: who owns each value, which
+source won, and what to edit next.
+
 ## What you get
 
 - **Field-origin tracing**: every deployed field maps back to `values.yaml`,

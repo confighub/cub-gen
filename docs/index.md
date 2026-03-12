@@ -1,23 +1,40 @@
 # cub-gen
 
-**Deterministic Git-native generator importer with command-shape parity to `cub gitops`.**
+**Governance + traceability sidecar for GitOps.**
 
-cub-gen detects generator-style app sources in Git repos, classifies DRY inputs and WET targets, and emits provenance with field-origin tracing and inverse-edit guidance — all without touching your runtime controllers.
+cub-gen works with what teams already run today:
+
+- app/config in Git
+- OCI artifacts
+- Flux/Argo reconciliation to cluster
+
+It adds what those layers do not provide by default:
+
+- source-to-live field traceability (`which file/path controls this field?`)
+- ownership-aware edit routing (`who should edit this?`)
+- governed safety decisions before deploy (`ALLOW/ESCALATE/BLOCK`)
 
 ---
 
 ## Why cub-gen exists
 
-Classical GitOps answers *"what changed?"* and *"did it sync?"*
+Classical GitOps is strong at applying changes.
 
 Teams still struggle to answer:
 
-- Why was this change proposed?
-- Who authorized it?
-- What checks ran before execution?
-- Was the real outcome verified afterward?
+- Which source file/path controls this live field?
+- Did the right team edit the right thing?
+- Can we block unsafe edits before they hit cluster?
 
-AI-assisted changes make this gap wider because more changes happen faster. cub-gen adds the **import and provenance layer** that answers these questions, while keeping Flux/Argo as the reconciler.
+AI-assisted changes make this gap wider because more changes happen faster.
+
+cub-gen adds the import/provenance layer that answers these questions while keeping Flux/Argo as reconciler.
+
+## What cub-gen is not
+
+- Not a Kubernetes reconciler
+- Not a Flux/Argo replacement
+- Not an OCI replacement
 
 ---
 

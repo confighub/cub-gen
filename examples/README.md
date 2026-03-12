@@ -19,6 +19,25 @@ locally with no backend. Generator detection, field-origin tracing, and evidence
 bundles work offline. Cross-repo queries, policy enforcement, and governed decisions
 require [ConfigHub](https://confighub.github.io/cub-gen/platform/).
 
+## Pick your domain POV first
+
+Start with the example that matches how your team already thinks:
+
+| If you are... | Start here | First value you should see |
+|---|---|---|
+| Spring Boot platform or app lead | [`springboot-paas`](./springboot-paas/) | "Which Spring property changed, who owns it, and what file do I edit?" |
+| Helm/Flux/Argo platform team (umbrella charts, overlays) | [`helm-paas`](./helm-paas/) | Ownership + field trace map without chart archaeology |
+| Score.dev platform team | [`scoredev-paas`](./scoredev-paas/) | Visibility from `score.yaml` intent to rendered runtime fields |
+| Ops/SRE workflow owner | [`ops-workflow`](./ops-workflow/) | Governed schedule/action changes with explicit ALLOW/BLOCK outcomes |
+| AI workflow / Swamp-style team | [`swamp-automation`](./swamp-automation/) | Structural workflow-change classification and policy-ready evidence |
+| AI fleet platform owner | [`c3agent`](./c3agent/) or [`ai-ops-paas`](./ai-ops-paas/) | Model/budget/credential governance over fleet config changes |
+| Backstage catalog owner | [`backstage-idp`](./backstage-idp/) | Catalog ownership/lifecycle changes become traceable and reviewable |
+| Reconciler reliability owner | [`live-reconcile`](./live-reconcile/) | Real Flux+Argo create/update/drift-correction proof harness |
+
+If you are unsure, start with `helm-paas` (platform POV) or `springboot-paas` (app-team POV).
+
+Deeper persona framing (from domain feedback): [Domain POV Matrix](../docs/workflows/domain-pov-matrix.md)
+
 ## What `cub-gen` does
 
 `cub-gen` is a deterministic, Git-native generator importer. It reads existing config and emits:

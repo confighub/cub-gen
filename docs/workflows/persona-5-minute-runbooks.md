@@ -7,6 +7,13 @@ Each runbook has two paths:
 - `Local mode`: offline, no login required.
 - `Connected mode`: real ConfigHub round-trip, starts with `cub auth login`.
 
+Persona principles used here (from field feedback):
+
+- Start with the user's existing authoring model (`application.yaml`, `values.yaml`, `score.yaml`, workflow YAML).
+- Lead with visibility and edit guidance first; layer governance complexity second.
+- Keep reconciler/runtime unchanged (Flux/Argo stay in place).
+- Describe value in domain language, not platform jargon.
+
 Build once before local runs:
 
 ```bash

@@ -10,6 +10,17 @@ This is governance governing itself. The lifecycle definition is configuration,
 and configuration gets governed. The same provenance, ownership, and decision
 pipeline that governs your app changes also governs the governance rules.
 
+## Domain POV (platform control-plane operators)
+
+This example is for teams operating policy-driven platform lifecycles:
+
+- release/verification/apply stages are already encoded as workflow config,
+- production controls (approvals, windows, break-glass) evolve frequently,
+- governance changes themselves need auditable governance.
+
+The first value is recursive safety: lifecycle policy edits are treated with the
+same rigor as app/runtime changes.
+
 ## What you get
 
 - **Recursive governance**: changes to lifecycle rules go through the same

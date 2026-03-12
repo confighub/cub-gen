@@ -2,6 +2,18 @@
 
 This example proves LIVE reconciliation loops with both Flux and Argo CD using a real `kind` cluster.
 
+## Domain POV (reconciler reliability owners)
+
+Use this harness if your team already trusts GitOps reconcilers and wants
+repeatable proof of behavior:
+
+- create/update/drift-correction in one script,
+- side-by-side Flux vs Argo verification,
+- connected governed path from `helm-paas` artifacts to LIVE correction.
+
+The first value is confidence that governance tooling remains additive to real
+reconciler behavior.
+
 ## What You Get
 
 - `flux/manifests-v1`: initial desired state (`replicas=1`, revision `v1`)

@@ -10,6 +10,17 @@ governance over *what* changed. When 50 teams rename owners during a reorg,
 you need traceability — not just commit history. ConfigHub makes every catalog
 change traceable, auditable, and queryable across repos.
 
+## Domain POV (Backstage/catalog admins)
+
+Use this example if your catalog is operationally critical:
+
+- `catalog-info.yaml` drives ownership, lifecycle, and service discoverability,
+- high-volume metadata edits happen during reorgs or compliance updates,
+- you need policy checks and provenance without changing Backstage workflows.
+
+The first value is catalog trust: owner/lifecycle edits become explicit,
+reviewable, and queryable across repos.
+
 ## What you get
 
 - **Catalog entity governance**: ownership, lifecycle, and type changes are

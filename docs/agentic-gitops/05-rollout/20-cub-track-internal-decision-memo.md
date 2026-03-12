@@ -45,6 +45,14 @@ It is explicitly positioned as:
 3. Not writing full WET telemetry/transcripts to Git by default.
 4. Not forcing product coupling in MVP.
 
+## Relationship Clarification (Tool Boundaries)
+
+1. `cub-gen` is the DRY->WET import/provenance surface (field-origin + inverse-edit).
+2. `cub-scout` is the LIVE observation/evidence surface.
+3. `cub-track` is the mutation ledger surface (intent/decision/outcome in Git).
+4. These are complementary, not duplicates or hidden rebrands.
+5. Packaging may converge later under `cub track`, but boundaries must remain explicit.
+
 ## Architecture Boundary (DRY vs WET)
 
 1. **Git (DRY):** immutable linkage + compact receipts.

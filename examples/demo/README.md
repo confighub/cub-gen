@@ -8,6 +8,19 @@ Each script demonstrates part of the flow:
 detect -> import -> publish -> verify -> attest -> (optional) bridge ingest/query
 ```
 
+## Pick your first demo by persona
+
+| Persona | Start here | Why |
+|---|---|---|
+| Spring app/platform team | `module-3-spring-ownership.sh` | Fast app-vs-platform ownership proof in Spring terms |
+| Helm platform engineer | `module-1-helm-import.sh` | Immediate DRY source mapping for chart/value changes |
+| Score platform team | `module-2-score-field-map.sh` | `score.yaml` -> runtime field trace in one command |
+| Ops/SRE workflow owner | `ai-work-platform/scenario-4-operations.sh` | Governed workflow mutation path, not just manifests |
+| Swamp/workflow maintainer | `ai-work-platform/scenario-2-swamp.sh` | Structural workflow-change classification path |
+| Reliability/reconciler owner | `e2e-live-reconcile-flux.sh` and `e2e-live-reconcile-argo.sh` | Real create/update/drift correction loops |
+
+See also: [Domain POV Matrix](../../docs/workflows/domain-pov-matrix.md)
+
 ## Workflow-first start (Ops + Swamp)
 
 If your platform is workflow-heavy, start here before app-manifest demos:

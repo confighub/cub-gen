@@ -11,6 +11,18 @@ For this pattern, `cub-gen` is most useful as a **workflow change classifier and
 
 > For deploying the Swamp runtime itself on Kubernetes, see [`swamp-project`](../swamp-project/).
 
+## Domain POV (Swamp/workflow maintainers)
+
+This example is tuned for local-first workflow teams:
+
+- AI agents compose workflow steps from typed models,
+- teams review workflow diffs in Git,
+- safety hinges on structural checks (models/methods/required steps), not
+  Helm-style template rendering.
+
+The first value is structural governance: classify workflow mutations quickly
+and gate risky changes before execution.
+
 ## What you get
 
 - **Structural workflow diffing**: step graph and model-method changes are visible in one governed bundle.
