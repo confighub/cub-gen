@@ -10,6 +10,17 @@ This is the infrastructure side of the Swamp story: deploying the engine
 itself. For governance over the *workflows* that run on Swamp, see
 [`swamp-automation`](../swamp-automation/).
 
+## Domain POV (runtime platform owners)
+
+Use this example when your team owns Swamp runtime delivery as infrastructure:
+
+- Helm chart + values overlays define runtime shape,
+- project teams tune approved runtime knobs (gateway, replicas, image),
+- platform teams enforce runtime safety baselines.
+
+This is the infrastructure half of the Swamp story. Pair with
+`swamp-automation` for workflow-change governance.
+
 ## What you get
 
 - **Standard Helm governance**: same field-origin tracing, ownership mapping,

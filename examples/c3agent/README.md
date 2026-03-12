@@ -13,6 +13,17 @@ properly isolated? ConfigHub makes AI fleet governance explicit and traceable.
 > For the full platform story with registry and constraint enforcement, see
 > [`ai-ops-paas`](../ai-ops-paas/).
 
+## Domain POV (AI fleet operators)
+
+This example is for teams already operating autonomous agent fleets:
+
+- model/budget/credential changes happen frequently,
+- one config change can fan out into many runtime resources,
+- platform teams need clear policy boundaries without slowing app teams.
+
+The first value is controlled speed: fast fleet edits with explicit ownership,
+traceability, and safe escalation paths.
+
 ## What you get
 
 - **Fleet config governance**: 30 lines of DRY config → 11 governed WET

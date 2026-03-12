@@ -9,6 +9,17 @@ This is the simplest cub-gen example: app-only configuration with no platform
 contracts. It proves the governance model works for *any* configuration, not
 just Kubernetes workloads.
 
+## Domain POV (app teams without a formal platform)
+
+This example is for teams that manage provider config directly today:
+
+- no full platform contract yet,
+- app teams still need safe change flow and traceability,
+- platform policy may be added later without breaking existing authoring.
+
+The first value is immediate visibility on plain config files, before any major
+platform rollout.
+
 ## What you get
 
 - **Field-origin tracing**: every channel, credential ref, and setting maps

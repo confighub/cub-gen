@@ -10,6 +10,18 @@ workflow definition gets the same field-origin tracing, ownership mapping,
 and decision pipeline as a Helm chart. Nothing executes without an explicit
 ALLOW decision.
 
+## Domain POV (SRE and operations workflow teams)
+
+This example fits teams that already run scheduled/triggered operational
+actions (deploy, restart, scale) through scripts, CI jobs, or runbooks:
+
+- changes to schedules/actions are high impact,
+- approvals and safe windows are often tribal knowledge,
+- post-incident review needs traceable "who changed what and why."
+
+The first value is operational clarity: workflows are governed config artifacts,
+not opaque automation scripts.
+
 ## What you get
 
 - **Workflow-as-config governance**: schedule changes, action parameters, and

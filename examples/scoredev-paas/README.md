@@ -10,6 +10,17 @@ ConfigHub adds the missing piece: traceable provenance from Score workload spec
 through to governed Kubernetes manifests, with field-level ownership and
 inverse-edit guidance.
 
+## Domain POV (Score platform teams)
+
+This example is for organizations already using Score at scale:
+
+- developers author `score.yaml` and do not touch Kubernetes YAML,
+- platform teams own provisioners, workload classes, and policy defaults,
+- incidents still require tracing "what happened between Score and runtime."
+
+The first value is post-render clarity: which runtime fields came from Score
+intent vs platform defaults, and who should edit each one.
+
 ## What you get
 
 - **Full field-origin mapping**: every rendered Kubernetes field traces back to

@@ -2,6 +2,17 @@
 
 These demos simulate AI-work platform use cases while keeping the same local-first `cub-gen` import model.
 
+## Domain POV
+
+This track is for teams combining:
+
+- app or prompt-level intent authored by humans/agents,
+- workflow-style execution models (Swamp/ops actions),
+- Kubernetes GitOps runtime (Flux/Argo) where needed.
+
+Use this track to validate the closed loop:
+intent -> governed change bundle -> decision -> runtime outcome -> next edit guidance.
+
 Scenarios:
 
 1. C3 Agent (`c3agent`)

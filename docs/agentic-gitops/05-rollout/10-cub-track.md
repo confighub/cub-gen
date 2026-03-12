@@ -50,6 +50,18 @@ governed execution (Stages 1-3).
 
 In governed mode, verification evidence and attestation are required before and after execution; they are core to the model, not add-ons.
 
+### Relationship to cub-gen and cub-scout
+
+These tools are complementary and intentionally separate:
+
+| Tool | Primary job | Does not do |
+|------|-------------|-------------|
+| `cub-gen` | DRY -> WET import/provenance, field-origin maps, inverse-edit guidance, governed bundle emission | Observe cluster runtime; reconcile |
+| `cub-scout` | Observe LIVE runtime, capture drift/evidence | Infer generator provenance from DRY inputs; reconcile |
+| `cub-track` | Record mutation intent/decision/outcome in Git, explain/search mutation history | Reconcile; replace ConfigHub governance authority |
+
+They are not one tool in disguise. Packaging may converge later (`cub track`), but boundaries stay fixed.
+
 ---
 
 ## Motivation

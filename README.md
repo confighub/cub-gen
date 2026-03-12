@@ -2,7 +2,24 @@
 
 See where every deployed config value came from.
 
-`cub-gen` is a local CLI that scans your repo, classifies config files by generator type, and traces every rendered field back to the source file, line, and owner that produced it.
+`cub-gen` is a governance + traceability sidecar for GitOps.
+
+If you already run app/config in Git, OCI artifacts, and Flux/Argo reconciliation, `cub-gen` answers:
+
+- Which source file/path controls this live field?
+- Did the right team edit the right thing?
+- Can we block unsafe edits before they hit cluster?
+
+It does this by classifying your existing repo and mapping rendered fields back
+to source file, line, and owner.
+
+## What it is not
+
+- Not a Kubernetes reconciler
+- Not a Flux/Argo replacement
+- Not an OCI replacement
+
+Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability after deploy.
 
 ## What it looks like
 

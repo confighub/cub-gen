@@ -137,6 +137,7 @@ ConfigHub (dry+wet Units; WET deployment contract) ----------+
 |----------------|----------|
 | Store dry+wet Units, keep WET authoritative for deployment, publish, resolve field-origin maps, route editing to DRY ingress | **ConfigHub** |
 | Detect stale renders (inputs changed, output not re-rendered) | **ConfigHub** (publishing pipeline) |
+| Import generator-style DRY inputs, produce field-origin maps + inverse-edit guidance, and emit governed change bundles | **cub-gen** |
 | Reconcile runtime from published artifacts | **Flux / Argo** (inner loop) |
 | Observe cluster, capture evidence, detect drift from intended state | **cub-scout** |
 | Record governed mutation history; redirect WET edits to DRY sources | **cub-track** |
@@ -145,11 +146,17 @@ ConfigHub (dry+wet Units; WET deployment contract) ----------+
 
 **Never cross these boundaries:**
 - cub-scout observes the CLUSTER, not the generator pipeline
+- cub-gen analyzes/imports DRY->WET intent, not LIVE runtime state
 - cub-track records MUTATIONS, not runtime state
 - ConfigHub STORES and GOVERNS, it does not reconcile
 - Flux/Argo RECONCILE, they are not replaced
 - Staleness (DRY changed, WET not re-rendered) is ConfigHub's concern, not cub-scout's
 - Drift (cluster differs from intended state) is cub-scout's concern, not ConfigHub's
+
+**Clarity check (not one tool in disguise):**
+- `cub-gen` + `cub-scout` are complementary surfaces in one operating model, not duplicates.
+- `cub-track` is a separate mutation-ledger surface (Labs/planned), not a hidden rename of either tool.
+- Packaging may converge later (`cub track`), but the responsibilities stay separate.
 
 ---
 

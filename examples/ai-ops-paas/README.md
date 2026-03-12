@@ -11,6 +11,17 @@ guidance.
 This is the full platform version of the c3agent story. For the standalone
 fleet config (without registry and constraints), see [`c3agent`](../c3agent/).
 
+## Domain POV (platform teams launching AI-ops PaaS)
+
+Use this when you are building a "Heroku for AI operations" internally:
+
+- app/AI teams should author short fleet intent, not Kubernetes objects,
+- platform teams must enforce model, budget, credential, and RBAC guardrails,
+- runtime should still flow through existing Flux/Argo + OCI operations.
+
+The first value is platform clarity: one contract for teams, one governance
+surface for platform owners.
+
 ## What you get
 
 - **Self-service provisioning**: teams author `c3agent.yaml`, platform provides

@@ -10,6 +10,18 @@ When someone changes `spring.datasource.hikari.maximum-pool-size`, is that an
 app change or a platform change? Today, your PR reviewer has to know. With
 ConfigHub, the ownership boundary is explicit and enforced.
 
+## Domain POV (Spring Boot shops)
+
+This example targets Spring-heavy teams where developers know Spring, not
+Kubernetes:
+
+- app teams edit `application*.yaml` and ship features,
+- platform teams own datasource/SLO/secrets boundaries,
+- reviews fail when ownership is implicit ("is this app config or platform config?").
+
+The goal is invisible governance for app developers: they get a clear ALLOW or
+BLOCK in PR terms they understand, without learning manifest internals.
+
 ## What you get
 
 - **Ownership-aware field tracing**: `server.port` is app-team owned;
