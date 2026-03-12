@@ -14,6 +14,14 @@ It adds what those layers do not provide by default:
 - ownership-aware edit routing (`who should edit this?`)
 - governed safety decisions before deploy (`ALLOW/ESCALATE/BLOCK`)
 
+## Why the name `cub-gen`
+
+`gen` means **generator**.
+
+- Generator = function mapping `<dry, context>` to `<wet, provenance, inverse-edit guidance>`.
+- `cub-gen` is the import/provenance/governance layer for that function.
+- Flux/Argo remain the reconciler that applies to LIVE state.
+
 ---
 
 ## Why cub-gen exists

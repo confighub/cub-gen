@@ -13,6 +13,14 @@ If you already run app/config in Git, OCI artifacts, and Flux/Argo reconciliatio
 It does this by classifying your existing repo and mapping rendered fields back
 to source file, line, and owner.
 
+## Why the name `cub-gen`
+
+`gen` means **generator**.
+
+- A generator is a function that maps `<dry, context>` to `<wet, provenance, inverse-edit guidance>`.
+- `cub-gen` does real work in that path today: it detects generator patterns, imports provenance, and emits verifiable governed change bundles.
+- It does not replace reconciliation; Flux/Argo still apply changes to cluster.
+
 ## What it is not
 
 - Not a Kubernetes reconciler
