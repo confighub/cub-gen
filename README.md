@@ -4,6 +4,8 @@ See where every deployed config value came from.
 
 `cub-gen` is a governance + traceability sidecar for GitOps.
 
+**gen = generator.** A generator is a function that maps DRY source (your `values.yaml`, `score.yaml`, etc.) to WET rendered output (the manifests that reach your cluster). `cub-gen` detects which generators your repo uses, runs the mapping, and records provenance — so every deployed field traces back to a source file, line, and owner.
+
 If you already run app/config in Git, OCI artifacts, and Flux/Argo reconciliation, `cub-gen` answers:
 
 - Which source file/path controls this live field?
