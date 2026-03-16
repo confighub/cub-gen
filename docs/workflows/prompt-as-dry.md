@@ -2,6 +2,21 @@
 
 This is the canonical answer to: "What does prompt-as-DRY look like in a real workflow?"
 
+## The conceptual model
+
+Human and AI-assisted changes can run through the same governed path:
+
+| Concept | How it maps |
+|---------|-------------|
+| **Prompt + context** | DRY input (what the team or agent authors) |
+| **LLM/agent layer** | Non-deterministic generator (produces WET output) |
+| **Verification + attestation** | Safety boundary (makes non-determinism governable) |
+| **Mutation ledger** | Compliance and forensics proof |
+
+The key insight: an LLM behaves like a non-deterministic generator. The same
+verification, attestation, and governance that makes deterministic generators
+safe also makes AI-assisted changes safe.
+
 ## The idea
 
 A human or agent writes high-level intent first.
