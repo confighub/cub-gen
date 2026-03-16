@@ -107,6 +107,64 @@ Use these when you want merge-blocking enforcement, not just local guidance:
 | `story-11-live-breakglass-proposal-connected.sh` | 11 | Persist accept/revert break-glass proposals as backend changesets with queryable evidence |
 | `run-phase-4-connected-stories.sh` | 8,10,11 | Runs all three connected Phase 4 stories |
 
+## PR-MR pairing and promotion flows (Wave 2)
+
+These scripts demonstrate the bidirectional handoff between Git PR workflow and
+ConfigHub MR workflow, plus upstream DRY promotion:
+
+| Script | Flow | What it demonstrates |
+|--------|------|---------------------|
+| `flow-a-git-pr-to-mr-connected.sh` | A | Git PR → ConfigHub MR: developer opens PR, ConfigHub creates/updates MR with evidence |
+| `flow-b-mr-to-git-pr-connected.sh` | B | ConfigHub MR → Git PR: ConfigHub initiates change, generates Git PR after approval |
+| `fr8-promotion-upstream-dry-connected.sh` | FR8 | Promotion to upstream DRY: successful app change promoted to platform base |
+
+### Flow A: Git PR → ConfigHub MR
+
+The most common governed change flow:
+
+```bash
+export GIT_REPO=owner/repo
+export PR_NUMBER=123
+./examples/demo/flow-a-git-pr-to-mr-connected.sh ./examples/helm-paas
+```
+
+Steps:
+1. Developer makes changes and opens Git PR
+2. CI/webhook triggers cub-gen import
+3. cub-gen creates/updates ConfigHub MR with evidence bundle
+4. ConfigHub evaluates and returns governed decision (ALLOW/ESCALATE/BLOCK)
+5. Decision is posted back to Git PR as status check
+
+### Flow B: ConfigHub MR → Git PR
+
+Reverse flow for ConfigHub-initiated changes:
+
+```bash
+./examples/demo/flow-b-mr-to-git-pr-connected.sh ./examples/helm-paas
+```
+
+Used for:
+- Live-origin proposals (story 11 accept path)
+- Platform-initiated changes
+- Upstream DRY promotions
+
+### FR8: Promotion to Upstream Platform DRY
+
+Full promotion flow from live observation through WET to upstream DRY:
+
+```bash
+./examples/demo/fr8-promotion-upstream-dry-connected.sh ./examples/helm-paas
+```
+
+Phases:
+1. **LIVE → WET**: Observe live state, capture delta
+2. **WET → governed**: Evaluate against policies, reach ALLOW
+3. **governed → promotion**: After successful rollout, propose promotion
+4. **promotion → upstream DRY**: Platform team reviews and merges
+5. **cleanup**: Reduce/remove app overlay to avoid drift
+
+See also: [PR-MR Linkage Contract](../../docs/contracts/pr-mr-linkage-and-dry-promotion.md)
+
 Story 10 required inputs (real GitHub evidence):
 
 ```bash
