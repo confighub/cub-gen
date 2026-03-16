@@ -48,6 +48,18 @@ Deeper persona framing (from domain feedback): [Domain POV Matrix](../docs/workf
 4. inverse-edit guidance (where to edit),
 5. evidence bundles (`publish`, `verify`, `attest`).
 
+## How this differs from ConfigHub GitOps Import
+
+If you have also seen ConfigHub's GitOps Import wizard or `cub gitops import`, the split is:
+
+- ConfigHub GitOps import starts from ArgoCD/Flux resources already represented in a cluster.
+- `cub-gen` starts from source repos and generator inputs such as `Chart.yaml`, `score.yaml`, `application.yaml`, or workflow files.
+
+That means:
+
+- use ConfigHub import for brownfield cluster/app discovery,
+- use these `cub-gen` examples for source-side provenance, ownership routing, and governed edits.
+
 If confidence scores are new to your team, use:
 - [Confidence score guide](../docs/workflows/confidence-scores.md)
 

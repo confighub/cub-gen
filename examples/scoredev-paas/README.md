@@ -21,6 +21,24 @@ This example is for organizations already using Score at scale:
 The first value is post-render clarity: which runtime fields came from Score
 intent vs platform defaults, and who should edit each one.
 
+## Which import path should a Score team use?
+
+For Score users, start with `cub-gen`, not ConfigHub's GitOps Import wizard.
+
+- ConfigHub GitOps Import is for importing ArgoCD/Flux application resources that already exist in a cluster.
+- This example is about source-side Score intent in `score.yaml`.
+
+That distinction matters because a Score team thinks in workload intent, workload
+classes, and provisioners, not in Argo `Application` or Flux `HelmRelease`
+objects.
+
+So the recommended path is:
+
+1. keep `score.yaml` as the app-team contract,
+2. add `cub-gen` for field-origin tracing and inverse-edit guidance,
+3. connect to ConfigHub when you want governed decisions, evidence, and
+   cross-repo visibility.
+
 ## What you get
 
 - **Full field-origin mapping**: every rendered Kubernetes field traces back to
@@ -77,6 +95,12 @@ This example is for teams already committed to Score-style app specs:
 
 cub-gen keeps Score as the app-team interface and adds deterministic provenance
 and ownership routing so debugging and governance use the same contract.
+
+If you are already a ConfigHub user, the framing is slightly different:
+
+- use ConfigHub's cluster-side GitOps import for existing Argo/Flux-managed apps,
+- use this Score example when you want to govern the source-side `score.yaml`
+  contract directly.
 
 ## Why this maps cleanly to the cub-gen framework
 
