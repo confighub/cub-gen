@@ -260,6 +260,15 @@ WET:  Deployment/spec/template/spec/containers[name=main]/image
 - **E2E demo**: `../demo/module-2-score-field-map.sh`
 - **Worked example**: `../../docs/agentic-gitops/03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md`
 
+### PR-MR pairing and promotion flows
+
+- **Flow A (Git PR → ConfigHub MR)**: `../demo/flow-a-git-pr-to-mr-connected.sh`
+  — developer opens PR, ConfigHub creates MR with evidence
+- **Flow B (ConfigHub MR → Git PR)**: `../demo/flow-b-mr-to-git-pr-connected.sh`
+  — ConfigHub initiates change, generates Git PR after approval
+- **FR8 promotion**: `../demo/fr8-promotion-upstream-dry-connected.sh`
+  — promote successful app change to upstream platform DRY
+
 ## Run from ConfigHub (connected mode)
 
 If you already have ConfigHub, start here:
