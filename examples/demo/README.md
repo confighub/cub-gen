@@ -237,7 +237,7 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 | Status | User stories |
 |--------|--------------|
 | Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 |
-| Partial | None |
+| Partial (simulated/local-first, not full backend/runtime integration) | None |
 | Deferred | None |
 
 References:
