@@ -354,7 +354,7 @@ Platform-owned fields cannot be weakened by downstream edits unless escalated:
 If an app team edits `templates/deployment.yaml` directly → **BLOCK**.
 If an app team edits `values.yaml` → **ALLOW** (within constraints).
 
-## Local and connected entrypoints
+## Local and Connected Entrypoints
 
 From repo root:
 

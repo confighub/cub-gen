@@ -320,7 +320,7 @@ After running discover/import, inspect:
   | jq '{change_id, bundle_digest: .bundle.digest}'
 ```
 
-## Local and connected entrypoints
+## Local and Connected Entrypoints
 
 From repo root:
 

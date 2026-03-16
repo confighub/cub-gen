@@ -320,7 +320,7 @@ resources:
 
 Result: GPU pool not in workload class approved types → **ESCALATE** to platform team
 
-## Local and connected entrypoints
+## Local and Connected Entrypoints
 
 From repo root:
 
