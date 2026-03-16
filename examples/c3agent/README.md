@@ -13,6 +13,32 @@ properly isolated? ConfigHub makes AI fleet governance explicit and traceable.
 > For the full platform story with registry and constraint enforcement, see
 > [`ai-ops-paas`](../ai-ops-paas/).
 
+## 1. Who this is for
+
+| If you are... | Start here |
+|---------------|------------|
+| **Existing ConfigHub user** adding AI fleet governance | Jump to [Run from ConfigHub](#run-from-confighub-connected-mode) |
+| **Existing AI fleet operator** | Jump to [Try it](#try-it) — 30 DRY lines → 11 WET targets |
+
+Both paths lead to the same outcome: governed AI fleet config with full provenance.
+
+## 2. What runs
+
+| Component | What it is |
+|-----------|------------|
+| **Real app** | C3 agent fleet (controlplane + gateway) |
+| **Real cluster objects** | 11 targets: 2 Deployments, 2 Services, ConfigMap, Secret, PVC, 4 RBAC |
+| **Real inspection target** | `kubectl get deployment c3agent-controlplane -o yaml` |
+| **GitOps transport** | Flux Kustomization or ArgoCD Application |
+
+## 3. Why ConfigHub + cub-gen helps here
+
+| Pain | Answer | Governed change win |
+|------|--------|---------------------|
+| "Which model version are we running?" | Fleet config → Deployment trace | Model upgrade → ALLOW/ESCALATE |
+| "What's our aggregate AI budget?" | Budget field provenance | Budget increase → governed |
+| "Are prod credentials isolated?" | Credential reference tracing | Credential swap → audited |
+
 ## Domain POV (AI fleet operators)
 
 This example is for teams already operating autonomous agent fleets:
@@ -105,16 +131,15 @@ The import maps every fleet setting to its rendered Kubernetes targets.
 **Who**: A fintech company running 5 C3 agent fleets — code review, testing,
 docs, security scanning, and incident response.
 
-### The change — upgrading the AI model
+### Scenario A — Approved model upgrade (ALLOW)
+
+The app team upgrades to an approved model:
 
 ```yaml
 # c3agent.yaml — model upgrade
 fleet:
-  agent_model: claude-sonnet-4-20250514  # was claude-sonnet-4-20250514
-  # changing to: claude-sonnet-4.5-20260101
+  agent_model: claude-sonnet-4.5-20260101  # was claude-sonnet-4-20250514
 ```
-
-### Governed pipeline
 
 ```bash
 # cub-gen detects the model change
@@ -130,16 +155,39 @@ BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.se
 ./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
-# Platform checks: is the new model in the approved list?
-# If approved → ALLOW. If not yet evaluated → ESCALATE to platform-owner.
+# Platform checks: model is in approved list → ALLOW
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
   --approved-by platform-owner --reason "model upgrade approved after eval"
 ```
 
-The fleet policy checks the approved models list. If the new model isn't
-approved yet, the decision engine **ESCALATE**s to the platform owner.
-After evaluation and approval, the fleet upgrade proceeds through the
-governed pipeline.
+The fleet policy checks the approved models list. Model is approved → **ALLOW**.
+
+### Scenario B — Unapproved model or budget violation (ESCALATE/BLOCK)
+
+The app team tries to use an unapproved model or exceeds budget:
+
+```yaml
+# c3agent.yaml — risky change
+fleet:
+  agent_model: untested-model-v0.1  # NOT in approved list
+  budget_limit: 50000               # exceeds platform ceiling (10000)
+```
+
+```bash
+# cub-gen detects the changes
+./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent
+
+# Evidence chain
+./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent > bundle.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
+./cub-gen bridge decision create --ingest ingest.json > decision.json
+
+# Platform checks: model not approved, budget exceeds ceiling → ESCALATE/BLOCK
+./cub-gen bridge decision apply --decision decision.json --state BLOCK \
+  --approved-by governance-bot \
+  --reason "Model 'untested-model-v0.1' not approved. Budget 50000 exceeds ceiling 10000."
+```
 
 ## How it works
 
@@ -180,15 +228,72 @@ WET:  Deployment(controlplane)/spec/template/spec/containers[0]/env[AGENT_MODEL]
   workflows with model binding governance
 - **E2E demo**: `../demo/ai-work-platform/scenario-1-c3agent.sh`
 
+## Run from ConfigHub (connected mode)
+
+If you already have ConfigHub, start here:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+
+# Publish and ingest
+./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent > /tmp/bundle.json
+./cub-gen verify --in /tmp/bundle.json
+./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
+./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
+```
+
+## 6. Inspect the result
+
+After running discover/import, inspect:
+
+```bash
+# Field-origin map (fleet fields → K8s targets)
+./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent \
+  | jq '.provenance[0].field_origin_map'
+
+# Fleet analysis (11 WET targets from 30 DRY lines)
+./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent \
+  | jq '.provenance[0].c3agent_fleet_analysis'
+
+# Evidence bundle
+./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent \
+  | jq '{change_id, bundle_digest: .bundle.digest}'
+```
+
+## 7. Try one governed change
+
+**ALLOW path**: App team upgrades to approved model:
+
+```yaml
+# c3agent.yaml change
+fleet:
+  agent_model: claude-sonnet-4.5-20260101  # in approved list
+```
+
+Result: Model is approved → **ALLOW**
+
+**BLOCK path**: App team uses unapproved model or exceeds budget:
+
+```yaml
+# c3agent.yaml change
+fleet:
+  agent_model: untested-model-v0.1  # NOT approved
+  budget_limit: 50000               # exceeds ceiling
+```
+
+Result: Model not approved, budget violation → **BLOCK**
+
 ## Local and Connected Entrypoints
 
 From repo root:
 
 ```bash
-echo "local/offline"
+# Local/offline
 ./examples/c3agent/demo-local.sh
 
-echo "connected (requires ConfigHub auth)"
+# Connected (requires ConfigHub auth)
 cub auth login
 ./examples/c3agent/demo-connected.sh
 ```
