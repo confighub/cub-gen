@@ -1,27 +1,68 @@
-# Demo Scripts
+# Demo Scripts — Your Starting Point for cub-gen
 
-Runnable demo scripts for every `cub-gen` example.
-
-Each script demonstrates part of the flow:
+Runnable demo scripts for every `cub-gen` example. Each script demonstrates
+part of the governed change flow:
 
 ```
-detect -> import -> publish -> verify -> attest -> (optional) bridge ingest/query
+detect → import → publish → verify → attest → (optional) bridge ingest/query
 ```
 
-## Pick your first demo by persona
+## 1. Pick your demo by persona
 
-| Persona | Start here | Why |
-|---|---|---|
-| Spring app/platform team | `module-3-spring-ownership.sh` | Fast app-vs-platform ownership proof in Spring terms |
-| Helm platform engineer | `module-1-helm-import.sh` | Immediate DRY source mapping for chart/value changes |
-| Score platform team | `module-2-score-field-map.sh` | `score.yaml` -> runtime field trace in one command |
-| Ops/SRE workflow owner | `ai-work-platform/scenario-4-operations.sh` | Governed workflow mutation path, not just manifests |
-| Swamp/workflow maintainer | `ai-work-platform/scenario-2-swamp.sh` | Structural workflow-change classification path |
-| Reliability/reconciler owner | `e2e-live-reconcile-flux.sh` and `e2e-live-reconcile-argo.sh` | Real create/update/drift correction loops |
+| Persona | Start here | What you'll prove |
+|---------|------------|-------------------|
+| **Helm platform engineer** | `module-1-helm-import.sh` | DRY source mapping for chart/value changes |
+| **Score platform team** | `module-2-score-field-map.sh` | `score.yaml` → runtime field trace |
+| **Spring app/platform team** | `module-3-spring-ownership.sh` | App-vs-platform ownership boundaries |
+| **Backstage catalog admin** | [`backstage-idp`](../backstage-idp/) demo | Owner/lifecycle governance |
+| **AI fleet operator** | `ai-work-platform/scenario-1-c3agent.sh` | 30 DRY lines → 11 governed WET targets |
+| **Swamp/workflow maintainer** | `ai-work-platform/scenario-2-swamp.sh` | Structural workflow-change classification |
+| **Ops/SRE workflow owner** | `ai-work-platform/scenario-4-operations.sh` | Governed workflow mutation path |
+| **Platform control-plane operator** | `ai-work-platform/scenario-3-confighub-actions.sh` | Recursive governance |
+| **Reconciler reliability owner** | `e2e-live-reconcile-flux.sh` | Real create/update/drift correction |
+| **App team (no platform layer)** | `module-5-no-config-platform.sh` | Provider config governance |
 
-See also: [Domain POV Matrix](../../docs/workflows/domain-pov-matrix.md)
+See also: [Domain POV Matrix](../../docs/workflows/domain-pov-matrix.md) | [Persona 5-minute runbooks](../../docs/workflows/persona-5-minute-runbooks.md)
 
-## Workflow-first start (Ops + Swamp)
+## 2. Quick start
+
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Run your first demo (Score example)
+./examples/demo/app-ai-change-run.sh ./examples/scoredev-paas
+
+# Run all core modules
+./examples/demo/run-all-modules.sh
+
+# Run all AI platform scenarios
+./examples/demo/ai-work-platform/run-all.sh
+```
+
+## 3. Local mode (no ConfigHub login required)
+
+### Core platform/app track
+
+| Script | Example | What it demonstrates |
+|--------|---------|---------------------|
+| `module-1-helm-import.sh` | [`helm-paas`](../helm-paas/) | Helm detection, values ownership, field-origin tracing |
+| `module-2-score-field-map.sh` | [`scoredev-paas`](../scoredev-paas/) | Score field-origin and inverse edit mapping |
+| `module-3-spring-ownership.sh` | [`springboot-paas`](../springboot-paas/) | Spring ownership boundaries (app vs platform) |
+| `module-4-bridge-governance.sh` | Multiple | Local bridge contract simulation |
+| `module-5-no-config-platform.sh` | [`just-apps-no-platform-config`](../just-apps-no-platform-config/) | No-platform provider governance |
+| `run-all-modules.sh` | All above | Run all core modules |
+
+### AI work platform track
+
+| Script | Example | What it demonstrates |
+|--------|---------|---------------------|
+| `ai-work-platform/scenario-1-c3agent.sh` | [`c3agent`](../c3agent/) + [`ai-ops-paas`](../ai-ops-paas/) | c3agent 11-target coverage |
+| `ai-work-platform/scenario-2-swamp.sh` | [`swamp-automation`](../swamp-automation/) | Swamp workflow/model governance |
+| `ai-work-platform/scenario-3-confighub-actions.sh` | [`confighub-actions`](../confighub-actions/) | Recursive governance |
+| `ai-work-platform/scenario-4-operations.sh` | [`ops-workflow`](../ops-workflow/) | Operations workflow governance |
+| `ai-work-platform/run-all.sh` | All above | Run all AI platform scenarios |
+
+### Workflow-first start (Ops + Swamp)
 
 If your platform is workflow-heavy, start here before app-manifest demos:
 
@@ -37,75 +78,124 @@ If your platform is workflow-heavy, start here before app-manifest demos:
   | jq '.provenance[0].ops_workflow_analysis'
 ```
 
-## Local mode (no ConfigHub login required)
+## 4. Connected mode (ConfigHub)
 
-## Core platform/app track
+Start with authentication:
 
-| Script | Example | What it demonstrates |
-|--------|---------|---------------------|
-| `module-1-helm-import.sh` | [`helm-paas`](../helm-paas/) | Helm detection, values ownership, field-origin tracing |
-| `module-2-score-field-map.sh` | [`scoredev-paas`](../scoredev-paas/) | Score field-origin and inverse edit mapping |
-| `module-3-spring-ownership.sh` | [`springboot-paas`](../springboot-paas/) | Spring ownership boundaries (app vs platform) |
-| `module-4-bridge-governance.sh` | Multiple | Local bridge contract simulation |
-| `module-5-no-config-platform.sh` | [`just-apps-no-platform-config`](../just-apps-no-platform-config/) | No-config-platform provider governance without a platform layer |
-| `run-all-modules.sh` | All above | Run all core modules |
+```bash
+cub auth login
+TOKEN="$(cub auth get-token)"
+cub context get --json | jq -r '.coordinate.user'
+```
 
-## AI work platform track
+Connected flow shape:
 
-| Script | Example | What it demonstrates |
-|--------|---------|---------------------|
-| `ai-work-platform/scenario-1-c3agent.sh` | [`c3agent`](../c3agent/) + [`ai-ops-paas`](../ai-ops-paas/) | c3agent 11-target coverage |
-| `ai-work-platform/scenario-2-swamp.sh` | [`swamp-automation`](../swamp-automation/) | Swamp workflow/model governance |
-| `ai-work-platform/scenario-3-confighub-actions.sh` | [`confighub-actions`](../confighub-actions/) | Recursive governance |
-| `ai-work-platform/scenario-4-operations.sh` | [`ops-workflow`](../ops-workflow/) | Operations workflow governance |
-| `ai-work-platform/run-all.sh` | All above | Run all AI platform scenarios |
+```
+publish → verify → attest → bridge ingest → decision query
+```
 
-## Lifecycle simulation scripts
+### Connected runners
+
+```bash
+./examples/demo/run-all-connected-lifecycles.sh
+./examples/demo/run-all-connected-entrypoints.sh
+./examples/demo/run-phase-3-connected-stories.sh
+./examples/demo/run-phase-4-connected-stories.sh
+```
+
+### Bridge endpoint behavior
+
+| Mode | Behavior |
+|------|----------|
+| Default (`CONNECTED_FALLBACK_MODE=off`) | Fail fast unless bridge endpoints are reachable |
+| Auto fallback (`CONNECTED_FALLBACK_MODE=auto`) | Fall back to backend `changeset` on 404 |
+| Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`) | Always use backend fallback (troubleshooting) |
+
+CI behavior:
+- `make ci-connected` enforces strict mode (`CONNECTED_FALLBACK_MODE=off`)
+- `make ci-connected-troubleshoot` is the only fallback-enabled lane
+
+See also: [connected-ci-bootstrap.md](../../docs/workflows/connected-ci-bootstrap.md)
+
+## 5. Live reconciler e2e (Flux + Argo + kind)
 
 | Script | What it demonstrates |
 |--------|---------------------|
-| `change-api-adapter.sh --request <json> [--out <json>]` | Thin compatibility adapter mapping API-style JSON requests to `change preview|run|explain` (including explain by `change_id + bundle`) |
-| `change-api-http-e2e.sh [repo] [target]` | Native HTTP compatibility flow using `POST /v1/changes`, `GET /v1/changes/{change_id}`, and `GET /v1/changes/{change_id}/explanations` |
-| `app-ai-change-run.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card output |
-| `prompt-as-dry-local.sh [repo]` | Canonical prompt-as-DRY local path with AI-only scope guardrails (Swamp workflow intent -> governed mutation card) |
-| `prompt-as-dry-connected.sh [repo] [target] [slug]` | Canonical prompt-as-DRY connected path with AI-only scope guardrails (`cub auth login` + backend ingest/query lifecycle) |
+| `e2e-live-reconcile-flux.sh` | Real WET→LIVE reconciliation with Flux on local kind cluster |
+| `e2e-live-reconcile-argo.sh` | Real WET→LIVE reconciliation with Argo CD on local kind cluster |
+| `e2e-connected-governed-reconcile-helm.sh` | Connected ConfigHub governance + Flux/Argo create/update/drift-correction |
+
+These scripts prove:
+1. Create reconciliation (v1 to LIVE)
+2. Update reconciliation (v2 rollout)
+3. Drift correction (manual drift reverted)
+
+Uses fixtures from [`live-reconcile`](../live-reconcile/).
+
+Connected full-loop proof:
+
+```bash
+cub auth login
+RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
+```
+
+## 6. Lifecycle simulation scripts
+
+| Script | What it demonstrates |
+|--------|---------------------|
+| `app-ai-change-run.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card |
+| `prompt-as-dry-local.sh [repo]` | Prompt-as-DRY local path with AI-only scope guardrails |
+| `prompt-as-dry-connected.sh [repo] [target] [slug]` | Prompt-as-DRY connected path with backend ingest/query |
 | `simulate-confighub-lifecycle.sh <repo> <target> [slug]` | Full local lifecycle simulation |
-| `run-all-confighub-lifecycles.sh` | Lifecycle simulation across current fixtures |
-| `run-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle: real ConfigHub ingest/query when bridge endpoints are available, with backend `changeset` fallback when they are not |
-| `run-all-connected-lifecycles.sh` | Connected lifecycle run across current fixtures with pass/fail summary |
-| `run-all-connected-entrypoints.sh` | Runs every `examples/*/demo-connected.sh` entrypoint (all examples, optional `live-reconcile`) |
+| `run-all-confighub-lifecycles.sh` | Lifecycle simulation across all fixtures |
+| `run-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle with ConfigHub ingest/query |
 | `simulate-repo-wizard.sh <repo> <target> [hint]` | GUI wizard simulation path |
 
-## CI policy gates (PR path)
+### Change API adapters
+
+| Script | What it demonstrates |
+|--------|---------------------|
+| `change-api-adapter.sh --request <json> [--out <json>]` | API-style JSON adapter for `change preview\|run\|explain` |
+| `change-api-http-e2e.sh [repo] [target]` | Native HTTP compatibility flow using `/v1/changes` endpoints |
+
+## 7. CI policy gates (PR path)
 
 Use these when you want merge-blocking enforcement, not just local guidance:
 
 - `test/checks/pr-dry-ownership-gate.sh <repo-path> <base-ref> <head-ref> [actor-role] --report-json <path>`
-  - Blocks direct WET edits by requiring recognized DRY input files.
-  - Emits JSON with failures plus inverse-edit suggestions (`wet_path`, `dry_path`, owner, confidence).
+  - Blocks direct WET edits by requiring recognized DRY input files
+  - Emits JSON with failures plus inverse-edit suggestions
 - `.github/workflows/pr-dry-ownership-gate.yml`
-  - Runs the gate for Helm + Spring examples.
-  - Posts a PR comment with actionable DRY edit guidance and fails status on BLOCK.
+  - Runs the gate for Helm + Spring examples
+  - Posts a PR comment with actionable DRY edit guidance
 
-## Phase 3 connected story scripts
+## 8. PR-MR pairing and promotion flows
+
+| Script | What it demonstrates |
+|--------|---------------------|
+| `flow-a-git-pr-to-mr-connected.sh` | Flow A: Git PR → ConfigHub MR with evidence |
+| `flow-b-mr-to-git-pr-connected.sh` | Flow B: ConfigHub MR → Git PR proposal |
+| `fr8-promotion-upstream-dry-connected.sh` | FR8: live→WET→DRY upstream promotion |
+
+## 9. Phase 3 connected story scripts
 
 | Script | User story | What it demonstrates |
 |--------|------------|---------------------|
 | `story-1-existing-repo-connected.sh` | 1 | Existing repo import + connected change query by `change_id` |
 | `story-7-ci-api-flow-connected.sh` | 7 | Non-interactive CI flow using `CONFIGHUB_TOKEN` |
-| `story-7-agent-tool-call-connected.sh` | 7 | Agent/tool-call adapter flow proving one shared `change_id` across `preview -> run -> explain` |
-| `story-9-multi-repo-wave-connected.sh` | 9 | Multi-repo wave with per-target ALLOW/ESCALATE/BLOCK outcomes |
-| `story-12-unified-actor-evidence.sh` | 12 | Unified human/CI/AI attestation chain under one `change_id` |
-| `run-phase-3-connected-stories.sh` | 1,7,9,12 | Runs all four connected Phase 3 stories |
+| `story-7-agent-tool-call-connected.sh` | 7 | Agent/tool-call adapter flow with shared `change_id` |
+| `story-9-multi-repo-wave-connected.sh` | 9 | Multi-repo wave with per-target ALLOW/ESCALATE/BLOCK |
+| `story-12-unified-actor-evidence.sh` | 12 | Unified human/CI/AI attestation chain |
+| `run-phase-3-connected-stories.sh` | 1,7,9,12 | Run all Phase 3 stories |
 
-## Phase 4 connected story scripts
+## 10. Phase 4 connected story scripts
 
 | Script | User story | What it demonstrates |
 |--------|------------|---------------------|
-| `story-8-label-evolution-connected.sh` | 8 | Backend-persisted label/taxonomy migration anchor with compatibility queries (no repo surgery) |
-| `story-10-signed-writeback-proof-connected.sh` | 10 | Real GitHub PR/commit/branch-protection evidence for signed write-back proof |
-| `story-11-live-breakglass-proposal-connected.sh` | 11 | Persist accept/revert break-glass proposals as backend changesets with queryable evidence |
-| `run-phase-4-connected-stories.sh` | 8,10,11 | Runs all three connected Phase 4 stories |
+| `story-8-label-evolution-connected.sh` | 8 | Backend-persisted label/taxonomy migration |
+| `story-10-signed-writeback-proof-connected.sh` | 10 | Real GitHub PR/commit/branch-protection evidence |
+| `story-11-live-breakglass-proposal-connected.sh` | 11 | Break-glass proposals as backend changesets |
+| `run-phase-4-connected-stories.sh` | 8,10,11 | Run all Phase 4 stories |
 
 Story 10 required inputs (real GitHub evidence):
 
@@ -118,117 +208,38 @@ export PROMOTION_PR_NUMBER=456
 export GH_TOKEN=...
 ```
 
-`run-phase-4-connected-stories.sh` enforces Story 10 by default and fails fast if these inputs are missing.
-Set `ALLOW_STORY_10_SKIP=1` only for local troubleshooting.
+`run-phase-4-connected-stories.sh` enforces Story 10 by default. Set `ALLOW_STORY_10_SKIP=1` only for local troubleshooting.
 
-## Connected mode (ConfigHub)
+## 11. Example directory quick reference
 
-Start with authentication:
-
-```bash
-cub auth login
-TOKEN="$(cub auth get-token)"
-cub context get --json | jq -r '.coordinate.user'
-```
-
-Then run bridge calls with `--token "$TOKEN"` and your `--base-url`.
-
-Shared connected preflight helper:
-
-- `examples/demo/lib/connected-preflight.sh`
-
-Connected flow shape:
-
-```
-publish -> verify -> attest -> bridge ingest -> decision query
-```
-
-Connected ingest/query and decision-state authority are real ConfigHub API calls in connected lifecycle scripts when governed-wet bridge endpoints are available.
-Local contract simulation is limited to explicit local-only demos (`simulate-confighub-lifecycle.sh`, `module-4-bridge-governance.sh`).
-
-Bridge endpoint behavior:
-
-- Default (`CONNECTED_FALLBACK_MODE=off`): fail fast unless bridge ingest/query endpoints are reachable.
-- Auto fallback (`CONNECTED_FALLBACK_MODE=auto`): if ingest returns `404 Not Found`, scripts switch to backend `changeset` fallback and still persist evidence in ConfigHub.
-- Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`): always use backend `changeset` fallback (troubleshooting only).
-- Release qualification policy: keep `ALLOW_FALLBACK_INGEST=0` and `ALLOW_STORY_10_SKIP=0` (strict mode).
-
-CI behavior:
-
-- `make ci-connected` enforces strict mode (`CONNECTED_FALLBACK_MODE=off`).
-- `make ci-connected-troubleshoot` is the only fallback-enabled lane.
-
-Fallback mode records `ingest.json`/`decision-final.json` in the standard contract shape with `source=confighub-backend-changeset-fallback`, so story scripts and CI gates remain deterministic.
-
-If your backend exposes non-default paths, set `BRIDGE_INGEST_ENDPOINT` and `BRIDGE_DECISION_ENDPOINT`.
-
-Connected runner:
-
-```bash
-./examples/demo/run-all-connected-lifecycles.sh
-./examples/demo/run-all-connected-entrypoints.sh
-./examples/demo/run-phase-3-connected-stories.sh
-./examples/demo/run-phase-4-connected-stories.sh
-```
-
-## Live reconciler e2e (Flux + Argo + kind)
-
-| Script | What it demonstrates |
-|--------|---------------------|
-| `e2e-live-reconcile-flux.sh` | Real WET->LIVE reconciliation with Flux on local kind cluster |
-| `e2e-live-reconcile-argo.sh` | Real WET->LIVE reconciliation with Argo CD on local kind cluster |
-| `e2e-connected-governed-reconcile-helm.sh` | Real connected ConfigHub governance round-trip for `helm-paas` + Flux/Argo create/update/drift-correction |
-
-These scripts prove:
-
-1. Create reconciliation (v1 to LIVE).
-2. Update reconciliation (v2 rollout).
-3. Drift correction (manual drift reverted).
-
-Uses fixtures from [`live-reconcile`](../live-reconcile/).
-
-Connected full-loop proof:
-
-```bash
-cub auth login
-RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
-```
-
-If your backend does not expose the default ingest/query routes, set
-`BRIDGE_INGEST_ENDPOINT` and `BRIDGE_DECISION_ENDPOINT` before running.
-
-Connected CI bootstrap/runbook:
-
-- [connected-ci-bootstrap.md](../../docs/workflows/connected-ci-bootstrap.md)
-
-## Quick start
-
-```bash
-go build -o ./cub-gen ./cmd/cub-gen
-./examples/demo/app-ai-change-run.sh ./examples/scoredev-paas
-./examples/demo/prompt-as-dry-local.sh
-./examples/demo/run-all-modules.sh
-./examples/demo/ai-work-platform/run-all.sh
-```
-
-Persona-first quick starts:
-
-- [Persona 5-minute runbooks](../../docs/workflows/persona-5-minute-runbooks.md)
-- [AI-only guardrails](../../docs/workflows/ai-only-guardrails.md)
+| Example | Generator | Key demo |
+|---------|-----------|----------|
+| [`helm-paas`](../helm-paas/) | `helm-paas` | `module-1-helm-import.sh` |
+| [`scoredev-paas`](../scoredev-paas/) | `scoredev-paas` | `module-2-score-field-map.sh` |
+| [`springboot-paas`](../springboot-paas/) | `springboot-paas` | `module-3-spring-ownership.sh` |
+| [`backstage-idp`](../backstage-idp/) | `backstage-idp` | `demo-local.sh` / `demo-connected.sh` |
+| [`just-apps-no-platform-config`](../just-apps-no-platform-config/) | `no-config-platform` | `module-5-no-config-platform.sh` |
+| [`c3agent`](../c3agent/) | `c3agent` | `ai-work-platform/scenario-1-c3agent.sh` |
+| [`ai-ops-paas`](../ai-ops-paas/) | `c3agent` | `ai-work-platform/scenario-1-c3agent.sh` |
+| [`swamp-automation`](../swamp-automation/) | `swamp` | `ai-work-platform/scenario-2-swamp.sh` |
+| [`confighub-actions`](../confighub-actions/) | `ops-workflow` | `ai-work-platform/scenario-3-confighub-actions.sh` |
+| [`ops-workflow`](../ops-workflow/) | `ops-workflow` | `ai-work-platform/scenario-4-operations.sh` |
+| [`live-reconcile`](../live-reconcile/) | — | `e2e-live-reconcile-flux.sh` / `e2e-live-reconcile-argo.sh` |
 
 ## Qualification caveat
 
-Without a live `WET -> LIVE` reconciler loop shown end-to-end, classify the flow as `governed config automation`, not full `Agentic GitOps`.
+Without a live `WET → LIVE` reconciler loop shown end-to-end, classify the flow as `governed config automation`, not full `Agentic GitOps`.
 
-References:
+See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` for full loop proofs.
 
-- `docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md`
-- `docs/agentic-gitops/02-design/10-generators-prd.md`
-
-## PRD user-story coverage snapshot
+## PRD user-story coverage
 
 | Status | User stories |
-|---|---|
+|--------|--------------|
 | Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 |
-| Partial (simulated/local-first, not full backend/runtime integration) | None |
+| Partial | None |
 | Deferred | None |
+
+References:
+- `docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md`
+- `docs/agentic-gitops/02-design/10-generators-prd.md`
