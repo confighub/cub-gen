@@ -294,19 +294,23 @@ It should also tell a believable day-2 story:
 
 ## Dependencies and open inputs
 
-1. Ilya complaint details must be captured explicitly and added to the checklist
-   before we can declare the reset complete.
-2. Jesper's current app/deployment concepts must be treated as the canonical
-   model for example language and live proof.
+1. ~~Ilya complaint details must be captured explicitly and added to the checklist
+   before we can declare the reset complete.~~
+   **DONE**: See [Ilya/CoreWeave Acceptance Checklist](../testing/ilya-coreweave-acceptance-checklist.md)
+2. ~~Jesper's current app/deployment concepts must be treated as the canonical
+   model for example language and live proof.~~
+   **DONE**: See [App/Deployment Concepts](../testing/app-deployment-concepts.md)
 3. Some supporting examples may need to split into sub-issues if their runtime
    story becomes too large for one PR.
-4. Kubara-like/platform-framework users need a clear custom-generator path from
-   the user-facing surface, not from deep design docs only.
-5. The strongest product story is often \"existing platform-tool user adds
-   ConfigHub + `cub-gen` + AI in one step\"; examples and entrypoints should be
+4. ~~Kubara-like/platform-framework users need a clear custom-generator path from
+   the user-facing surface, not from deep design docs only.~~
+   **DONE**: See [Custom Generator Onboarding](../workflows/custom-generator-onboarding.md)
+5. The strongest product story is often "existing platform-tool user adds
+   ConfigHub + `cub-gen` + AI in one step"; examples and entrypoints should be
    optimized for that reader.
-6. The AI-specific value from the DRY/WET analysis needs to be surfaced in
-   examples and entrypoints, not left in planning text.
+6. ~~The AI-specific value from the DRY/WET analysis needs to be surfaced in
+   examples and entrypoints, not left in planning text.~~
+   **DONE**: AI prompt-as-DRY visible in examples/README.md and prompt-as-dry.md
 
 ## Definition of done
 
