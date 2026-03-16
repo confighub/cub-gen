@@ -5,9 +5,35 @@ The platform owns the chart structure; app teams own their values overlays.
 ConfigHub makes that contract explicit, traceable, and auditable — without
 changing how you use Helm.
 
+## 1. Who this is for
+
+| If you are... | Start here |
+|---------------|------------|
+| **Existing ConfigHub user** adding Helm governance | Jump to [Run from ConfigHub](#run-from-configHub-connected-mode) |
+| **Existing Helm/Flux/Argo user** adding ConfigHub | Jump to [Run from Helm](#try-it) then connect later |
+
+Both paths lead to the same outcome: governed Helm with field-origin tracing.
+
+## 2. What runs
+
+| Component | What it is |
+|-----------|------------|
+| **Real app** | `payments-api` Helm chart (Deployment + Service + ConfigMap) |
+| **Real cluster objects** | Kubernetes Deployment, Service, ConfigMap |
+| **Real inspection target** | `kubectl get deployment payments-api -o yaml` |
+| **GitOps transport** | Flux HelmRelease or ArgoCD Application |
+
+## 3. Why ConfigHub + cub-gen helps here
+
+| Pain | Answer | Governed change win |
+|------|--------|---------------------|
+| "Who owns this deployed field?" | Field-origin tracing to `values.yaml` or `templates/` | App team changes → ALLOW |
+| "What file do I edit to fix this?" | Inverse-edit guidance with confidence scores | Platform changes → ESCALATE/BLOCK |
+| "How do I prove what changed?" | Evidence bundle with attestation chain | Audit trail for compliance |
+
 ## Domain POV (Helm platform teams)
 
-This example is written for teams like IITS customer environments:
+This example is written for teams like IITS/Kubara-style platform environments:
 
 - umbrella charts + subcharts + environment overlays,
 - Flux/Argo reconciliation from Git/OCI,
@@ -257,15 +283,86 @@ WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payme
 - **E2E demo script**: `../demo/module-1-helm-import.sh`
 - **Bridge governance demo**: `../demo/module-4-bridge-governance.sh`
 
-## Local and Connected Entrypoints
+## Run from ConfigHub (connected mode)
+
+If you already have ConfigHub, start here:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+
+# Publish and ingest
+./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
+./cub-gen verify --in /tmp/bundle.json
+./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
+./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
+```
+
+## 6. Inspect the result
+
+After running discover/import, inspect:
+
+```bash
+# Field-origin map
+./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+  | jq '.provenance[0].field_origin_map'
+
+# Inverse-edit guidance
+./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+  | jq '.provenance[0].inverse_edit_pointers'
+
+# Evidence bundle digest
+./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas \
+  | jq '{change_id, bundle_digest: .bundle.digest}'
+```
+
+After connected ingest, query ConfigHub for decision state.
+
+## 8. Generation chain (Kubara-like platforms)
+
+For umbrella charts, overlays, and ApplicationSets, trace the full chain:
+
+```
+Cluster labels          →  ApplicationSet selector  →  HelmRelease values  →  Deployed resources
+  env: prod                 match: env=prod             replicas: 3            Deployment.spec.replicas: 3
+  region: eu                                            image.tag: v2.4.1      container.image: ...v2.4.1
+```
+
+The key question: "Why does this cluster have this addon enabled?"
+
+Answer: Trace from cluster labels through overlay selection to the deployed field.
+
+```bash
+# Show rendered lineage
+./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+  | jq '.provenance[0].rendered_object_lineage'
+```
+
+## 9. Ownership boundary
+
+Platform-owned fields cannot be weakened by downstream edits unless escalated:
+
+| Layer | Owner | What's enforced |
+|-------|-------|-----------------|
+| `Chart.yaml` | Platform | Chart contract, dependencies |
+| `templates/*.yaml` | Platform | Resource structure, security context |
+| `platform/base/*.yaml` | Platform | Probes, limits, network policies |
+| `values.yaml` | App team | Can edit within platform constraints |
+| `values-prod.yaml` | Ops | Production overrides (escalation may apply) |
+
+If an app team edits `templates/deployment.yaml` directly → **BLOCK**.
+If an app team edits `values.yaml` → **ALLOW** (within constraints).
+
+## Local and connected entrypoints
 
 From repo root:
 
 ```bash
-echo "local/offline"
+# Local/offline
 ./examples/helm-paas/demo-local.sh
 
-echo "connected (requires ConfigHub auth)"
+# Connected (requires ConfigHub auth)
 cub auth login
 ./examples/helm-paas/demo-connected.sh
 ```
