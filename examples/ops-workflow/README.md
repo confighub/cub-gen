@@ -10,6 +10,33 @@ workflow definition gets the same field-origin tracing, ownership mapping,
 and decision pipeline as a Helm chart. Nothing executes without an explicit
 ALLOW decision.
 
+## 1. Who this is for
+
+| If you are... | Start here |
+|---------------|------------|
+| **Existing ConfigHub user** adding ops workflow governance | Jump to [Run from ConfigHub](#run-from-confighub-connected-mode) |
+| **Existing ops/SRE team** adding ConfigHub | Jump to [Try it](#try-it) then connect later |
+
+Both paths lead to the same outcome: governed operational workflows with
+field-origin tracing and execution policy enforcement.
+
+## 2. What runs
+
+| Component | What it is |
+|-----------|------------|
+| **Real workflow** | Operations workflow with deploy, restart, and scale actions |
+| **Real policy** | Execution policy with allowed/blocked actions and scheduling windows |
+| **Real inspection target** | `operations.yaml` and `operations-prod.yaml` with governance decisions |
+| **Execution transport** | Scheduled jobs, CI pipelines, or manual triggers |
+
+## 3. Why ConfigHub + cub-gen helps here
+
+| Pain | Answer | Governed change win |
+|------|--------|---------------------|
+| "Who changed the maintenance schedule?" | Field-origin tracing to `operations-prod.yaml` | Schedule changes → ALLOW within window |
+| "Is this action allowed in production?" | Execution policy enforcement | Blocked actions (destroy) → BLOCK |
+| "What happened during the incident?" | Attestable evidence chain | Full audit trail for post-incident review |
+
 ## Domain POV (SRE and operations workflow teams)
 
 This example fits teams that already run scheduled/triggered operational
@@ -21,6 +48,27 @@ actions (deploy, restart, scale) through scripts, CI jobs, or runbooks:
 
 The first value is operational clarity: workflows are governed config artifacts,
 not opaque automation scripts.
+
+## AI prompt-as-DRY for operations workflows
+
+Operations workflows are a natural fit for the AI prompt-as-DRY pattern:
+
+| Concept | How it maps to ops workflows |
+|---------|------------------------------|
+| **Prompt + context** | "Deploy checkout-service at 3 AM, restart after backup completes" |
+| **LLM/agent layer** | Agent compiles prompt into `operations.yaml` structure |
+| **Verification + attestation** | cub-gen verifies structure matches execution policy |
+| **Mutation ledger** | ConfigHub records who proposed, who approved, what evidence |
+
+Example agent-assisted workflow change:
+
+```text
+Human prompt: "Move the nightly deploy from 2 AM to 3 AM to avoid backup overlap"
+Agent output: operations-prod.yaml with triggers.schedule: "0 3 * * *"
+Governance: cub-gen imports, verifies window compliance, ConfigHub records decision
+```
+
+See also: [Prompt as DRY](../../docs/workflows/prompt-as-dry.md)
 
 ## What you get
 
@@ -114,15 +162,13 @@ and service target back to its DRY source.
 **Who**: An e-commerce ops team managing release workflows for 12 services.
 Nightly deploys run at 2 AM but overlap with database backups.
 
-### The change
+### Scenario A — Schedule change within allowed window (ALLOW)
 
 ```yaml
 # operations-prod.yaml — move maintenance window
 triggers:
   schedule: "0 3 * * *"   # was "0 2 * * *"
 ```
-
-### Governed pipeline
 
 ```bash
 # cub-gen detects the schedule change
@@ -147,8 +193,37 @@ The execution policy checks: is the new schedule within the allowed window?
 Are all actions (deploy, restart) in the allowed list? Does production require
 approval? All pass → **ALLOW**.
 
-If someone tried to add a `destroy` action, the execution policy would
-**BLOCK** it — `destroy` is in the blocked actions list.
+### Scenario B — Blocked action (BLOCK)
+
+Someone tries to add a `destroy` action to the workflow:
+
+```yaml
+# operations-prod.yaml — dangerous action
+actions:
+  deploy:
+    image_tag: v1.2.4
+  destroy:           # blocked by execution policy!
+    service: checkout-api
+```
+
+```bash
+# cub-gen detects the action change
+./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow
+
+# Evidence chain
+./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow > bundle.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
+./cub-gen bridge decision create --ingest ingest.json > decision.json
+
+# destroy action is in blocked list → BLOCK
+./cub-gen bridge decision apply --decision decision.json --state BLOCK \
+  --approved-by governance-bot \
+  --reason "Action 'destroy' is in the blocked actions list. Requires platform-ops escalation."
+```
+
+The execution policy sees `destroy` in the blocked actions list → **BLOCK**.
+The workflow cannot execute until the action is removed or escalated.
 
 ## How it works
 
@@ -183,16 +258,85 @@ cub-gen's `ops-workflow` generator detects `operations.yaml` containing
 - **AI workflow governance**: [`swamp-automation`](../swamp-automation/) —
   AI-agent-driven workflows with model binding governance
 - **E2E demo**: `../demo/ai-work-platform/scenario-4-operations.sh`
+- **Prompt-as-DRY demo**: `../demo/prompt-as-dry-local.sh`
+
+### PR-MR pairing and promotion flows
+
+- **Flow A (Git PR → ConfigHub MR)**: `../demo/flow-a-git-pr-to-mr-connected.sh`
+  — ops team opens PR, ConfigHub creates MR with evidence
+- **Flow B (ConfigHub MR → Git PR)**: `../demo/flow-b-mr-to-git-pr-connected.sh`
+  — ConfigHub initiates change, generates Git PR after approval
+- **FR8 promotion**: `../demo/fr8-promotion-upstream-dry-connected.sh`
+  — promote successful workflow change to upstream platform base
+
+## Run from ConfigHub (connected mode)
+
+If you already have ConfigHub, start here:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+
+# Publish and ingest
+./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow > /tmp/bundle.json
+./cub-gen verify --in /tmp/bundle.json
+./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
+./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
+```
+
+## 6. Inspect the result
+
+After running discover/import, inspect:
+
+```bash
+# Field-origin map
+./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+  | jq '.provenance[0].field_origin_map'
+
+# Ops workflow analysis
+./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+  | jq '.provenance[0].ops_workflow_analysis'
+
+# Evidence bundle
+./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow \
+  | jq '{change_id, bundle_digest: .bundle.digest}'
+```
+
+## 7. Try one governed change
+
+**ALLOW path**: Ops team changes schedule within allowed window:
+
+```yaml
+# operations-prod.yaml change
+triggers:
+  schedule: "0 3 * * *"  # was "0 2 * * *"
+```
+
+Result: Schedule is within allowed window → **ALLOW**
+
+**BLOCK path**: Ops team adds blocked action:
+
+```yaml
+# operations-prod.yaml change
+actions:
+  deploy:
+    image_tag: v1.2.4
+  destroy:          # blocked action
+    service: checkout-api
+```
+
+Result: `destroy` is in blocked actions list → **BLOCK**
 
 ## Local and Connected Entrypoints
 
 From repo root:
 
 ```bash
-echo "local/offline"
+# Local/offline
 ./examples/ops-workflow/demo-local.sh
 
-echo "connected (requires ConfigHub auth)"
+# Connected (requires ConfigHub auth)
 cub auth login
 ./examples/ops-workflow/demo-connected.sh
 ```
