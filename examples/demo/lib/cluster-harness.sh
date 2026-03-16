@@ -136,14 +136,13 @@ install_flux() {
   require_cmd flux
 
   if kubectl --context "$KUBE_CONTEXT" get namespace "$FLUX_NS" >/dev/null 2>&1; then
-    echo "[cluster-harness] flux already installed in $FLUX_NS"
-    return 0
+    echo "[cluster-harness] flux namespace exists, verifying readiness..."
+  else
+    echo "[cluster-harness] installing flux controllers"
+    flux --context "$KUBE_CONTEXT" install --timeout="${RECONCILE_TIMEOUT}s"
   fi
 
-  echo "[cluster-harness] installing flux controllers"
-  flux --context "$KUBE_CONTEXT" install --timeout="${RECONCILE_TIMEOUT}s"
-
-  # Wait for flux to be ready
+  # Always verify flux is ready (handles partial installs)
   flux --context "$KUBE_CONTEXT" check --timeout="${RECONCILE_TIMEOUT}s"
   echo "[cluster-harness] flux installed and ready"
 }
@@ -155,16 +154,15 @@ install_flux() {
 #######################################
 install_argo() {
   if kubectl --context "$KUBE_CONTEXT" get namespace "$ARGO_NS" >/dev/null 2>&1; then
-    echo "[cluster-harness] argo cd already installed in $ARGO_NS"
-    return 0
+    echo "[cluster-harness] argo cd namespace exists, verifying readiness..."
+  else
+    echo "[cluster-harness] installing argo cd"
+    kubectl --context "$KUBE_CONTEXT" create namespace "$ARGO_NS"
+    kubectl --context "$KUBE_CONTEXT" apply -n "$ARGO_NS" \
+      -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
   fi
 
-  echo "[cluster-harness] installing argo cd"
-  kubectl --context "$KUBE_CONTEXT" create namespace "$ARGO_NS"
-  kubectl --context "$KUBE_CONTEXT" apply -n "$ARGO_NS" \
-    -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-
-  # Wait for argo to be ready
+  # Always verify argo is ready (handles partial installs)
   echo "[cluster-harness] waiting for argo cd to be ready..."
   kubectl --context "$KUBE_CONTEXT" wait --for=condition=available \
     --timeout="${RECONCILE_TIMEOUT}s" \
@@ -183,8 +181,30 @@ install_argo() {
 setup_connected_cluster() {
   local reconciler="${1:-flux}"
 
+  # If already initialized, check if we need to add a reconciler
   if [ "$_CLUSTER_HARNESS_INITIALIZED" = "1" ]; then
-    echo "[cluster-harness] cluster already initialized (reconciler: $_CLUSTER_HARNESS_RECONCILER)"
+    if [ "$reconciler" = "$_CLUSTER_HARNESS_RECONCILER" ]; then
+      echo "[cluster-harness] cluster already initialized with $reconciler"
+      return 0
+    fi
+    # Handle adding additional reconciler to existing cluster
+    if [ "$reconciler" = "both" ]; then
+      echo "[cluster-harness] adding missing reconciler to existing cluster"
+      if [ "$_CLUSTER_HARNESS_RECONCILER" = "flux" ]; then
+        install_argo
+      elif [ "$_CLUSTER_HARNESS_RECONCILER" = "argo" ]; then
+        install_flux
+      fi
+      _CLUSTER_HARNESS_RECONCILER="both"
+      return 0
+    fi
+    # Different single reconciler requested - install it
+    echo "[cluster-harness] adding $reconciler to existing cluster (was: $_CLUSTER_HARNESS_RECONCILER)"
+    case "$reconciler" in
+      flux) install_flux ;;
+      argo) install_argo ;;
+    esac
+    _CLUSTER_HARNESS_RECONCILER="both"
     return 0
   fi
 
