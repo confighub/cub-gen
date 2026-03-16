@@ -10,6 +10,32 @@ When someone changes `spring.datasource.hikari.maximum-pool-size`, is that an
 app change or a platform change? Today, your PR reviewer has to know. With
 ConfigHub, the ownership boundary is explicit and enforced.
 
+## 1. Who this is for
+
+| If you are... | Start here |
+|---------------|------------|
+| **Existing ConfigHub user** adding Spring Boot governance | Jump to [Run from ConfigHub](#run-from-configHub-connected-mode) |
+| **Existing Spring Boot user** adding ConfigHub | Jump to [Try it](#try-it) then connect later |
+
+Both paths lead to the same outcome: governed Spring config with field-origin tracing.
+
+## 2. What runs
+
+| Component | What it is |
+|-----------|------------|
+| **Real app** | Spring Boot 3.3.2 inventory service (Java 21) |
+| **Real cluster objects** | Kubernetes Deployment, Service, ConfigMap |
+| **Real inspection target** | `kubectl get deployment inventory-service -o yaml`, Spring Actuator `/health` |
+| **GitOps transport** | Flux Kustomization or ArgoCD Application |
+
+## 3. Why ConfigHub + cub-gen helps here
+
+| Pain | Answer | Governed change win |
+|------|--------|---------------------|
+| "Is this app config or platform config?" | Ownership by Spring property namespace | `server.port` → ALLOW, `spring.datasource.*` → BLOCK |
+| "Which profile set this value?" | Profile overlay tracking with lineage | Trace `application-prod.yaml` override |
+| "Can I change this in production?" | Governance decisions in Spring terms | "datasource is platform-owned" not "Deployment spec changed" |
+
 ## Domain POV (Spring Boot shops)
 
 This example targets Spring-heavy teams where developers know Spring, not
@@ -260,15 +286,49 @@ WET:  Deployment/spec/template/spec/containers[0]/env[name=SERVER_PORT]/value = 
 - **E2E demo**: `../demo/module-3-spring-ownership.sh`
 - **Worked example**: `../../docs/agentic-gitops/03-worked-examples/03-spring-boot-dry-wet-unit-worked-example.md`
 
+## Run from ConfigHub (connected mode)
+
+If you already have ConfigHub, start here:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+
+# Publish and ingest
+./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas > /tmp/bundle.json
+./cub-gen verify --in /tmp/bundle.json
+./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
+./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
+```
+
+## 6. Inspect the result
+
+After running discover/import, inspect:
+
+```bash
+# Field-origin map (Spring property → K8s field)
+./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas \
+  | jq '.provenance[0].field_origin_map'
+
+# Ownership-aware inverse pointers
+./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas \
+  | jq '.provenance[0].inverse_edit_pointers'
+
+# Evidence bundle
+./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas \
+  | jq '{change_id, bundle_digest: .bundle.digest}'
+```
+
 ## Local and Connected Entrypoints
 
 From repo root:
 
 ```bash
-echo "local/offline"
+# Local/offline
 ./examples/springboot-paas/demo-local.sh
 
-echo "connected (requires ConfigHub auth)"
+# Connected (requires ConfigHub auth)
 cub auth login
 ./examples/springboot-paas/demo-connected.sh
 ```

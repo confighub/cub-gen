@@ -2,6 +2,35 @@
 
 Get from zero to provenance-traced import in under 10 minutes.
 
+## What cub-gen does
+
+`cub-gen` is a deterministic generator importer. It reads your existing config
+and tells you:
+
+| Question | Answer |
+|----------|--------|
+| What type of project is this? | Generator detection (Helm, Score, Spring Boot, etc.) |
+| Which files are human-editable intent? | DRY source classification |
+| Which files are rendered output? | WET manifest classification |
+| For any deployed field, where do I edit it? | Field-origin tracing + inverse-edit guidance |
+| How do I prove what changed? | Verification, attestation, and evidence bundles |
+
+## The DRY → WET model
+
+```
+DRY source (what you author)     →  Generator  →  WET manifests (what gets deployed)
+  values.yaml                         Helm           deployment.yaml
+  score.yaml                          Score          service.yaml
+  application.yaml                    Spring Boot    configmap.yaml
+```
+
+- **DRY**: The human-editable source of truth (e.g., `values.yaml`)
+- **WET**: The expanded, hydrated output (e.g., rendered Kubernetes manifests)
+- **Generator**: The tool that transforms DRY to WET (Helm, Score, etc.)
+
+`cub-gen` traces this transformation so you always know which DRY file to edit
+when you need to change a deployed value.
+
 ## Prerequisites
 
 - [Go 1.22+](https://go.dev/dl/)
@@ -144,6 +173,25 @@ Emit an attestation record:
   | jq '{status, verifier, bundle_digest, attestation_digest}'
 ```
 
+## What happens after import? (Day-2)
+
+Import is day 1. The real value shows on day 2:
+
+| Day | What you do | What you gain |
+|-----|-------------|---------------|
+| **Day 1** | Import and explain | Field-origin tracing, ownership clarity, inverse-edit guidance |
+| **Day 2** | Governed change | ALLOW/BLOCK decisions, policy enforcement via ConfigHub |
+| **Day 3** | AI-assisted changes (optional) | Same governance for human and AI edits |
+
+After import, your next steps are:
+
+1. **Make a governed change**: Edit a DRY file, run `publish`, and see the decision
+2. **Connect to ConfigHub**: Push the bundle to ConfigHub for cross-repo visibility
+3. **Enable promotion**: Use ConfigHub to promote patterns to reusable base config
+
+The governance model treats human and AI-assisted changes the same way:
+verification, attestation, and policy enforcement are the safety boundary.
+
 ## Run demo modules
 
 Five self-contained demo modules, each runnable independently:
@@ -189,9 +237,14 @@ Boundary language (aligned with [PARITY.md](parity.md)):
 |------|-------------------|
 | DRY source | Human-editable app/platform intent (`values.yaml`, `score.yaml`, `application.yaml`) |
 | WET rendered units | Explicit rendered deployment-facing units/manifests |
+| Generator | Tool that transforms DRY to WET (Helm, Score, Spring Boot, etc.) |
 | Provenance | Record of DRY inputs, rendered outputs, field-origin map, inverse-edit pointers |
-| Inverse map | Guidance from changed WET field &rarr; where to edit DRY safely |
-| Pre-sync | `cub-gen` stops before WET&rarr;LIVE; Flux/Argo own reconciliation |
+| Inverse map | Guidance from changed WET field → where to edit DRY safely |
+| Pre-sync | `cub-gen` stops before WET→LIVE; Flux/Argo own reconciliation |
+| Verification | Cryptographic proof that a bundle is intact |
+| Attestation | Record of who verified a bundle and when |
+| Governance | Policy enforcement (ALLOW/ESCALATE/BLOCK) via ConfigHub decision engine |
+| Mutation ledger | Audit trail of all config changes with evidence chain |
 
 ## Next steps
 

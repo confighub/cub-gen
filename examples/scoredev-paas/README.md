@@ -10,6 +10,32 @@ ConfigHub adds the missing piece: traceable provenance from Score workload spec
 through to governed Kubernetes manifests, with field-level ownership and
 inverse-edit guidance.
 
+## 1. Who this is for
+
+| If you are... | Start here |
+|---------------|------------|
+| **Existing ConfigHub user** adding Score governance | Jump to [Run from ConfigHub](#run-from-configHub-connected-mode) |
+| **Existing Score.dev user** adding ConfigHub | Jump to [Try it](#try-it) then connect later |
+
+Both paths lead to the same outcome: governed Score workloads with field-origin tracing.
+
+## 2. What runs
+
+| Component | What it is |
+|-----------|------------|
+| **Real app** | Node.js checkout API defined in `score.yaml` |
+| **Real cluster objects** | Kubernetes Deployment, Service, ConfigMap |
+| **Real inspection target** | `kubectl get deployment checkout-api -o yaml` |
+| **GitOps transport** | Flux Kustomization or ArgoCD Application |
+
+## 3. Why ConfigHub + cub-gen helps here
+
+| Pain | Answer | Governed change win |
+|------|--------|---------------------|
+| "What K8s fields came from my score.yaml?" | Field-origin tracing with 0.94 confidence | Container image changes → ALLOW |
+| "Why did my deployment fail validation?" | Platform contract enforcement at publish | Missing probes → ESCALATE |
+| "Who owns this rendered field?" | DRY/WET ownership boundary | Resource dependency adds → governed review |
+
 ## Domain POV (Score platform teams)
 
 This example is for organizations already using Score at scale:
@@ -234,15 +260,75 @@ WET:  Deployment/spec/template/spec/containers[name=main]/image
 - **E2E demo**: `../demo/module-2-score-field-map.sh`
 - **Worked example**: `../../docs/agentic-gitops/03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md`
 
+## Run from ConfigHub (connected mode)
+
+If you already have ConfigHub, start here:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+
+# Publish and ingest
+./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas > /tmp/bundle.json
+./cub-gen verify --in /tmp/bundle.json
+./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
+./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
+```
+
+## 6. Inspect the result
+
+After running discover/import, inspect:
+
+```bash
+# Field-origin map (Score → Kubernetes)
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+  | jq '.provenance[0].field_origin_map'
+
+# Score-specific analysis
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+  | jq '.provenance[0].score_workload_analysis'
+
+# Evidence bundle
+./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas \
+  | jq '{change_id, bundle_digest: .bundle.digest}'
+```
+
+## 7. Try one governed change
+
+**ALLOW path**: App team updates container image in `score.yaml`:
+
+```yaml
+# score.yaml change
+containers:
+  main:
+    image: ghcr.io/example/checkout-api:v2.0.0  # was :latest
+```
+
+Result: Image field is app-team owned → **ALLOW**
+
+**ESCALATE path**: App team adds unapproved resource dependency:
+
+```yaml
+# score.yaml change
+resources:
+  db:
+    type: postgres
+  ml-gpu:          # new resource type
+    type: gpu-pool # not in approved list
+```
+
+Result: GPU pool not in workload class approved types → **ESCALATE** to platform team
+
 ## Local and Connected Entrypoints
 
 From repo root:
 
 ```bash
-echo "local/offline"
+# Local/offline
 ./examples/scoredev-paas/demo-local.sh
 
-echo "connected (requires ConfigHub auth)"
+# Connected (requires ConfigHub auth)
 cub auth login
 ./examples/scoredev-paas/demo-connected.sh
 ```

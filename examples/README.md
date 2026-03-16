@@ -11,13 +11,39 @@ You already have a deployment pipeline: Git, Helm, Flux, Argo, Spring Boot, Scor
 
 Each example in this directory is runnable and maps to a real platform/app pattern.
 
-**Who this is for:** Platform engineers, SREs, and app developers who want config
-traceability without changing their existing deployment workflow.
+## Two audiences, two entry points
 
-**What runs locally vs what needs ConfigHub:** Everything in these examples runs
-locally with no backend. Generator detection, field-origin tracing, and evidence
-bundles work offline. Cross-repo queries, policy enforcement, and governed decisions
-require [ConfigHub](https://confighub.github.io/cub-gen/platform/).
+Every example supports both paths explicitly:
+
+| If you are... | Your path |
+|---------------|-----------|
+| **Existing ConfigHub user** adding a platform tool | Start with connected mode, import your existing repos |
+| **Existing platform-tool user** adding ConfigHub | Start with local mode, see value first, then connect |
+
+Neither audience is an afterthought. Pick your path and each example will guide you.
+
+## What happens after import? (Day-2 stories)
+
+Import is day 1. The real value shows on day 2:
+
+| Day | What you do | What you gain |
+|-----|-------------|---------------|
+| **Day 1** | Import and explain | Field-origin tracing, ownership clarity, inverse-edit guidance |
+| **Day 2** | Governed change, promotion, or live-origin proposal | ALLOW/BLOCK decisions, cross-repo promotion, live→DRY proposals |
+| **Day 3** | Optional AI-assisted change lane | Prompt-as-DRY, mutation-ledger evidence, verification boundary |
+
+Every example should answer: "I imported my config. Now what?" The answer is
+governed change, promotion, or live-origin proposal — not "wait for the next feature."
+
+## What runs locally vs what needs ConfigHub
+
+Everything in these examples runs locally with no backend:
+- Generator detection
+- Field-origin tracing
+- Evidence bundles (`publish`, `verify`, `attest`)
+
+Cross-repo queries, policy enforcement, and governed decisions require
+[ConfigHub](https://confighub.github.io/cub-gen/platform/).
 
 ## Pick your domain POV first
 
@@ -130,8 +156,6 @@ When you run `cub-gen attest --verifier <name>`, the verifier name records who/w
 | `security-review` | Security approval |
 | `deploy-agent` | Automated deployment agent |
 
-## Pick your starting point
-
 ## Choose your starting view
 
 | If you are... | Start here | Direct viewpoint section | First command |
@@ -195,6 +219,22 @@ Now includes Helm + Spring Boot registry-backed platform examples too.
 | [**swamp-automation**](swamp-automation/) | Swamp agent-authored workflows | Workflow-graph change governance (models/methods/required steps) |
 | [**swamp-project**](swamp-project/) | Helm chart for AI runtime | Helm-based runtime policy mapping |
 
+### AI prompt-as-DRY (first-class product lane)
+
+For AI and workflow examples, the DRY/WET model extends to prompts and context:
+
+| Concept | How it maps |
+|---------|-------------|
+| **Prompt + context** | DRY input (what the team authors) |
+| **LLM/agent layer** | Non-deterministic generator (produces WET output) |
+| **Verification + attestation** | Safety boundary (makes non-determinism governable) |
+| **Mutation ledger** | Compliance and forensics proof |
+
+This means human-authored changes and AI-assisted changes can run through the same
+governed ConfigHub MR path. The mutation ledger is what makes this auditable.
+
+See the [AI lane workflow](../docs/workflows/prompt-as-dry.md) for details.
+
 ## Operations patterns
 
 | Example | You use... | cub-gen shows you... |
@@ -209,14 +249,32 @@ Now includes Helm + Spring Boot registry-backed platform examples too.
 | [**live-reconcile**](live-reconcile/) | Flux + Argo e2e fixtures proving WET->LIVE reconciliation |
 | [**demo**](demo/) | Runnable demo script index |
 
+## Add your own generator
+
+If your platform has its own config format (not Helm, Score, Spring Boot, etc.),
+you can add `cub-gen` support for it.
+
+See [Custom Generator Onboarding](../docs/workflows/custom-generator-onboarding.md) for:
+
+- When you need a custom generator
+- Fork-and-extend path for internal platforms
+- Request-inclusion path for community-relevant generators
+- Kubara-like layered platform requirements
+
 ## How to read each example
 
-Every example README should answer:
+Every example README satisfies the [Universal Example Contract](../docs/workflows/example-checklist.md):
 
-1. What scenario it models.
-2. Who owns which fields.
-3. How to run local mode.
-4. How to run connected mode.
-5. What proof artifacts to inspect.
+| Section | What it tells you |
+|---------|-------------------|
+| 1. Who this is for | Two-audience paths (ConfigHub-first + tool-first) |
+| 2. What runs | Real app/runtime, real cluster objects, real inspection target |
+| 3. Why ConfigHub + cub-gen helps | One pain, one answer, one governed change win |
+| 4. Run from ConfigHub | Connected mode instructions |
+| 5. Run from platform tool | Local mode instructions |
+| 6. Inspect the result | URL/pods/evidence artifacts |
+| 7. Governed change | ALLOW + ESCALATE/BLOCK examples |
+| 8. Generation chain | (Layered only) Multi-hop tracing |
+| 9. Ownership boundary | (Layered only) Platform vs downstream guidance |
 
-For acceptance criteria across examples, see [Example Checklist](../docs/workflows/example-checklist.md).
+For full contract details, see the [Universal Example Contract](../docs/workflows/example-checklist.md).
