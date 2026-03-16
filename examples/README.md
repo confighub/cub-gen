@@ -249,6 +249,18 @@ See the [AI lane workflow](../docs/workflows/prompt-as-dry.md) for details.
 | [**live-reconcile**](live-reconcile/) | Flux + Argo e2e fixtures proving WET->LIVE reconciliation |
 | [**demo**](demo/) | Runnable demo script index |
 
+## Add your own generator
+
+If your platform has its own config format (not Helm, Score, Spring Boot, etc.),
+you can add `cub-gen` support for it.
+
+See [Custom Generator Onboarding](../docs/workflows/custom-generator-onboarding.md) for:
+
+- When you need a custom generator
+- Fork-and-extend path for internal platforms
+- Request-inclusion path for community-relevant generators
+- Kubara-like layered platform requirements
+
 ## How to read each example
 
 Every example README satisfies the [Universal Example Contract](../docs/workflows/example-checklist.md):
