@@ -27,6 +27,9 @@ show concrete ConfigHub value."
 7. Every example must include one governed `ALLOW` path and one governed
    `ESCALATE` or `BLOCK` path.
 8. Examples are the primary discovery surface; supporting docs are secondary.
+9. Argo-first users must see Argo as a first-class path, not an afterthought.
+10. Layered platform frameworks must show multi-layer tracing where the stack
+    genuinely has more than one generation hop.
 
 ## Universal example contract
 
@@ -53,6 +56,16 @@ Every example README and entrypoint must include these sections and behaviors:
    - at least one `ALLOW`
    - at least one `ESCALATE` or `BLOCK`
 
+For layered examples such as Helm/Argo/Kubara-like platforms, the contract also
+requires:
+
+8. `Show the generation chain`
+   - labels, overlays, umbrella charts, ApplicationSets, or other intermediate
+     layers if they materially affect what gets deployed
+9. `Explain the ownership boundary`
+   - especially where platform-owned security defaults can be weakened by
+     downstream edits unless governed
+
 ## Execution waves
 
 ### Wave 0: contract and foundations
@@ -64,6 +77,7 @@ Issues:
 - [#175](https://github.com/confighub/cub-gen/issues/175) shared real-cluster connected harness
 - [#176](https://github.com/confighub/cub-gen/issues/176) app/deployment concept alignment + Ilya checklist capture
 - [#183](https://github.com/confighub/cub-gen/issues/183) connected acceptance suite and release gate
+- [#185](https://github.com/confighub/cub-gen/issues/185) custom-generator onboarding path for framework-specific generators
 
 Exit criteria:
 - example contract is written and testable
@@ -121,6 +135,7 @@ Exit criteria:
 - [#174](https://github.com/confighub/cub-gen/issues/174) define and enforce a universal example contract
 - [#175](https://github.com/confighub/cub-gen/issues/175) build shared real-cluster connected harness for examples
 - [#176](https://github.com/confighub/cub-gen/issues/176) align examples to current app/deployment concepts and capture Ilya acceptance checklist
+- [#185](https://github.com/confighub/cub-gen/issues/185) add a custom-generator onboarding path for Kubara-like frameworks
 - [#183](https://github.com/confighub/cub-gen/issues/183) add connected acceptance suite and release gate for the example reset
 
 ### Primary example issues
@@ -138,13 +153,14 @@ Exit criteria:
 1. Universal example contract and acceptance gates
 2. Shared real-cluster connected harness
 3. App/deployment concept alignment + Ilya checklist capture
-4. Helm flagship example
-5. Score flagship example
-6. Spring flagship example
-7. Workflow examples
-8. Supporting catalog cleanup
-9. Entry-point/index redesign
-10. Connected release gate hardening
+4. Custom-generator onboarding path for framework-specific platforms
+5. Helm flagship example
+6. Score flagship example
+7. Spring flagship example
+8. Workflow examples
+9. Supporting catalog cleanup
+10. Entry-point/index redesign
+11. Connected release gate hardening
 
 ## Detailed expectations by example family
 
@@ -154,10 +170,17 @@ We should treat `helm-paas` as the closest current answer for users of:
 - Helm + Argo/Flux
 - umbrella charts
 - overlays
+- ApplicationSets and cluster-label targeting
 - secure-by-default platform baselines
 - Kubara-like platform frameworks
 
 The example must feel like a real platform engineering story, not a template demo.
+It should answer concrete Kubara-style questions such as:
+
+- why does this cluster have this addon enabled?
+- which label or overlay caused this deployment?
+- who is allowed to weaken a platform-owned security setting?
+- what should be edited upstream instead of downstream?
 
 ### Score.dev
 
@@ -189,6 +212,8 @@ plus the value of ConfigHub-connected governance.
    model for example language and live proof.
 3. Some supporting examples may need to split into sub-issues if their runtime
    story becomes too large for one PR.
+4. Kubara-like/platform-framework users need a clear custom-generator path from
+   the user-facing surface, not from deep design docs only.
 
 ## Definition of done
 
@@ -203,4 +228,3 @@ We can call this reset complete when all of the following are true:
 6. Every primary example exposes a real live inspection target.
 7. CI/release gates prove the claims.
 8. We no longer need hidden supporting docs to explain the examples' value.
-
