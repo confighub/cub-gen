@@ -27,6 +27,12 @@ That means the product surface must make three things obvious:
 3. human and AI-assisted changes should run through the same governed ConfigHub
    MR path.
 
+It also needs to give platform users credible day-2 stories:
+
+- after import, what do I do next?
+- how do governed change, promotion, live-origin proposals, or AI-assisted
+  changes help me now?
+
 ## Non-negotiable requirements
 
 1. Every featured example must support two audiences explicitly:
@@ -47,6 +53,8 @@ That means the product surface must make three things obvious:
     (live-origin proposal flow) must be prominent user-facing workflows.
 12. The meaning of invariants and the enforcement model must be explained in
     workflow terms, not left as abstract internal language.
+13. AI prompt/context as DRY input must be visible as a first-class product
+    lane, not left inside planning docs only.
 
 ## Universal example contract
 
@@ -96,6 +104,7 @@ Issues:
 - [#183](https://github.com/confighub/cub-gen/issues/183) connected acceptance suite and release gate
 - [#185](https://github.com/confighub/cub-gen/issues/185) custom-generator onboarding path for framework-specific generators
 - [#190](https://github.com/confighub/cub-gen/issues/190) clarify DRY->WET, AI governance, invariants, and enforcement in primary entrypoints
+- [#192](https://github.com/confighub/cub-gen/issues/192) AI prompt-as-DRY with verification, attestation, and mutation-ledger proof
 
 Exit criteria:
 - example contract is written and testable
@@ -104,6 +113,8 @@ Exit criteria:
 - Ilya complaint checklist is written and mapped to tests
 - release gate can fail on example regressions
 - primary entrypoints explain DRY->WET generators and ConfigHub MR governance in plain English
+- primary entrypoints expose credible day-2 stories for stuck platform users
+- AI prompt-as-DRY is visible as a first-class product lane
 
 ### Wave 1: flagship app-platform examples
 
@@ -173,6 +184,7 @@ Exit criteria:
 - [#185](https://github.com/confighub/cub-gen/issues/185) add a custom-generator onboarding path for Kubara-like frameworks
 - [#183](https://github.com/confighub/cub-gen/issues/183) add connected acceptance suite and release gate for the example reset
 - [#190](https://github.com/confighub/cub-gen/issues/190) clarify DRY->WET, AI governance, invariants, and enforcement in primary entrypoints
+- [#192](https://github.com/confighub/cub-gen/issues/192) make AI prompt-as-DRY with verification, attestation, and mutation-ledger proof first-class
 
 ### Primary example issues
 - [#187](https://github.com/confighub/cub-gen/issues/187) support Kubara-like layered provenance across overlays, ApplicationSet, and label-driven generation
@@ -195,17 +207,18 @@ Exit criteria:
 2. Shared real-cluster connected harness
 3. Product framing: DRY->WET, AI governance, invariants, enforcement
 4. App/deployment concept alignment + Ilya checklist capture
-5. Custom-generator onboarding path for framework-specific platforms
-6. Helm/Kubara layered provenance capability
-7. Helm flagship example
-8. Score flagship example
-9. Spring flagship example
-10. Real Flow A / Flow B pairing demos
-11. FR8 promotion and live->wet->dry example
-12. Workflow examples
-13. Supporting catalog cleanup
-14. Entry-point/index redesign
-15. Connected release gate hardening
+5. AI prompt-as-DRY user-facing lane
+6. Custom-generator onboarding path for framework-specific platforms
+7. Helm/Kubara layered provenance capability
+8. Helm flagship example
+9. Score flagship example
+10. Spring flagship example
+11. Real Flow A / Flow B pairing demos
+12. FR8 promotion and live->wet->dry example
+13. Workflow examples
+14. Supporting catalog cleanup
+15. Entry-point/index redesign
+16. Connected release gate hardening
 
 ## Detailed expectations by example family
 
@@ -254,6 +267,13 @@ The workflow examples must no longer read like static YAML governance demos.
 They need to show a real workflow engine or real runnable workflow artifact,
 plus the value of ConfigHub-connected governance.
 
+They also need to carry the stronger AI story:
+
+- prompt + context can be DRY input,
+- the LLM or agent layer can behave like a non-deterministic generator,
+- verification, attestation, and governance are what make that safe,
+- the mutation ledger is the compliance and forensics proof.
+
 ## Flow expectations from the PRD
 
 The product surface should make these flows easy to find and run:
@@ -265,6 +285,12 @@ The product surface should make these flows easy to find and run:
 
 The goal is not just to mention them in design docs. The goal is to make them
 obvious from examples and entrypoints.
+
+It should also tell a believable day-2 story:
+
+- Day 1: import and explain
+- Day 2: governed change, promotion, or live-origin proposal
+- Day 3: optional AI-assisted lane with mutation-ledger evidence
 
 ## Dependencies and open inputs
 
@@ -279,6 +305,8 @@ obvious from examples and entrypoints.
 5. The strongest product story is often \"existing platform-tool user adds
    ConfigHub + `cub-gen` + AI in one step\"; examples and entrypoints should be
    optimized for that reader.
+6. The AI-specific value from the DRY/WET analysis needs to be surfaced in
+   examples and entrypoints, not left in planning text.
 
 ## Definition of done
 
