@@ -14,6 +14,19 @@ This plan replaces the weaker standard of "good explanatory docs" with the
 stronger standard of "compelling runnable examples that deploy something real and
 show concrete ConfigHub value."
 
+The dominant audience assumption for this plan is:
+
+- existing platform-tool users
+- adding ConfigHub + `cub-gen` + AI-assisted change workflows together
+- without replacing their current reconciler or platform framework
+
+That means the product surface must make three things obvious:
+
+1. most code and prompts are DRY,
+2. generators are how teams get from DRY to WET,
+3. human and AI-assisted changes should run through the same governed ConfigHub
+   MR path.
+
 ## Non-negotiable requirements
 
 1. Every featured example must support two audiences explicitly:
@@ -30,6 +43,10 @@ show concrete ConfigHub value."
 9. Argo-first users must see Argo as a first-class path, not an afterthought.
 10. Layered platform frameworks must show multi-layer tracing where the stack
     genuinely has more than one generation hop.
+11. Story 2 (import), story 10 (ConfigHub promotion value), and story 11
+    (live-origin proposal flow) must be prominent user-facing workflows.
+12. The meaning of invariants and the enforcement model must be explained in
+    workflow terms, not left as abstract internal language.
 
 ## Universal example contract
 
@@ -78,6 +95,7 @@ Issues:
 - [#176](https://github.com/confighub/cub-gen/issues/176) app/deployment concept alignment + Ilya checklist capture
 - [#183](https://github.com/confighub/cub-gen/issues/183) connected acceptance suite and release gate
 - [#185](https://github.com/confighub/cub-gen/issues/185) custom-generator onboarding path for framework-specific generators
+- [#190](https://github.com/confighub/cub-gen/issues/190) clarify DRY->WET, AI governance, invariants, and enforcement in primary entrypoints
 
 Exit criteria:
 - example contract is written and testable
@@ -85,12 +103,14 @@ Exit criteria:
 - current app/deployment concepts are encoded
 - Ilya complaint checklist is written and mapped to tests
 - release gate can fail on example regressions
+- primary entrypoints explain DRY->WET generators and ConfigHub MR governance in plain English
 
 ### Wave 1: flagship app-platform examples
 
 Purpose: fix the examples most users will recognize first.
 
 Issues:
+- [#187](https://github.com/confighub/cub-gen/issues/187) Kubara-like layered provenance across overlays, ApplicationSet, and label-driven generation
 - [#177](https://github.com/confighub/cub-gen/issues/177) Helm / Argo / Kubara-like flagship example
 - [#178](https://github.com/confighub/cub-gen/issues/178) Score.dev flagship example
 - [#179](https://github.com/confighub/cub-gen/issues/179) Spring Boot flagship example
@@ -100,8 +120,23 @@ Exit criteria:
 - each one deploys a real app to a real cluster
 - each one has both audience paths
 - each one shows a real ConfigHub connected value path
+- Helm/Kubara-like example demonstrates layered provenance, not only flat field mapping
 
-### Wave 2: workflow platform examples
+### Wave 2: governed entry/promotion flows
+
+Purpose: make the most important ConfigHub MR workflows runnable and visible.
+
+Issues:
+- [#188](https://github.com/confighub/cub-gen/issues/188) real Git PR <-> ConfigHub MR pairing flows A and B
+- [#189](https://github.com/confighub/cub-gen/issues/189) FR8 promotion and live->wet->dry first-class flow
+
+Exit criteria:
+- Flow A (`Git PR -> ConfigHub MR`) is demoed on a real cluster
+- Flow B (`ConfigHub MR -> Git PR`) is demoed on a real cluster
+- story 10 and FR8 are easy to point at from examples
+- story 11 remains a prominent, runnable live-origin flow
+
+### Wave 3: workflow platform examples
 
 Purpose: make workflow/automation stories equally strong and credible.
 
@@ -113,7 +148,7 @@ Exit criteria:
 - runtime and governance concerns are separated and both made concrete
 - each example ends with a real inspectable outcome
 
-### Wave 3: supporting example catalog
+### Wave 4: supporting example catalog
 
 Purpose: bring the rest of the catalog up to the same user-facing quality bar.
 
@@ -137,12 +172,18 @@ Exit criteria:
 - [#176](https://github.com/confighub/cub-gen/issues/176) align examples to current app/deployment concepts and capture Ilya acceptance checklist
 - [#185](https://github.com/confighub/cub-gen/issues/185) add a custom-generator onboarding path for Kubara-like frameworks
 - [#183](https://github.com/confighub/cub-gen/issues/183) add connected acceptance suite and release gate for the example reset
+- [#190](https://github.com/confighub/cub-gen/issues/190) clarify DRY->WET, AI governance, invariants, and enforcement in primary entrypoints
 
 ### Primary example issues
+- [#187](https://github.com/confighub/cub-gen/issues/187) support Kubara-like layered provenance across overlays, ApplicationSet, and label-driven generation
 - [#177](https://github.com/confighub/cub-gen/issues/177) upgrade `helm-paas` into the flagship Helm/Argo/Kubara-like example
 - [#178](https://github.com/confighub/cub-gen/issues/178) upgrade `scoredev-paas` for ConfigHub-first and Score-first adoption
 - [#179](https://github.com/confighub/cub-gen/issues/179) upgrade `springboot-paas` into a real app + governed config example
 - [#180](https://github.com/confighub/cub-gen/issues/180) upgrade `ops-workflow` and Swamp examples into runnable workflow platform stories
+
+### Flow and promotion issues
+- [#188](https://github.com/confighub/cub-gen/issues/188) demo real Git PR <-> ConfigHub MR pairing flows A and B
+- [#189](https://github.com/confighub/cub-gen/issues/189) make FR8 promotion and live->wet->dry a first-class example flow
 
 ### Catalog and UX issues
 - [#181](https://github.com/confighub/cub-gen/issues/181) upgrade supporting examples to the same product standard
@@ -152,15 +193,19 @@ Exit criteria:
 
 1. Universal example contract and acceptance gates
 2. Shared real-cluster connected harness
-3. App/deployment concept alignment + Ilya checklist capture
-4. Custom-generator onboarding path for framework-specific platforms
-5. Helm flagship example
-6. Score flagship example
-7. Spring flagship example
-8. Workflow examples
-9. Supporting catalog cleanup
-10. Entry-point/index redesign
-11. Connected release gate hardening
+3. Product framing: DRY->WET, AI governance, invariants, enforcement
+4. App/deployment concept alignment + Ilya checklist capture
+5. Custom-generator onboarding path for framework-specific platforms
+6. Helm/Kubara layered provenance capability
+7. Helm flagship example
+8. Score flagship example
+9. Spring flagship example
+10. Real Flow A / Flow B pairing demos
+11. FR8 promotion and live->wet->dry example
+12. Workflow examples
+13. Supporting catalog cleanup
+14. Entry-point/index redesign
+15. Connected release gate hardening
 
 ## Detailed expectations by example family
 
@@ -181,6 +226,11 @@ It should answer concrete Kubara-style questions such as:
 - which label or overlay caused this deployment?
 - who is allowed to weaken a platform-owned security setting?
 - what should be edited upstream instead of downstream?
+
+It also needs to answer the deeper chain question:
+
+- how do I trace from `config.yaml` or cluster labels through overlays/ApplicationSet
+  logic to the live deployment on a specific cluster?
 
 ### Score.dev
 
@@ -204,6 +254,18 @@ The workflow examples must no longer read like static YAML governance demos.
 They need to show a real workflow engine or real runnable workflow artifact,
 plus the value of ConfigHub-connected governance.
 
+## Flow expectations from the PRD
+
+The product surface should make these flows easy to find and run:
+
+- story 2: import as a concrete first step for brownfield users
+- story 10 / FR8: promotion to reusable base DRY and upstream/default config
+- story 11: live-origin proposal flow, because it is one of the clearest unique
+  ConfigHub strengths
+
+The goal is not just to mention them in design docs. The goal is to make them
+obvious from examples and entrypoints.
+
 ## Dependencies and open inputs
 
 1. Ilya complaint details must be captured explicitly and added to the checklist
@@ -214,6 +276,9 @@ plus the value of ConfigHub-connected governance.
    story becomes too large for one PR.
 4. Kubara-like/platform-framework users need a clear custom-generator path from
    the user-facing surface, not from deep design docs only.
+5. The strongest product story is often \"existing platform-tool user adds
+   ConfigHub + `cub-gen` + AI in one step\"; examples and entrypoints should be
+   optimized for that reader.
 
 ## Definition of done
 
