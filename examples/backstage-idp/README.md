@@ -10,6 +10,32 @@ governance over *what* changed. When 50 teams rename owners during a reorg,
 you need traceability — not just commit history. ConfigHub makes every catalog
 change traceable, auditable, and queryable across repos.
 
+## 1. Who this is for
+
+| If you are... | Start here |
+|---------------|------------|
+| **Existing ConfigHub user** adding catalog governance | Jump to [Run from ConfigHub](#run-from-confighub-connected-mode) |
+| **Existing Backstage user** adding ConfigHub | Jump to [Try it](#try-it) then connect later |
+
+Both paths lead to the same outcome: governed catalog entities with field-origin tracing.
+
+## 2. What runs
+
+| Component | What it is |
+|-----------|------------|
+| **Real app** | Backstage `catalog-info.yaml` Component entity |
+| **Real inspection target** | Backstage Developer Portal catalog page |
+| **Validation** | Platform catalog standards (owner, lifecycle, naming) |
+| **Sync transport** | Backstage native Git sync (no Flux/Argo needed) |
+
+## 3. Why ConfigHub + cub-gen helps here
+
+| Pain | Answer | Governed change win |
+|------|--------|---------------------|
+| "Who changed the service owner?" | Field-origin tracing to `catalog-info.yaml` | Owner transfers → governed audit |
+| "Are all services on valid lifecycle?" | Platform standards enforcement | Invalid lifecycle → BLOCK |
+| "Which services still use old team name?" | Cross-repo catalog queries | Reorg cleanup → queryable |
+
 ## Domain POV (Backstage/catalog admins)
 
 Use this example if your catalog is operationally critical:
@@ -105,19 +131,16 @@ back to its source with ownership metadata.
 **Who**: A company with 200 microservices and a Backstage-powered developer
 portal. The payments team is splitting into payments-core and payments-fraud.
 
-### The change — 15 services need new owners
+### Scenario A — Valid owner transfer (ALLOW)
+
+The app team updates the service owner to a valid team name:
 
 ```yaml
-# catalog-info.yaml — before
+# catalog-info.yaml — ownership transfer
 spec:
-  owner: team-payments
-
-# catalog-info.yaml — after
-spec:
-  owner: team-payments-core
+  owner: team-payments-core   # was team-payments (valid team)
+  lifecycle: production       # unchanged
 ```
-
-### Governed pipeline
 
 ```bash
 # cub-gen detects the ownership change
@@ -141,6 +164,33 @@ BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.se
 After the reorg, ConfigHub can answer: "are there any services still owned by
 the old team-payments?" — a cross-repo query that would otherwise require
 grepping across 200 repositories.
+
+### Scenario B — Invalid lifecycle or unknown owner (BLOCK)
+
+The app team tries to set an invalid lifecycle or an unknown owner:
+
+```yaml
+# catalog-info.yaml — invalid change
+spec:
+  owner: random-person           # NOT in approved team list
+  lifecycle: testing             # NOT a valid lifecycle stage
+```
+
+```bash
+# cub-gen detects the invalid change
+./cub-gen gitops import --space platform --json ./examples/backstage-idp ./examples/backstage-idp
+
+# Evidence chain
+./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp > bundle.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
+./cub-gen bridge decision create --ingest ingest.json > decision.json
+
+# Platform validates: owner not in team list, lifecycle not valid → BLOCK
+./cub-gen bridge decision apply --decision decision.json --state BLOCK \
+  --approved-by governance-bot \
+  --reason "Owner 'random-person' not in approved team list. Lifecycle 'testing' not valid (use: experimental, production, deprecated)."
+```
 
 ## How it works
 
@@ -172,15 +222,72 @@ cub-gen's `backstage-idp` generator detects `catalog-info.yaml` containing a
   live alongside Helm charts in the same repo
 - **Full platform story**: see the [platform architecture](../../docs/platform.md)
 
+## Run from ConfigHub (connected mode)
+
+If you already have ConfigHub, start here:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+
+# Publish and ingest
+./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp > /tmp/bundle.json
+./cub-gen verify --in /tmp/bundle.json
+./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
+./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
+```
+
+## 6. Inspect the result
+
+After running discover/import, inspect:
+
+```bash
+# Field-origin map (catalog fields → source)
+./cub-gen gitops import --space platform --json ./examples/backstage-idp ./examples/backstage-idp \
+  | jq '.provenance[0].field_origin_map'
+
+# Catalog entity analysis
+./cub-gen gitops import --space platform --json ./examples/backstage-idp ./examples/backstage-idp \
+  | jq '.provenance[0].backstage_entity_analysis'
+
+# Evidence bundle
+./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp \
+  | jq '{change_id, bundle_digest: .bundle.digest}'
+```
+
+## 7. Try one governed change
+
+**ALLOW path**: App team transfers ownership to valid team:
+
+```yaml
+# catalog-info.yaml change
+spec:
+  owner: team-payments-core  # valid team in approved list
+```
+
+Result: Owner is in approved team list → **ALLOW**
+
+**BLOCK path**: App team sets unknown owner or invalid lifecycle:
+
+```yaml
+# catalog-info.yaml change
+spec:
+  owner: john-doe        # NOT a team, just a person
+  lifecycle: alpha       # NOT valid (use experimental/production/deprecated)
+```
+
+Result: Owner not in approved list, lifecycle not valid → **BLOCK**
+
 ## Local and Connected Entrypoints
 
 From repo root:
 
 ```bash
-echo "local/offline"
+# Local/offline
 ./examples/backstage-idp/demo-local.sh
 
-echo "connected (requires ConfigHub auth)"
+# Connected (requires ConfigHub auth)
 cub auth login
 ./examples/backstage-idp/demo-connected.sh
 ```

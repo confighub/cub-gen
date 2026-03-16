@@ -10,6 +10,32 @@ This is governance governing itself. The lifecycle definition is configuration,
 and configuration gets governed. The same provenance, ownership, and decision
 pipeline that governs your app changes also governs the governance rules.
 
+## 1. Who this is for
+
+| If you are... | Start here |
+|---------------|------------|
+| **Existing ConfigHub user** adding lifecycle governance | Jump to [Run from ConfigHub](#run-from-confighub-connected-mode) |
+| **Platform control-plane operator** | Jump to [Try it](#try-it) — recursive governance proof |
+
+Both paths lead to the same outcome: governed lifecycle operations with recursive safety.
+
+## 2. What runs
+
+| Component | What it is |
+|-----------|------------|
+| **Real workflow** | Operations lifecycle (plan → verify → deploy) |
+| **Real inspection target** | Governed execution plan with action manifest |
+| **Policy enforcement** | Approval thresholds, deploy windows, break-glass |
+| **Execution transport** | ConfigHub decision engine |
+
+## 3. Why ConfigHub + cub-gen helps here
+
+| Pain | Answer | Governed change win |
+|------|--------|---------------------|
+| "Who changed the approval rules?" | Recursive governance trail | Approval threshold change → ALLOW with evidence |
+| "Can we bypass approvals in emergencies?" | Break-glass with mandatory post-actions | Emergency override → audited |
+| "Are governance changes themselves governed?" | Same pipeline for everything | Meta-governance → traceable |
+
 ## Domain POV (platform control-plane operators)
 
 This example is for teams operating policy-driven platform lifecycles:
@@ -103,7 +129,9 @@ Actions lifecycle is just a specific workflow shape.
 **Who**: A platform team managing 30 microservices through ConfigHub. The
 security team requires three approvals for production deploys (up from two).
 
-### The change
+### Scenario A — Tightening approvals (ALLOW)
+
+The platform team increases the approval threshold:
 
 ```yaml
 # operations-prod.yaml — tighten approvals
@@ -112,8 +140,6 @@ actions:
     approvals:
       required: 3   # was 2
 ```
-
-### Governed pipeline — governance governs itself
 
 ```bash
 # cub-gen detects the approval threshold change
@@ -135,6 +161,34 @@ BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.se
 The recursive loop: ConfigHub Actions define the lifecycle (plan → verify →
 deploy). Changes to the lifecycle are *themselves* governed through ConfigHub.
 The decision engine evaluates the lifecycle change using the current rules.
+
+### Scenario B — Weakening approvals without authorization (BLOCK)
+
+A team member tries to reduce approval requirements:
+
+```yaml
+# operations-prod.yaml — weaken approvals
+actions:
+  verify:
+    approvals:
+      required: 0   # was 2, attempting to bypass
+```
+
+```bash
+# cub-gen detects the approval threshold change
+./cub-gen gitops import --space platform --json ./examples/confighub-actions ./examples/confighub-actions
+
+# Evidence chain
+./cub-gen publish --space platform ./examples/confighub-actions ./examples/confighub-actions > bundle.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
+./cub-gen bridge decision create --ingest ingest.json > decision.json
+
+# Lifecycle policy requires minimum approval threshold → BLOCK
+./cub-gen bridge decision apply --decision decision.json --state BLOCK \
+  --approved-by governance-bot \
+  --reason "Cannot reduce approval threshold below policy minimum (2). Requires security-lead exception."
+```
 
 ### Break-glass: emergency override
 
@@ -183,15 +237,75 @@ This example uses the `ops-workflow` generator — the same generator used by
   AI-agent-driven workflows
 - **E2E demo**: `../demo/ai-work-platform/scenario-3-confighub-actions.sh`
 
+## Run from ConfigHub (connected mode)
+
+If you already have ConfigHub, start here:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+
+# Publish and ingest
+./cub-gen publish --space platform ./examples/confighub-actions ./examples/confighub-actions > /tmp/bundle.json
+./cub-gen verify --in /tmp/bundle.json
+./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
+./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
+```
+
+## 6. Inspect the result
+
+After running discover/import, inspect:
+
+```bash
+# Field-origin map (lifecycle fields → source)
+./cub-gen gitops import --space platform --json ./examples/confighub-actions ./examples/confighub-actions \
+  | jq '.provenance[0].field_origin_map'
+
+# Ops workflow analysis
+./cub-gen gitops import --space platform --json ./examples/confighub-actions ./examples/confighub-actions \
+  | jq '.provenance[0].ops_workflow_analysis'
+
+# Evidence bundle
+./cub-gen publish --space platform ./examples/confighub-actions ./examples/confighub-actions \
+  | jq '{change_id, bundle_digest: .bundle.digest}'
+```
+
+## 7. Try one governed change
+
+**ALLOW path**: Platform team tightens approval threshold:
+
+```yaml
+# operations-prod.yaml change
+actions:
+  verify:
+    approvals:
+      required: 3   # stricter is allowed
+```
+
+Result: Tightening controls is permitted → **ALLOW**
+
+**BLOCK path**: Attempting to bypass approvals:
+
+```yaml
+# operations-prod.yaml change
+actions:
+  verify:
+    approvals:
+      required: 0   # attempting to bypass
+```
+
+Result: Below policy minimum → **BLOCK**
+
 ## Local and Connected Entrypoints
 
 From repo root:
 
 ```bash
-echo "local/offline"
+# Local/offline
 ./examples/confighub-actions/demo-local.sh
 
-echo "connected (requires ConfigHub auth)"
+# Connected (requires ConfigHub auth)
 cub auth login
 ./examples/confighub-actions/demo-connected.sh
 ```

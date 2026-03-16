@@ -11,6 +11,33 @@ guidance.
 This is the full platform version of the c3agent story. For the standalone
 fleet config (without registry and constraints), see [`c3agent`](../c3agent/).
 
+## 1. Who this is for
+
+| If you are... | Start here |
+|---------------|------------|
+| **Existing ConfigHub user** adding AI fleet platform | Jump to [Run from ConfigHub](#run-from-confighub-connected-mode) |
+| **Platform team building AI-ops PaaS** | Jump to [Try it](#try-it) — full registry + constraints |
+
+Both paths lead to the same outcome: self-service AI fleet provisioning with full governance.
+
+## 2. What runs
+
+| Component | What it is |
+|-----------|------------|
+| **Real app** | C3 agent fleet (controlplane + gateway) |
+| **Real cluster objects** | 11 targets: 2 Deployments, 2 Services, 2 ConfigMaps, Secret, PVC, 3 RBAC |
+| **Real inspection target** | `kubectl get deployment c3agent-controlplane -o yaml` |
+| **Platform layer** | FrameworkRegistry (7 operations) + ConstraintSet (guardrails) |
+| **GitOps transport** | Flux Kustomization or ArgoCD Application |
+
+## 3. Why ConfigHub + cub-gen helps here
+
+| Pain | Answer | Governed change win |
+|------|--------|---------------------|
+| "How do I provision an AI fleet?" | 30 lines → 11 governed targets | Self-service → IDP portal |
+| "Which models are approved?" | Platform registry + constraints | Unapproved model → BLOCK |
+| "What budget limits apply?" | Constraint enforcement with tiers | Budget violation → ESCALATE |
+
 ## Domain POV (platform teams launching AI-ops PaaS)
 
 Use this when you are building a "Heroku for AI operations" internally:
@@ -107,7 +134,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 **Who**: An ML team wants an agent fleet for automated code review. The platform
 team provides self-service provisioning with guardrails.
 
-### Step 1 — Team authors fleet config
+### Scenario A — Fleet passes all constraints (ALLOW)
+
+Team authors fleet config that meets all requirements:
 
 ```yaml
 # c3agent.yaml — 30 lines of DRY intent
@@ -116,13 +145,11 @@ apiVersion: c3agent/v1
 fleet:
   name: ml-review-fleet
   max_concurrent_tasks: 3
-  agent_model: claude-sonnet-4-20250514
+  agent_model: claude-sonnet-4-20250514   # in approved list
 agent_runtime:
-  image: ghcr.io/acme-corp/ai-ops-agent:0.3.1
-  max_budget_usd: 8.0
+  image: ghcr.io/acme-corp/ai-ops-agent:0.3.1  # approved registry
+  max_budget_usd: 8.0                          # within ceiling
 ```
-
-### Step 2 — Platform validates against constraints
 
 ```bash
 # Import with constraint validation
@@ -144,10 +171,42 @@ BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.se
 The platform's constraints check:
 - **approved-models-only**: is `claude-sonnet-4-20250514` in the approved list? → yes
 - **approved-registries-only**: is `ghcr.io/*` the only image source? → yes
-- **budget-ceiling-per-tier**: is $8.00 within the budget ceiling? → yes (ESCALATE if over)
+- **budget-ceiling-per-tier**: is $8.00 within the budget ceiling? → yes
 - **no-plaintext-secrets**: are all credentials reference-only? → yes
 
 All constraints pass → **ALLOW**.
+
+### Scenario B — Constraint violation (BLOCK/ESCALATE)
+
+Team tries to use unapproved model or exceed budget:
+
+```yaml
+# c3agent.yaml — violates constraints
+service: c3agent
+apiVersion: c3agent/v1
+fleet:
+  name: ml-review-fleet
+  agent_model: untested-model-v0.1        # NOT in approved list
+agent_runtime:
+  image: docker.io/random/image:latest    # NOT approved registry
+  max_budget_usd: 500.0                   # exceeds tier ceiling
+```
+
+```bash
+# Import with constraint validation
+./cub-gen gitops import --space ai-ops --json ./examples/ai-ops-paas ./examples/ai-ops-paas
+
+# Evidence chain
+./cub-gen publish --space ai-ops ./examples/ai-ops-paas ./examples/ai-ops-paas > bundle.json
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
+./cub-gen bridge decision create --ingest ingest.json > decision.json
+
+# Constraint violations → BLOCK
+./cub-gen bridge decision apply --decision decision.json --state BLOCK \
+  --approved-by governance-bot \
+  --reason "Model 'untested-model-v0.1' not approved. Registry 'docker.io' not approved. Budget $500 exceeds tier ceiling."
+```
 
 ## How it works — the platform layer
 
@@ -188,15 +247,79 @@ Platform guardrails with enforcement levels:
   DAG workflows with model binding governance
 - **E2E demo**: `../demo/ai-work-platform/scenario-1-c3agent.sh`
 
+## Run from ConfigHub (connected mode)
+
+If you already have ConfigHub, start here:
+
+```bash
+cub auth login
+BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+TOKEN="$(cub auth get-token)"
+
+# Publish and ingest
+./cub-gen publish --space ai-ops ./examples/ai-ops-paas ./examples/ai-ops-paas > /tmp/bundle.json
+./cub-gen verify --in /tmp/bundle.json
+./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
+./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
+```
+
+## 6. Inspect the result
+
+After running discover/import, inspect:
+
+```bash
+# Field-origin map (fleet fields → K8s targets)
+./cub-gen gitops import --space ai-ops --json ./examples/ai-ops-paas ./examples/ai-ops-paas \
+  | jq '.provenance[0].field_origin_map'
+
+# Fleet analysis (11 WET targets from 30 DRY lines)
+./cub-gen gitops import --space ai-ops --json ./examples/ai-ops-paas ./examples/ai-ops-paas \
+  | jq '.provenance[0].c3agent_fleet_analysis'
+
+# Registry operations (7 typed operations)
+./cub-gen gitops import --space ai-ops --json ./examples/ai-ops-paas ./examples/ai-ops-paas \
+  | jq '.provenance[0].registry_operations'
+
+# Evidence bundle
+./cub-gen publish --space ai-ops ./examples/ai-ops-paas ./examples/ai-ops-paas \
+  | jq '{change_id, bundle_digest: .bundle.digest}'
+```
+
+## 7. Try one governed change
+
+**ALLOW path**: Team uses approved model and stays within budget:
+
+```yaml
+# c3agent.yaml change
+fleet:
+  agent_model: claude-sonnet-4-20250514  # approved
+agent_runtime:
+  max_budget_usd: 8.0                    # within ceiling
+```
+
+Result: All constraints pass → **ALLOW**
+
+**BLOCK path**: Team uses unapproved model or exceeds budget:
+
+```yaml
+# c3agent.yaml change
+fleet:
+  agent_model: untested-model-v0.1       # NOT approved
+agent_runtime:
+  max_budget_usd: 500.0                  # exceeds ceiling
+```
+
+Result: Constraint violations → **BLOCK**
+
 ## Local and Connected Entrypoints
 
 From repo root:
 
 ```bash
-echo "local/offline"
+# Local/offline
 ./examples/ai-ops-paas/demo-local.sh
 
-echo "connected (requires ConfigHub auth)"
+# Connected (requires ConfigHub auth)
 cub auth login
 ./examples/ai-ops-paas/demo-connected.sh
 ```
