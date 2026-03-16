@@ -32,6 +32,18 @@ AI-assisted changes make this gap wider because more changes happen faster.
 
 cub-gen adds the import/provenance layer that answers these questions while keeping Flux/Argo as reconciler.
 
+## Two import paths, not one
+
+ConfigHub now has two complementary import stories:
+
+- `cub gitops import` imports existing ArgoCD/Flux application resources from a cluster or worker target into ConfigHub.
+- `cub-gen gitops import` reads source-side generators such as Helm, Score.dev, Spring Boot, and workflow config, then emits provenance, inverse-edit guidance, and evidence.
+
+Use them for different jobs:
+
+- brownfield GitOps app onboarding -> ConfigHub GitOps import
+- source-to-runtime traceability and governed edits -> `cub-gen`
+
 ## What cub-gen is not
 
 - Not a Kubernetes reconciler — Flux/Argo still own WET→LIVE
@@ -74,6 +86,11 @@ ConfigHub backend OSS is available today:
 4. **ConfigHub** ingests bundles, enforces governed decision state, manages units with revision history
 5. **Bridge workers** connect ConfigHub to clusters via HTTP/2 SSE
 6. **Flux/Argo** continue to reconcile WET to LIVE — unchanged
+
+This is why the import surfaces both exist:
+
+- ConfigHub cluster import starts from Argo/Flux objects that already exist,
+- `cub-gen` starts from the source repo before those objects become opaque cluster state.
 
 Teams can start with cub-gen locally today and connect to ConfigHub when they need cross-repo queries, policy at write time, and governed execution.
 

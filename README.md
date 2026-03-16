@@ -23,6 +23,18 @@ to source file, line, and owner.
 
 Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability after deploy.
 
+## Two import paths, two jobs
+
+There are two related import flows in the ConfigHub world:
+
+- `cub gitops import` in ConfigHub imports existing Argo/Flux applications from a cluster or worker target.
+- `cub-gen gitops import` reads source repos such as Helm, Score.dev, Spring Boot, or workflow config and emits provenance, inverse-edit guidance, and evidence.
+
+They complement each other:
+
+- use ConfigHub GitOps import for brownfield cluster/app onboarding,
+- use `cub-gen` when you want source-to-runtime traceability and governed changes from DRY config.
+
 ## What it looks like
 
 ```bash
@@ -122,6 +134,11 @@ Per-generator recipes and bridge flow examples: [CLI Reference](https://confighu
 `cub-gen` is the local-first on-ramp. It runs standalone with no backend required.
 
 When you need cross-repo queries, policy enforcement, and governed decisions, connect to [ConfigHub](https://github.com/confighubai/confighub). The flow: DRY files in Git &rarr; `cub-gen` classifies and traces &rarr; `publish` produces change bundles &rarr; ConfigHub ingests, enforces policy (ALLOW/ESCALATE/BLOCK) &rarr; bridge workers connect to clusters &rarr; Flux/Argo reconciles as before.
+
+If you already use ConfigHub's GitOps Import wizard, think of it this way:
+
+- ConfigHub imports cluster-discovered Argo/Flux applications.
+- `cub-gen` imports source-side generators before they ever become opaque cluster objects.
 
 See the [platform docs](https://confighub.github.io/cub-gen/platform/) for the full story.
 
