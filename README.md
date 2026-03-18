@@ -1,5 +1,7 @@
 # cub-gen
 
+Working on this repo as the next maintainer or AI? Start with [AI-HANDOVER.md](AI-HANDOVER.md).
+
 See where every deployed config value came from.
 
 `cub-gen` is a governance + traceability sidecar for GitOps.
