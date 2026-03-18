@@ -43,7 +43,7 @@ Everything in these examples runs locally with no backend:
 - Evidence bundles (`publish`, `verify`, `attest`)
 
 Cross-repo queries, policy enforcement, and governed decisions require
-[ConfigHub](https://confighub.github.io/cub-gen/platform/).
+[ConfigHub](../docs/platform.md).
 
 ## Pick your domain POV first
 

@@ -290,13 +290,16 @@ Without a live `WET → LIVE` reconciler loop shown end-to-end, classify the flo
 
 See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` for full loop proofs.
 
-## PRD user-story coverage
+## PRD execution status
 
-| Status | User stories |
-|--------|--------------|
-| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 |
-| Partial (simulated/local-first, not full backend/runtime integration) | None |
-| Deferred | None |
+| Status | What is true today |
+|--------|--------------------|
+| Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
+| In progress | The flagship examples still need contract-based proof for real-cluster outcome, two-audience onboarding, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` paths |
+| Actively tracked | Example reset execution is being driven through issues `#173`, `#177`, `#178`, `#179`, `#180`, `#182`, `#183`, `#185`, and `#187` |
+
+That means the demo surface is broad, but we are still hardening the main examples
+before we claim full PRD-complete product proof.
 
 References:
 - `docs/agentic-gitops/03-worked-examples/04-eight-example-story-cards.md`

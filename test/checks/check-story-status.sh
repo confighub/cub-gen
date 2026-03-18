@@ -32,19 +32,43 @@ extract_stories() {
   printf '%s' "$value"
 }
 
-main_met="$(extract_stories "$README_MAIN" "Met/strong in current demos")"
-main_partial="$(extract_stories "$README_MAIN" "Partial (simulated/local-first, not full backend/runtime integration)")"
-main_deferred="$(extract_stories "$README_MAIN" "Deferred")"
+require_heading() {
+  local file="$1"
+  local heading="$2"
+  if ! grep -Eq "^## ${heading}$" "$file"; then
+    echo "error: heading not found in $file: ## ${heading}" >&2
+    exit 1
+  fi
+}
 
-demo_met="$(extract_stories "$README_DEMO" "Met/strong in current demos")"
-demo_partial="$(extract_stories "$README_DEMO" "Partial (simulated/local-first, not full backend/runtime integration)")"
-demo_deferred="$(extract_stories "$README_DEMO" "Deferred")"
+require_absent() {
+  local file="$1"
+  local pattern="$2"
+  if grep -Eq "$pattern" "$file"; then
+    echo "error: stale status language found in $file: $pattern" >&2
+    exit 1
+  fi
+}
 
-if [ "$main_met" != "$demo_met" ] || [ "$main_partial" != "$demo_partial" ] || [ "$main_deferred" != "$demo_deferred" ]; then
-  echo "error: story-status table drift between README.md and examples/demo/README.md" >&2
-  echo "  README.md     met=$main_met partial=$main_partial deferred=$main_deferred" >&2
-  echo "  demo README   met=$demo_met partial=$demo_partial deferred=$demo_deferred" >&2
+require_heading "$README_MAIN" "Execution status"
+require_heading "$README_DEMO" "PRD execution status"
+
+require_absent "$README_MAIN" "Met/strong in current demos"
+require_absent "$README_DEMO" "Met/strong in current demos"
+
+main_tracked="$(extract_stories "$README_MAIN" "Actively tracked")"
+demo_tracked="$(extract_stories "$README_DEMO" "Actively tracked")"
+
+if [ "$main_tracked" != "$demo_tracked" ]; then
+  echo "error: active execution issue list drift between README.md and examples/demo/README.md" >&2
+  echo "  README.md   tracked=$main_tracked" >&2
+  echo "  demo README tracked=$demo_tracked" >&2
   exit 1
 fi
 
-echo "ok: story-status tables are consistent"
+extract_stories "$README_MAIN" "Strong now" >/dev/null
+extract_stories "$README_MAIN" "In progress" >/dev/null
+extract_stories "$README_DEMO" "Strong now" >/dev/null
+extract_stories "$README_DEMO" "In progress" >/dev/null
+
+echo "ok: execution-status tables are consistent"

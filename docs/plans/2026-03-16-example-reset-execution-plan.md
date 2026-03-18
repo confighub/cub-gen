@@ -33,6 +33,26 @@ It also needs to give platform users credible day-2 stories:
 - how do governed change, promotion, live-origin proposals, or AI-assisted
   changes help me now?
 
+## Current status snapshot
+
+Completed enough to build on:
+
+- the example contract and real-cluster bar are written down,
+- the main catalog has local and connected entrypoints,
+- the messaging around DRY -> WET, ConfigHub MR governance, and AI prompt-as-DRY
+  is materially better than it was.
+
+Still not complete enough to claim victory:
+
+- the flagship examples still need to prove the universal contract end to end,
+- the release gate still needs to act as the enforcement point for that
+  contract,
+- the repo should not claim full PRD-complete proof until those gates exist.
+
+Active execution issues:
+
+- `#173`, `#177`, `#178`, `#179`, `#180`, `#182`, `#183`, `#185`, `#187`
+
 ## Non-negotiable requirements
 
 1. Every featured example must support two audiences explicitly:
