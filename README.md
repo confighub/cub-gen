@@ -127,7 +127,7 @@ Full guide: [docs/workflows/confidence-scores.md](docs/workflows/confidence-scor
 | C3 Agent | `c3agent.yaml` | [c3agent](examples/c3agent/) |
 | Swamp | `.swamp.yaml` + `workflow-*.yaml` | [swamp-automation](examples/swamp-automation/) |
 
-Per-generator recipes and bridge flow examples: [CLI Reference](https://confighub.github.io/cub-gen/cli-reference/)
+Per-generator recipes and bridge flow examples: [CLI Reference](docs/cli-reference.md)
 
 ## Part of the ConfigHub platform
 
@@ -140,7 +140,7 @@ If you already use ConfigHub's GitOps Import wizard, think of it this way:
 - ConfigHub imports cluster-discovered Argo/Flux applications.
 - `cub-gen` imports source-side generators before they ever become opaque cluster objects.
 
-See the [platform docs](https://confighub.github.io/cub-gen/platform/) for the full story.
+See the [platform docs](docs/platform.md) for the full story.
 
 ## Who this is for
 
@@ -160,13 +160,14 @@ Platform engineers, SREs, and app developers who want to know exactly what chang
 
 ## Documentation
 
-Full docs: **https://confighub.github.io/cub-gen/**
+Docs currently live in this repo:
 
-- [Getting Started](https://confighub.github.io/cub-gen/getting-started/) — 10-minute quickstart
-- [CLI Reference](https://confighub.github.io/cub-gen/cli-reference/) — all commands, flags, and generator recipes
-- [Demo Guide](https://confighub.github.io/cub-gen/demo-guide/) — runnable demo scripts and scenarios
+- [Docs index](docs/index.md) — overview and navigation
+- [Getting Started](docs/getting-started.md) — 10-minute quickstart
+- [CLI Reference](docs/cli-reference.md) — all commands, flags, and generator recipes
+- [Demo Guide](docs/demo-guide.md) — runnable demo scripts and scenarios
 - [Examples](examples/README.md) — complete runnable scenarios for every generator
-- [Platform](https://confighub.github.io/cub-gen/platform/) — how cub-gen connects to ConfigHub
+- [Platform](docs/platform.md) — how cub-gen connects to ConfigHub
 - [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md) — stack-specific entry paths
 - [Change CLI contract](docs/contracts/change-cli-v1.md) — change preview/run/explain specification
 - [Operation registry for real apps](docs/workflows/operation-registry-real-apps.md) — registry-backed platform governance
@@ -180,13 +181,17 @@ Full docs: **https://confighub.github.io/cub-gen/**
 
 Both prove create, update, and drift-correction on a real cluster.
 
-## User-story coverage
+## Execution status
 
-| Status | User stories |
+| Status | What is true today |
 |---|---|
-| Met/strong in current demos | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 |
-| Partial (simulated/local-first, not full backend/runtime integration) | None |
-| Deferred | None |
+| Strong now | Dual-mode example entrypoints exist across the main catalog; connected story scripts exist for stories 1-13; Flux and Argo live reconciler proofs run on real clusters |
+| In progress | Flagship examples are still being hardened against the universal example contract: real-cluster outcome, two-audience path, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` proof |
+| Actively tracked | Example reset execution is being driven through issues `#173`, `#177`, `#178`, `#179`, `#180`, `#182`, `#183`, `#185`, and `#187` |
+
+We have runnable paths for the full PRD story surface, but we are not treating every
+story as fully acceptance-complete until the flagship examples and release gates
+prove the new standard end to end.
 
 ## Test and contribute
 
