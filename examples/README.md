@@ -11,6 +11,16 @@ You already have a deployment pipeline: Git, Helm, Flux, Argo, Spring Boot, Scor
 
 Each example in this directory is runnable and maps to a real platform/app pattern.
 
+## Start here first
+
+Do not start by scanning the whole catalog. Start with one of these:
+
+| Journey | Start here | Why this should be first |
+|---------|------------|--------------------------|
+| Platform-first GitOps team | [`helm-paas`](./helm-paas/) then [`live-reconcile`](./live-reconcile/) | Most direct story for existing Helm plus Flux/Argo users |
+| App-first team | [`springboot-paas`](./springboot-paas/) | Most recognizable "I already ship this app" path |
+| Cluster-first companion path | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | Start from running reality, then trace back to source |
+
 ## Two audiences, two entry points
 
 Every example supports both paths explicitly:
@@ -21,6 +31,14 @@ Every example supports both paths explicitly:
 | **Existing platform-tool user** adding ConfigHub | Start with local mode, see value first, then connect |
 
 Neither audience is an afterthought. Pick your path and each example will guide you.
+
+## How the tools fit together
+
+| Tool | Starts from | Best first question |
+|------|-------------|---------------------|
+| `cub-gen` | Source repo | Which DRY file or path produced this rendered field? |
+| [`cub-scout`](https://github.com/confighub/cub-scout) | Cluster and reconciler runtime | What is running and where is drift? |
+| ConfigHub | Shared evidence and governance state | What changed, what was approved, and what proof exists? |
 
 ## What happens after import? (Day-2 stories)
 
@@ -95,8 +113,12 @@ If confidence scores are new to your team, use:
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
-./examples/demo/run-all-modules.sh
-./examples/demo/run-all-confighub-lifecycles.sh
+
+# Platform-first
+./examples/helm-paas/demo-local.sh
+
+# App-first
+./examples/springboot-paas/demo-local.sh
 ```
 
 ## Connected mode (ConfigHub)
@@ -107,13 +129,17 @@ TOKEN="$(cub auth get-token)"
 cub context get --json | jq -r '.coordinate.user'
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
-./cub-gen verify --in /tmp/bundle.json
-./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
-./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN" > /tmp/ingest.json
+# Platform-first
+./examples/helm-paas/demo-connected.sh
+
+# App-first
+./examples/springboot-paas/demo-connected.sh
 ```
 
 Use local mode for first value. Use connected mode for centralized governance state and cross-repo visibility.
+
+After that, use [`live-reconcile`](./live-reconcile/) for WET to LIVE proof and
+[`cub-scout`](https://github.com/confighub/cub-scout) for cluster-side inspection.
 
 ## Use your own repo quickly
 

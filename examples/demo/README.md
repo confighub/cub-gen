@@ -7,7 +7,21 @@ part of the governed change flow:
 detect → import → publish → verify → attest → (optional) bridge ingest/query
 ```
 
-## 1. Pick your demo by persona
+If you are new, do not start with "run everything." Start with one concrete
+adoption path that matches what you already run.
+
+## 1. Start with one of these
+
+| If you already run... | Start here | What you should prove first |
+|---------|-----------|------------------------------|
+| Helm plus Flux/Argo | `./examples/helm-paas/demo-local.sh` | Which values file/path controls the rendered field |
+| Spring Boot app repos | `./examples/springboot-paas/demo-local.sh` | Which app or platform config file should be edited |
+| Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | WET to LIVE create, update, and drift-correction |
+
+Cluster-side follow-on: pair the above with [`cub-scout`](https://github.com/confighub/cub-scout)
+when you want to inspect what is actually running after reconciliation.
+
+## 2. Pick your demo by persona
 
 | Persona | Start here | What you'll prove |
 |---------|------------|-------------------|
@@ -24,22 +38,29 @@ detect → import → publish → verify → attest → (optional) bridge ingest
 
 See also: [Domain POV Matrix](../../docs/workflows/domain-pov-matrix.md) | [Persona 5-minute runbooks](../../docs/workflows/persona-5-minute-runbooks.md)
 
-## 2. Quick start
+## 3. Quick start
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
 
-# Run your first demo (Score example)
-./examples/demo/app-ai-change-run.sh ./examples/scoredev-paas
+# Platform-first first run
+./examples/helm-paas/demo-local.sh
 
-# Run all core modules
+# App-first first run
+./examples/springboot-paas/demo-local.sh
+
+# Runtime proof after source-side import
+RECONCILER=both ./examples/live-reconcile/demo-local.sh
+```
+
+Once those are clear, then expand into the broader module and lifecycle surface.
+
+```bash
 ./examples/demo/run-all-modules.sh
-
-# Run all AI platform scenarios
 ./examples/demo/ai-work-platform/run-all.sh
 ```
 
-## 3. Local mode (no ConfigHub login required)
+## 4. Local mode (no ConfigHub login required)
 
 ### Core platform/app track
 
@@ -78,7 +99,7 @@ If your platform is workflow-heavy, start here before app-manifest demos:
   | jq '.provenance[0].ops_workflow_analysis'
 ```
 
-## 4. Connected mode (ConfigHub)
+## 5. Connected mode (ConfigHub)
 
 Start with authentication:
 
@@ -117,7 +138,7 @@ CI behavior:
 
 See also: [connected-ci-bootstrap.md](../../docs/workflows/connected-ci-bootstrap.md)
 
-## 5. Live reconciler e2e (Flux + Argo + kind)
+## 6. Live reconciler e2e (Flux + Argo + kind)
 
 | Script | What it demonstrates |
 |--------|---------------------|
@@ -139,7 +160,7 @@ cub auth login
 RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 ```
 
-## 6. Lifecycle simulation scripts
+## 7. Lifecycle simulation scripts
 
 | Script | What it demonstrates |
 |--------|---------------------|
@@ -158,7 +179,7 @@ RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 | `change-api-adapter.sh --request <json> [--out <json>]` | API-style JSON adapter for `change preview\|run\|explain` |
 | `change-api-http-e2e.sh [repo] [target]` | Native HTTP compatibility flow using `/v1/changes` endpoints |
 
-## 7. CI policy gates (PR path)
+## 8. CI policy gates (PR path)
 
 Use these when you want merge-blocking enforcement, not just local guidance:
 
@@ -169,7 +190,7 @@ Use these when you want merge-blocking enforcement, not just local guidance:
   - Runs the gate for Helm + Spring examples
   - Posts a PR comment with actionable DRY edit guidance
 
-## 8. PR-MR pairing and promotion flows
+## 9. PR-MR pairing and promotion flows
 
 | Script | What it demonstrates |
 |--------|---------------------|
@@ -177,7 +198,7 @@ Use these when you want merge-blocking enforcement, not just local guidance:
 | `flow-b-mr-to-git-pr-connected.sh` | Flow B: ConfigHub MR → Git PR proposal |
 | `fr8-promotion-upstream-dry-connected.sh` | FR8: live→WET→DRY upstream promotion |
 
-## 9. Phase 3 connected story scripts
+## 10. Phase 3 connected story scripts
 
 | Script | User story | What it demonstrates |
 |--------|------------|---------------------|
@@ -188,7 +209,7 @@ Use these when you want merge-blocking enforcement, not just local guidance:
 | `story-12-unified-actor-evidence.sh` | 12 | Unified human/CI/AI attestation chain |
 | `run-phase-3-connected-stories.sh` | 1,7,9,12 | Run all Phase 3 stories |
 
-## 10. Phase 4 connected story scripts
+## 11. Phase 4 connected story scripts
 
 | Script | User story | What it demonstrates |
 |--------|------------|---------------------|

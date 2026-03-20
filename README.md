@@ -2,20 +2,33 @@
 
 Working on this repo as the next maintainer or AI? Start with [AI-HANDOVER.md](AI-HANDOVER.md).
 
-See where every deployed config value came from.
+See where every deployed config value came from, starting from the repo you
+already have.
 
-`cub-gen` is a governance + traceability sidecar for GitOps.
+`cub-gen` is a source-side provenance and governed-change companion for GitOps
+teams. It is for people who already run GitHub, Helm, Score, Spring Boot, or
+workflow config, and already rely on Flux or Argo CD to reconcile what reaches
+their clusters.
 
 **gen = generator.** A generator is a function that maps DRY source (your `values.yaml`, `score.yaml`, etc.) to WET rendered output (the manifests that reach your cluster). `cub-gen` detects which generators your repo uses, runs the mapping, and records provenance — so every deployed field traces back to a source file, line, and owner.
 
 If you already run app/config in Git, OCI artifacts, and Flux/Argo reconciliation, `cub-gen` answers:
 
 - Which source file/path controls this live field?
+- What rendered manifests did this repo actually produce?
 - Did the right team edit the right thing?
 - Can we block unsafe edits before they hit cluster?
 
 It does this by classifying your existing repo and mapping rendered fields back
 to source file, line, and owner.
+
+## Start with the path you already have
+
+| If you already run... | Start here | First useful answer |
+|-----------|-----------|---------------------|
+| Helm plus Flux/Argo platform repos | [helm-paas](examples/helm-paas/) | Which values file owns this rendered field? |
+| Spring Boot services in GitOps | [springboot-paas](examples/springboot-paas/) | Which `application.yaml` setting or platform file should I edit? |
+| Cluster-first GitOps operations | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 
 ## What it is not
 
@@ -24,6 +37,16 @@ to source file, line, and owner.
 - Not an OCI replacement
 
 Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability after deploy.
+
+## Why import?
+
+Import should answer something useful right away:
+
+- what rendered manifests this repo produces,
+- which DRY file controls a deployed field,
+- what evidence bundle or governed change to inspect next,
+- how the repo-side answer lines up with cluster-side inspection in `cub-scout`
+  and ConfigHub.
 
 ## Two import paths, two jobs
 
@@ -36,6 +59,14 @@ They complement each other:
 
 - use ConfigHub GitOps import for brownfield cluster/app onboarding,
 - use `cub-gen` when you want source-to-runtime traceability and governed changes from DRY config.
+
+## How the tools fit together
+
+| Tool | Starts from | Best first question |
+|------|-------------|---------------------|
+| `cub-gen` | Source repo and generator inputs | Which DRY file/path produced this rendered field? |
+| [`cub-scout`](https://github.com/confighub/cub-scout) | Cluster, reconciler, and live runtime state | What is running, who owns it, and where is drift? |
+| [ConfigHub](https://github.com/confighubai/confighub) | Shared intended state, evidence, and governance state | What changed, what was approved, and what evidence exists across repos and clusters? |
 
 ## What it looks like
 
@@ -73,18 +104,16 @@ You see exactly which source field produced each deployed value, who owns it, an
 - **Inverse-edit guidance** — tells you where to edit DRY source to change a deployed value
 - **Change CLI** — `change preview`, `change run`, `change explain` for day-to-day workflows
 
-## Quickstart (local, no login)
+## First runs (local, no login)
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
 
-# One-command change preview
-./cub-gen change preview --space platform ./examples/scoredev-paas ./examples/scoredev-paas
+# Platform-first: existing Helm + Flux/Argo team
+./examples/helm-paas/demo-local.sh
 
-# Or the core flow
-./cub-gen gitops discover --space platform ./examples/helm-paas
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
-  | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
+# App-first: existing Spring Boot team
+./examples/springboot-paas/demo-local.sh
 ```
 
 ## Use Your Repo in 3 Commands
@@ -92,19 +121,27 @@ go build -o ./cub-gen ./cmd/cub-gen
 ```bash
 REPO=/path/to/your/repo
 ./cub-gen change preview --space platform "$REPO" "$REPO"
-./cub-gen change run --mode local --space platform "$REPO" "$REPO"
+./cub-gen gitops import --space platform --json "$REPO" "$REPO" \
+  | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
 ./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
 ```
 
-## Quickstart (connected, ConfigHub)
+## Next step (connected, ConfigHub)
 
 ```bash
 cub auth login
-TOKEN="$(cub auth get-token)"
-BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
-./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" \
-  --space platform ./examples/helm-paas ./examples/helm-paas
+
+# Platform-first connected path
+./examples/helm-paas/demo-connected.sh
+
+# App-first connected path
+./examples/springboot-paas/demo-connected.sh
 ```
+
+If you are starting from a cluster or controller rather than a repo, use
+ConfigHub GitOps import and [`cub-scout`](https://github.com/confighub/cub-scout)
+for the cluster-side path first, then use `cub-gen` to trace a chosen field back
+to DRY source.
 
 ## Confidence scores
 
@@ -141,6 +178,7 @@ If you already use ConfigHub's GitOps Import wizard, think of it this way:
 
 - ConfigHub imports cluster-discovered Argo/Flux applications.
 - `cub-gen` imports source-side generators before they ever become opaque cluster objects.
+- `cub-scout` inspects the cluster-side and controller-side reality after those objects reach runtime.
 
 See the [platform docs](docs/platform.md) for the full story.
 
