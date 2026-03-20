@@ -4,6 +4,37 @@ This example proves LIVE reconciliation loops with both Flux and Argo CD using a
 
 Without a real WET→LIVE reconciler loop shown end-to-end, the flow is "governed config automation" not full "Agentic GitOps." This harness proves the full loop.
 
+This is the runtime half of the platform-first flagship story.
+
+If your first question is "which values file or source path owns this field?",
+start with [`helm-paas`](../helm-paas/) first. Come here when you want to prove
+that the governed WET output really survives Flux or Argo reconciliation.
+
+## What this example proves
+
+- Flux or Argo can create the workload from the declared source
+- Flux or Argo can update it when the source changes
+- Flux or Argo can correct manual drift back to declared state
+
+## What this example does not prove by itself
+
+- DRY ownership boundaries
+- source-side field provenance
+- whether a repo change should be ALLOW, ESCALATE, or BLOCK before delivery
+
+Those are the source-side and governance questions handled by `cub-gen`,
+ConfigHub, and the paired [`helm-paas`](../helm-paas/) example.
+
+## Start here first
+
+Use this sequence:
+
+1. `./examples/helm-paas/demo-local.sh`
+2. `./examples/live-reconcile/demo-local.sh`
+3. `RECONCILER=argo ./examples/live-reconcile/demo-local.sh`
+4. if you want the full governed loop, `RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh`
+5. inspect the runtime side with [`cub-scout`](https://github.com/confighub/cub-scout)
+
 ## 1. Who this is for
 
 | If you are... | Start here |
@@ -106,15 +137,17 @@ fast proof harness:
 # Build cub-gen (if not already built)
 go build -o ./cub-gen ./cmd/cub-gen
 
-# Run Flux live reconcile proof (requires kind + flux CLI)
-./examples/demo/e2e-live-reconcile-flux.sh
+# If you are new, do the source-side half first
+./examples/helm-paas/demo-local.sh
 
-# Run Argo live reconcile proof (requires kind + network access)
-./examples/demo/e2e-live-reconcile-argo.sh
-
-# Run both side-by-side
-./examples/demo/e2e-live-reconcile-flux.sh && ./examples/demo/e2e-live-reconcile-argo.sh
+# Runtime proof: documented wrapper entrypoints
+./examples/live-reconcile/demo-local.sh
+RECONCILER=argo ./examples/live-reconcile/demo-local.sh
+RECONCILER=both ./examples/live-reconcile/demo-local.sh
 ```
+
+These wrapper entrypoints call the documented Flux and Argo e2e paths without
+you having to improvise the sequence yourself.
 
 ## Real-world scenario: proving drift correction
 
@@ -174,6 +207,8 @@ Result: Reconciler corrects manual drift → **PASS**
 ## Next steps
 
 - **Helm + governance**: [`helm-paas`](../helm-paas/) — DRY→WET governance before reconciliation
+- **Cluster-side inspection**: [`cub-scout`](https://github.com/confighub/cub-scout)
+  — inspect the reconciled runtime side and compare it with declared intent
 - **Full connected loop**: `e2e-connected-governed-reconcile-helm.sh` — ConfigHub → Flux/Argo
 
 ## Run from ConfigHub (connected mode)

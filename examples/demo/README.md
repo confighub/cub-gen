@@ -14,8 +14,8 @@ adoption path that matches what you already run.
 
 | If you already run... | Start here | What you should prove first |
 |---------|-----------|------------------------------|
-| Helm plus Flux/Argo | `./examples/helm-paas/demo-local.sh` | Which values file/path controls the rendered field |
-| Spring Boot app repos | `./examples/springboot-paas/demo-local.sh` | Which app or platform config file should be edited |
+| Helm plus Flux/Argo | `./examples/demo/start-platform-first.sh` | Which values file/path controls the rendered field |
+| Spring Boot app repos | `./examples/demo/start-app-first.sh` | Which app or platform config file should be edited |
 | Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | WET to LIVE create, update, and drift-correction |
 
 Cluster-side follow-on: pair the above with [`cub-scout`](https://github.com/confighub/cub-scout)
@@ -44,10 +44,10 @@ See also: [Domain POV Matrix](../../docs/workflows/domain-pov-matrix.md) | [Pers
 go build -o ./cub-gen ./cmd/cub-gen
 
 # Platform-first first run
-./examples/helm-paas/demo-local.sh
+./examples/demo/start-platform-first.sh
 
 # App-first first run
-./examples/springboot-paas/demo-local.sh
+./examples/demo/start-app-first.sh
 
 # Runtime proof after source-side import
 RECONCILER=both ./examples/live-reconcile/demo-local.sh
@@ -66,6 +66,8 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 
 | Script | Example | What it demonstrates |
 |--------|---------|---------------------|
+| `start-platform-first.sh` | [`helm-paas`](../helm-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated platform-first starter path |
+| `start-app-first.sh` | [`springboot-paas`](../springboot-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated app-first starter path |
 | `module-1-helm-import.sh` | [`helm-paas`](../helm-paas/) | Helm detection, values ownership, field-origin tracing |
 | `module-2-score-field-map.sh` | [`scoredev-paas`](../scoredev-paas/) | Score field-origin and inverse edit mapping |
 | `module-3-spring-ownership.sh` | [`springboot-paas`](../springboot-paas/) | Spring ownership boundaries (app vs platform) |
