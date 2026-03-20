@@ -109,6 +109,62 @@ These are currently untracked locally and should not be swept up casually:
 
 Treat them as user/local work unless explicitly asked to modify them.
 
+## Safe cold-start
+
+If you are the next AI, start read-only and machine-readable first.
+
+These are the safest first commands:
+
+```bash
+go run ./cmd/cub-gen generators --json
+go run ./cmd/cub-gen gitops discover --space platform ./examples/helm-paas
+go run ./cmd/cub-gen change preview --space platform --json ./examples/springboot-paas ./examples/springboot-paas
+```
+
+What they do:
+
+- `generators --json`: shows the supported generator families and capabilities
+- `gitops discover`: classifies a repo without pushing anything to ConfigHub or a cluster
+- `change preview --json`: shows the governed change shape without executing it
+
+Treat these as read-only first steps.
+
+Only move to connected or state-changing paths after you understand which
+example or workflow you are touching.
+
+Examples of heavier paths:
+
+- `make ci`: local validation suite
+- `make ci-connected`: connected validation suite, only if the environment is ready
+- `change run --mode connected`: uses ConfigHub APIs
+- demo scripts that ingest/query ConfigHub or apply to Flux/Argo/kind
+
+## How to frame proof tasks
+
+When a user asks you to prove a GitOps, ConfigHub, or example workflow, strong
+task framing helps more than generic "run the demo" wording.
+
+Good proof requests should say:
+
+- start read-only,
+- use the documented path from the repo, not an improvised sequence,
+- call out contaminated or hybrid state explicitly,
+- state what does *not* count as proof,
+- list the exact artifacts or states that must be shown,
+- end with a clear result classification.
+
+For GitOps proof in particular:
+
+- do not count pre-existing running resources as proof of delivery,
+- do not count direct `kubectl apply` of app manifests as proof of GitOps delivery,
+- if the documented flow is hybrid, say exactly what it proves and what it does not.
+
+Preferred end states:
+
+- `full GitOps proof`
+- `partial/hybrid GitOps proof`
+- `not proven`
+
 ## Validation commands
 
 Use these before claiming progress:

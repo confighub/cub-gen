@@ -10,6 +10,29 @@ When someone changes `spring.datasource.hikari.maximum-pool-size`, is that an
 app change or a platform change? Today, your PR reviewer has to know. With
 ConfigHub, the ownership boundary is explicit and enforced.
 
+This is the app-first flagship path for `cub-gen`.
+
+The first question it should answer is:
+
+"Which Spring config file should I edit, and when does this become a
+platform-owned change instead of an app-owned one?"
+
+## Start here first
+
+If you are new, use this sequence:
+
+1. `./examples/springboot-paas/demo-local.sh`
+2. `./examples/springboot-paas/demo-connected.sh`
+3. if you want runtime proof after the source-side path, use [`live-reconcile`](../live-reconcile/)
+4. inspect the runtime side with [`cub-scout`](https://github.com/confighub/cub-scout)
+
+That keeps the story concrete:
+
+1. source-side Spring ownership,
+2. connected ConfigHub evidence and decisions,
+3. runtime and reconciler follow-through,
+4. cluster-side inspection when needed.
+
 ## 1. Who this is for
 
 | If you are... | Start here |
@@ -145,9 +168,22 @@ ownership boundaries.
 
 ## Try it
 
+Start with the documented entrypoints:
+
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
 
+# Local source-side path
+./examples/springboot-paas/demo-local.sh
+
+# Connected ConfigHub path
+cub auth login
+./examples/springboot-paas/demo-connected.sh
+```
+
+If you want the raw commands underneath the wrappers:
+
+```bash
 # Detect Spring Boot project structure
 ./cub-gen gitops discover --space platform --json ./examples/springboot-paas
 
@@ -281,6 +317,10 @@ WET:  Deployment/spec/template/spec/containers[0]/env[name=SERVER_PORT]/value = 
 
 - **Helm version**: [`helm-paas`](../helm-paas/) — same governance for
   chart-based deployments
+- **Runtime proof companion**: [`live-reconcile`](../live-reconcile/) — prove
+  the governed output survives Flux/Argo reconciliation
+- **Cluster-side inspection companion**: [`cub-scout`](https://github.com/confighub/cub-scout)
+  — inspect runtime behavior after delivery
 - **Score.dev version**: [`scoredev-paas`](../scoredev-paas/) — platform-agnostic
   workload specs
 - **E2E demo**: `../demo/module-3-spring-ownership.sh`

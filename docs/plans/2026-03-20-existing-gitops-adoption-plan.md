@@ -230,7 +230,15 @@ Changes:
 1. add `AI_START_HERE.md` once the primary journeys are stable,
 2. add prompts and machine-readable contracts for the starter flows,
 3. add repo-level agent guidance only after the first-run paths are clear,
-4. make read-only versus mutating boundaries explicit in the starter flows.
+4. make read-only versus mutating boundaries explicit in the starter flows,
+5. provide strong proof-task templates that define what counts as proof, what
+   does not count, and how to classify the result (`full`, `partial/hybrid`, or
+   `not proven`),
+6. keep the root guidance in `CLAUDE.md` for now because `cub-gen` and
+   `cub-scout` are currently optimized for Claude Code discovery; add
+   `AI_START_HERE.md` as the tool-agnostic companion when the canonical
+   journeys are stable; only reconsider `AGENTS.md` if a stronger multi-tool
+   convention becomes worth following.
 
 Exit criteria:
 

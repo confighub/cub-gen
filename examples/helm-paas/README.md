@@ -5,6 +5,31 @@ The platform owns the chart structure; app teams own their values overlays.
 ConfigHub makes that contract explicit, traceable, and auditable — without
 changing how you use Helm.
 
+This is the platform-first flagship path for `cub-gen`.
+
+The first question it should answer is:
+
+"Which values file or chart layer actually controls the field I am looking at?"
+
+This example is the source-side half of that story. For the runtime proof half,
+pair it with [`live-reconcile`](../live-reconcile/).
+
+## Start here first
+
+If you are new, use this sequence:
+
+1. `./examples/helm-paas/demo-local.sh`
+2. `./examples/helm-paas/demo-connected.sh`
+3. `RECONCILER=both ./examples/live-reconcile/demo-local.sh`
+4. inspect the runtime side with [`cub-scout`](https://github.com/confighub/cub-scout)
+
+That gives you:
+
+1. source-side provenance and ownership,
+2. connected ConfigHub evidence and governed decision state,
+3. WET to LIVE reconciliation proof,
+4. cluster-side inspection of what actually ran.
+
 ## 1. Who this is for
 
 | If you are... | Start here |
@@ -136,9 +161,22 @@ incidents.
 
 ## Try it
 
+Start with the documented entrypoints:
+
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
 
+# Local source-side path
+./examples/helm-paas/demo-local.sh
+
+# Connected ConfigHub path
+cub auth login
+./examples/helm-paas/demo-connected.sh
+```
+
+If you want the raw commands underneath the wrappers:
+
+```bash
 # Detect the generator and classify all files
 ./cub-gen gitops discover --space platform --json ./examples/helm-paas
 
@@ -274,6 +312,10 @@ WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payme
 
 ## Next steps
 
+- **Runtime proof companion**: [`live-reconcile`](../live-reconcile/) — prove
+  the same governed path survives real Flux/Argo reconciliation
+- **Cluster-side inspection companion**: [`cub-scout`](https://github.com/confighub/cub-scout)
+  — inspect the reconciled runtime side after delivery
 - **Spring Boot version**: [`springboot-paas`](../springboot-paas/) — same
   governance model for Java services with `application.yaml`
 - **Score.dev version**: [`scoredev-paas`](../scoredev-paas/) — platform-agnostic
