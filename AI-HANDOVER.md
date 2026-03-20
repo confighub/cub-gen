@@ -69,12 +69,13 @@ For layered platforms like Helm/Argo/Kubara-like stacks, also prove:
 
 ## Files that matter most
 
-- [README.md](/Users/alexis/Public/github-repos/cub-gen/README.md)
-- [examples/README.md](/Users/alexis/Public/github-repos/cub-gen/examples/README.md)
-- [examples/demo/README.md](/Users/alexis/Public/github-repos/cub-gen/examples/demo/README.md)
-- [docs/plans/2026-03-16-example-reset-execution-plan.md](/Users/alexis/Public/github-repos/cub-gen/docs/plans/2026-03-16-example-reset-execution-plan.md)
-- [docs/testing/ilya-coreweave-acceptance-checklist.md](/Users/alexis/Public/github-repos/cub-gen/docs/testing/ilya-coreweave-acceptance-checklist.md)
-- [test/checks/check-story-status.sh](/Users/alexis/Public/github-repos/cub-gen/test/checks/check-story-status.sh)
+- [README.md](README.md)
+- [examples/README.md](examples/README.md)
+- [examples/demo/README.md](examples/demo/README.md)
+- [docs/plans/2026-03-16-example-reset-execution-plan.md](docs/plans/2026-03-16-example-reset-execution-plan.md)
+- [docs/plans/2026-03-20-existing-gitops-adoption-plan.md](docs/plans/2026-03-20-existing-gitops-adoption-plan.md)
+- [docs/testing/ilya-coreweave-acceptance-checklist.md](docs/testing/ilya-coreweave-acceptance-checklist.md)
+- [test/checks/check-story-status.sh](test/checks/check-story-status.sh)
 
 ## Important recent fixes
 

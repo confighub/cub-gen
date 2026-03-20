@@ -1,6 +1,24 @@
 # Getting Started
 
-Get from zero to provenance-traced import in under 10 minutes.
+Get from an existing GitOps repo to a first useful answer in under 10 minutes.
+
+This guide is for teams that already have:
+
+- a source repo in GitHub or Git,
+- Helm, Score, Spring Boot, or workflow config as authoring input,
+- Flux or Argo CD handling WET to LIVE reconciliation.
+
+`cub-gen` adds source-side provenance. ConfigHub adds shared governance and
+evidence. [`cub-scout`](https://github.com/confighub/cub-scout) adds
+cluster-side inspection.
+
+## Start from the setup you already have
+
+| If you already have... | Start here | First value |
+|----------|------------|-------------|
+| Helm plus Flux/Argo | [`../examples/helm-paas`](../examples/helm-paas/) | Values ownership and rendered-field provenance |
+| Spring Boot app repos | [`../examples/springboot-paas`](../examples/springboot-paas/) | App-vs-platform ownership in familiar config |
+| A running cluster and GitOps controller | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | Cluster/runtime view first, source provenance second |
 
 ## What cub-gen does
 
@@ -14,6 +32,14 @@ and tells you:
 | Which files are rendered output? | WET manifest classification |
 | For any deployed field, where do I edit it? | Field-origin tracing + inverse-edit guidance |
 | How do I prove what changed? | Verification, attestation, and evidence bundles |
+
+## How the tools fit together
+
+| Tool | Starts from | What it answers first |
+|------|-------------|-----------------------|
+| `cub-gen` | Source repo | Which DRY file/path produced this rendered field? |
+| [`cub-scout`](https://github.com/confighub/cub-scout) | Cluster and controller reality | What is running and where is drift? |
+| ConfigHub | Shared intended/evidence/governance state | What changed, what was approved, and what evidence exists? |
 
 ## The DRY → WET model
 
@@ -48,9 +74,10 @@ go build -o cub-gen ./cmd/cub-gen
 
 ```bash
 REPO=/path/to/your/repo
+./cub-gen gitops discover --space platform "$REPO"
+./cub-gen gitops import --space platform --json "$REPO" "$REPO" \
+  | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
 ./cub-gen change preview --space platform "$REPO" "$REPO"
-./cub-gen change run --mode local --space platform "$REPO" "$REPO"
-./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
 ```
 
 Connected mode for the same repo:
@@ -115,6 +142,22 @@ The key value of cub-gen is the provenance trail. Focus on the inverse-edit poin
 
 This tells you: for any WET field, where is the DRY source to edit it safely.
 
+## Why this matters right after import
+
+Import should give you an immediate answer before any migration story:
+
+1. what this repo renders,
+2. which source file owns the deployed field you care about,
+3. what evidence bundle you can verify next,
+4. how to connect the repo-side answer to cluster-side inspection and ConfigHub.
+
+That is why the first useful sequence is:
+
+1. import the repo,
+2. inspect provenance,
+3. build or verify evidence,
+4. compare that answer with runtime inspection.
+
 ## Try other generators
 
 Each generator follows the same three-command flow:
@@ -173,6 +216,13 @@ Emit an attestation record:
   | jq '{status, verifier, bundle_digest, attestation_digest}'
 ```
 
+## If you are starting from a cluster, not a repo
+
+Use ConfigHub GitOps import and [`cub-scout`](https://github.com/confighub/cub-scout)
+first when your first question is "what is running?" rather than "what source
+produced this?" Then come back to `cub-gen` when you want the source-side DRY to
+WET answer for the field or workload you found.
+
 ## What happens after import? (Day-2)
 
 Import is day 1. The real value shows on day 2:
@@ -223,6 +273,8 @@ What you add:
 - `cub-gen gitops discover` to classify generator roots
 - `cub-gen gitops import` to emit DRY/WET contracts + provenance/inverse pointers
 - `cub-gen gitops cleanup` to clear local discover state
+- ConfigHub for shared evidence and governed decisions
+- `cub-scout` for cluster-side inspection after reconciliation
 
 Boundary language (aligned with [PARITY.md](parity.md)):
 
