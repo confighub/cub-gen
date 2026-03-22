@@ -1,21 +1,19 @@
 # Spring Boot PaaS — Governed Config for Java Services
 
-Your Spring Boot services already separate concerns: `application.yaml` for
-business config, `application-prod.yaml` for production overrides, `pom.xml`
-for build dependencies. Your developers know this layout.
+This example is meant to feel like a Heroku-style app model, not a Helm chart
+exercise.
 
-The problem is that not everything in `application.yaml` has the same owner.
-Feature flags are app-team territory. Datasource config is platform-controlled.
-When someone changes `spring.datasource.hikari.maximum-pool-size`, is that an
-app change or a platform change? Today, your PR reviewer has to know. With
-ConfigHub, the ownership boundary is explicit and enforced.
+There is one Spring Boot service, `inventory-api`, with `dev`, `stage`, and
+`prod` deployments. Git still holds the app code and the upstream Spring
+configuration shape. The platform still contributes runtime policies and GitOps
+delivery descriptors. ConfigHub is where the resulting operational config
+becomes authoritative, mutable, and inspectable.
 
-This is the app-first flagship path for `cub-gen`.
+That makes this the clearest app-first example for a hard but common question:
 
-The first question it should answer is:
-
-"Which Spring config file should I edit, and when does this become a
-platform-owned change instead of an app-owned one?"
+"When I need to change `inventory-api` in production, is this a direct ConfigHub
+mutation, a change that should be lifted back to the app source, or a
+platform-owned field that must be blocked or escalated?"
 
 ## Start here first
 
@@ -32,6 +30,23 @@ That keeps the story concrete:
 2. connected ConfigHub evidence and decisions,
 3. runtime and reconciler follow-through,
 4. cluster-side inspection when needed.
+
+## The app model this example demonstrates
+
+Treat `inventory-api` as one real app with several deployments and several kinds
+of natural change:
+
+| Behavior | Natural request | What should happen |
+|----------|-----------------|--------------------|
+| **Mutable in ConfigHub** | "Change `feature.inventory.reservationMode` in prod for a rollout." | Mutate the prod app config directly in ConfigHub and preserve the change as part of the deployment's operational history. |
+| **Lift upstream** | "This service now needs Redis-backed caching." | Accept the intent, but route the durable change back to the Spring app inputs or source repo because the platform-rendered operational shape itself must evolve. |
+| **Generator-owned** | "Change `spring.datasource.*` or bypass the managed datasource boundary." | Block or escalate because the field belongs to the platform contract, not the app team. |
+
+This is the product point in one app:
+
+- some changes should mutate the app instance directly in ConfigHub,
+- some should be routed back to upstream producers,
+- some must remain platform-owned.
 
 ## 1. Who this is for
 
@@ -55,9 +70,9 @@ Both paths lead to the same outcome: governed Spring config with field-origin tr
 
 | Pain | Answer | Governed change win |
 |------|--------|---------------------|
-| "Is this app config or platform config?" | Ownership by Spring property namespace | `server.port` → ALLOW, `spring.datasource.*` → BLOCK |
+| "Is this app config or platform config?" | Ownership by Spring property namespace | `feature.inventory.*` → direct app mutation, `spring.datasource.*` → BLOCK |
 | "Which profile set this value?" | Profile overlay tracking with lineage | Trace `application-prod.yaml` override |
-| "Can I change this in production?" | Governance decisions in Spring terms | "datasource is platform-owned" not "Deployment spec changed" |
+| "Can I change this in production?" | Governance decisions in Spring terms | direct mutation, lift-upstream, or generator-owned block |
 
 ## Domain POV (Spring Boot shops)
 
@@ -70,6 +85,11 @@ Kubernetes:
 
 The goal is invisible governance for app developers: they get a clear ALLOW or
 BLOCK in PR terms they understand, without learning manifest internals.
+
+Important nuance: Spring Boot is not itself the deployment generator here.
+Spring provides upstream app inputs. `cub-gen` detects that input shape and
+traces how a platform would render it into operational config and runtime
+objects.
 
 ## What you get
 
@@ -100,9 +120,10 @@ BLOCK in PR terms they understand, without learning manifest internals.
 **DRY** is what your team edits: Spring config files (`application*.yaml`), the
 Maven build (`pom.xml`), and platform policies. These are the source of truth.
 
-**WET** is what cub-gen produces: Kubernetes manifests with every field traced
-back to its Spring config source — including which profile overlay contributed
-each value.
+**WET** is the platform-rendered operational shape that `cub-gen` models and
+traces: Kubernetes manifests and runtime config with every field linked back to
+its Spring config source, including which profile overlay contributed each
+value.
 
 **LIVE** is your running JVM. Flux Kustomization or ArgoCD reconciles WET
 manifests to LIVE state. cub-gen doesn't touch your reconciler.
@@ -137,7 +158,7 @@ runtime manifests explicit, including ownership boundaries by field.
 | Existing Spring model | cub-gen concept | Why it matters |
 |------|------|------|
 | `application*.yaml` + profiles | DRY intent | Spring remains the authoring interface for app teams. |
-| Spring-to-K8s transformation | WET targets with provenance | Each runtime field can be traced back to a Spring property. |
+| Platform render from Spring inputs | WET targets with provenance | Each runtime field can be traced back to a Spring property. |
 | Datasource and secret controls | Ownership + policy gates | Sensitive changes can be blocked/escalated before deploy. |
 | Flux/Argo deployment path | LIVE state | Existing deployment runtime remains unchanged. |
 
@@ -196,21 +217,19 @@ cub-gen detects `pom.xml` + `src/main/resources/application.yaml` as a
 `springboot-paas` project. The import traces field origins through Spring's
 profile system and classifies each field by owner.
 
-## Real-world scenario: database connection pool change
+## Real-world scenario: one service, three kinds of change
 
 **Who**: An inventory team at a logistics company. 40 Spring Boot microservices.
 Each has `application.yaml` for base config and `application-prod.yaml` for
 production overrides.
 
-### Scenario A — App team change (ALLOW)
+### Scenario A — Direct app mutation in ConfigHub (ALLOW)
 
-The app team adds a new feature flag and changes the server port for a canary
-test. These are app-owned fields:
+The app team changes a prod feature flag. This is an app-owned field and a
+natural per-deployment mutation:
 
 ```yaml
-# application-prod.yaml (app-team fields)
-server:
-  port: 8082           # canary port
+# application-prod.yaml (app-team field)
 feature:
   inventory:
     reservationMode: optimistic  # was strict
@@ -230,12 +249,34 @@ BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.se
 ./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
 
-# Decision engine: server.port + feature.* are app-owned → ALLOW
+# Decision engine: feature.inventory.* is app-owned → ALLOW
 ./cub-gen bridge decision apply --decision decision.json --state ALLOW \
-  --approved-by app-lead --reason "canary test with optimistic reservation"
+  --approved-by app-lead --reason "gradual prod rollout for reservation mode"
 ```
 
-### Scenario B — Platform-owned field edit (BLOCK)
+This is the "mutable in CH" case. The deployment's current operational config
+changes in ConfigHub, and that change should survive normal refreshes because it
+belongs to the app owner.
+
+### Scenario B — New app capability that should be lifted upstream
+
+The app team decides `inventory-api` now needs Redis-backed caching for product
+availability lookups.
+
+That should not be treated as a blind local tweak to the platform-rendered deployment
+shape. It changes the upstream app contract:
+
+- the app code gains a Redis dependency,
+- the Spring inputs gain the expected cache configuration,
+- the platform-rendered deployment shape grows new runtime wiring,
+- ConfigHub should preserve the intent and route the durable change back to the
+  upstream producer.
+
+This is the "lift upstream" case. ConfigHub is still the control point, but the
+lasting edit belongs in the Spring app inputs or the source repo, not as a
+detached local override.
+
+### Scenario C — Platform-owned field edit (BLOCK)
 
 The same app team edits the datasource configuration — a platform-owned field:
 
@@ -278,19 +319,17 @@ change this without platform-dba review → **BLOCK**.
 
 ## How it works
 
-cub-gen's `springboot-paas` generator detects any directory containing `pom.xml`
-(or `build.gradle`) with a Spring Boot `application.yaml`. On import:
+The `springboot-paas` profile in `cub-gen` detects any directory containing
+`pom.xml` (or `build.gradle`) with a Spring Boot `application.yaml`. On import:
 
 1. **Classifies inputs** — `pom.xml` (role: build-config), `application.yaml`
    (role: app-config-base), `application-prod.yaml` (role: app-config-profile)
 2. **Maps field origins** — `server.port` traces from `application.yaml` through
    Spring's profile merge to the Deployment spec (confidence: 0.92)
-3. **Splits ownership** — `server.port` and `feature.*` are app-team editable;
-   `spring.datasource.*` requires platform review (confidence: 0.78, review
-   required)
-4. **Emits inverse guidance** — "to change the feature flag in production,
-   edit `application-prod.yaml`; to change the datasource pool, get
-   platform-dba approval first"
+3. **Splits ownership** — `feature.*` is app-team editable; `spring.datasource.*`
+   requires platform review (confidence: 0.78, review required)
+4. **Emits inverse guidance** — which changes are safe direct mutations, which
+   should be lifted upstream, and which require platform approval first
 
 A concrete field trace:
 
