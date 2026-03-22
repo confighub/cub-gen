@@ -136,10 +136,10 @@ That stack is the clearest current example of:
 
 Product gaps made concrete by that example are now tracked in:
 
-- `confighubai/confighub#4023`: direct mutation of dotted ConfigMap keys and
-  embedded YAML-backed fields,
-- `confighubai/confighub#4024`: field-level `block/escalate` enforcement for
-  generator-owned mutation routes.
+- `#208`: direct mutation of dotted ConfigMap keys and embedded YAML-backed
+  fields,
+- `#207`: field-level `block/escalate` enforcement for generator-owned
+  mutation routes.
 
 ## How to frame proof tasks
 
