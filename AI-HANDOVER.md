@@ -22,6 +22,8 @@ What is not done:
 - the cluster-first companion path still needs a concrete, primary walkthrough,
 - the connected acceptance gate still needs to enforce the flagship contract,
 - the strongest examples still need end-to-end proof against the new standard.
+- actual field-level `block/escalate` enforcement still depends on product work,
+- direct mutation of embedded config payloads still has product gaps.
 
 ## Canonical journeys
 
@@ -107,6 +109,38 @@ For layered Helm/Argo/Kubara-like stacks, also prove:
 - the ownership boundary
 - why downstream edits should route upstream instead
 
+## Current reference implementation
+
+The best current reference for the AI-first, proof-tiered example style now
+lives in the public `examples` repo under
+`incubator/springboot-platform-app`.
+
+What exists there now:
+
+- merged: real Spring Boot app plus HTTP tests,
+- merged: ConfigHub-only proof for `inventory-api-dev`, `stage`, and `prod`,
+- open stacked PR: Noop target proof for apply and re-apply without a real
+  cluster ([examples#84](https://github.com/confighub/examples/pull/84)),
+- open stacked PR: read-only `lift upstream` Redis bundle
+  ([examples#87](https://github.com/confighub/examples/pull/87)),
+- open stacked PR: read-only `block/escalate` boundary bundle
+  ([examples#89](https://github.com/confighub/examples/pull/89)).
+
+That stack is the clearest current example of:
+
+- explicit proof levels,
+- AI-first docs plus contracts,
+- read-only preview surfaces before mutation,
+- one mutation system with three routed outcomes,
+- honest classification of what is still not proven.
+
+Product gaps made concrete by that example are now tracked in:
+
+- `confighubai/confighub#4023`: direct mutation of dotted ConfigMap keys and
+  embedded YAML-backed fields,
+- `confighubai/confighub#4024`: field-level `block/escalate` enforcement for
+  generator-owned mutation routes.
+
 ## How to frame proof tasks
 
 When proving GitOps or example behavior, strong task framing matters.
@@ -178,4 +212,4 @@ make ci-connected
 At the time of this update:
 
 - `main` matched `origin/main`
-- current synced head: `3bc35a3` `docs: strengthen flagship example adoption paths (#204)`
+- current synced head: `8aa89ec` `docs: refresh handover and spring platform model (#205)`

@@ -245,6 +245,18 @@ Exit criteria:
 1. an AI assistant can safely execute the same primary journeys a human would choose,
 2. AI docs reinforce the main adoption wedge instead of introducing a parallel story.
 
+Current public reference:
+
+1. `examples/incubator/springboot-platform-app` now provides the clearest
+   worked example of this packaging style,
+2. it already separates structural, local-app, ConfigHub-only, Noop-target,
+   `lift upstream`, and `block/escalate` boundary proof levels,
+3. use that example as the reference shape for `README.md`,
+   `AI_START_HERE.md`, `contracts.md`, read-only previews, and explicit
+   read/write boundaries,
+4. product gaps made visible by that work are now tracked in
+   `confighubai/confighub#4023` and `confighubai/confighub#4024`.
+
 ## 6. Acceptance gate
 
 Primary issues:
