@@ -249,8 +249,10 @@ Current public reference:
 
 1. `examples/incubator/springboot-platform-app` now provides the clearest
    worked example of this packaging style,
-2. it already separates structural, local-app, ConfigHub-only, Noop-target,
-   `lift upstream`, and `block/escalate` boundary proof levels,
+2. it already separates structural, local-app, and ConfigHub-only proof
+   levels on the merged default branch, with Noop-target, `lift upstream`,
+   and `block/escalate` boundary levels carried in the current open stacked
+   PRs,
 3. use that example as the reference shape for `README.md`,
    `AI_START_HERE.md`, `contracts.md`, read-only previews, and explicit
    read/write boundaries,
