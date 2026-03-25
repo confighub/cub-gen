@@ -176,8 +176,12 @@ nav:
   - Contributing:
       - "How to Contribute": contributing-guide.md
       - "Proof-First Delivery": workflows/proof-first-delivery.md
-      - "Testing Strategy": testing/README.md
-      - "Contract Drift Checklist": testing/contract-drift-checklist.md
+      - Testing:
+          - "Testing Strategy": testing/README.md
+          - "Example Truth Matrix": testing/example-truth-matrix.md
+          - "Ilya/CoreWeave Acceptance Checklist": testing/ilya-coreweave-acceptance-checklist.md
+          - "App/Deployment Concepts": testing/app-deployment-concepts.md
+          - "Contract Drift Checklist": testing/contract-drift-checklist.md
       - "Release Notes (v0.2-preview.1)": releases/v0.2-preview.1.md
       - Decisions:
           - "Sprint 2 Go/No-Go": decisions/2026-03-06-sprint-2-go-no-go.md

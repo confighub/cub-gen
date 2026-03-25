@@ -39,18 +39,23 @@ require_file_pattern "README.md" "confighubai/confighub" "ConfigHub OSS backend 
 require_file_pattern "README.md" "Use Your Repo in 3 Commands" "own-repo quickstart section"
 require_file_pattern "README.md" "confidence-scores\\.md" "confidence interpretation link"
 require_file_pattern "README.md" "operation-registry-real-apps\\.md" "operation registry real-apps guide link"
+require_file_pattern "README.md" "example-truth-matrix\\.md" "derived example truth matrix link"
 
 # Docs-site landing pages must preserve the same message.
 require_file_pattern "docs/index.md" "cub auth login" "connected auth step (cub auth login)"
 require_file_pattern "docs/index.md" "confighubai/confighub" "ConfigHub OSS backend link"
+require_file_pattern "docs/index.md" "example-truth-matrix\\.md" "derived example truth matrix link"
 require_file_pattern "docs/platform.md" "cub auth login" "connected auth step (cub auth login)"
 require_file_pattern "docs/platform.md" "confighubai/confighub" "ConfigHub OSS backend link"
 require_file_pattern "docs/getting-started.md" "Use your own repo in 3 commands" "own-repo quickstart section"
 require_file_pattern "docs/getting-started.md" "cub auth login" "connected auth step (cub auth login)"
+require_file_pattern "docs/testing/README.md" "example-truth-matrix\\.md" "derived example truth matrix link"
 
 # Examples landing page must keep own-repo entry and confidence guidance.
 require_file_pattern "examples/README.md" "Use your own repo quickly" "own-repo quickstart section"
 require_file_pattern "examples/README.md" "confidence-scores\\.md" "confidence interpretation link"
 require_file_pattern "examples/README.md" "operation-registry-real-apps\\.md" "operation registry real-apps guide link"
+require_file_pattern "examples/README.md" "example-truth-matrix\\.md" "derived example truth matrix link"
+require_file_pattern "examples/demo/README.md" "example-truth-matrix\\.md" "derived example truth matrix link"
 
-echo "ok: core docs keep local-vs-connected onboarding, backend availability, own-repo quickstart, confidence guidance, and operation-registry discoverability"
+echo "ok: core docs keep local-vs-connected onboarding, backend availability, own-repo quickstart, confidence guidance, operation-registry discoverability, and the derived example truth matrix link"

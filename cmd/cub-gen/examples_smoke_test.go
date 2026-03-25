@@ -5,15 +5,17 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/confighub/cub-gen/internal/exampletruth"
 )
 
 func TestExamplesPathModeDiscoverAndImport(t *testing.T) {
-	tests := bridgeSymmetryMatrix()
+	tests := exampletruth.BridgeSymmetryMatrix()
 	assertBridgeSymmetryMatrixCoverage(t, tests)
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repoPath, err := filepath.Abs(filepath.Join("..", "..", tt.repoSuffix))
+		t.Run(tt.Name, func(t *testing.T) {
+			repoPath, err := filepath.Abs(filepath.Join("..", "..", tt.RepoSuffix))
 			if err != nil {
 				t.Fatalf("resolve repo path: %v", err)
 			}
@@ -30,7 +32,7 @@ func TestExamplesPathModeDiscoverAndImport(t *testing.T) {
 			if err := json.Unmarshal([]byte(discoverOut), &discover); err != nil {
 				t.Fatalf("unmarshal discover output: %v\noutput=%s", err, discoverOut)
 			}
-			assertFirstGeneratorRecord(t, discover, tt.expectedProfile, tt.expectedKind)
+			assertFirstGeneratorRecord(t, discover, tt.ExpectedProfile, tt.ExpectedKind)
 
 			importOut, importErr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", repoPath, repoPath})
 			if err != nil {
@@ -44,7 +46,7 @@ func TestExamplesPathModeDiscoverAndImport(t *testing.T) {
 			if err := json.Unmarshal([]byte(importOut), &imp); err != nil {
 				t.Fatalf("unmarshal import output: %v\noutput=%s", err, importOut)
 			}
-			assertFirstGeneratorRecord(t, imp, tt.expectedProfile, tt.expectedKind)
+			assertFirstGeneratorRecord(t, imp, tt.ExpectedProfile, tt.ExpectedKind)
 		})
 	}
 }

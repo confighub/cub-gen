@@ -229,6 +229,8 @@ Both prove create, update, and drift-correction on a real cluster.
 | In progress | Flagship examples are still being hardened against the universal example contract: real-cluster outcome, two-audience path, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` proof |
 | Actively tracked | Example reset execution is being driven through issues `#173`, `#177`, `#178`, `#179`, `#180`, `#182`, `#183`, `#185`, and `#187` |
 
+For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, connected runners, and real live-proof harnesses.
+
 We have runnable paths for the full PRD story surface, but we are not treating every
 story as fully acceptance-complete until the flagship examples and release gates
 prove the new standard end to end.

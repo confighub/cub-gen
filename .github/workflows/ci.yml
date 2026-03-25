@@ -94,7 +94,7 @@ jobs:
             echo "${{ steps.connected-preflight.outputs.missing }}";
             echo '```';
             echo "";
-            echo "To run connected CI, set ConfigHub credentials and Story 10 fixture identifiers.";
+            echo "To run connected CI, set ConfigHub credentials and the connected Git proof fixture identifiers.";
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up Go
@@ -120,7 +120,7 @@ jobs:
           make -C /tmp/confighub build-cli
           echo "/tmp/confighub/bin" >> "$GITHUB_PATH"
 
-      - name: Validate Story 10 proof inputs
+      - name: Validate connected Git proof inputs
         if: steps.connected-preflight.outputs.can_run == 'true'
         run: |
           test -n "$APP_PR_REPO"

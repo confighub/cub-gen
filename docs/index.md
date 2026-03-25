@@ -126,6 +126,12 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
     [Confidence Scores](workflows/confidence-scores.md)
 
+-   **Check what is really proven**
+
+    Use the derived example matrix to see which examples are source-chain verified, connected-release-gated, AI-first, or backed by real live proof.
+
+    [Example Truth Matrix](testing/example-truth-matrix.md)
+
 -   **Start with workflows (Ops + Swamp)**
 
     See structural workflow governance first: actions, schedules, approval gates, model/method bindings, and required-step checks.

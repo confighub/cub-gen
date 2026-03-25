@@ -1,0 +1,446 @@
+{
+  "schema_version": "cub.confighub.io/example-truth-matrix/v1",
+  "rows": [
+    {
+      "example": "ai-ops-paas",
+      "generator_fixture": false,
+      "source_chain_verified": false,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "none",
+      "ai_first_surface": "explicit",
+      "proof_commands": [
+        "./examples/ai-ops-paas/demo-connected.sh",
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "connected_mode": [
+          "./examples/ai-ops-paas/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ],
+        "ai_first": [
+          "examples/README.md#ai--automation-patterns"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#181",
+        "#183",
+        "#202"
+      ]
+    },
+    {
+      "example": "backstage-idp",
+      "generator_fixture": true,
+      "generator_kind": "backstage",
+      "source_chain_verified": true,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "none",
+      "ai_first_surface": "none",
+      "proof_commands": [
+        "./examples/backstage-idp/demo-connected.sh",
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "source_chain": [
+          "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+        ],
+        "connected_mode": [
+          "./examples/backstage-idp/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#181",
+        "#183"
+      ]
+    },
+    {
+      "example": "c3agent",
+      "generator_fixture": true,
+      "generator_kind": "c3agent",
+      "source_chain_verified": true,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "none",
+      "ai_first_surface": "explicit",
+      "proof_commands": [
+        "./examples/c3agent/demo-connected.sh",
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "source_chain": [
+          "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+        ],
+        "connected_mode": [
+          "./examples/c3agent/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ],
+        "ai_first": [
+          "examples/README.md#ai--automation-patterns"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#181",
+        "#183",
+        "#202",
+        "#216"
+      ]
+    },
+    {
+      "example": "confighub-actions",
+      "generator_fixture": false,
+      "source_chain_verified": false,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "none",
+      "ai_first_surface": "partial",
+      "proof_commands": [
+        "./examples/confighub-actions/demo-connected.sh",
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "connected_mode": [
+          "./examples/confighub-actions/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ],
+        "ai_first": [
+          "examples/demo/README.md#ai-work-platform-track"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#181",
+        "#183",
+        "#202"
+      ]
+    },
+    {
+      "example": "helm-paas",
+      "generator_fixture": true,
+      "generator_kind": "helm",
+      "source_chain_verified": true,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "paired-harness",
+      "ai_first_surface": "none",
+      "proof_commands": [
+        "./examples/demo/e2e-connected-governed-reconcile-helm.sh",
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "./examples/helm-paas/demo-connected.sh",
+        "./examples/live-reconcile/demo-local.sh",
+        "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "source_chain": [
+          "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+        ],
+        "connected_mode": [
+          "./examples/helm-paas/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ],
+        "real_live": [
+          "./examples/demo/e2e-connected-governed-reconcile-helm.sh",
+          "./examples/live-reconcile/demo-local.sh"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#177",
+        "#183",
+        "#187"
+      ],
+      "notes": [
+        "Real LIVE proof is paired through the live-reconcile harness, not standalone in helm-paas."
+      ]
+    },
+    {
+      "example": "just-apps-no-platform-config",
+      "generator_fixture": true,
+      "generator_kind": "no-config-platform",
+      "source_chain_verified": true,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "none",
+      "ai_first_surface": "none",
+      "proof_commands": [
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "./examples/just-apps-no-platform-config/demo-connected.sh",
+        "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "source_chain": [
+          "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+        ],
+        "connected_mode": [
+          "./examples/just-apps-no-platform-config/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#181",
+        "#183"
+      ]
+    },
+    {
+      "example": "live-reconcile",
+      "generator_fixture": false,
+      "source_chain_verified": false,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "standalone",
+      "ai_first_surface": "none",
+      "proof_commands": [
+        "./examples/demo/e2e-connected-governed-reconcile-helm.sh",
+        "./examples/demo/e2e-live-reconcile-argo.sh",
+        "./examples/demo/e2e-live-reconcile-flux.sh",
+        "./examples/live-reconcile/demo-connected.sh",
+        "./test/checks/check-story-evidence.sh",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "connected_mode": [
+          "./examples/live-reconcile/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/e2e-live-reconcile-flux.sh",
+          "./examples/demo/e2e-live-reconcile-argo.sh",
+          "./test/checks/check-story-evidence.sh"
+        ],
+        "real_live": [
+          "./examples/demo/e2e-live-reconcile-flux.sh",
+          "./examples/demo/e2e-live-reconcile-argo.sh",
+          "./examples/demo/e2e-connected-governed-reconcile-helm.sh"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#181",
+        "#183"
+      ],
+      "notes": [
+        "Runtime harness for WET-\u003eLIVE proof; source-side generator proof lives in paired examples."
+      ]
+    },
+    {
+      "example": "ops-workflow",
+      "generator_fixture": true,
+      "generator_kind": "opsworkflow",
+      "source_chain_verified": true,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "none",
+      "ai_first_surface": "partial",
+      "proof_commands": [
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "./examples/ops-workflow/demo-connected.sh",
+        "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "source_chain": [
+          "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+        ],
+        "connected_mode": [
+          "./examples/ops-workflow/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ],
+        "ai_first": [
+          "examples/demo/README.md#ai-work-platform-track"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#180",
+        "#183",
+        "#202"
+      ]
+    },
+    {
+      "example": "scoredev-paas",
+      "generator_fixture": true,
+      "generator_kind": "score",
+      "source_chain_verified": true,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "none",
+      "ai_first_surface": "none",
+      "proof_commands": [
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "./examples/scoredev-paas/demo-connected.sh",
+        "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "source_chain": [
+          "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+        ],
+        "connected_mode": [
+          "./examples/scoredev-paas/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#178",
+        "#183"
+      ]
+    },
+    {
+      "example": "springboot-paas",
+      "generator_fixture": true,
+      "generator_kind": "springboot",
+      "source_chain_verified": true,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "none",
+      "ai_first_surface": "none",
+      "proof_commands": [
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "./examples/springboot-paas/demo-connected.sh",
+        "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "source_chain": [
+          "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+        ],
+        "connected_mode": [
+          "./examples/springboot-paas/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#179",
+        "#183"
+      ]
+    },
+    {
+      "example": "swamp-automation",
+      "generator_fixture": true,
+      "generator_kind": "swamp",
+      "source_chain_verified": true,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "none",
+      "ai_first_surface": "explicit",
+      "proof_commands": [
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "./examples/swamp-automation/demo-connected.sh",
+        "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "source_chain": [
+          "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+        ],
+        "connected_mode": [
+          "./examples/swamp-automation/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ],
+        "ai_first": [
+          "examples/README.md#ai--automation-patterns"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#180",
+        "#183",
+        "#202"
+      ]
+    },
+    {
+      "example": "swamp-project",
+      "generator_fixture": false,
+      "source_chain_verified": false,
+      "connected_mode_present": true,
+      "connected_release_gated": true,
+      "real_live_proof": "none",
+      "ai_first_surface": "explicit",
+      "proof_commands": [
+        "./examples/demo/run-all-connected-lifecycles.sh",
+        "./examples/swamp-project/demo-connected.sh",
+        "make ci-connected"
+      ],
+      "proof_refs": {
+        "connected_mode": [
+          "./examples/swamp-project/demo-connected.sh"
+        ],
+        "connected_release_gate": [
+          "make ci-connected",
+          "./examples/demo/run-all-connected-lifecycles.sh"
+        ],
+        "ai_first": [
+          "examples/README.md#ai--automation-patterns"
+        ]
+      },
+      "tracking_issues": [
+        "#173",
+        "#180",
+        "#183",
+        "#202"
+      ]
+    }
+  ],
+  "summary": {
+    "featured_examples": 12,
+    "generator_fixtures": 8,
+    "source_chain_verified": 8,
+    "connected_mode_present": 12,
+    "connected_release_gated": 12,
+    "real_live_proof": {
+      "none": 10,
+      "paired-harness": 1,
+      "standalone": 1
+    },
+    "ai_first_surface": {
+      "explicit": 4,
+      "none": 6,
+      "partial": 2
+    }
+  }
+}

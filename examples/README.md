@@ -63,6 +63,16 @@ Everything in these examples runs locally with no backend:
 Cross-repo queries, policy enforcement, and governed decisions require
 [ConfigHub](../docs/platform.md).
 
+## Current truth matrix
+
+Use the generated [Example Truth Matrix](../docs/testing/example-truth-matrix.md) when you need an exact answer for:
+
+- which examples are first-class generator fixtures,
+- which ones are CI-proven through the full source-side `cub-gen` chain,
+- which ones are in the connected release gate,
+- which ones have real WET->LIVE proof today,
+- which ones are explicitly AI-first versus only adjacent.
+
 ## Pick your domain POV first
 
 Start with the example that matches how your team already thinks:
