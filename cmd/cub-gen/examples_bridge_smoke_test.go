@@ -5,15 +5,17 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/confighub/cub-gen/internal/exampletruth"
 )
 
 func TestExamplesPathModeBridgeFlow(t *testing.T) {
-	tests := bridgeSymmetryMatrix()
+	tests := exampletruth.BridgeSymmetryMatrix()
 	assertBridgeSymmetryMatrixCoverage(t, tests)
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repoPath, err := filepath.Abs(filepath.Join("..", "..", tt.repoSuffix))
+		t.Run(tt.Name, func(t *testing.T) {
+			repoPath, err := filepath.Abs(filepath.Join("..", "..", tt.RepoSuffix))
 			if err != nil {
 				t.Fatalf("resolve repo path: %v", err)
 			}
@@ -33,7 +35,7 @@ func TestExamplesPathModeBridgeFlow(t *testing.T) {
 			if bundle["schema_version"] != "cub.confighub.io/change-bundle/v1" {
 				t.Fatalf("unexpected bundle schema_version: %v", bundle["schema_version"])
 			}
-			assertBundleProfile(t, bundle, tt.expectedProfile)
+			assertBundleProfile(t, bundle, tt.ExpectedProfile)
 
 			verifyOut, verifyErr, err := runWithCapturedIOAndStdin([]string{"verify", "--json", "--in", "-"}, publishOut)
 			if err != nil {

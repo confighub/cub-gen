@@ -118,6 +118,10 @@ Every featured example must pass these checks:
 - [ ] Demonstrates governance without requiring manual YAML edits
 - [ ] Works with existing Flux/Argo reconciliation (no reconciler changes)
 
+Current repo truth for those checks is published in the generated
+[Example Truth Matrix](example-truth-matrix.md). If a row is partial there, do
+not describe that example as fully proven.
+
 ## Related documentation
 
 - [Universal Example Contract](../workflows/example-checklist.md)

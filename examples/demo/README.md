@@ -126,6 +126,12 @@ publish → verify → attest → bridge ingest → decision query
 ./examples/demo/run-phase-4-connected-stories.sh
 ```
 
+Connected CI also release-gates:
+
+- `flow-a-git-pr-to-mr-connected.sh`
+- `flow-b-mr-to-git-pr-connected.sh`
+- evidence validation via `test/checks/check-flow-evidence.sh`
+
 ### Bridge endpoint behavior
 
 | Mode | Behavior |
@@ -320,6 +326,8 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 | Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
 | In progress | The flagship examples still need contract-based proof for real-cluster outcome, two-audience onboarding, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` paths |
 | Actively tracked | Example reset execution is being driven through issues `#173`, `#177`, `#178`, `#179`, `#180`, `#182`, `#183`, `#185`, and `#187` |
+
+For the per-example truth behind those claims, use the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md). It is derived from the example catalog, connected runners, source-side tests, and live proof scripts.
 
 That means the demo surface is broad, but we are still hardening the main examples
 before we claim full PRD-complete product proof.

@@ -5,6 +5,41 @@ Start here if you are the next AI picking up work in this repo.
 Use this file for current priorities and safe first steps. Use `CLAUDE.md` for
 stable repo-wide coding and validation rules.
 
+## 2026-03-25 Handover Update
+
+Short handover for the current local worktree:
+
+- `#215` first slice is landed locally: generated example truth artifacts now live in `docs/testing/example-truth-matrix.md` and `docs/testing/example-truth-matrix.json`, derived by `internal/exampletruth/` and `tools/example-truth-matrix/`.
+- `#183` first slice is landed locally: `Makefile` now gates matrix freshness, connected release-gate coverage, and Flow A / Flow B presence via `test/checks/check-example-truth-matrix.sh`, `test/checks/check-connected-release-gate.sh`, and `test/checks/check-flow-evidence.sh`.
+- Docs now point status/readiness claims back to the generated matrix (`README.md`, `examples/README.md`, `examples/demo/README.md`, `docs/index.md`, `docs/testing/README.md`, `mkdocs.yml`).
+
+Current local proof:
+
+- `make ci-local` passes.
+- `mkdocs build --strict` was not run successfully here because `mkdocs` is not installed in this shell.
+- A separate credentialed environment is currently attempting `make ci-connected`; treat that result as the next real decision point.
+
+Current derived truth from the generated matrix:
+
+- 12 featured examples
+- 8 first-class generator fixtures
+- 8 source-chain verified fixtures
+- 12 connected-release-gated examples
+- live proof split: 10 `none`, 1 `paired-harness`, 1 `standalone`
+- AI-first split: 6 `none`, 2 `partial`, 4 `explicit`
+
+Next plan if the connected run passes:
+
+1. Record the `ci-connected` result in `#183`, `#188`, and `#215`.
+2. Commit this local slice on a branch instead of leaving it on dirty `main`.
+3. Decide whether the next work is fixing connected regressions or tightening per-example universal-contract checks.
+
+Next plan if the connected run fails:
+
+1. Fix the first failing connected target or evidence check.
+2. Re-run only the failing connected proof lane until stable.
+3. Update the issue comments with the exact blocker instead of claiming the gate is complete.
+
 ## Repo truth
 
 `cub-gen` is now much clearer on its product story than it was a week ago, but

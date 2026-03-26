@@ -1,100 +1,40 @@
 package main
 
 import (
-	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
 
+	"github.com/confighub/cub-gen/internal/exampletruth"
 	"github.com/confighub/cub-gen/internal/registry"
 )
 
-type exampleFamilyFixture struct {
-	name            string
-	repoSuffix      string
-	expectedProfile string
-	expectedKind    string
-}
-
-func bridgeSymmetryMatrix() []exampleFamilyFixture {
-	return []exampleFamilyFixture{
-		{
-			name:            "helm",
-			repoSuffix:      filepath.Join("examples", "helm-paas"),
-			expectedProfile: "helm-paas",
-			expectedKind:    "helm",
-		},
-		{
-			name:            "score",
-			repoSuffix:      filepath.Join("examples", "scoredev-paas"),
-			expectedProfile: "scoredev-paas",
-			expectedKind:    "score",
-		},
-		{
-			name:            "spring",
-			repoSuffix:      filepath.Join("examples", "springboot-paas"),
-			expectedProfile: "springboot-paas",
-			expectedKind:    "springboot",
-		},
-		{
-			name:            "backstage",
-			repoSuffix:      filepath.Join("examples", "backstage-idp"),
-			expectedProfile: "backstage-idp",
-			expectedKind:    "backstage",
-		},
-		{
-			name:            "no-config-platform",
-			repoSuffix:      filepath.Join("examples", "just-apps-no-platform-config"),
-			expectedProfile: "no-config-platform",
-			expectedKind:    "no-config-platform",
-		},
-		{
-			name:            "ops",
-			repoSuffix:      filepath.Join("examples", "ops-workflow"),
-			expectedProfile: "ops-workflow",
-			expectedKind:    "opsworkflow",
-		},
-		{
-			name:            "c3agent",
-			repoSuffix:      filepath.Join("examples", "c3agent"),
-			expectedProfile: "c3agent",
-			expectedKind:    "c3agent",
-		},
-		{
-			name:            "swamp",
-			repoSuffix:      filepath.Join("examples", "swamp-automation"),
-			expectedProfile: "swamp",
-			expectedKind:    "swamp",
-		},
-	}
-}
-
 func TestBridgeSymmetryMatrix(t *testing.T) {
-	matrix := bridgeSymmetryMatrix()
+	matrix := exampletruth.BridgeSymmetryMatrix()
 	if len(matrix) == 0 {
 		t.Fatal("bridge symmetry matrix must not be empty")
 	}
 	assertBridgeSymmetryMatrixCoverage(t, matrix)
 }
 
-func assertBridgeSymmetryMatrixCoverage(t *testing.T, matrix []exampleFamilyFixture) {
+func assertBridgeSymmetryMatrixCoverage(t *testing.T, matrix []exampletruth.FamilyFixture) {
 	t.Helper()
 
-	byKind := map[string]exampleFamilyFixture{}
+	byKind := map[string]exampletruth.FamilyFixture{}
 	for _, fixture := range matrix {
-		if fixture.expectedKind == "" {
-			t.Fatalf("matrix fixture %q has empty expectedKind", fixture.name)
+		if fixture.ExpectedKind == "" {
+			t.Fatalf("matrix fixture %q has empty expectedKind", fixture.Name)
 		}
-		if fixture.expectedProfile == "" {
-			t.Fatalf("matrix fixture %q has empty expectedProfile", fixture.name)
+		if fixture.ExpectedProfile == "" {
+			t.Fatalf("matrix fixture %q has empty expectedProfile", fixture.Name)
 		}
-		if fixture.repoSuffix == "" {
-			t.Fatalf("matrix fixture %q has empty repoSuffix", fixture.name)
+		if fixture.RepoSuffix == "" {
+			t.Fatalf("matrix fixture %q has empty repoSuffix", fixture.Name)
 		}
-		if prev, exists := byKind[fixture.expectedKind]; exists {
-			t.Fatalf("matrix has duplicate kind %q in fixtures %q and %q", fixture.expectedKind, prev.name, fixture.name)
+		if prev, exists := byKind[fixture.ExpectedKind]; exists {
+			t.Fatalf("matrix has duplicate kind %q in fixtures %q and %q", fixture.ExpectedKind, prev.Name, fixture.Name)
 		}
-		byKind[fixture.expectedKind] = fixture
+		byKind[fixture.ExpectedKind] = fixture
 	}
 
 	missing := make([]string, 0)
