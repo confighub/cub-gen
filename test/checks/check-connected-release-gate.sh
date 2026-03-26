@@ -20,7 +20,7 @@ assert_jq() {
 
 require_make_dep() {
   local dep="$1"
-  if ! rg -q "^ci-connected: .*\\b${dep}\\b" Makefile; then
+  if ! grep -Eq "^ci-connected: .*\b${dep}\b" Makefile; then
     fail "ci-connected target is missing dependency: $dep"
   fi
 }
