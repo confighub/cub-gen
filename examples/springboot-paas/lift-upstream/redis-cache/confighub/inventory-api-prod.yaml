@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inventory-api-config
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: inventory-api
+data:
+  application.yaml: |
+    spring:
+      application:
+        name: inventory-api
+      datasource:
+        url: jdbc:postgresql://postgres.platform.svc:5432/inventory
+        username: inventory
+      cache:
+        type: redis
+    inventory:
+      environment: prod
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info
+    feature:
+      inventory:
+        reservationMode: strict
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-api
+  namespace: apps
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: inventory-api
+  template:
+    spec:
+      containers:
+        - name: inventory-api
+          image: ghcr.io/example/inventory-api:1.0.0
+          env:
+            - name: CACHE_BACKEND
+              value: redis

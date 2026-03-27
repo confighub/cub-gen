@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
+CUB="${CUB:-cub}"
+CLUSTER_NAME="${1:-springboot-platform}"
+SPACE="${2:-springboot-infra}"
+KUBECONFIG_PATH="${PROJECT_DIR}/var/${CLUSTER_NAME}.kubeconfig"
+PID_FILE="${PROJECT_DIR}/var/worker.pid"
+LOG_FILE="${PROJECT_DIR}/var/worker.log"
+
+export KUBECONFIG="${KUBECONFIG_PATH}"
+
+echo "Installing ConfigHub worker for space '${SPACE}'..."
+
+# Create infra space if needed
+${CUB} space create "${SPACE}" \
+  --label "ExampleName=springboot-paas" \
+  --label "Role=infrastructure" \
+  2>/dev/null || true
+
+# Create target
+${CUB} target create "${SPACE}" "k8s-worker-kind-${CLUSTER_NAME}" \
+  --type kubernetes \
+  2>/dev/null || true
+
+echo "Starting worker in background..."
+
+if [[ -f "${PID_FILE}" ]]; then
+  OLD_PID=$(cat "${PID_FILE}")
+  if kill -0 "${OLD_PID}" 2>/dev/null; then
+    echo "  Stopping existing worker (PID ${OLD_PID})..."
+    kill "${OLD_PID}" 2>/dev/null || true
+    sleep 2
+  fi
+fi
+
+nohup ${CUB} worker run \
+  --space "${SPACE}" \
+  --target "k8s-worker-kind-${CLUSTER_NAME}" \
+  --kubeconfig "${KUBECONFIG_PATH}" \
+  > "${LOG_FILE}" 2>&1 &
+
+echo $! > "${PID_FILE}"
+echo "  Worker started (PID $(cat "${PID_FILE}"))"
+
+# Wait for ready
+echo "Waiting for worker to become Ready..."
+for i in $(seq 1 30); do
+  CONDITION=$(${CUB} worker list --space "${SPACE}" --json 2>/dev/null | jq -r '.[0].BridgeWorker.Condition' 2>/dev/null || echo "unknown")
+  if [[ "$CONDITION" == "Ready" ]]; then
+    echo "  Worker is Ready."
+    break
+  fi
+  sleep 2
+done
+
+echo ""
+echo "====================================="
+echo "Worker installed for space '${SPACE}'."
+echo "Log: ${LOG_FILE}"
+echo "PID: $(cat "${PID_FILE}")"
+echo "====================================="

@@ -30,6 +30,11 @@
           "name": "input_04",
           "required": true,
           "schema_ref": "https://json.schemastore.org/spring-configuration-metadata"
+        },
+        {
+          "name": "input_05",
+          "required": true,
+          "schema_ref": "https://json.schemastore.org/spring-configuration-metadata"
         }
       ],
       "kind": "springboot",
@@ -54,6 +59,7 @@
         "pom.xml",
         "src/main/resources/application-dev.yaml",
         "src/main/resources/application-prod.yaml",
+        "src/main/resources/application-stage.yaml",
         "src/main/resources/application.yaml"
       ],
       "resource_body": "kind: Kustomization\nmetadata:\n  name: springboot-paas\nspec:\n  root: \n",
@@ -84,6 +90,14 @@
       "generator_id": "gen_73ed79c3c8b65360",
       "owner": "app-team",
       "path": "src/main/resources/application-prod.yaml",
+      "profile": "springboot-paas",
+      "required": true,
+      "role": "app-config-profile"
+    },
+    {
+      "generator_id": "gen_73ed79c3c8b65360",
+      "owner": "app-team",
+      "path": "src/main/resources/application-stage.yaml",
       "profile": "springboot-paas",
       "required": true,
       "role": "app-config-profile"
@@ -198,7 +212,7 @@
       "generator_id": "gen_73ed79c3c8b65360",
       "generator_name": "springboot-paas",
       "generator_profile": "springboot-paas",
-      "input_digest": "sha256:5bca6dd0fcb20f32628706275ad41375be280a647473658347bff8522e3139e8",
+      "input_digest": "sha256:2e18f06bdb1649abb15f82e01924dd7f0caa6512da15345d4b569e2f023cf0c2",
       "inverse_edit_pointers": [
         {
           "confidence": 0.89,
@@ -282,6 +296,12 @@
           "uri": "\u003csource_uri\u003e"
         },
         {
+          "path": "src/main/resources/application-stage.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
           "path": "src/main/resources/application.yaml",
           "revision": "HEAD",
           "role": "generator-input",
@@ -299,7 +319,7 @@
   "summary": {
     "contracts": 1,
     "discovered_resources": 1,
-    "dry_inputs": 4,
+    "dry_inputs": 5,
     "dry_units": 1,
     "generator_profiles": [
       "springboot-paas"
