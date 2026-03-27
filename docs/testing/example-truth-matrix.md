@@ -9,7 +9,7 @@ Generated from repo structure, source-side tests, connected runners, and live-pr
 - Source-chain verified: `8`
 - Connected mode present: `12`
 - Connected release gated: `12`
-- Real live proof: `none=10`, `paired-harness=1`, `standalone=1`
+- Real live proof: `none=9`, `paired-harness=1`, `standalone=2`
 - AI-first surface: `none=6`, `partial=2`, `explicit=4`
 
 ## Matrix
@@ -25,7 +25,7 @@ Generated from repo structure, source-side tests, connected runners, and live-pr
 | `live-reconcile` | no | no | yes | yes | `standalone` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
 | `ops-workflow` | yes | yes | yes | yes | `none` | `partial` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183), [#202](https://github.com/confighub/cub-gen/issues/202) |
 | `scoredev-paas` | yes | yes | yes | yes | `none` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#178](https://github.com/confighub/cub-gen/issues/178), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `springboot-paas` | yes | yes | yes | yes | `none` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#179](https://github.com/confighub/cub-gen/issues/179), [#183](https://github.com/confighub/cub-gen/issues/183) |
+| `springboot-paas` | yes | yes | yes | yes | `standalone` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#179](https://github.com/confighub/cub-gen/issues/179), [#183](https://github.com/confighub/cub-gen/issues/183) |
 | `swamp-automation` | yes | yes | yes | yes | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183), [#202](https://github.com/confighub/cub-gen/issues/202) |
 | `swamp-project` | no | no | yes | yes | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183), [#202](https://github.com/confighub/cub-gen/issues/202) |
 
@@ -110,8 +110,9 @@ Generated from repo structure, source-side tests, connected runners, and live-pr
 - Source chain: `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v`
 - Connected mode: `./examples/springboot-paas/demo-connected.sh`
 - Connected release gate: `make ci-connected`, `./examples/demo/run-all-connected-lifecycles.sh`
-- Real live: --
+- Real live: `./examples/springboot-paas/verify-e2e.sh`, `./examples/springboot-paas/confighub-verify.sh`, `./examples/springboot-paas/bin/create-cluster`, `./examples/springboot-paas/bin/build-image`
 - AI-first: --
+- Notes: Standalone real-cluster proof: Kind cluster + ConfigHub worker + inventory-api HTTP verification.
 
 ### `swamp-automation`
 
