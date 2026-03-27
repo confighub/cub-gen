@@ -150,6 +150,15 @@ func Collect(root string) (Matrix, error) {
 				"./examples/live-reconcile/demo-local.sh",
 			}
 			row.Notes = append(row.Notes, "Real LIVE proof is paired through the live-reconcile harness, not standalone in helm-paas.")
+		case "springboot-paas":
+			row.RealLiveProof = RealLiveStandalone
+			row.ProofRefs.RealLive = []string{
+				"./examples/springboot-paas/verify-e2e.sh",
+				"./examples/springboot-paas/confighub-verify.sh",
+				"./examples/springboot-paas/bin/create-cluster",
+				"./examples/springboot-paas/bin/build-image",
+			}
+			row.Notes = append(row.Notes, "Standalone real-cluster proof: Kind cluster + ConfigHub worker + inventory-api HTTP verification.")
 		case "live-reconcile":
 			row.RealLiveProof = RealLiveStandalone
 			row.ProofRefs.RealLive = []string{

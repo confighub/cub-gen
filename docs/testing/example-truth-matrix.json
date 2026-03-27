@@ -330,11 +330,15 @@
       "source_chain_verified": true,
       "connected_mode_present": true,
       "connected_release_gated": true,
-      "real_live_proof": "none",
+      "real_live_proof": "standalone",
       "ai_first_surface": "none",
       "proof_commands": [
         "./examples/demo/run-all-connected-lifecycles.sh",
+        "./examples/springboot-paas/bin/build-image",
+        "./examples/springboot-paas/bin/create-cluster",
+        "./examples/springboot-paas/confighub-verify.sh",
         "./examples/springboot-paas/demo-connected.sh",
+        "./examples/springboot-paas/verify-e2e.sh",
         "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v",
         "make ci-connected"
       ],
@@ -348,12 +352,21 @@
         "connected_release_gate": [
           "make ci-connected",
           "./examples/demo/run-all-connected-lifecycles.sh"
+        ],
+        "real_live": [
+          "./examples/springboot-paas/verify-e2e.sh",
+          "./examples/springboot-paas/confighub-verify.sh",
+          "./examples/springboot-paas/bin/create-cluster",
+          "./examples/springboot-paas/bin/build-image"
         ]
       },
       "tracking_issues": [
         "#173",
         "#179",
         "#183"
+      ],
+      "notes": [
+        "Standalone real-cluster proof: Kind cluster + ConfigHub worker + inventory-api HTTP verification."
       ]
     },
     {
@@ -433,9 +446,9 @@
     "connected_mode_present": 12,
     "connected_release_gated": 12,
     "real_live_proof": {
-      "none": 10,
+      "none": 9,
       "paired-harness": 1,
-      "standalone": 1
+      "standalone": 2
     },
     "ai_first_surface": {
       "explicit": 4,

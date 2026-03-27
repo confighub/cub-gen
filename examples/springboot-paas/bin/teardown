@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
+CLUSTER_NAME="${1:-springboot-platform}"
+KUBECONFIG_PATH="${PROJECT_DIR}/var/${CLUSTER_NAME}.kubeconfig"
+PID_FILE="${PROJECT_DIR}/var/worker.pid"
+LOG_FILE="${PROJECT_DIR}/var/worker.log"
+
+echo "Tearing down springboot-paas infrastructure..."
+
+if [[ -f "${PID_FILE}" ]]; then
+  PID=$(cat "${PID_FILE}")
+  if kill -0 "${PID}" 2>/dev/null; then
+    echo "Stopping worker (PID ${PID})..."
+    kill "${PID}" 2>/dev/null || true
+    sleep 2
+    kill -0 "${PID}" 2>/dev/null && kill -9 "${PID}" 2>/dev/null || true
+  fi
+  rm -f "${PID_FILE}"
+  echo "  Worker stopped."
+fi
+
+if command -v kind >/dev/null 2>&1; then
+  if kind get clusters 2>/dev/null | grep -q "^${CLUSTER_NAME}$"; then
+    echo "Deleting Kind cluster '${CLUSTER_NAME}'..."
+    kind delete cluster --name "${CLUSTER_NAME}"
+    echo "  Cluster deleted."
+  fi
+fi
+
+rm -f "${KUBECONFIG_PATH}" "${LOG_FILE}"
+
+echo ""
+echo "====================================="
+echo "Teardown complete."
+echo "Don't forget: ./confighub-cleanup.sh"
+echo "====================================="
