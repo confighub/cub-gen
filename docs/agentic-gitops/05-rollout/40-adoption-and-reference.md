@@ -938,7 +938,7 @@ audit and compliance workflows.
 | `[External] mental-model.md` | Core relationships |
 | `[External] platform-inheritance.md` | Multi-platform constraint resolution |
 
-### cub-track and Governed Execution (cub-scout/docs/reference/)
+### cub-track and Governed Execution (legacy cub-scout reference set)
 
 | File | Purpose |
 |------|---------|

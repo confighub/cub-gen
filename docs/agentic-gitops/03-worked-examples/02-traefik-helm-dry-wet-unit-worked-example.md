@@ -306,8 +306,8 @@ Naming rule:
 
 ## 9. Related Docs
 
-1. `docs/reference/agentic-gitops-design.md`
-2. `docs/reference/scoredev-dry-wet-unit-worked-example.md`
-3. `docs/reference/dual-approval-gitops-gh-pr-and-ch-mr.md`
-4. `docs/reference/stored-in-git-vs-confighub.md`
-5. `docs/reference/next-gen-gitops-ai-era.md`
+1. `docs/agentic-gitops/02-design/00-agentic-gitops-design.md`
+2. `docs/agentic-gitops/03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md`
+3. `docs/agentic-gitops/02-design/50-dual-approval-gitops-gh-pr-and-ch-mr.md`
+4. `docs/agentic-gitops/02-design/60-stored-in-git-vs-confighub.md`
+5. `docs/agentic-gitops/01-vision/02-next-gen-gitops-ai-era.md`

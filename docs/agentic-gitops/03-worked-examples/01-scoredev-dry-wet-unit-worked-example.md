@@ -507,10 +507,10 @@ Upstream DRY promotion flow is additionally shown in Section 6.
 
 ## 11. Related Docs
 
-1. `docs/reference/agentic-gitops-design.md`
+1. `docs/agentic-gitops/02-design/00-agentic-gitops-design.md`
 2. `examples/flux-import-confighub-demo/README.md`
 3. `examples/argo-import-confighub-demo/README.md`
-4. `docs/reference/next-gen-gitops-ai-era.md`
-5. `docs/reference/stored-in-git-vs-confighub.md`
-6. `docs/reference/dual-approval-gitops-gh-pr-and-ch-mr.md`
-7. `docs/reference/traefik-helm-dry-wet-unit-worked-example.md`
+4. `docs/agentic-gitops/01-vision/02-next-gen-gitops-ai-era.md`
+5. `docs/agentic-gitops/02-design/60-stored-in-git-vs-confighub.md`
+6. `docs/agentic-gitops/02-design/50-dual-approval-gitops-gh-pr-and-ch-mr.md`
+7. `docs/agentic-gitops/03-worked-examples/02-traefik-helm-dry-wet-unit-worked-example.md`
