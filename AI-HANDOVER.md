@@ -148,7 +148,7 @@ For layered Helm/Argo/Kubara-like stacks, also prove:
 
 The best current reference for the AI-first, proof-tiered example style now
 lives in the public `examples` repo under
-`incubator/springboot-platform-app`.
+`spring-platform/springboot-platform-app`.
 
 What exists there now:
 
