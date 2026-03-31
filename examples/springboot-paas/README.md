@@ -33,6 +33,17 @@ cub auth login
 ./examples/springboot-paas/demo-connected.sh
 ```
 
+## Understand the generator
+
+Before changing anything, see how inputs become outputs:
+
+```bash
+./generator/render.sh --explain                               # what the generator does
+./generator/render.sh --trace                                 # field-by-field: input → output
+./generator/render.sh --explain-field feature.inventory.reservationMode  # MUTABLE
+./generator/render.sh --explain-field spring.datasource.url              # BLOCKED
+```
+
 ## Handle request #1: flip the feature flag
 
 This is the **apply-here** path. The field `feature.inventory.reservationMode` is app-owned — mutate it directly in ConfigHub.
@@ -48,6 +59,8 @@ cub function do --space inventory-api-prod --unit inventory-api \
 Verify it worked:
 
 ```bash
+./confighub-compare.sh                    # see the * on prod's reservationMode
+./confighub-refresh-preview.sh prod       # PRESERVE: your change survives refresh
 cub mutation list --space inventory-api-prod --json inventory-api | \
   jq '[.[-1] | {mutationNum, description, author: .Author.Email, createdAt: .CreatedAt}]'
 ```
@@ -132,8 +145,9 @@ HTTP-level tests verify both dev profile (optimistic mode, no cache) and prod pr
 | Structural proof (verify.sh) | Real |
 | Lift-upstream Redis bundle | Real (bundle only, no automated PR) |
 | Block/escalate boundary | Real (documented, not server-enforced) |
-| Refresh-survival preview | Not yet (see [spring-platform](https://github.com/confighub/examples/tree/main/spring-platform)) |
-| Generator visibility (explain-field) | Not yet (tracked in cub-gen #222) |
+| Refresh-survival preview | Real (client-side simulation) |
+| Generator visibility (explain-field) | Real |
+| Cross-environment comparison | Real (with fixture fallback) |
 
 ## File layout
 
