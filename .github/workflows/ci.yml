@@ -116,9 +116,9 @@ jobs:
       - name: Build cub CLI for connected scripts
         if: steps.connected-preflight.outputs.can_run == 'true'
         run: |
-          git clone --depth 1 https://github.com/confighubai/confighub.git /tmp/confighub
-          make -C /tmp/confighub build-cli
-          echo "/tmp/confighub/bin" >> "$GITHUB_PATH"
+          git clone --depth 1 https://github.com/confighub/sdk.git /tmp/confighub-sdk
+          make -C /tmp/confighub-sdk build-cli
+          echo "/tmp/confighub-sdk/bin" >> "$GITHUB_PATH"
 
       - name: Validate connected Git proof inputs
         if: steps.connected-preflight.outputs.can_run == 'true'
