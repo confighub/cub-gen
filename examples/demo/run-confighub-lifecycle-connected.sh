@@ -78,7 +78,6 @@ sanitize_slug() {
 
 should_use_fallback() {
   local bridge_error="$1"
-  echo "[debug] should_use_fallback: CONNECTED_FALLBACK_MODE='${CONNECTED_FALLBACK_MODE}'" >&2
   case "$CONNECTED_FALLBACK_MODE" in
     off) return 1 ;;
     changeset) return 0 ;;
