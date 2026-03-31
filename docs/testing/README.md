@@ -99,3 +99,5 @@ make update-goldens
 ## Story 10 fixture
 
 This line exists as a Story 10 signed-commit fixture for ci-connected (app PR).
+
+This line exists as a Story 10 signed-commit fixture for ci-connected (promotion PR).
