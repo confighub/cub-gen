@@ -9,7 +9,7 @@ This note defines the storage boundary for governed GitOps mutations.
 
 For staged adoption and product packaging context, see:
 
-1. `docs/reference/cub-track-mvp-upsell-and-dual-store.md`
+1. `docs/agentic-gitops/cub-track-mvp-upsell-and-dual-store.md`
 
 ## Why This Split Exists
 
@@ -93,5 +93,5 @@ If a record is needed for:
 
 ## Related Docs
 
-1. `docs/reference/agentic-gitops-design.md`
-2. `docs/reference/dual-approval-gitops-gh-pr-and-ch-mr.md`
+1. `docs/agentic-gitops/02-design/00-agentic-gitops-design.md`
+2. `docs/agentic-gitops/02-design/50-dual-approval-gitops-gh-pr-and-ch-mr.md`

@@ -19,17 +19,15 @@ Current schema set:
 8. `provenance-record.v1` (render and artifact lineage)
 9. `inverse-transform-plan.v1` (`WET/live -> DRY` proposal plan)
 
-Contract files:
+Standalone schema files currently checked in:
 
-1. `docs/reference/schemas/change-intent.v1.schema.json`
-2. `docs/reference/schemas/execution-report.v1.schema.json`
-3. `docs/reference/schemas/change-interaction-card.v1.schema.json`
-4. `docs/reference/schemas/decision-receipt.v1.schema.json`
-5. `docs/reference/schemas/execution-receipt.v1.schema.json`
-6. `docs/reference/schemas/outcome-receipt.v1.schema.json`
-7. `docs/reference/schemas/generator-contract.v1.schema.json`
-8. `docs/reference/schemas/provenance-record.v1.schema.json`
-9. `docs/reference/schemas/inverse-transform-plan.v1.schema.json`
+1. `docs/agentic-gitops/04-schemas/generator-contract.v1.schema.json`
+2. `docs/agentic-gitops/04-schemas/provenance-record.v1.schema.json`
+3. `docs/agentic-gitops/04-schemas/inverse-transform-plan.v1.schema.json`
+
+The checkpoint-era objects (`change-intent`, `execution-report`,
+`change-interaction-card`, and the compact receipts) are currently documented on
+this page but are not yet split into separate checked-in JSON schema files.
 
 ## Versioning Rules
 
@@ -95,7 +93,8 @@ They contain:
 
 See also:
 
-1. `docs/reference/stored-in-git-vs-confighub.md`
+1. `docs/agentic-gitops/02-design/60-stored-in-git-vs-confighub.md`
+2. `docs/agentic-gitops/gitops-checkpoint-prd.md`
 
 ## Minimal Example (`change-interaction-card.v1`)
 

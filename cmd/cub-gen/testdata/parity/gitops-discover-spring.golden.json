@@ -8,6 +8,7 @@
         "pom.xml",
         "src/main/resources/application-dev.yaml",
         "src/main/resources/application-prod.yaml",
+        "src/main/resources/application-stage.yaml",
         "src/main/resources/application.yaml"
       ],
       "kind": "springboot",
@@ -29,6 +30,7 @@
         "pom.xml",
         "src/main/resources/application-dev.yaml",
         "src/main/resources/application-prod.yaml",
+        "src/main/resources/application-stage.yaml",
         "src/main/resources/application.yaml"
       ],
       "resource_body": "kind: Kustomization\nmetadata:\n  name: springboot-paas\nspec:\n  root: \n",

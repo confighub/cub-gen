@@ -15,21 +15,19 @@ Current schema set:
 4. `decision-receipt.v1`
 5. `execution-receipt.v1`
 6. `outcome-receipt.v1`
-7. `generator-contract.v1`
-8. `provenance-record.v1`
-9. `inverse-transform-plan.v1`
+7. `generator-contract.v1` (agentic generator contract)
+8. `provenance-record.v1` (render and artifact lineage)
+9. `inverse-transform-plan.v1` (`WET/live -> DRY` proposal plan)
 
-Contract files:
+Standalone schema files currently checked in:
 
-1. `docs/reference/schemas/change-intent.v1.schema.json`
-2. `docs/reference/schemas/execution-report.v1.schema.json`
-3. `docs/reference/schemas/change-interaction-card.v1.schema.json`
-4. `docs/reference/schemas/decision-receipt.v1.schema.json`
-5. `docs/reference/schemas/execution-receipt.v1.schema.json`
-6. `docs/reference/schemas/outcome-receipt.v1.schema.json`
-7. `docs/reference/schemas/generator-contract.v1.schema.json`
-8. `docs/reference/schemas/provenance-record.v1.schema.json`
-9. `docs/reference/schemas/inverse-transform-plan.v1.schema.json`
+1. `docs/agentic-gitops/04-schemas/generator-contract.v1.schema.json`
+2. `docs/agentic-gitops/04-schemas/provenance-record.v1.schema.json`
+3. `docs/agentic-gitops/04-schemas/inverse-transform-plan.v1.schema.json`
+
+The checkpoint-era objects (`change-intent`, `execution-report`,
+`change-interaction-card`, and the compact receipts) are currently documented on
+this page but are not yet split into separate checked-in JSON schema files.
 
 ## Versioning Rules
 
@@ -38,6 +36,8 @@ Contract files:
 3. Unknown values must be explicit (`"unknown"`), not omitted, for critical audit fields.
 
 ## Mandatory Governance Enforcement (Normative)
+
+These requirements are mandatory for governed paths:
 
 1. `GeneratorContract` must be signed and include deterministic output hash.
 2. `ProvenanceRecord` must include immutable `input_hash`,
@@ -69,15 +69,17 @@ Joined object used by explain/search/audit:
 
 ### `GeneratorContract`
 
-Defines forward transform contract (`DRY -> WET`) and deterministic generation controls.
+Defines forward transform contract (`DRY -> WET`) and adapter capabilities.
 
 ### `ProvenanceRecord`
 
-Defines immutable render lineage: inputs, toolchain/policy versions, artifacts, and run identity.
+Defines generator version, input digest, source artifacts, output artifact digests,
+and controller linkage for each rendered outcome.
 
 ### `InverseTransformPlan`
 
-Defines safe reverse mapping proposals from `WET` or `LIVE` observations back to DRY-editable paths.
+Defines safe reverse mapping proposals from `WET` or `LIVE` observations back to
+DRY-editable paths with confidence and review requirements.
 
 ### Receipts (`decision|execution|outcome`)
 
@@ -91,7 +93,8 @@ They contain:
 
 See also:
 
-1. `docs/reference/stored-in-git-vs-confighub.md`
+1. `docs/agentic-gitops/02-design/60-stored-in-git-vs-confighub.md`
+2. `docs/agentic-gitops/gitops-checkpoint-prd.md`
 
 ## Minimal Example (`change-interaction-card.v1`)
 

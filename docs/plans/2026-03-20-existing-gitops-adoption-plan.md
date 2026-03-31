@@ -247,7 +247,7 @@ Exit criteria:
 
 Current public reference:
 
-1. `examples/incubator/springboot-platform-app` now provides the clearest
+1. `examples/spring-platform/springboot-platform-app` now provides the clearest
    worked example of this packaging style,
 2. it already separates structural, local-app, and ConfigHub-only proof
    levels on the merged default branch, with Noop-target, `lift upstream`,

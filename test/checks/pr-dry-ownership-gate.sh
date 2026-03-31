@@ -170,6 +170,13 @@ for changed in "${changed_files[@]}"; do
     rel="${rel#"$repo_norm/"}"
   fi
 
+  # Skip known non-DRY directories (WET outputs, proof artifacts, infrastructure)
+  case "$rel" in
+    confighub/*|operational/*|lift-upstream/*|changes/*|var/*|.cub-gen/*)
+      continue
+      ;;
+  esac
+
   dry_line="$(awk -F'\t' -v path="$rel" '$1 == path {print $0}' "$tmpdir/dry-inputs.tsv" || true)"
   if [ -z "$dry_line" ]; then
     failures+=("$changed: changed file is not a recognized DRY input for this generator")

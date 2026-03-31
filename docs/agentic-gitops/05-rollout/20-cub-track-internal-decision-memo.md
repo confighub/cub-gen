@@ -119,9 +119,9 @@ If go:
 
 ## Related Docs
 
-1. `docs/reference/cub-track-mvp-upsell-and-dual-store.md`
-2. `docs/reference/stored-in-git-vs-confighub.md`
-3. `docs/reference/gitops-checkpoint-prd.md`
+1. `docs/agentic-gitops/cub-track-mvp-upsell-and-dual-store.md`
+2. `docs/agentic-gitops/02-design/60-stored-in-git-vs-confighub.md`
+3. `docs/agentic-gitops/gitops-checkpoint-prd.md`
 
 # Next-Gen GitOps in the AI Era
 
@@ -233,7 +233,7 @@ Message:
 
 Use the complete reference:
 
-1. `docs/reference/traefik-helm-dry-wet-unit-worked-example.md`
+1. `docs/agentic-gitops/03-worked-examples/02-traefik-helm-dry-wet-unit-worked-example.md`
 
 That walkthrough includes:
 
@@ -246,7 +246,7 @@ That walkthrough includes:
 
 Use the complete end-to-end reference:
 
-1. `docs/reference/scoredev-dry-wet-unit-worked-example.md`
+1. `docs/agentic-gitops/03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md`
 
 That walkthrough includes:
 
@@ -264,9 +264,9 @@ That walkthrough includes:
 
 ## Related Docs
 
-1. `docs/reference/app-and-ai-gitops-plain-english.md`
-2. `docs/reference/cub-track-mvp-upsell-and-dual-store.md`
-3. `docs/reference/stored-in-git-vs-confighub.md`
-4. `docs/reference/scoredev-dry-wet-unit-worked-example.md`
-5. `docs/reference/dual-approval-gitops-gh-pr-and-ch-mr.md`
-6. `docs/reference/traefik-helm-dry-wet-unit-worked-example.md`
+1. `docs/agentic-gitops/app-and-ai-gitops-plain-english.md`
+2. `docs/agentic-gitops/cub-track-mvp-upsell-and-dual-store.md`
+3. `docs/agentic-gitops/02-design/60-stored-in-git-vs-confighub.md`
+4. `docs/agentic-gitops/03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md`
+5. `docs/agentic-gitops/02-design/50-dual-approval-gitops-gh-pr-and-ch-mr.md`
+6. `docs/agentic-gitops/03-worked-examples/02-traefik-helm-dry-wet-unit-worked-example.md`
