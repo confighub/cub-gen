@@ -38,9 +38,9 @@ jobs:
       CONFIGHUB_SPACE: ${{ secrets.CONFIGHUB_SPACE }}
       CONFIGHUB_TOKEN: ${{ secrets.CONFIGHUB_TOKEN }}
       CONFIGHUB_USER: ci-bot
-      CONNECTED_FALLBACK_MODE: changeset
+      CONNECTED_FALLBACK_MODE: off
       REQUIRE_TERMINAL_DECISION: "1"
-      ALLOW_FALLBACK_INGEST: "1"
+      ALLOW_FALLBACK_INGEST: "0"
       ALLOW_STORY_10_SKIP: "0"
       CLEANUP_CLUSTER: "1"
       RUN_ID: ${{ github.run_id }}
@@ -131,4 +131,4 @@ jobs:
 
       - name: Run connected CI suite
         if: steps.connected-preflight.outputs.can_run == 'true'
-        run: make ci-connected-troubleshoot
+        run: make ci-connected
