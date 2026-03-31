@@ -94,7 +94,7 @@ ci-local: build test test-contracts test-bridge-symmetry test-examples test-chan
 ci-connected: build test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-flow-a-git-pr-to-mr test-flow-b-mr-to-git-pr test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo check-story-evidence check-flow-evidence check-ai-only-scope check-docs-entrypoints check-example-truth-matrix check-connected-release-gate check-no-legacy-provider-terms check-connected-auth-contract check-registry-discoverability
 
 ci-connected-troubleshoot:
-	CONNECTED_FALLBACK_MODE=changeset ALLOW_FALLBACK_INGEST=1 ALLOW_STORY_10_SKIP=1 $(MAKE) ci-connected
+	export CONNECTED_FALLBACK_MODE=changeset && export ALLOW_FALLBACK_INGEST=1 && export ALLOW_STORY_10_SKIP=1 && $(MAKE) ci-connected
 
 ci: ci-local
 
