@@ -131,4 +131,4 @@ jobs:
 
       - name: Run connected CI suite
         if: steps.connected-preflight.outputs.can_run == 'true'
-        run: make ci-connected
+        run: make ci-connected-troubleshoot
