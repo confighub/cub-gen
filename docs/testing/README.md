@@ -95,3 +95,5 @@ make update-goldens
 2. Golden output is treated as contract surface.
 3. Unsupported behavior must fail explicitly, never silently.
 4. Every user-visible change needs either a new golden or an explicit reason why not.
+
+This line exists as a Story 10 signed-commit fixture for ci-connected (promotion PR).
