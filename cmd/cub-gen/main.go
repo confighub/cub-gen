@@ -56,6 +56,8 @@ func run(args []string) error {
 		return runGitOps(args[1:])
 	case "bridge":
 		return runBridge(args[1:])
+	case "springboot":
+		return runSpringBoot(args[1:])
 	default:
 		printUsage(os.Stderr)
 		return fmt.Errorf("unknown command: %s", args[0])
