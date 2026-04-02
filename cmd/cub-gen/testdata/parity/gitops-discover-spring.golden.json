@@ -15,18 +15,6 @@
       "name": "springboot-paas",
       "profile": "springboot-paas",
       "root": ""
-    },
-    {
-      "confidence": 0.93,
-      "id": "gen_0dbe124945a73802",
-      "inputs": [
-        "lift-upstream/redis-cache/upstream-app/pom.xml",
-        "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml"
-      ],
-      "kind": "springboot",
-      "name": "upstream-app",
-      "profile": "springboot-paas",
-      "root": "lift-upstream/redis-cache/upstream-app"
     }
   ],
   "discover_file": "\u003cdiscover_file\u003e",
@@ -50,20 +38,6 @@
       "resource_name": "springboot-paas",
       "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization",
       "root": ""
-    },
-    {
-      "generator_id": "gen_0dbe124945a73802",
-      "generator_kind": "springboot",
-      "generator_profile": "springboot-paas",
-      "inputs": [
-        "lift-upstream/redis-cache/upstream-app/pom.xml",
-        "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml"
-      ],
-      "resource_body": "kind: Kustomization\nmetadata:\n  name: upstream-app\nspec:\n  root: lift-upstream/redis-cache/upstream-app\n",
-      "resource_kind": "Kustomization",
-      "resource_name": "upstream-app",
-      "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization",
-      "root": "lift-upstream/redis-cache/upstream-app"
     }
   ],
   "space": "platform",

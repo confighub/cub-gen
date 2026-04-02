@@ -47,37 +47,6 @@
       "source_repo": "\u003ctarget_path\u003e",
       "transport": "oci+git",
       "version": "0.1.0"
-    },
-    {
-      "capabilities": [
-        "render-app-config",
-        "profile-overrides",
-        "inverse-app-config-patch"
-      ],
-      "deterministic": true,
-      "generator_id": "gen_0dbe124945a73802",
-      "inputs": [
-        {
-          "name": "input_01",
-          "required": true,
-          "schema_ref": "https://maven.apache.org/xsd/maven-4.0.0.xsd"
-        },
-        {
-          "name": "input_02",
-          "required": true,
-          "schema_ref": "https://json.schemastore.org/spring-configuration-metadata"
-        }
-      ],
-      "kind": "springboot",
-      "name": "upstream-app",
-      "output_format": "kubernetes/yaml",
-      "profile": "springboot-paas",
-      "schema_version": "cub.confighub.io/generator-contract/v1",
-      "source_path": "lift-upstream/redis-cache/upstream-app",
-      "source_ref": "HEAD",
-      "source_repo": "\u003ctarget_path\u003e",
-      "transport": "oci+git",
-      "version": "0.1.0"
     }
   ],
   "digest_algorithm": "sha256",
@@ -98,20 +67,6 @@
       "resource_name": "springboot-paas",
       "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization",
       "root": ""
-    },
-    {
-      "generator_id": "gen_0dbe124945a73802",
-      "generator_kind": "springboot",
-      "generator_profile": "springboot-paas",
-      "inputs": [
-        "lift-upstream/redis-cache/upstream-app/pom.xml",
-        "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml"
-      ],
-      "resource_body": "kind: Kustomization\nmetadata:\n  name: upstream-app\nspec:\n  root: lift-upstream/redis-cache/upstream-app\n",
-      "resource_kind": "Kustomization",
-      "resource_name": "upstream-app",
-      "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization",
-      "root": "lift-upstream/redis-cache/upstream-app"
     }
   ],
   "dry_inputs": [
@@ -154,22 +109,6 @@
       "profile": "springboot-paas",
       "required": true,
       "role": "build-config"
-    },
-    {
-      "generator_id": "gen_0dbe124945a73802",
-      "owner": "app-team",
-      "path": "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml",
-      "profile": "springboot-paas",
-      "required": true,
-      "role": "app-config-base"
-    },
-    {
-      "generator_id": "gen_0dbe124945a73802",
-      "owner": "platform-engineer",
-      "path": "lift-upstream/redis-cache/upstream-app/pom.xml",
-      "profile": "springboot-paas",
-      "required": true,
-      "role": "build-config"
     }
   ],
   "dry_units": [
@@ -178,12 +117,6 @@
       "kind": "dry-unit",
       "layer": "dry",
       "name": "springboot-paas-dry"
-    },
-    {
-      "id": "dry_1c55f2b1503c4c74",
-      "kind": "dry-unit",
-      "layer": "dry",
-      "name": "upstream-app-dry"
     }
   ],
   "generated_at": "\u003ctimestamp\u003e",
@@ -193,12 +126,6 @@
       "kind": "generator-unit",
       "layer": "generator",
       "name": "springboot-paas-generator"
-    },
-    {
-      "id": "gen_c84edc6a1df9899c",
-      "kind": "generator-unit",
-      "layer": "generator",
-      "name": "upstream-app-generator"
     }
   ],
   "inverse_transform_plans": [
@@ -240,45 +167,6 @@
       "source_ref": "",
       "status": "draft",
       "target_unit_id": "dry_5b90287a647b6d00"
-    },
-    {
-      "change_id": "\u003cchange_id\u003e",
-      "created_at": "\u003ctimestamp\u003e",
-      "patches": [
-        {
-          "confidence": 0.88,
-          "dry_path": "spring.application.name",
-          "editable_by": "app-team",
-          "op": "replace",
-          "reason": "Application identity should be app-editable without platform escalation.",
-          "requires_review": false,
-          "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
-        },
-        {
-          "confidence": 0.91,
-          "dry_path": "server.port",
-          "editable_by": "app-team",
-          "op": "replace",
-          "reason": "Application listener port is an app-level configuration concern.",
-          "requires_review": false,
-          "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
-        },
-        {
-          "confidence": 0.78,
-          "dry_path": "spring.datasource.url",
-          "editable_by": "platform-engineer",
-          "op": "replace",
-          "reason": "Database connectivity impacts shared runtime dependencies.",
-          "requires_review": true,
-          "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
-        }
-      ],
-      "plan_id": "\u003cplan_id\u003e",
-      "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
-      "source_kind": "springboot",
-      "source_ref": "lift-upstream/redis-cache/upstream-app",
-      "status": "draft",
-      "target_unit_id": "dry_1c55f2b1503c4c74"
     }
   ],
   "links": [
@@ -286,11 +174,6 @@
       "dry_unit_id": "dry_5b90287a647b6d00",
       "generator_unit_id": "gen_14fc080d57edc21b",
       "wet_unit_id": "wet_24b4f9e96079fa9a"
-    },
-    {
-      "dry_unit_id": "dry_1c55f2b1503c4c74",
-      "generator_unit_id": "gen_c84edc6a1df9899c",
-      "wet_unit_id": "wet_75ba2e4d2aace9fe"
     }
   ],
   "provenance": [
@@ -426,114 +309,6 @@
         }
       ],
       "version": "0.1.0"
-    },
-    {
-      "change_id": "\u003cchange_id\u003e",
-      "field_origin_map": [
-        {
-          "confidence": 0.89,
-          "dry_path": "spring.application.name",
-          "source_path": "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml",
-          "transform": "spring-config-to-manifest",
-          "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
-        },
-        {
-          "confidence": 0.92,
-          "dry_path": "server.port",
-          "source_path": "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml",
-          "transform": "spring-config-to-manifest",
-          "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
-        },
-        {
-          "confidence": 0.78,
-          "dry_path": "spring.datasource.url",
-          "source_path": "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml",
-          "transform": "spring-config-to-manifest",
-          "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
-        }
-      ],
-      "generator_id": "gen_0dbe124945a73802",
-      "generator_name": "upstream-app",
-      "generator_profile": "springboot-paas",
-      "input_digest": "sha256:87c6c3e18217f46e9c7a8ce4eeaf1878f96cad8f40403824296d6d83f41975f9",
-      "inverse_edit_pointers": [
-        {
-          "confidence": 0.89,
-          "dry_path": "spring.application.name",
-          "edit_hint": "Edit spring.application.name in lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml.",
-          "owner": "app-team",
-          "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
-        },
-        {
-          "confidence": 0.91,
-          "dry_path": "server.port",
-          "edit_hint": "Edit server.port in lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml.",
-          "owner": "app-team",
-          "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
-        },
-        {
-          "confidence": 0.78,
-          "dry_path": "spring.datasource.url",
-          "edit_hint": "Edit spring.datasource.url in lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml and coordinate with platform ownership rules.",
-          "owner": "platform-engineer",
-          "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
-        }
-      ],
-      "outputs": [
-        {
-          "digest": "\u003cdigest\u003e",
-          "role": "rendered-manifests",
-          "uri": "oci://example.local/platform/upstream-app:latest"
-        }
-      ],
-      "provenance_id": "\u003cprovenance_id\u003e",
-      "rendered_at": "\u003ctimestamp\u003e",
-      "rendered_object_lineage": [
-        {
-          "kind": "Kustomization",
-          "name": "upstream-app",
-          "namespace": "apps",
-          "source_dry_path": "build",
-          "source_path": "lift-upstream/redis-cache/upstream-app/pom.xml"
-        },
-        {
-          "kind": "Deployment",
-          "name": "upstream-app",
-          "namespace": "apps",
-          "source_dry_path": "spring.application.name",
-          "source_path": "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml"
-        },
-        {
-          "kind": "ConfigMap",
-          "name": "upstream-app-config",
-          "namespace": "apps",
-          "source_dry_path": "spring.datasource.url",
-          "source_path": "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml"
-        },
-        {
-          "kind": "Deployment",
-          "name": "upstream-app",
-          "namespace": "apps",
-          "source_dry_path": "server.port",
-          "source_path": "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml"
-        }
-      ],
-      "schema_version": "cub.confighub.io/provenance/v1",
-      "sources": [
-        {
-          "path": "lift-upstream/redis-cache/upstream-app/pom.xml",
-          "revision": "HEAD",
-          "role": "generator-input",
-          "uri": "\u003csource_uri\u003e"
-        },
-        {
-          "path": "lift-upstream/redis-cache/upstream-app/src/main/resources/application.yaml",
-          "revision": "HEAD",
-          "role": "generator-input",
-          "uri": "\u003csource_uri\u003e"
-        }
-      ],
-      "version": "0.1.0"
     }
   ],
   "ref": "HEAD",
@@ -542,19 +317,19 @@
   "source": "cub-gen",
   "space": "platform",
   "summary": {
-    "contracts": 2,
-    "discovered_resources": 2,
-    "dry_inputs": 7,
-    "dry_units": 2,
+    "contracts": 1,
+    "discovered_resources": 1,
+    "dry_inputs": 5,
+    "dry_units": 1,
     "generator_profiles": [
       "springboot-paas"
     ],
-    "generator_units": 2,
-    "inverse_transform_plans": 2,
-    "links": 2,
-    "provenance_records": 2,
-    "wet_manifest_targets": 6,
-    "wet_units": 2
+    "generator_units": 1,
+    "inverse_transform_plans": 1,
+    "links": 1,
+    "provenance_records": 1,
+    "wet_manifest_targets": 3,
+    "wet_units": 1
   },
   "target_path": "\u003ctarget_path\u003e",
   "target_slug": "spring",
@@ -581,29 +356,6 @@
       "namespace": "apps",
       "owner": "platform-runtime",
       "source_dry_path": "spring.datasource.url"
-    },
-    {
-      "generator_id": "gen_0dbe124945a73802",
-      "kind": "Kustomization",
-      "name": "upstream-app",
-      "namespace": "apps",
-      "owner": "platform-runtime"
-    },
-    {
-      "generator_id": "gen_0dbe124945a73802",
-      "kind": "Deployment",
-      "name": "upstream-app",
-      "namespace": "apps",
-      "owner": "platform-runtime",
-      "source_dry_path": "server.port"
-    },
-    {
-      "generator_id": "gen_0dbe124945a73802",
-      "kind": "ConfigMap",
-      "name": "upstream-app-config",
-      "namespace": "apps",
-      "owner": "platform-runtime",
-      "source_dry_path": "spring.datasource.url"
     }
   ],
   "wet_units": [
@@ -612,12 +364,6 @@
       "kind": "wet-unit",
       "layer": "wet",
       "name": "springboot-paas-wet"
-    },
-    {
-      "id": "wet_75ba2e4d2aace9fe",
-      "kind": "wet-unit",
-      "layer": "wet",
-      "name": "upstream-app-wet"
     }
   ]
 }
