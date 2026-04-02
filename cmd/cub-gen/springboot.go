@@ -22,6 +22,8 @@ func runSpringBoot(args []string) error {
 		return nil
 	case "init":
 		return runSpringBootInit(args[1:])
+	case "validate-mutation":
+		return runSpringBootValidateMutation(args[1:])
 	default:
 		printSpringBootUsage(os.Stderr)
 		return fmt.Errorf("unknown springboot subcommand: %s", args[0])
@@ -121,13 +123,90 @@ func runSpringBootInit(args []string) error {
 	return nil
 }
 
+func runSpringBootValidateMutation(args []string) error {
+	fs := flag.NewFlagSet("springboot validate-mutation", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	fs.Usage = func() {
+		fmt.Fprintln(fs.Output(), "Usage: cub-gen springboot validate-mutation [flags] <field-path>")
+		fmt.Fprintln(fs.Output())
+		fmt.Fprintln(fs.Output(), "Validate whether a mutation to a field path is allowed by field-routes.yaml.")
+		fmt.Fprintln(fs.Output())
+		fmt.Fprintln(fs.Output(), "This enforces the block/escalate boundary: mutations to platform-owned")
+		fmt.Fprintln(fs.Output(), "fields (like spring.datasource.*) will fail with a non-zero exit code.")
+		fmt.Fprintln(fs.Output())
+		fmt.Fprintln(fs.Output(), "Examples:")
+		fmt.Fprintln(fs.Output(), "  # Allowed (app-owned)")
+		fmt.Fprintln(fs.Output(), "  cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml feature.inventory.reservationMode")
+		fmt.Fprintln(fs.Output())
+		fmt.Fprintln(fs.Output(), "  # Blocked (platform-owned)")
+		fmt.Fprintln(fs.Output(), "  cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml spring.datasource.url")
+		fmt.Fprintln(fs.Output())
+		fmt.Fprintln(fs.Output(), "Flags:")
+		fs.PrintDefaults()
+	}
+
+	routesPath := fs.String("routes", "", "Path to field-routes.yaml (required)")
+	jsonOut := fs.Bool("json", false, "Output JSON")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+
+	if fs.NArg() != 1 {
+		return errors.New("usage: cub-gen springboot validate-mutation --routes <path> <field-path>")
+	}
+	if *routesPath == "" {
+		return errors.New("--routes is required")
+	}
+	fieldPath := fs.Arg(0)
+
+	result, err := springboot.ValidateMutation(springboot.ValidateMutationOptions{
+		FieldRoutesPath: *routesPath,
+		FieldPath:       fieldPath,
+	})
+	if err != nil {
+		return err
+	}
+
+	if *jsonOut {
+		return writeJSON(os.Stdout, result, *pretty)
+	}
+
+	// Human-readable output
+	if result.Allowed {
+		fmt.Println("ALLOWED")
+		fmt.Printf("  Field:  %s\n", result.FieldPath)
+		fmt.Printf("  Owner:  %s\n", result.Owner)
+		fmt.Printf("  Action: %s\n", result.Action)
+		if result.MatchedRule != "" {
+			fmt.Printf("  Rule:   %s\n", result.MatchedRule)
+		}
+		fmt.Printf("  Reason: %s\n", result.Reason)
+		return nil
+	}
+
+	// Blocked - print and return error for non-zero exit
+	fmt.Println("BLOCKED")
+	fmt.Printf("  Field:  %s\n", result.FieldPath)
+	fmt.Printf("  Owner:  %s\n", result.Owner)
+	fmt.Printf("  Action: %s\n", result.Action)
+	fmt.Printf("  Rule:   %s\n", result.MatchedRule)
+	fmt.Printf("  Reason: %s\n", result.Reason)
+	return fmt.Errorf("mutation to %s is blocked by field routes", result.FieldPath)
+}
+
 func printSpringBootUsage(out *os.File) {
 	fmt.Fprintln(out, "Usage: cub-gen springboot <subcommand> [flags]")
 	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Spring Boot onboarding commands for cub-gen.")
+	fmt.Fprintln(out, "Spring Boot onboarding and enforcement commands.")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Subcommands:")
-	fmt.Fprintln(out, "  init    Generate starter cub-gen material for a Spring Boot app")
+	fmt.Fprintln(out, "  init               Generate starter cub-gen material for a Spring Boot app")
+	fmt.Fprintln(out, "  validate-mutation  Check if a field mutation is allowed by field-routes.yaml")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Run 'cub-gen springboot <subcommand> --help' for details.")
 }

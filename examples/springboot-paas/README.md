@@ -85,7 +85,36 @@ This is the **block/escalate** path. The field `spring.datasource.*` is platform
 ./block-escalate.sh --render-attempt  # the dry-run: what would happen
 ```
 
-Server-side enforcement is not yet implemented — today this is documented and previewed, not enforced.
+### Enforcement via validate-mutation
+
+Use `cub-gen springboot validate-mutation` to enforce field routes:
+
+```bash
+# Allowed: app-owned field
+cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml \
+  feature.inventory.reservationMode
+# ALLOWED (exit 0)
+
+# Blocked: platform-owned field
+cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml \
+  spring.datasource.url
+# BLOCKED (exit 1)
+```
+
+This command reads `field-routes.yaml` and rejects mutations to fields with `defaultAction: generator-owned` (platform-owned) or `defaultAction: lift-upstream` (requires source change).
+
+**What is now enforced:**
+- Field routes are read from `operational/field-routes.yaml`
+- Mutations to `spring.datasource.*` and `securityContext.*` are blocked (exit 1)
+- Mutations to `spring.cache.*` are blocked (lift-upstream: requires source change)
+- Mutations to `feature.{app}.*` are allowed (exit 0)
+
+**What is NOT yet enforced:**
+- Server-side rejection in ConfigHub (this is client-side validation)
+- Automatic rejection during `cub unit apply`
+- Worker-side enforcement at deploy time
+
+This is a client-side gate. Integrate it into CI/CD to enforce the boundary before mutations reach ConfigHub.
 
 ## Real Kubernetes deployment
 
