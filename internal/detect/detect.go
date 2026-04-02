@@ -775,6 +775,9 @@ func mapValuesSorted(m map[string]model.GeneratorDetection) []model.GeneratorDet
 
 func shouldSkipDir(name string) bool {
 	switch name {
+	// TODO: lift-upstream should be handled with per-directory .cubignore
+	// rather than a global skip. This is a temporary workaround for the
+	// springboot-paas example structure. See PR #228 discussion.
 	case ".git", "node_modules", "vendor", ".idea", ".vscode", "lift-upstream":
 		return true
 	default:

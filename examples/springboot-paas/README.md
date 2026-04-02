@@ -85,7 +85,36 @@ This is the **block/escalate** path. The field `spring.datasource.*` is platform
 ./block-escalate.sh --render-attempt  # the dry-run: what would happen
 ```
 
-Server-side enforcement is not yet implemented — today this is documented and previewed, not enforced.
+### Enforcement via validate-mutation
+
+Use `cub-gen springboot validate-mutation` to enforce field routes:
+
+```bash
+# Allowed: app-owned field
+cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml \
+  feature.inventory.reservationMode
+# ALLOWED (exit 0)
+
+# Blocked: platform-owned field
+cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml \
+  spring.datasource.url
+# BLOCKED (exit 1)
+```
+
+This command reads `field-routes.yaml` and rejects mutations to fields with `defaultAction: generator-owned` (platform-owned) or `defaultAction: lift-upstream` (requires source change).
+
+**What is now enforced:**
+- Field routes are read from `operational/field-routes.yaml`
+- Mutations to `spring.datasource.*` and `securityContext.*` are blocked (exit 1)
+- Mutations to `spring.cache.*` are blocked (lift-upstream: requires source change)
+- Mutations to `feature.{app}.*` are allowed (exit 0)
+
+**What is NOT yet enforced:**
+- Server-side rejection in ConfigHub (this is client-side validation)
+- Automatic rejection during `cub unit apply`
+- Worker-side enforcement at deploy time
+
+This is a client-side gate. Integrate it into CI/CD to enforce the boundary before mutations reach ConfigHub.
 
 ## Real Kubernetes deployment
 
@@ -180,6 +209,56 @@ You know `application.yaml`, profiles, and the gap between "app config" and "pla
 
 The field routes in `operational/field-routes.yaml` are the machine-readable version of the ownership rules your team already argues about in code review.
 
+## Onboard your own Spring Boot app
+
+Use `cub-gen springboot init` to generate starter cub-gen material for your app:
+
+```bash
+# Dry run: see what would be generated
+cub-gen springboot init --dry-run ./path/to/your-spring-app
+
+# Generate starter files
+cub-gen springboot init --app my-service ./path/to/your-spring-app
+
+# Or generate to a different output directory
+cub-gen springboot init --app my-service --output ./my-service-cub-gen ./path/to/your-spring-app
+```
+
+This generates:
+- `platform/base/runtime-policy.yaml` — platform policy skeleton
+- `platform/overlays/prod/slo-policy.yaml` — SLO skeleton
+- `operational/field-routes.yaml` — field ownership rules (with sensible defaults)
+- `confighub/{app}-{dev,stage,prod}.yaml` — ConfigHub unit starters
+- `.cub-gen/config.yaml` — generator config
+
+### What this does NOT do
+
+The init command generates starter skeletons, not production-ready manifests:
+
+- It does NOT parse your actual Spring config values
+- It does NOT generate actual Kubernetes manifests (deployment.yaml, etc.)
+- It does NOT infer ownership beyond the default patterns
+- It does NOT support every Spring Boot project shape
+
+After init, you still need to:
+1. Review and customize the generated files
+2. Add actual Kubernetes manifests to `operational/`
+3. Update ConfigHub unit YAMLs with correct images, ports, and config
+4. Run `cub-gen gitops discover` and `cub-gen gitops import`
+
+### Default field ownership
+
+The generated `field-routes.yaml` uses these defaults (matching the inventory-api example):
+
+| Pattern | Owner | Route |
+|---------|-------|-------|
+| `feature.{app}.*` | app-team | mutable-in-ch |
+| `spring.cache.*` | app-team | lift-upstream |
+| `spring.datasource.*` | platform-engineering | generator-owned (blocked) |
+| `securityContext.*` | platform-engineering | generator-owned (blocked) |
+
+Customize these based on your actual ownership boundaries.
+
 ## Why this maps to the cub-gen model
 
 | Spring concept | cub-gen concept | What it enables |
@@ -205,4 +284,5 @@ cub auth login
 - [`helm-paas`](../helm-paas/) — same governance model for Helm charts
 - [`live-reconcile`](../live-reconcile/) — prove governed output survives Flux/Argo
 - [`scoredev-paas`](../scoredev-paas/) — workload-spec-first alternative
-- [spring-platform](https://github.com/confighub/examples/tree/main/spring-platform) — the same challenge with generator visibility, cross-env comparison, and refresh-survival preview
+- [spring-platform](https://github.com/confighub/examples/tree/main/spring-platform) — teaching examples with visibility scripts and scaffold tooling
+- [FROM-DEMO-TO-PRODUCT.md](https://github.com/confighub/examples/tree/main/spring-platform/FROM-DEMO-TO-PRODUCT.md) — concept mapping between teaching examples and this product path
