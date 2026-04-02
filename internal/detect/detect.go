@@ -775,7 +775,7 @@ func mapValuesSorted(m map[string]model.GeneratorDetection) []model.GeneratorDet
 
 func shouldSkipDir(name string) bool {
 	switch name {
-	case ".git", "node_modules", "vendor", ".idea", ".vscode", "lift-upstream":
+	case ".git", "node_modules", "vendor", ".idea", ".vscode":
 		return true
 	default:
 		return false

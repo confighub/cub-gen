@@ -173,7 +173,13 @@ func runSpringBootValidateMutation(args []string) error {
 	}
 
 	if *jsonOut {
-		return writeJSON(os.Stdout, result, *pretty)
+		if err := writeJSON(os.Stdout, result, *pretty); err != nil {
+			return err
+		}
+		if !result.Allowed {
+			return fmt.Errorf("mutation to %s is blocked by field routes", result.FieldPath)
+		}
+		return nil
 	}
 
 	// Human-readable output
