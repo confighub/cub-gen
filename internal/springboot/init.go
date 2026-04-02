@@ -21,12 +21,12 @@ type InitOptions struct {
 
 // InitResult captures what was generated.
 type InitResult struct {
-	AppName       string   `json:"app_name"`
-	SourcePath    string   `json:"source_path"`
-	OutputPath    string   `json:"output_path"`
-	FilesCreated  []string `json:"files_created"`
-	Detection     Detection `json:"detection"`
-	Checklist     []string `json:"checklist"`
+	AppName      string    `json:"app_name"`
+	SourcePath   string    `json:"source_path"`
+	OutputPath   string    `json:"output_path"`
+	FilesCreated []string  `json:"files_created"`
+	Detection    Detection `json:"detection"`
+	Checklist    []string  `json:"checklist"`
 }
 
 // Detection holds Spring Boot detection info.

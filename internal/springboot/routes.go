@@ -14,8 +14,8 @@ import (
 type RouteAction string
 
 const (
-	ActionMutableInCH   RouteAction = "mutable-in-ch"
-	ActionLiftUpstream  RouteAction = "lift-upstream"
+	ActionMutableInCH    RouteAction = "mutable-in-ch"
+	ActionLiftUpstream   RouteAction = "lift-upstream"
 	ActionGeneratorOwned RouteAction = "generator-owned"
 )
 
@@ -34,12 +34,12 @@ type FieldRoutes struct {
 
 // ValidationResult captures the outcome of a mutation validation.
 type ValidationResult struct {
-	FieldPath     string      `json:"field_path"`
-	Allowed       bool        `json:"allowed"`
-	Action        RouteAction `json:"action"`
-	Owner         string      `json:"owner"`
-	Reason        string      `json:"reason"`
-	MatchedRule   string      `json:"matched_rule,omitempty"`
+	FieldPath   string      `json:"field_path"`
+	Allowed     bool        `json:"allowed"`
+	Action      RouteAction `json:"action"`
+	Owner       string      `json:"owner"`
+	Reason      string      `json:"reason"`
+	MatchedRule string      `json:"matched_rule,omitempty"`
 }
 
 // ValidateMutationOptions configures mutation validation.
