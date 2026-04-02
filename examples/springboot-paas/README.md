@@ -16,6 +16,88 @@ These map to the three mutation routes every platform team needs:
 
 The app is `inventory-api`, a Spring Boot 3.3.2 service (Java 21) deployed across `dev`, `stage`, and `prod`.
 
+## What this example is (and isn't)
+
+This is a minimal but real Spring Boot application. You can build it with
+Maven, run it with `spring-boot:run` (modulo the Postgres dependency), and
+point `cub-gen` at it to get governance output. It exists to demonstrate
+config-level ownership and field tracing, not application complexity.
+
+cub-gen only inspects config files (`application*.yaml`, `pom.xml`,
+`platform/*.yaml`). It does not parse or compile Java source. A 3-file
+inventory service and a 200-class payment gateway produce the same governance
+output for the same config surface. If your real app has `application.yaml`
+and a Spring Boot build file, cub-gen works on it identically.
+
+What this example **is**:
+- A runnable Spring Boot project with real Java source, Maven build, and
+  Spring config files
+- A working target for `cub-gen gitops discover` and `cub-gen gitops import`
+- A self-contained demo (`demo-local.sh`) that runs the full lifecycle locally
+  with no external dependencies
+
+What this example **is not**:
+- A production application template -- the Java code is intentionally minimal
+- A Kubernetes deployment -- it produces manifests but does not apply them
+- A substitute for reading the conceptual model (see the relationship section
+  below)
+
+## What's in the box
+
+**Java source** (3 files):
+
+| File | Purpose |
+|------|---------|
+| `src/main/java/.../InventoryApplication.java` | Standard `@SpringBootApplication` entry point |
+| `src/main/java/.../api/InventoryController.java` | `/healthz` REST endpoint |
+| `src/main/java/.../service/InventoryService.java` | Reservation mode logic |
+
+**Spring config** (3 files):
+
+| File | What it provides |
+|------|-----------------|
+| `src/main/resources/application.yaml` | Base config: app name, server port, datasource, actuator |
+| `src/main/resources/application-dev.yaml` | Dev profile overrides |
+| `src/main/resources/application-prod.yaml` | Prod profile: port override, feature flags |
+
+**Platform governance** (3 files):
+
+| File | What it controls |
+|------|-----------------|
+| `platform/registry.yaml` | FrameworkRegistry: typed operations, constraints, validation rules |
+| `platform/base/runtime-policy.yaml` | Required actuator health, managed datasource policy |
+| `platform/overlays/prod/slo-policy.yaml` | Production SLO targets (99.9% availability, p95 250ms) |
+
+**GitOps transport** (2 files):
+
+| File | Reconciler |
+|------|-----------|
+| `gitops/flux/kustomization.yaml` | Flux Kustomization |
+| `gitops/argo/application.yaml` | ArgoCD Application |
+
+## Relationship to spring-platform
+
+The [`spring-platform`](https://github.com/confighub/examples/tree/main/spring-platform)
+repo teaches the conceptual model: three mutation routes (apply-here,
+lift-upstream, block/escalate), field provenance, and ownership boundaries.
+It uses fixed inputs and `--explain` scripts to walk through each concept.
+
+This example is where those concepts become commands. If you have done the
+spring-platform walkthrough, you already understand *why* `spring.datasource.*`
+is platform-owned. Here, you run `cub-gen gitops import` and see cub-gen
+*compute* that classification from the registry and policy files.
+
+| spring-platform | springboot-paas |
+|-----------------|-----------------|
+| Fixed inventory-api fixture | Real (minimal) Spring Boot app |
+| `render.sh --explain-field` | `cub-gen gitops import --json` |
+| Hardcoded field explanations | Computed from source files |
+| Three conceptual lenses (vanilla/ADT/ADTP) | One runnable target |
+| Teaches the model | Runs the tooling |
+
+You do not need spring-platform to use this example. You do not need this
+example to learn from spring-platform. They complement each other.
+
 ## Quick start
 
 ```bash
