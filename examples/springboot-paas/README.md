@@ -205,4 +205,5 @@ cub auth login
 - [`helm-paas`](../helm-paas/) — same governance model for Helm charts
 - [`live-reconcile`](../live-reconcile/) — prove governed output survives Flux/Argo
 - [`scoredev-paas`](../scoredev-paas/) — workload-spec-first alternative
-- [spring-platform](https://github.com/confighub/examples/tree/main/spring-platform) — the same challenge with generator visibility, cross-env comparison, and refresh-survival preview
+- [spring-platform](https://github.com/confighub/examples/tree/main/spring-platform) — teaching examples with visibility scripts and scaffold tooling
+- [FROM-DEMO-TO-PRODUCT.md](https://github.com/confighub/examples/tree/main/spring-platform/FROM-DEMO-TO-PRODUCT.md) — concept mapping between teaching examples and this product path
