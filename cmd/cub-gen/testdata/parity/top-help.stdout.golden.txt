@@ -1,57 +1,34 @@
-cub-gen: prototype generator importer for agentic GitOps
+cub-gen: source-side provenance and governed-change companion for GitOps
 
-Usage:
-  cub-gen detect [--repo PATH] [--ref REF] [--pretty]
-  cub-gen import [--repo PATH] [--ref REF] [--space SPACE] [--out FILE|-] [--pretty]
-  cub-gen publish [--in FILE|-] [--out FILE|-] [--pretty]
-  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-slug> <render-target-slug>
-  cub-gen verify [--in FILE|-] [--json] [--pretty]
-  cub-gen attest [--in FILE|-] [--out FILE|-] [--verifier NAME] [--pretty]
-  cub-gen verify-attestation [--in FILE|-] [--bundle FILE] [--json] [--pretty]
-  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>
-  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>
-  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-slug> <render-target-slug>
-  cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]
-  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]
-  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]
-  cub-gen gitops <discover|import|cleanup> [flags]
-  cub-gen bridge <ingest|decision|promote> [flags]
+Maps DRY source files (values.yaml, score.yaml, application.yaml, etc.)
+to WET rendered manifests, recording field-level provenance and inverse-edit hints.
 
-GitOps parity examples:
+POPULAR COMMANDS
+  detect            Detect generators in a repo
+  generators        List supported generators (Helm, Score, Spring Boot, ...)
+  gitops discover   Discover renderable artifacts in a repo
+  gitops import     Import + render to a target
+  publish           Build a provenance bundle for a target
+  verify            Verify a provenance bundle
+  attest            Sign a provenance bundle
+  change preview    Preview a change with provenance and inverse-edit hints
+  change run        Run a change in local or connected mode
+  change explain    Explain field origin and where to edit DRY source
+  bridge            Connected ingest/decision/promote workflows
+
+QUICK START
+  cub-gen generators --markdown --details
   cub-gen gitops discover --space my-space ./examples/helm-paas
   cub-gen gitops import --space my-space ./examples/helm-paas local-renderer
-  cub-gen gitops cleanup --space my-space ./examples/helm-paas
-  cub-gen gitops import --space my-space --json ./examples/helm-paas local-renderer | cub-gen publish --in -
   cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas
-  cub-gen publish --space my-space ./examples/scoredev-paas ./examples/scoredev-paas
-  cub-gen publish --space my-space ./examples/springboot-paas ./examples/springboot-paas
-  cub-gen publish --space my-space ./examples/backstage-idp ./examples/backstage-idp
-  cub-gen publish --space my-space ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config
-  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow
-  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen verify --in -
-  cub-gen publish --space my-space ./examples/scoredev-paas ./examples/scoredev-paas | cub-gen verify --in -
-  cub-gen publish --space my-space ./examples/springboot-paas ./examples/springboot-paas | cub-gen verify --in -
-  cub-gen publish --space my-space ./examples/backstage-idp ./examples/backstage-idp | cub-gen verify --in -
-  cub-gen publish --space my-space ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config | cub-gen verify --in -
-  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen verify --in -
-  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot
-  cub-gen publish --space my-space ./examples/scoredev-paas ./examples/scoredev-paas | cub-gen attest --in - --verifier ci-bot
-  cub-gen publish --space my-space ./examples/springboot-paas ./examples/springboot-paas | cub-gen attest --in - --verifier ci-bot
-  cub-gen publish --space my-space ./examples/backstage-idp ./examples/backstage-idp | cub-gen attest --in - --verifier ci-bot
-  cub-gen publish --space my-space ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config | cub-gen attest --in - --verifier ci-bot
-  cub-gen publish --space my-space ./examples/ops-workflow ./examples/ops-workflow | cub-gen attest --in - --verifier ci-bot
-  cub-gen verify-attestation --in attestation.json --bundle bundle.json
   cub-gen change preview --space my-space ./examples/scoredev-paas ./examples/scoredev-paas
-  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas
-  cub-gen change explain --space my-space --wet-path "Deployment/spec/template/spec/containers[name=main]/image" ./examples/scoredev-paas ./examples/scoredev-paas
-  cub-gen change explain --change-id chg_123 --bundle bundle.json --owner app-team
-  cub-gen change api serve --listen 127.0.0.1:8787 --space my-space
-  cub-gen bridge ingest --in bundle.json --base-url https://confighub.example
-  cub-gen bridge decision query --change-id chg_123 --base-url https://confighub.example
-  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123
-  cub-gen generators --json
-  cub-gen generators --json --details
-  cub-gen generators --markdown --details
-  cub-gen generators --capability render-manifests
+  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas
 
-Note: gitops commands are local-only prototypes that mirror cub gitops stages.
+TIPS
+  • Add --json or --pretty for machine-readable output
+  • Pipe publish | verify | attest for an end-to-end provenance chain
+  • Use 'cub-gen <command> --help' for full flag detail
+  • For per-generator recipes, see docs/cli-reference.md
+
+Note: gitops commands are local-only and mirror 'cub gitops' command shape.
+      For cluster-side import, use 'cub gitops' from the ConfigHub CLI.

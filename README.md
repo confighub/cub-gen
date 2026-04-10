@@ -1,9 +1,9 @@
 # cub-gen
 
-Working on this repo as the next maintainer or AI? Start with [AI-HANDOVER.md](AI-HANDOVER.md).
-
 See where every deployed config value came from, starting from the repo you
 already have.
+
+> Working on this repo as a contributor or AI agent? Start with [AI-README-FIRST.md](AI-README-FIRST.md).
 
 `cub-gen` is a source-side provenance and governed-change companion for GitOps
 teams. It is for people who already run GitHub, Helm, Score, Spring Boot, or
