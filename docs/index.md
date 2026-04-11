@@ -130,11 +130,25 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
     [Confidence Scores](workflows/confidence-scores.md)
 
+-   **Run AI-First Safely**
+
+    Use the current checklist and worked prompt-as-DRY story for safe
+    AI-assisted change.
+
+    [AI Example Hygiene Checklist](workflows/ai-example-hygiene-checklist.md) · [Prompt as DRY](workflows/prompt-as-dry.md)
+
 -   **Check what is really proven**
 
     Use the derived example matrix to see which examples are source-chain verified, in the connected smoke lane, AI-first, or backed by real live proof.
 
     [Example Truth Matrix](testing/example-truth-matrix.md)
+
+-   **Add Your Generator**
+
+    If your platform has its own framework or layered generator chain, start
+    with the user-facing onboarding path.
+
+    [Custom Generator Onboarding](workflows/custom-generator-onboarding.md)
 
 -   **Start with workflows (Ops + Swamp)**
 
