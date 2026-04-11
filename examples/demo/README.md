@@ -23,6 +23,8 @@ trace?" before you spend time on backend or cluster setup.
 
 For exact per-example proof tiers, use the generated
 [Example Truth Matrix](../../docs/testing/example-truth-matrix.md).
+For workflow and AI example quality, use the
+[AI Example Hygiene Checklist](../../docs/workflows/ai-example-hygiene-checklist.md).
 
 ## 1. Start with one of these
 

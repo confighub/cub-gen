@@ -88,6 +88,10 @@ If you are about to spend real time on one example, check the matrix first.
 It is the repo's source of truth for what is source-side only, what is connected,
 and what has real live proof today.
 
+For workflow and AI examples specifically, use the
+[AI Example Hygiene Checklist](../docs/workflows/ai-example-hygiene-checklist.md)
+as the repo's current bar for "what good looks like."
+
 ## Pick your domain POV first
 
 Start with the example that matches how your team already thinks:

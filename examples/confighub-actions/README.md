@@ -10,6 +10,33 @@ This is governance governing itself. The lifecycle definition is configuration,
 and configuration gets governed. The same provenance, ownership, and decision
 pipeline that governs your app changes also governs the governance rules.
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Recursive governance walkthrough | Real | `./examples/confighub-actions/demo-local.sh` |
+| Connected governance path | Real | `./examples/confighub-actions/demo-connected.sh` |
+| First-class source-chain coverage in the truth matrix | Not yet | this example is still a companion workflow story, not a first-class verified fixture |
+| Standalone live execution artifact | Not yet | current example proves governed lifecycle config more than a real executed platform run |
+
+This example is strongest as a control-plane governance companion to
+[`ops-workflow`](../ops-workflow/). Start with `ops-workflow` if you want the
+cleaner first proof of governed workflow config, then use this to see the same
+model applied recursively to ConfigHub's own lifecycle.
+
+## Fastest path to believe it
+
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Local recursive-governance walkthrough
+./examples/confighub-actions/demo-local.sh
+
+# Connected governance path
+cub auth login
+./examples/confighub-actions/demo-connected.sh
+```
+
 ## 1. Who this is for
 
 | If you are... | Start here |

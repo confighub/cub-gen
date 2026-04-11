@@ -7,6 +7,39 @@ Which models/methods were introduced? Were required safety steps removed?
 ConfigHub + cub-gen adds governed oversight to agent-written workflows without
 slowing down the agent iteration loop.
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Source-side structural workflow governance | Real | `./examples/swamp-automation/demo-local.sh` |
+| Connected governance path | Real | `./examples/swamp-automation/demo-connected.sh` |
+| AI-first prompt-as-DRY story | Strongest current lane | `./examples/demo/prompt-as-dry-local.sh` then `./examples/demo/prompt-as-dry-connected.sh` |
+| Standalone live workflow runtime or task artifact | Not yet | current example proves structural governance more than runtime execution |
+
+Known gaps still open:
+
+- a real live workflow runtime proof is still open work ([#180](https://github.com/confighub/cub-gen/issues/180))
+- the fuller flagship AI doc bundle standard is still open work ([#202](https://github.com/confighub/cub-gen/issues/202))
+
+## Fastest path to believe it
+
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Local source-side path
+./examples/swamp-automation/demo-local.sh
+
+# AI-first prompt-as-DRY path
+./examples/demo/prompt-as-dry-local.sh
+
+# Connected governance path
+cub auth login
+./examples/swamp-automation/demo-connected.sh
+```
+
+For the repo-wide quality bar behind this example, see the
+[AI Example Hygiene Checklist](../../docs/workflows/ai-example-hygiene-checklist.md).
+
 ## 1. Who this is for
 
 | If you are... | Start here |

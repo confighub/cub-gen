@@ -11,6 +11,32 @@ guidance.
 This is the full platform version of the c3agent story. For the standalone
 fleet config (without registry and constraints), see [`c3agent`](../c3agent/).
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Runnable local and connected platform walkthrough | Real | `./examples/ai-ops-paas/demo-local.sh` then `./examples/ai-ops-paas/demo-connected.sh` |
+| First-class source-chain coverage in the truth matrix | Not yet | this example is still a companion platform story, not a first-class verified fixture |
+| Standalone live fleet runtime proof | Not yet | current proof is platform contract + governance, not live runtime |
+
+This README is intentionally honest: today `ai-ops-paas` is best read as the
+full-platform companion to [`c3agent`](../c3agent/), not as the strongest
+source-side proof by itself. Start with `c3agent` first if you want the
+cleanest AI fleet proof, then come here for the registry + constraints layer.
+
+## Fastest path to believe it
+
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Local platform walkthrough
+./examples/ai-ops-paas/demo-local.sh
+
+# Connected governance path
+cub auth login
+./examples/ai-ops-paas/demo-connected.sh
+```
+
 ## 1. Who this is for
 
 | If you are... | Start here |
