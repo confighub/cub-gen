@@ -275,6 +275,7 @@ If your users mostly run workflows (not app manifests), start with these two:
 ```bash
 # Ops workflows: actions/schedules/approval-gates as governed config
 ./examples/ops-workflow/demo-local.sh
+./examples/ops-workflow/demo-governed-policy.sh
 ./cub-gen gitops import --space platform --json ./examples/ops-workflow \
   | jq '.provenance[0].ops_workflow_analysis'
 
