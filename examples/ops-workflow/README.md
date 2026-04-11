@@ -15,6 +15,7 @@ ALLOW decision.
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side workflow provenance | Real | `./examples/ops-workflow/demo-local.sh` |
+| Local governed ALLOW + BLOCK policy proof | Real | `./examples/ops-workflow/demo-governed-policy.sh` |
 | Deep connected bridge path | Real | `./examples/ops-workflow/demo-connected.sh` |
 | AI/workflow governance story | Partial | strong workflow governance story today; `swamp-automation` is still the stronger AI-first workflow example |
 | Standalone live workflow run or runtime artifact | Not yet | current example proves governed workflow config more than a real executed workflow result |
@@ -32,6 +33,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 # Local source-side path
 ./examples/ops-workflow/demo-local.sh
+
+# Local governed policy proof
+./examples/ops-workflow/demo-governed-policy.sh
 
 # Deep connected bridge path
 cub auth login
@@ -342,7 +346,30 @@ After running discover/import, inspect:
   | jq '{change_id, bundle_digest: .bundle.digest}'
 ```
 
+For the example-owned governed proof wrapper, inspect:
+
+```bash
+./examples/ops-workflow/demo-governed-policy.sh
+
+# then inspect the printed artifact directory, for example:
+jq '.' .tmp/ops-workflow-governed-policy/<run>/allow-summary.json
+jq '.' .tmp/ops-workflow-governed-policy/<run>/block-summary.json
+```
+
 ## 7. Try one governed change
+
+Run the example-owned wrapper first:
+
+```bash
+./examples/ops-workflow/demo-governed-policy.sh
+```
+
+That wrapper proves both sides:
+
+- **ALLOW**: a schedule move to `0 4 * * *` stays inside the documented production window
+- **BLOCK**: adding `destroy` shows up immediately in `blocked_actions_used`
+
+If you want the raw YAML shape underneath the wrapper:
 
 **ALLOW path**: Ops team changes schedule within allowed window:
 
@@ -374,6 +401,7 @@ From repo root:
 ```bash
 # Local/offline
 ./examples/ops-workflow/demo-local.sh
+./examples/ops-workflow/demo-governed-policy.sh
 
 # Connected (requires ConfigHub auth)
 cub auth login

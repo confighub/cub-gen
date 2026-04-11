@@ -127,6 +127,7 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 | `ai-work-platform/scenario-2-swamp.sh` | [`swamp-automation`](../swamp-automation/) | Swamp workflow/model governance |
 | `ai-work-platform/scenario-3-confighub-actions.sh` | [`confighub-actions`](../confighub-actions/) | Recursive governance |
 | `ai-work-platform/scenario-4-operations.sh` | [`ops-workflow`](../ops-workflow/) | Operations workflow governance |
+| `../ops-workflow/demo-governed-policy.sh` | [`ops-workflow`](../ops-workflow/) | Example-owned local ALLOW/BLOCK workflow policy proof |
 | `ai-work-platform/run-all.sh` | All above | Run all AI platform scenarios |
 
 ### Workflow-first start (Ops + Swamp)
