@@ -234,8 +234,8 @@ Both prove create, update, and drift-correction on a real cluster.
 | Current ship checklist | See [docs/releases/v0.2-preview.2-ship-checklist.md](docs/releases/v0.2-preview.2-ship-checklist.md) |
 | Example quality | `#177`, `#180`, `#187` |
 | CLI/docs follow-on | `#238`, `#239`, `#240`, `#241`, `#242` |
-| Release gate | `#218` |
-| Actively tracked | `#173`, `#177`, `#180`, `#187`, `#218`, `#238`-`#242` |
+| Release gate | Secrets-backed ConfigHub smoke is green on `main`; rerun it in the release environment before tagging |
+| Actively tracked | `#173`, `#177`, `#180`, `#187`, `#238`-`#242` |
 
 For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, the connected smoke lane, and real live-proof harnesses.
 
