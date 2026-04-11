@@ -47,6 +47,29 @@ inspect_with:
   - jq '{change, edit_recommendation, verification}' .tmp/swamp-prompt-local/mutation-card.json
 ```
 
+## Local governed structure proof
+
+```yaml
+id: swamp_local_governed_structure
+command: ./examples/swamp-automation/demo-governed-structure.sh
+mutates:
+  repo: scratch_clone_only
+  backend: false
+  live: false
+expects:
+  stdout_contains:
+    - "[swamp-governed] success"
+  files_exist:
+    - ".tmp/swamp-governed-structure/<run>/allow-summary.json"
+    - ".tmp/swamp-governed-structure/<run>/block-summary.json"
+  evidence:
+    allow_path: "approved model-method addition stays ALLOW"
+    block_path: "missing validate step plus unapproved model-method becomes BLOCK"
+inspect_with:
+  - jq '{decision_state, inverse_hint, policy}' .tmp/swamp-governed-structure/<run>/allow-summary.json
+  - jq '{decision_state, policy}' .tmp/swamp-governed-structure/<run>/block-summary.json
+```
+
 ## Local structural walkthrough
 
 ```yaml

@@ -127,7 +127,7 @@ Start with the example that matches how your team already thinks:
 | Helm/Flux/Argo platform team (umbrella charts, overlays) | [`helm-paas`](./helm-paas/) | Ownership + field trace map without chart archaeology |
 | Score.dev platform team | [`scoredev-paas`](./scoredev-paas/) | Visibility from `score.yaml` intent to rendered runtime fields |
 | Ops/SRE workflow owner | [`ops-workflow`](./ops-workflow/) | Governed schedule/action changes with explicit ALLOW/BLOCK outcomes |
-| AI workflow / Swamp-style team | [`swamp-automation`](./swamp-automation/) | Structural workflow-change classification and policy-ready evidence |
+| AI workflow / Swamp-style team | [`swamp-automation`](./swamp-automation/) | Structural workflow-change classification with explicit ALLOW/BLOCK workflow evidence |
 | AI fleet platform owner | [`c3agent`](./c3agent/) or [`ai-ops-paas`](./ai-ops-paas/) | Model/budget/credential governance over fleet config changes |
 | Backstage catalog owner | [`backstage-idp`](./backstage-idp/) | Catalog ownership/lifecycle changes become traceable and reviewable |
 | Reconciler reliability owner | [`live-reconcile`](./live-reconcile/) | Real Flux+Argo create/update/drift-correction proof harness |
@@ -260,7 +260,7 @@ When you run `cub-gen attest --verifier <name>`, the verifier name records who/w
 | Ops workflow/SRE automation team | [ops-workflow](ops-workflow/) | [If you already run operational workflows at scale](ops-workflow/README.md#if-you-already-run-operational-workflows-at-scale) | `./examples/ops-workflow/demo-local.sh` |
 | AI agent fleet platform team | [c3agent](c3agent/) | [If you already run agent fleets operationally](c3agent/README.md#if-you-already-run-agent-fleets-operationally) | `./examples/c3agent/demo-local.sh` |
 | Full AI PaaS builder | [ai-ops-paas](ai-ops-paas/) | [If you already run AI/ops platforms on Kubernetes](ai-ops-paas/README.md#if-you-already-run-aiops-platforms-on-kubernetes) | `./examples/ai-ops-paas/demo-local.sh` |
-| Workflow automation platform team | [swamp-automation](swamp-automation/) | [If you already build workflow automation systems](swamp-automation/README.md#if-you-already-build-workflow-automation-systems) | `./examples/swamp-automation/demo-local.sh` |
+| Workflow automation platform team | [swamp-automation](swamp-automation/) | [If you already build workflow automation systems](swamp-automation/README.md#if-you-already-build-workflow-automation-systems) | `./examples/swamp-automation/demo-governed-structure.sh` |
 | Helm-based AI runtime team | [swamp-project](swamp-project/) | [If you already operate Helm-based AI runtimes](swamp-project/README.md#if-you-already-operate-helm-based-ai-runtimes) | `./examples/swamp-project/demo-local.sh` |
 | Reconciler/platform reliability engineer | [live-reconcile](live-reconcile/) | [If you already operate Flux/Argo at scale](live-reconcile/README.md#if-you-already-operate-fluxargo-at-scale) | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
 
@@ -281,8 +281,7 @@ If your users mostly run workflows (not app manifests), start with these two:
 
 # Swamp workflows: model/method/required-step structural governance
 ./examples/swamp-automation/demo-local.sh
-./cub-gen gitops import --space platform --json ./examples/swamp-automation \
-  | jq '.provenance[0].swamp_workflow_analysis'
+./examples/swamp-automation/demo-governed-structure.sh
 ```
 
 Operation-registry walkthrough (AI Ops + Ops Workflow + Swamp):
