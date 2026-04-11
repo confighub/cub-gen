@@ -130,6 +130,13 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
     [Confidence Scores](workflows/confidence-scores.md)
 
+-   **Add your own generator**
+
+    Follow the user-facing path for framework-specific platforms and layered
+    Kubara-like stacks.
+
+    [Custom Generator Onboarding](workflows/custom-generator-onboarding.md)
+
 -   **Check what is really proven**
 
     Use the derived example matrix to see which examples are source-chain verified, in the connected smoke lane, AI-first, or backed by real live proof.

@@ -128,6 +128,8 @@ Full guide: [docs/workflows/confidence-scores.md](docs/workflows/confidence-scor
 | C3 Agent | `c3agent.yaml` | [c3agent](examples/c3agent/) |
 | Swamp | `.swamp.yaml` + `workflow-*.yaml` | [swamp-automation](examples/swamp-automation/) |
 
+Need support for your own platform framework? See [Custom Generator Onboarding](docs/workflows/custom-generator-onboarding.md) for the fork-and-extend path, request-inclusion path, and Kubara-like layered-generator guidance.
+
 Per-generator recipes and bridge flow examples: [CLI Reference](docs/cli-reference.md)
 
 ## Part of the ConfigHub platform
@@ -176,6 +178,7 @@ Docs currently live in this repo:
 - [Getting Started](docs/getting-started.md) — 10-minute quickstart
 - [CLI Reference](docs/cli-reference.md) — all commands, flags, and generator recipes
 - [Demo Guide](docs/demo-guide.md) — runnable demo scripts and scenarios
+- [Custom Generator Onboarding](docs/workflows/custom-generator-onboarding.md) — add support for your own framework-specific generator
 - [Current release plan](docs/releases/v0.2-preview.2-plan.md) — must-ship and post-release work for the next preview
 - [Current ship checklist](docs/releases/v0.2-preview.2-ship-checklist.md) — what is already landed on `main`, what still blocks the tag, and what can wait
 - [Draft release notes](docs/releases/v0.2-preview.2.md) — the current `v0.2-preview.2` release-note draft to finalize from green `main`
@@ -204,10 +207,10 @@ Both prove create, update, and drift-correction on a real cluster.
 | Current release target | `v0.2-preview.2` focuses on all featured examples working well, CLI/docs trust, and a credible connected release signal |
 | Current plan | See [docs/releases/v0.2-preview.2-plan.md](docs/releases/v0.2-preview.2-plan.md) |
 | Current ship checklist | See [docs/releases/v0.2-preview.2-ship-checklist.md](docs/releases/v0.2-preview.2-ship-checklist.md) |
-| Example quality | `#177`, `#178`, `#180`, `#185`, `#187`, `#200`, `#202` |
+| Example quality | `#177`, `#178`, `#180`, `#187`, `#200`, `#202` |
 | CLI/docs follow-on | `#238`, `#239`, `#240`, `#241`, `#242` |
 | Release gate | `#218`, `#226` |
-| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#185`, `#187`, `#200`, `#202`, `#218`, `#226`, `#238`-`#242` |
+| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#187`, `#200`, `#202`, `#218`, `#226`, `#238`-`#242` |
 
 For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, the connected smoke lane, and real live-proof harnesses.
 

@@ -458,6 +458,10 @@ The key question: "Why does this cluster have this addon enabled?"
 
 Answer: Trace from cluster labels through overlay selection to the deployed field.
 
+If your platform follows a similar layered pattern but uses its own framework,
+see [Custom Generator Onboarding](../../docs/workflows/custom-generator-onboarding.md)
+for the fork-and-extend path and the minimum custom-generator shape.
+
 ```bash
 # Show rendered lineage
 ./cub-gen gitops import --space platform --json ./examples/helm-paas \
