@@ -10,6 +10,9 @@ echo "[start-platform] step 1: source-side provenance and governance"
 cat <<'EOF'
 
 [start-platform] next steps
+  governed ownership proof from the same example:
+    ./examples/helm-paas/demo-governed-change.sh
+
   connected governance only:
     cub auth login
     ./examples/helm-paas/demo-connected.sh

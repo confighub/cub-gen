@@ -11,14 +11,18 @@ The first question it should answer is:
 
 "Which values file or chart layer actually controls the field I am looking at?"
 
-This example is the source-side half of that story. For the runtime proof half,
-pair it with [`live-reconcile`](../live-reconcile/).
+This example now owns three flagship proof paths:
+
+1. source-side provenance,
+2. governed ownership proof for allowed vs blocked edits,
+3. connected + live Helm proof through an example-owned runtime wrapper.
 
 ## What this proves today
 
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side Helm provenance | Real | `./examples/helm-paas/demo-local.sh` |
+| Governed ALLOW + BLOCK ownership proof | Real | `./examples/helm-paas/demo-governed-change.sh` |
 | Connected governance path | Real | `./examples/helm-paas/demo-connected.sh` |
 | Connected + live Helm proof from this example | Real | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` |
 | Runtime WET->LIVE harness beneath the wrapper | Paired | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
@@ -49,6 +53,7 @@ That sequence gives you:
 | Step | Command | Inspectable result |
 |---|---|---|
 | Local source-side proof | `./examples/helm-paas/demo-local.sh` | field origin, inverse-edit guidance, dry inputs, and rendered targets |
+| Local governed ownership proof | `./examples/helm-paas/demo-governed-change.sh` | one app-team change that passes and one platform-contract change that fails the DRY ownership gate |
 | Connected governance proof | `./examples/helm-paas/demo-connected.sh` | change ID, bundle digest, attestation, and backend decision/query output |
 | Connected + live proof | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` | live Deployment rollout, pods, services, and reconciler status for Flux and Argo |
 
@@ -201,6 +206,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 # Local source-side path
 ./examples/helm-paas/demo-local.sh
+
+# Local governed change path
+./examples/helm-paas/demo-governed-change.sh
 
 # Connected ConfigHub path
 cub auth login
@@ -393,6 +401,17 @@ RECONCILER=both ./examples/helm-paas/demo-runtime.sh
 
 That example-owned wrapper runs the connected governed lifecycle first, then
 shows live Deployment, Pod, Service, and reconciler status for Argo or Flux.
+
+If you want the local governed edit proof before the connected path, run:
+
+```bash
+./examples/helm-paas/demo-governed-change.sh
+```
+
+That wrapper clones the repo into `.tmp`, proves an app-team `values.yaml`
+change passes the ownership gate, then proves an app-team edit to
+`templates/deployment.yaml` is rejected as a platform-owned runtime contract
+change.
 
 If you specifically need the deeper bridge API path, use:
 
