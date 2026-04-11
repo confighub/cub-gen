@@ -34,8 +34,9 @@ When the operator asks... | Run this | What you get
 "Preview a change" | `./cub-gen change preview --space my-space $REPO $REPO` | Diff + provenance + confidence
 "Where do I edit this field?" | `./cub-gen change explain --wet-path "<path>" $REPO $REPO` | DRY file/path/owner
 "Run a governed change" | `./cub-gen change run --mode local --space my-space $REPO $REPO` | Local change report (or connected to ConfigHub)
-"Send to ConfigHub for decision" | `./cub-gen bridge ingest --in bundle.json --base-url <url>` | Ingest receipt
-"Check decision status" | `./cub-gen bridge decision query --change-id <id> --base-url <url>` | ALLOW / ESCALATE / BLOCK
+"Verify the connected smoke path" | `cub auth login && ./examples/demo/run-connected-smoke.sh` | ConfigHub auth/context + flagship connected wrappers
+"Use the deep bridge API path" | `./cub-gen bridge ingest --in bundle.json --base-url <url>` | Ingest receipt
+"Check deep decision status" | `./cub-gen bridge decision query --change-id <id> --base-url <url>` | ALLOW / ESCALATE / BLOCK
 
 ## First commands for any source repo
 
@@ -79,12 +80,12 @@ The output includes:
 # 2. Run it (still local, just produces a change report)
 ./cub-gen change run --mode local --space my-space $REPO $REPO --json
 
-# 3. (Connected) Send for governed decision
+# 3. (Connected, advanced) Send for governed decision
 ./cub-gen change run --mode connected --base-url <confighub-url> \
   --space my-space $REPO $REPO --json
 ```
 
-In connected mode, ConfigHub returns a decision: ALLOW / ESCALATE / BLOCK.
+In the advanced connected path, ConfigHub returns a decision: ALLOW / ESCALATE / BLOCK.
 
 ### Task: Build an evidence bundle for a release
 
@@ -191,12 +192,14 @@ Command surface and generator catalog evolve. Use `--help` and `generators
 
 ```bash
 ./cub-gen change run --mode local      # local report, no backend
+./examples/demo/run-connected-smoke.sh # connected smoke lane
 ./cub-gen change run --mode connected --base-url <url>  # ConfigHub decision
 ```
 
-Connected mode requires a ConfigHub base URL and (usually) authentication via
-`cub auth login`. If the user does not have ConfigHub set up, all the
-source-side and provenance work still works in local mode.
+Start with the connected smoke lane after `cub auth login`. The direct
+`change run --mode connected` path is deeper and requires a ConfigHub base URL
+plus the backend bridge endpoints. If the user does not have ConfigHub set up,
+all the source-side and provenance work still works in local mode.
 
 ## Variants and overlays
 
@@ -241,7 +244,7 @@ If asked about something cub-gen cannot do today, do not invent. Be honest:
 - **Generator coverage is finite** — only generators in `./cub-gen generators` are supported
 - **Confidence is a heuristic** — not a guarantee of correctness; threshold-based routing exists for a reason
 - **No cluster reach** — cub-gen never reads or writes a cluster; that's `cub-scout`'s job
-- **Connected mode requires ConfigHub** — bridge workflows depend on a backend
+- **Connected smoke and deep connected paths require ConfigHub** — the smoke lane checks auth/context; bridge workflows also depend on backend endpoints
 - **Inverse-edit hints are advisory** — they tell you where to edit, they don't perform the edit
 
 When a capability is missing, offer to file an issue at

@@ -296,14 +296,20 @@ WET:  Deployment/spec/template/spec/containers[name=main]/image
 
 ## Run from ConfigHub (connected mode)
 
-If you already have ConfigHub, start here:
+If you already have ConfigHub, start with the wrapper entrypoint:
 
 ```bash
 cub auth login
+./examples/scoredev-paas/demo-connected.sh
+```
+
+That is the current first-run connected path for this example.
+
+If you specifically need the deeper bridge API path, use:
+
+```bash
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-
-# Publish and ingest
 ./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json

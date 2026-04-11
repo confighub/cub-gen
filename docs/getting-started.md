@@ -80,7 +80,15 @@ REPO=/path/to/your/repo
 ./cub-gen change preview --space platform "$REPO" "$REPO"
 ```
 
-Connected mode for the same repo:
+Connected smoke first:
+
+```bash
+cub auth login
+./examples/helm-paas/demo-connected.sh
+./examples/springboot-paas/demo-connected.sh
+```
+
+Advanced connected decision path for the same repo:
 
 ```bash
 cub auth login
@@ -88,6 +96,10 @@ BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.se
 TOKEN="$(cub auth get-token)"
 ./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO" "$REPO"
 ```
+
+Use the smoke wrappers first to confirm your ConfigHub environment. The direct
+`change run --mode connected` path is deeper and depends on backend bridge
+endpoints.
 
 ## Your first import (Helm)
 
@@ -236,7 +248,7 @@ Import is day 1. The real value shows on day 2:
 After import, your next steps are:
 
 1. **Make a governed change**: Edit a DRY file, run `publish`, and see the decision
-2. **Connect to ConfigHub**: Push the bundle to ConfigHub for cross-repo visibility
+2. **Connect to ConfigHub**: Verify the connected smoke path first, then use the deeper bridge path if your backend exposes it
 3. **Enable promotion**: Use ConfigHub to promote patterns to reusable base config
 
 The governance model treats human and AI-assisted changes the same way:

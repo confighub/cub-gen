@@ -4,7 +4,7 @@ Runnable demo scripts for every `cub-gen` example. Each script demonstrates
 part of the governed change flow:
 
 ```
-detect → import → publish → verify → attest → (optional) bridge ingest/query
+detect → import → publish → verify → attest → (optional, deep) bridge ingest/query
 ```
 
 If you are new, do not start with "run everything." Start with one concrete
@@ -15,8 +15,9 @@ adoption path that matches what you already run.
 Use the demo surface in this order:
 
 1. **Local source-side proof**: `detect -> import -> publish -> verify -> attest`
-2. **Connected governance proof**: bridge ingest/query plus decision state in ConfigHub
-3. **Runtime proof**: real WET->LIVE reconciliation or a real deployed app
+2. **Connected smoke proof**: `cub auth login` plus `./examples/demo/run-connected-smoke.sh`
+3. **Deep connected proof**: bridge ingest/query, promotion, and multi-story ConfigHub flows
+4. **Runtime proof**: real WET->LIVE reconciliation or a real deployed app
 
 That ordering matters. The first run should answer "do I trust the source-side
 trace?" before you spend time on backend or cluster setup.
@@ -127,20 +128,36 @@ Start with authentication:
 
 ```bash
 cub auth login
-TOKEN="$(cub auth get-token)"
+cub info
 cub context get --json | jq -r '.coordinate.user'
 ```
 
-Connected flow shape:
+Connected smoke shape:
+
+```bash
+cub auth login
+./examples/demo/run-connected-smoke.sh
+```
+
+Deep connected flow shape:
 
 ```
 publish → verify → attest → bridge ingest → decision query
 ```
 
-### Connected runners
+### Connected smoke runner
 
 ```bash
 ./examples/demo/run-connected-smoke.sh
+```
+
+This is the repo's release-facing connected proof lane. It verifies ConfigHub
+auth/context and runs the flagship example wrappers without depending on bridge
+ingest/query endpoints.
+
+### Deep connected runners
+
+```bash
 ./examples/demo/run-all-connected-lifecycles.sh
 ./examples/demo/run-all-connected-entrypoints.sh
 ./examples/demo/run-phase-3-connected-stories.sh
@@ -196,10 +213,10 @@ RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 |--------|---------------------|
 | `app-ai-change-run.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card |
 | `prompt-as-dry-local.sh [repo]` | Prompt-as-DRY local path with AI-only scope guardrails |
-| `prompt-as-dry-connected.sh [repo] [target] [slug]` | Prompt-as-DRY connected path with backend ingest/query |
+| `prompt-as-dry-connected.sh [repo] [target] [slug]` | Prompt-as-DRY deep connected path with backend ingest/query |
 | `simulate-confighub-lifecycle.sh <repo> <target> [slug]` | Full local lifecycle simulation |
 | `run-all-confighub-lifecycles.sh` | Lifecycle simulation across all fixtures |
-| `run-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle with ConfigHub ingest/query |
+| `run-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Deep connected lifecycle with ConfigHub ingest/query |
 | `simulate-repo-wizard.sh <repo> <target> [hint]` | GUI wizard simulation path |
 
 ### Change API adapters

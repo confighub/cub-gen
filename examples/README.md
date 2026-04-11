@@ -38,7 +38,7 @@ Every example supports both paths explicitly:
 
 | If you are... | Your path |
 |---------------|-----------|
-| **Existing ConfigHub user** adding a platform tool | Start with connected mode, import your existing repos |
+| **Existing ConfigHub user** adding a platform tool | Start with the connected wrapper for one example, then expand into deeper bridge/promotion flows only if you need them |
 | **Existing platform-tool user** adding ConfigHub | Start with local mode, see value first, then connect |
 
 Neither audience is an afterthought. Pick your path and each example will guide you.
@@ -150,13 +150,14 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./examples/springboot-paas/demo-local.sh
 ```
 
-## Connected mode (ConfigHub)
+## Connected mode (ConfigHub smoke first)
 
 ```bash
 cub auth login
-TOKEN="$(cub auth get-token)"
-cub context get --json | jq -r '.coordinate.user'
-BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+cub info
+
+# Repo-wide smoke check for the current connected surface
+./examples/demo/run-connected-smoke.sh
 
 # Platform-first
 ./examples/helm-paas/demo-connected.sh
@@ -165,7 +166,9 @@ BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.se
 ./examples/springboot-paas/demo-connected.sh
 ```
 
-Use local mode for first value. Use connected mode for centralized governance state and cross-repo visibility.
+Use local mode for first value. Use connected smoke to confirm your ConfigHub
+environment and the flagship wrappers. Use the deeper bridge/promotion scripts
+only when you specifically need backend decision-query or promotion flows.
 
 After that, use [`live-reconcile`](./live-reconcile/) for WET to LIVE proof and
 [`cub-scout`](https://github.com/confighub/cub-scout) for cluster-side inspection.
@@ -179,7 +182,7 @@ REPO=/path/to/your/repo
 ./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
 ```
 
-Connected run against the same repo:
+Advanced connected decision path for the same repo:
 
 ```bash
 cub auth login
@@ -188,7 +191,11 @@ TOKEN="$(cub auth get-token)"
 ./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO" "$REPO"
 ```
 
-Connected full-entrypoint runner:
+Use that path when your backend exposes the bridge endpoints used by
+`change run --mode connected`. For a simpler connected first run, prefer the
+example wrappers and `./examples/demo/run-connected-smoke.sh`.
+
+Deep connected full-entrypoint runner:
 
 ```bash
 cub auth login

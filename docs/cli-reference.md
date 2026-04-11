@@ -105,7 +105,11 @@ cub-gen verify-attestation --in <attestation.json> --bundle <bundle.json>
 
 ---
 
-## Bridge flow (ConfigHub API path)
+## Bridge flow (advanced ConfigHub API path)
+
+These are the deeper connected commands. For the repo's default connected
+first run, use `./examples/demo/run-connected-smoke.sh` or an example's
+`demo-connected.sh` wrapper first.
 
 ### `bridge ingest`
 

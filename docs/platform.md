@@ -3,7 +3,9 @@
 cub-gen is the local-first entry point to the ConfigHub platform.
 
 - Local mode: standalone, no backend login required.
-- Connected mode: `cub auth login` + ConfigHub backend APIs.
+- Connected mode: `cub auth login` + ConfigHub backend APIs. The repo's first
+  connected run is the smaller smoke lane; raw bridge endpoints are the deeper
+  path.
 
 ConfigHub backend OSS is available today:
 
@@ -82,7 +84,8 @@ Local CLI that runs against any Git repo. No backend required.
 | `verify` | Validates bundle schema and digest integrity |
 | `attest` | Emits an attestation record from a verified bundle |
 
-The output of `publish` is a **ConfigHub-ready change bundle** — the exact format that ConfigHub's bridge ingest accepts.
+The output of `publish` is a **ConfigHub-ready change bundle** — the exact
+format used by the deeper bridge-ingest path.
 
 ### ConfigHub (the platform)
 
@@ -135,7 +138,24 @@ Nothing changes here. Flux and ArgoCD continue to reconcile WET manifests to LIV
 
 ---
 
-## The bridge pipeline
+## Connected smoke first
+
+This is the repo's release-facing connected path:
+
+```bash
+cub auth login
+./examples/demo/run-connected-smoke.sh
+```
+
+It proves:
+
+- ConfigHub auth/context resolve cleanly,
+- flagship examples can run their connected wrappers,
+- your environment is ready for a real connected walkthrough.
+
+It does **not** depend on the bridge ingest/query endpoints.
+
+## The deep bridge pipeline
 
 This is the path from cub-gen's local output to governed deployment:
 
@@ -159,7 +179,7 @@ publish → verify → attest → bridge ingest → decision → promote
 
 These three commands work offline. The bundle and attestation are portable JSON files.
 
-### Connected phase (ConfigHub API)
+### Connected phase (deep ConfigHub API path)
 
 ```bash
 # Submit bundle to ConfigHub
@@ -180,7 +200,7 @@ BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.se
 ./cub-gen bridge promote merge --flow flow.json --by platform-owner
 ```
 
-Connected demos and CI treat ConfigHub decision query output as the source of truth.
+Deep connected demos and scripts treat ConfigHub decision query output as the source of truth.
 Local `bridge decision create|attach|apply` commands are still available for offline contract simulation.
 
 ---
@@ -193,8 +213,9 @@ You don't have to use ConfigHub to use cub-gen. The progression is:
 |-------|-------------|-------------|
 | **0. Local CLI** | `cub-gen` only | DRY/WET classification, provenance, inverse-edit guidance. Works today against any Git repo. |
 | **1. Bridge artifacts** | `cub-gen publish + verify + attest` | Portable change bundles with digest verification and attestation. Still local, still offline. |
-| **2. ConfigHub connected** | ConfigHub backend + bridge ingest | Governed WET state, decision authority, cross-repo queries, retention, policy at write time. |
-| **3. Governed execution** | ConfigHub + bridge workers + Flux/ArgoCD | Full governed pipeline: nothing deploys without an explicit ALLOW decision with attestation linkage. |
+| **2. ConfigHub smoke** | ConfigHub auth + flagship connected wrappers | Confirm the real connected environment and wrapper entrypoints work. |
+| **3. Deep connected bridge path** | ConfigHub backend + bridge ingest | Governed WET state, decision authority, cross-repo queries, retention, policy at write time. |
+| **4. Governed execution** | ConfigHub + bridge workers + Flux/ArgoCD | Full governed pipeline: nothing deploys without an explicit ALLOW decision with attestation linkage. |
 
 Each stage is additive. You keep everything from the previous stage and add new capability.
 

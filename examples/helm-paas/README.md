@@ -354,14 +354,21 @@ WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payme
 
 ## Run from ConfigHub (connected mode)
 
-If you already have ConfigHub, start here:
+If you already have ConfigHub, start with the wrapper entrypoint:
 
 ```bash
 cub auth login
+./examples/helm-paas/demo-connected.sh
+```
+
+That is the current first-run connected path for this example and the same
+surface used by the connected smoke lane.
+
+If you specifically need the deeper bridge API path, use:
+
+```bash
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-
-# Publish and ingest
 ./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
@@ -386,7 +393,7 @@ After running discover/import, inspect:
   | jq '{change_id, bundle_digest: .bundle.digest}'
 ```
 
-After connected ingest, query ConfigHub for decision state.
+After the deep bridge API path, query ConfigHub for decision state.
 
 ## 8. Generation chain (Kubara-like platforms)
 
