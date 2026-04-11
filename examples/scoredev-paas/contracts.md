@@ -67,6 +67,31 @@ inspect_with:
   - cat escalate.txt
 ```
 
+## Standalone runtime proof
+
+```yaml
+id: score_standalone_runtime
+command: ./examples/scoredev-paas/demo-runtime.sh
+mutates:
+  repo: false
+  backend: false
+  live: kind_cluster_only
+expects:
+  stdout_contains:
+    - "E2E verification PASSED"
+    - "[score-runtime] success"
+  files_exist:
+    - "examples/scoredev-paas/var/runtime-manifests.yaml"
+  live_checks:
+    - "checkout-api deployment has a ready replica"
+    - "/healthz returns ok"
+    - "/ returns service=checkout-api and logLevel=warn"
+inspect_with:
+  - kubectl -n checkout-api get deployment checkout-api -o yaml
+  - kubectl -n checkout-api get service checkout-api -o yaml
+  - ./examples/scoredev-paas/verify-e2e.sh
+```
+
 ## Connected preflight
 
 ```yaml
@@ -100,7 +125,7 @@ expects:
     - ".tmp/scoredev-connected/create/summary.json"
     - ".tmp/scoredev-connected/update/summary.json"
   decision_state: terminal_allow_escalate_or_block
-  note: "standalone live-cluster Score proof is still out of scope for this contract"
+  note: "connected proof complements the standalone live-cluster proof; it does not replace it"
 inspect_with:
   - jq '{phase, change_id, decision_state, attestation_valid}' .tmp/scoredev-connected/create/summary.json
   - jq '{phase, change_id, decision_state, attestation_valid}' .tmp/scoredev-connected/update/summary.json

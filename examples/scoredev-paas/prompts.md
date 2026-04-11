@@ -52,12 +52,31 @@ Help me run the connected Score walkthrough for ./examples/scoredev-paas.
 Safety rules:
 - Start with the shared connected smoke check even though Score is not in the smoke lane.
 - Stop if cub auth/context is missing.
-- Be explicit that this example still does not claim standalone live-cluster Score proof.
 
 Sequence:
 1. cub auth login
 2. ./examples/demo/run-connected-smoke.sh
 3. OUTPUT_DIR=.tmp/scoredev-connected ./examples/scoredev-paas/demo-connected.sh
 
-After each step, tell me what to inspect in ConfigHub and what the remaining proof gap is.
+After each step, tell me what to inspect in ConfigHub and how this differs from the standalone local runtime proof.
+```
+
+## Standalone runtime prompt
+
+```text
+Help me run the standalone live Score runtime proof for ./examples/scoredev-paas.
+
+Safety rules:
+- Explain that this uses a local kind cluster and Docker image only.
+- Stop if Docker, kind, or kubectl are missing.
+- Keep the cluster name and kubeconfig path visible in your summary.
+
+Sequence:
+1. ./examples/scoredev-paas/demo-runtime.sh
+2. Summarize:
+   - the resolved runtime image tag
+   - the namespace, deployment, and service that were created
+   - the /healthz result
+   - the JSON response from /
+3. Tell me how to inspect the live deployment with kubectl and how to tear the cluster down when I'm done.
 ```

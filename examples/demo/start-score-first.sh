@@ -11,6 +11,10 @@ echo
 echo "[start-score] step 2: prove app-owned workload changes stay allowed and new resource types escalate"
 ./examples/scoredev-paas/demo-governed-workload.sh
 
+echo
+echo "[start-score] step 3: run the merged Score workload as a real app on a local cluster"
+./examples/scoredev-paas/demo-runtime.sh
+
 cat <<'EOF'
 
 [start-score] next steps
@@ -21,10 +25,10 @@ cat <<'EOF'
   what to inspect:
     - local output: score.yaml field origin + inverse edit map
     - governed output: ALLOW for safe image change, ESCALATE for unapproved resource type
+    - runtime output: live checkout-api Deployment + Service on kind with /healthz and / verified
     - connected output: change_id, bundle digest, and decision/query evidence
 
-  runtime proof today:
-    standalone Score live-cluster proof is still open work
-    use RECONCILER=both ./examples/live-reconcile/demo-local.sh for reconciler proof
-    and ./examples/scoredev-paas/README.md for the current Score-specific truth
+  cleanup when finished:
+    kind delete cluster --name scoredev-runtime
+    or set CLUSTER_NAME to keep this proof separate from other examples
 EOF
