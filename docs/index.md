@@ -186,6 +186,8 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 - repo-first CLI and contract coverage remain green,
 - current release work is focused on full example-catalog quality,
 - CLI/help/docs must match clean-checkout behavior,
+- flagship Helm, Score, Spring, and Swamp examples now carry explicit
+  `AI_START_HERE.md`, `prompts.md`, and `contracts.md` bundles,
 - connected release status must be backed by a credible lane the team actually runs.
 
 See the [v0.2-preview.2 Release Plan](releases/v0.2-preview.2-plan.md) for the

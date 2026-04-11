@@ -33,6 +33,15 @@ Known gaps still open:
 - one-command multi-variant fan-out is not exposed yet ([#237](https://github.com/confighub/cub-gen/issues/237))
 - CLI override capture for `--set` / `--set-file` is not modeled yet ([#242](https://github.com/confighub/cub-gen/issues/242))
 
+## AI-first bundle
+
+Use these together if the first operator is an AI assistant or if you want a
+safe, step-by-step handoff:
+
+- [AI_START_HERE.md](./AI_START_HERE.md)
+- [prompts.md](./prompts.md)
+- [contracts.md](./contracts.md)
+
 ## Start here by audience
 
 | If you are... | First command | Then do this | What you can inspect |

@@ -10,24 +10,24 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Connected mode present: `12`
 - Connected smoke gated: `2`
 - Real live proof: `none=9`, `paired-harness=1`, `standalone=2`
-- AI-first surface: `none=6`, `partial=2`, `explicit=4`
+- AI-first surface: `none=3`, `partial=2`, `explicit=7`
 
 ## Matrix
 
 | Example | Generator fixture | Source chain verified | Connected mode | Connected smoke lane | Real live proof | AI-first surface | Tracking issues |
 |---|---|---|---|---|---|---|---|
-| `ai-ops-paas` | no | no | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183), [#202](https://github.com/confighub/cub-gen/issues/202) |
+| `ai-ops-paas` | no | no | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
 | `backstage-idp` | yes | yes | yes | no | `none` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `c3agent` | yes | yes | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183), [#202](https://github.com/confighub/cub-gen/issues/202), [#216](https://github.com/confighub/cub-gen/issues/216) |
-| `confighub-actions` | no | no | yes | no | `none` | `partial` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183), [#202](https://github.com/confighub/cub-gen/issues/202) |
-| `helm-paas` | yes | yes | yes | yes | `paired-harness` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#177](https://github.com/confighub/cub-gen/issues/177), [#183](https://github.com/confighub/cub-gen/issues/183), [#187](https://github.com/confighub/cub-gen/issues/187) |
+| `c3agent` | yes | yes | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183), [#216](https://github.com/confighub/cub-gen/issues/216) |
+| `confighub-actions` | no | no | yes | no | `none` | `partial` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
+| `helm-paas` | yes | yes | yes | yes | `paired-harness` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#177](https://github.com/confighub/cub-gen/issues/177), [#183](https://github.com/confighub/cub-gen/issues/183), [#187](https://github.com/confighub/cub-gen/issues/187) |
 | `just-apps-no-platform-config` | yes | yes | yes | no | `none` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
 | `live-reconcile` | no | no | yes | no | `standalone` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `ops-workflow` | yes | yes | yes | no | `none` | `partial` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183), [#202](https://github.com/confighub/cub-gen/issues/202) |
-| `scoredev-paas` | yes | yes | yes | no | `none` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#178](https://github.com/confighub/cub-gen/issues/178), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `springboot-paas` | yes | yes | yes | yes | `standalone` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#179](https://github.com/confighub/cub-gen/issues/179), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `swamp-automation` | yes | yes | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183), [#202](https://github.com/confighub/cub-gen/issues/202) |
-| `swamp-project` | no | no | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183), [#202](https://github.com/confighub/cub-gen/issues/202) |
+| `ops-workflow` | yes | yes | yes | no | `none` | `partial` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183) |
+| `scoredev-paas` | yes | yes | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#178](https://github.com/confighub/cub-gen/issues/178), [#183](https://github.com/confighub/cub-gen/issues/183) |
+| `springboot-paas` | yes | yes | yes | yes | `standalone` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#179](https://github.com/confighub/cub-gen/issues/179), [#183](https://github.com/confighub/cub-gen/issues/183) |
+| `swamp-automation` | yes | yes | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183) |
+| `swamp-project` | no | no | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183) |
 
 ## Proof References
 
@@ -69,7 +69,7 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Connected mode: `./examples/helm-paas/demo-connected.sh`
 - Connected smoke lane: `make ci-connected`, `./examples/demo/run-connected-smoke.sh`
 - Real live: `./examples/helm-paas/demo-runtime.sh`, `./examples/demo/e2e-connected-governed-reconcile-helm.sh`, `./examples/live-reconcile/demo-local.sh`
-- AI-first: --
+- AI-first: `./examples/helm-paas/AI_START_HERE.md`, `./examples/helm-paas/prompts.md`, `./examples/helm-paas/contracts.md`
 - Notes: Real LIVE proof is exposed through an example-owned helm-paas wrapper, but still uses the shared live-reconcile harness under the hood.
 
 ### `just-apps-no-platform-config`
@@ -103,7 +103,7 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Connected mode: `./examples/scoredev-paas/demo-connected.sh`
 - Connected smoke lane: --
 - Real live: --
-- AI-first: --
+- AI-first: `./examples/scoredev-paas/AI_START_HERE.md`, `./examples/scoredev-paas/prompts.md`, `./examples/scoredev-paas/contracts.md`
 - Notes: Score now has example-owned local governed proof via ./examples/scoredev-paas/demo-governed-workload.sh for ALLOW versus ESCALATE, even though standalone live-cluster proof is still open.
 
 ### `springboot-paas`
@@ -112,7 +112,7 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Connected mode: `./examples/springboot-paas/demo-connected.sh`
 - Connected smoke lane: `make ci-connected`, `./examples/demo/run-connected-smoke.sh`
 - Real live: `./examples/springboot-paas/verify-e2e.sh`, `./examples/springboot-paas/confighub-verify.sh`, `./examples/springboot-paas/bin/create-cluster`, `./examples/springboot-paas/bin/build-image`
-- AI-first: --
+- AI-first: `./examples/springboot-paas/AI_START_HERE.md`, `./examples/springboot-paas/prompts.md`, `./examples/springboot-paas/contracts.md`
 - Notes: Standalone real-cluster proof: Kind cluster + ConfigHub worker + inventory-api HTTP verification.
 
 ### `swamp-automation`
@@ -121,7 +121,7 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Connected mode: `./examples/swamp-automation/demo-connected.sh`
 - Connected smoke lane: --
 - Real live: --
-- AI-first: `examples/README.md#ai--automation-patterns`
+- AI-first: `./examples/swamp-automation/AI_START_HERE.md`, `./examples/swamp-automation/prompts.md`, `./examples/swamp-automation/contracts.md`
 
 ### `swamp-project`
 

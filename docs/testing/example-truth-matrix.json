@@ -23,8 +23,7 @@
       "tracking_issues": [
         "#173",
         "#181",
-        "#183",
-        "#202"
+        "#183"
       ]
     },
     {
@@ -82,7 +81,6 @@
         "#173",
         "#181",
         "#183",
-        "#202",
         "#216"
       ]
     },
@@ -108,8 +106,7 @@
       "tracking_issues": [
         "#173",
         "#181",
-        "#183",
-        "#202"
+        "#183"
       ]
     },
     {
@@ -120,7 +117,7 @@
       "connected_mode_present": true,
       "connected_release_gated": true,
       "real_live_proof": "paired-harness",
-      "ai_first_surface": "none",
+      "ai_first_surface": "explicit",
       "proof_commands": [
         "./examples/demo/e2e-connected-governed-reconcile-helm.sh",
         "./examples/demo/run-connected-smoke.sh",
@@ -145,6 +142,11 @@
           "./examples/helm-paas/demo-runtime.sh",
           "./examples/demo/e2e-connected-governed-reconcile-helm.sh",
           "./examples/live-reconcile/demo-local.sh"
+        ],
+        "ai_first": [
+          "./examples/helm-paas/AI_START_HERE.md",
+          "./examples/helm-paas/prompts.md",
+          "./examples/helm-paas/contracts.md"
         ]
       },
       "tracking_issues": [
@@ -244,8 +246,7 @@
       "tracking_issues": [
         "#173",
         "#180",
-        "#183",
-        "#202"
+        "#183"
       ]
     },
     {
@@ -256,7 +257,7 @@
       "connected_mode_present": true,
       "connected_release_gated": false,
       "real_live_proof": "none",
-      "ai_first_surface": "none",
+      "ai_first_surface": "explicit",
       "proof_commands": [
         "./examples/scoredev-paas/demo-connected.sh",
         "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
@@ -267,6 +268,11 @@
         ],
         "connected_mode": [
           "./examples/scoredev-paas/demo-connected.sh"
+        ],
+        "ai_first": [
+          "./examples/scoredev-paas/AI_START_HERE.md",
+          "./examples/scoredev-paas/prompts.md",
+          "./examples/scoredev-paas/contracts.md"
         ]
       },
       "tracking_issues": [
@@ -286,7 +292,7 @@
       "connected_mode_present": true,
       "connected_release_gated": true,
       "real_live_proof": "standalone",
-      "ai_first_surface": "none",
+      "ai_first_surface": "explicit",
       "proof_commands": [
         "./examples/demo/run-connected-smoke.sh",
         "./examples/springboot-paas/bin/build-image",
@@ -313,6 +319,11 @@
           "./examples/springboot-paas/confighub-verify.sh",
           "./examples/springboot-paas/bin/create-cluster",
           "./examples/springboot-paas/bin/build-image"
+        ],
+        "ai_first": [
+          "./examples/springboot-paas/AI_START_HERE.md",
+          "./examples/springboot-paas/prompts.md",
+          "./examples/springboot-paas/contracts.md"
         ]
       },
       "tracking_issues": [
@@ -345,14 +356,15 @@
           "./examples/swamp-automation/demo-connected.sh"
         ],
         "ai_first": [
-          "examples/README.md#ai--automation-patterns"
+          "./examples/swamp-automation/AI_START_HERE.md",
+          "./examples/swamp-automation/prompts.md",
+          "./examples/swamp-automation/contracts.md"
         ]
       },
       "tracking_issues": [
         "#173",
         "#180",
-        "#183",
-        "#202"
+        "#183"
       ]
     },
     {
@@ -377,8 +389,7 @@
       "tracking_issues": [
         "#173",
         "#180",
-        "#183",
-        "#202"
+        "#183"
       ]
     }
   ],
@@ -394,8 +405,8 @@
       "standalone": 2
     },
     "ai_first_surface": {
-      "explicit": 4,
-      "none": 6,
+      "explicit": 7,
+      "none": 3,
       "partial": 2
     }
   }

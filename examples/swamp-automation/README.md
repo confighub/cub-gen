@@ -19,7 +19,15 @@ slowing down the agent iteration loop.
 Known gaps still open:
 
 - a real live workflow runtime proof is still open work ([#180](https://github.com/confighub/cub-gen/issues/180))
-- the fuller flagship AI doc bundle standard is still open work ([#202](https://github.com/confighub/cub-gen/issues/202))
+
+## AI-first bundle
+
+Use these together if the first operator is an AI assistant or if you want a
+safe, step-by-step handoff:
+
+- [AI_START_HERE.md](./AI_START_HERE.md)
+- [prompts.md](./prompts.md)
+- [contracts.md](./contracts.md)
 
 ## Fastest path to believe it
 

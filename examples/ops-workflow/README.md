@@ -22,7 +22,8 @@ ALLOW decision.
 Known gaps still open:
 
 - real workflow runtime or live artifact proof is still open work ([#180](https://github.com/confighub/cub-gen/issues/180))
-- the fuller AI-first example bundle standard is still open work ([#202](https://github.com/confighub/cub-gen/issues/202))
+- `swamp-automation` is still the stronger AI-first workflow bundle today; this
+  example remains a lighter workflow companion surface
 
 ## Fastest path to believe it
 

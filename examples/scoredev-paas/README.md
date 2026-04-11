@@ -25,6 +25,15 @@ runtime proof elsewhere in the repo right now, use [`springboot-paas`](../spring
 or [`live-reconcile`](../live-reconcile/) as the current runtime companions
 while the Score-specific live path is being finished.
 
+## AI-first bundle
+
+Use these together if the first operator is an AI assistant or if you want a
+safe, step-by-step handoff:
+
+- [AI_START_HERE.md](./AI_START_HERE.md)
+- [prompts.md](./prompts.md)
+- [contracts.md](./contracts.md)
+
 ## Start here by audience
 
 | If you are... | First command | Then do this | What you can inspect |
