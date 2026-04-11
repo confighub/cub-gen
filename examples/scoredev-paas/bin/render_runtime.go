@@ -332,7 +332,7 @@ type manifestSetInput struct {
 
 func marshalManifestSet(input manifestSetInput) ([]byte, error) {
 	labels := map[string]string{
-		"app.kubernetes.io/name": input.Name,
+		"app.kubernetes.io/name":    input.Name,
 		"app.kubernetes.io/part-of": "scoredev-paas",
 	}
 
