@@ -254,7 +254,7 @@ A practical app-team/platform-team path in a Spring Boot repo:
 3. Flux/Argo reconciliation path stays unchanged for deployment.
 4. Teams keep app velocity while preserving governance boundaries.
 
-The pattern is the same for Helm, Score.dev, Backstage, AI agents, and operational workflows. Only the adapter changes.
+The pattern is the same for Helm, Score.dev, Backstage, AI agents, and operational workflows. Only the generator-specific mapping changes.
 
 ---
 

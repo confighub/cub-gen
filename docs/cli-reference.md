@@ -25,8 +25,9 @@ not cluster/runtime ones.
 
 ## Path model
 
-`cub-gen` keeps the `target` / `render-target` names for parity with `cub gitops`,
-but in this local-first CLI they are usually local repo paths.
+`cub-gen` uses the `target` / `render-target` names from the wider ConfigHub
+GitOps vocabulary, but in day-to-day local use they are usually just repo
+paths.
 
 - `<target-path>`: the repo path to inspect and classify
 - `<render-target-path>`: optional local render target path; if omitted, `cub-gen` reuses `<target-path>`
@@ -58,7 +59,7 @@ cub-gen gitops import --space <space> [--json] [--wait] <target-path> [<render-t
 |------|-------------|
 | `--space` | Space label (must match discover) |
 | `--json` | Emit JSON output with full provenance |
-| `--wait` | Accepted for CLI compatibility (no-op in local mode) |
+| `--wait` | Accepted for connected-shape compatibility; no-op in local mode |
 
 Arguments:
 
@@ -206,9 +207,11 @@ Examples:
 
 ---
 
-## Parity status
+## Contract status
 
-Command contracts are **frozen** at `v0.2-preview-parity-locked` (2026-03-06). See [Command Parity](parity.md) for the full contract matrix.
+The current preview keeps its command and JSON contracts locked so first-run
+docs, examples, and automation stay reliable. See [Command Parity](parity.md)
+for the full contributor-facing drift matrix.
 
 | Status | Meaning |
 |--------|---------|

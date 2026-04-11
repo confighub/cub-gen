@@ -218,7 +218,7 @@ prove the new standard end to end.
 make ci                # build + all tests (local)
 make ci-connected      # connected smoke against a real ConfigHub space
 make ci-connected-deep # optional extended connected proof lane
-go test ./...          # unit + golden + parity tests
+go test ./...          # unit + golden + contract tests
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development rules, test requirements, and how to add a new generator.

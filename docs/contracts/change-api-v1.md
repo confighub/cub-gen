@@ -7,7 +7,7 @@ This contract defines the HTTP API surface that mirrors `cub-gen change preview|
 
 Goal: CI systems, agents, and UIs can consume one JSON contract without shelling across multiple files.
 
-Run the compatibility server locally:
+Run the HTTP server locally:
 
 ```bash
 ./cub-gen change api serve --listen 127.0.0.1:8787 --space platform --ref HEAD --verifier ci-bot
@@ -187,7 +187,7 @@ Error body shape:
 - `POST /v1/changes {action:"run"}` ↔ `cub-gen change run ...`
 - `GET /v1/changes/{change_id}/explanations` ↔ `cub-gen change explain ...`
 
-Compatibility adapter in this repo:
+Helpers in this repo:
 
 - Native HTTP server: `cub-gen change api serve ...`
 - CI sample using direct HTTP calls: `examples/demo/change-api-http-e2e.sh`

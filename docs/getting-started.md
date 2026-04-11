@@ -103,7 +103,7 @@ endpoints.
 
 ## Your first import (Helm)
 
-The three core commands mirror `cub gitops`:
+The three core repo-first commands are:
 
 ### 1. Discover generator roots
 
@@ -288,12 +288,12 @@ What you add:
 - ConfigHub for shared evidence and governed decisions
 - `cub-scout` for cluster-side inspection after reconciliation
 
-Boundary language (aligned with [PARITY.md](parity.md)):
+Current delivery status:
 
-- **matched**: `gitops discover|import|cleanup` command shape and output contracts
-- **matched**: bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 8 generators
-- **partial**: local state/artifacts stand in for server-side units during this phase
-- **partial**: bridge flow commands (`ingest`, `decision`, `promote`) produce correct contract shapes; [ConfigHub backend integration](platform.md) is the next step
+- `gitops discover|import|cleanup` are stable and good for first-run local use
+- `publish`, `verify`, `attest`, and `verify-attestation` are stable across all supported generators
+- local mode uses file-backed state and artifacts instead of server-side units
+- deeper bridge commands exist, but the recommended connected first run is still the smoke wrappers and example `demo-connected.sh` paths
 
 ## Terminology
 

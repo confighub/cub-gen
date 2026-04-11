@@ -12,7 +12,7 @@ Usage:
   ./examples/demo/story-7-agent-tool-call-connected.sh [example-slug]
 
 Purpose:
-  Prove one shared change lifecycle across adapter tool calls:
+  Prove one shared change lifecycle across JSON tool calls:
   preview -> run (connected) -> explain (by change_id + bundle).
 
 Environment variables:
@@ -62,7 +62,7 @@ if [ "${SKIP_BUILD:-0}" != "1" ]; then
   go build -o ./cub-gen ./cmd/cub-gen
 fi
 
-# 1) Agent requests preview via adapter.
+# 1) Agent requests preview via the JSON wrapper.
 jq -n \
   --arg action "preview" \
   --arg target_path "$REPO_PATH" \
@@ -80,7 +80,7 @@ SKIP_BUILD=1 ./examples/demo/change-api-adapter.sh \
   --request "$OUT_DIR/preview-request.json" \
   --out "$OUT_DIR/preview.json"
 
-# 2) Agent requests connected run via adapter.
+# 2) Agent requests connected run via the JSON wrapper.
 jq -n \
   --arg action "run" \
   --arg mode "connected" \
@@ -130,7 +130,7 @@ fi
 
 WET_PATH="$(jq -r '.preview.edit_recommendation.wet_path // empty' "$OUT_DIR/run.json")"
 
-# 3) Agent requests explain by existing lifecycle id via adapter.
+# 3) Agent requests explain by existing lifecycle id via the JSON wrapper.
 jq -n \
   --arg action "explain" \
   --arg change_id "$RUN_CHANGE_ID" \
