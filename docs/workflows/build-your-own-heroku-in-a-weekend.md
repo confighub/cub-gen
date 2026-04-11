@@ -128,7 +128,7 @@ Monday:
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
 ./cub-gen gitops discover --space platform ./examples/ai-ops-paas
-./cub-gen gitops import --space platform --json ./examples/ai-ops-paas ./examples/ai-ops-paas
+./cub-gen gitops import --space platform --json ./examples/ai-ops-paas
 ```
 
 Related examples:

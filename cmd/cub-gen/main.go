@@ -757,19 +757,20 @@ func runPublish(args []string) error {
 		if err := json.Unmarshal(inputBytes, &imported); err != nil {
 			return fmt.Errorf("parse import flow json: %w", err)
 		}
-	case 2:
+	case 1, 2:
 		if *in != "-" {
 			return errors.New("cannot combine --in with direct target mode")
 		}
-		targetSlug := fs.Arg(0)
-		renderTargetSlug := fs.Arg(1)
-		var err error
+		targetSlug, renderTargetSlug, err := resolveTargetPairArgs(fs, "usage: cub-gen publish [flags] [<target-path> [<render-target-path>]]")
+		if err != nil {
+			return err
+		}
 		imported, err = gitopsflow.Import(targetSlug, renderTargetSlug, *ref, *space, *whereResource)
 		if err != nil {
 			return err
 		}
 	default:
-		return errors.New("usage: cub-gen publish [flags] [<target-path> <render-target-path>]")
+		return errors.New("usage: cub-gen publish [flags] [<target-path> [<render-target-path>]]")
 	}
 
 	bundle := publish.BuildBundle(imported)
@@ -1082,11 +1083,10 @@ func runChangePreview(args []string) error {
 	}
 	_ = jsonOut
 
-	if fs.NArg() != 2 {
-		return errors.New("usage: cub-gen change preview [flags] <target-path> <render-target-path>")
+	targetSlug, renderTargetSlug, err := resolveTargetPairArgs(fs, "usage: cub-gen change preview [flags] <target-path> [<render-target-path>]")
+	if err != nil {
+		return err
 	}
-	targetSlug := fs.Arg(0)
-	renderTargetSlug := fs.Arg(1)
 
 	result, _, _, err := buildChangePreviewResult(
 		targetSlug,
@@ -1137,11 +1137,10 @@ func runChangeRun(args []string) error {
 	}
 	_ = jsonOut
 
-	if fs.NArg() != 2 {
-		return errors.New("usage: cub-gen change run [flags] <target-path> <render-target-path>")
+	targetSlug, renderTargetSlug, err := resolveTargetPairArgs(fs, "usage: cub-gen change run [flags] <target-path> [<render-target-path>]")
+	if err != nil {
+		return err
 	}
-	targetSlug := fs.Arg(0)
-	renderTargetSlug := fs.Arg(1)
 	runMode := strings.ToLower(strings.TrimSpace(*mode))
 	if runMode != "local" && runMode != "connected" {
 		return errors.New("change run --mode must be local|connected")
@@ -1247,11 +1246,10 @@ func runChangeExplain(args []string) error {
 		if strings.TrimSpace(*bundlePath) != "" {
 			return errors.New("change explain --bundle requires --change-id")
 		}
-		if fs.NArg() != 2 {
-			return errors.New("usage: cub-gen change explain [flags] <target-path> <render-target-path>")
+		targetSlug, renderTargetSlug, resolveErr := resolveTargetPairArgs(fs, "usage: cub-gen change explain [flags] <target-path> [<render-target-path>]")
+		if resolveErr != nil {
+			return resolveErr
 		}
-		targetSlug := fs.Arg(0)
-		renderTargetSlug := fs.Arg(1)
 
 		var preview changePreviewResult
 		var imported gitopsflow.ImportFlowResult
@@ -1501,6 +1499,18 @@ func countInversePatches(plans []model.InverseTransformPlan) int {
 	return total
 }
 
+func resolveTargetPairArgs(fs *flag.FlagSet, usage string) (string, string, error) {
+	switch fs.NArg() {
+	case 1:
+		target := fs.Arg(0)
+		return target, target, nil
+	case 2:
+		return fs.Arg(0), fs.Arg(1), nil
+	default:
+		return "", "", errors.New(usage)
+	}
+}
+
 func runGitOps(args []string) error {
 	if len(args) == 0 {
 		printGitOpsUsage(os.Stderr)
@@ -1580,11 +1590,10 @@ func runGitOpsImport(args []string) error {
 	}
 	_ = wait
 
-	if fs.NArg() != 2 {
-		return errors.New("usage: cub-gen gitops import [flags] <target-path> <render-target-path>")
+	targetSlug, renderTargetSlug, err := resolveTargetPairArgs(fs, "usage: cub-gen gitops import [flags] <target-path> [<render-target-path>]")
+	if err != nil {
+		return err
 	}
-	targetSlug := fs.Arg(0)
-	renderTargetSlug := fs.Arg(1)
 
 	result, err := gitopsflow.Import(targetSlug, renderTargetSlug, *ref, *space, *whereResource)
 	if err != nil {
@@ -2008,10 +2017,10 @@ func printUsage(out io.Writer) {
 		helpSection{
 			Title: "FIRST RUNS",
 			Lines: []string{
-				"  cub-gen gitops import --space my-space ./examples/helm-paas ./examples/helm-paas",
-				"  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas",
-				"  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen verify --in -",
-				"  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot",
+				"  cub-gen gitops import --space my-space ./examples/helm-paas",
+				"  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas",
+				"  cub-gen publish --space my-space ./examples/helm-paas | cub-gen verify --in -",
+				"  cub-gen publish --space my-space ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot",
 			},
 		},
 		helpSection{
@@ -2020,7 +2029,7 @@ func printUsage(out io.Writer) {
 				"  - cub-gen does not deploy and does not read live cluster state",
 				"  - Use 'cub-scout' for runtime/cluster questions",
 				"  - Use 'cub gitops' for cluster-side import and ConfigHub management",
-				"  - In most examples, the target path and render-target path are the same repo path",
+				"  - If you omit <render-target-path>, cub-gen reuses <target-path>",
 			},
 		},
 	)
@@ -2039,9 +2048,9 @@ func printChangeUsage(out io.Writer) {
 		helpSection{
 			Title: "Usage",
 			Lines: []string{
-				"  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> <render-target-path>",
-				"  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> <render-target-path>",
-				"  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-path> <render-target-path>",
+				"  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> [<render-target-path>]",
+				"  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> [<render-target-path>]",
+				"  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-path> [<render-target-path>]",
 				"  cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]",
 				"  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]",
 			},
@@ -2049,9 +2058,9 @@ func printChangeUsage(out io.Writer) {
 		helpSection{
 			Title: "Examples",
 			Lines: []string{
-				"  cub-gen change preview --space my-space ./examples/helm-paas ./examples/helm-paas",
-				"  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas",
-				"  cub-gen change explain --space my-space --wet-path \"Deployment/spec/template/spec/containers[0]/ports[0]/containerPort\" ./examples/springboot-paas ./examples/springboot-paas",
+				"  cub-gen change preview --space my-space ./examples/helm-paas",
+				"  cub-gen change run --mode local --space my-space ./examples/scoredev-paas",
+				"  cub-gen change explain --space my-space --wet-path \"Deployment/spec/template/spec/containers[0]/ports[0]/containerPort\" ./examples/springboot-paas",
 				"  cub-gen change explain --change-id chg_123 --bundle bundle.json --wet-path \"Deployment/spec/template/spec/containers[0]/image\"",
 				"  cub-gen change api serve --listen 127.0.0.1:8787 --space my-space",
 			},
@@ -2062,7 +2071,7 @@ func printChangeUsage(out io.Writer) {
 				"  - Start with 'change explain' if you already know the rendered field you care about",
 				"  - Start with 'change preview' before 'change run'",
 				"  - 'change run --mode connected' asks ConfigHub for a decision; it does not deploy",
-				"  - In most local examples, <render-target-path> is the same repo path",
+				"  - If omitted, <render-target-path> defaults to <target-path>",
 			},
 		},
 	)
@@ -2084,7 +2093,7 @@ func printGitOpsUsage(out io.Writer) {
 			Title: "Usage",
 			Lines: []string{
 				"  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--json] <target-path>",
-				"  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--wait] [--json] <target-path> <render-target-path>",
+				"  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--wait] [--json] <target-path> [<render-target-path>]",
 				"  cub-gen gitops cleanup [--space SPACE] [--json] <target-path>",
 			},
 		},
@@ -2102,7 +2111,7 @@ func printGitOpsUsage(out io.Writer) {
 			Lines: []string{
 				"  cub-gen gitops discover --space my-space ./examples/scoredev-paas",
 				"  cub-gen gitops discover --where-resource \"kind IN ('HelmRelease') AND resource_name LIKE '<contains-payments>'\" ./examples/helm-paas",
-				"  cub-gen gitops import --space my-space ./examples/springboot-paas ./examples/springboot-paas",
+				"  cub-gen gitops import --space my-space ./examples/springboot-paas",
 				"  cub-gen gitops cleanup --space my-space ./examples/springboot-paas",
 			},
 		},
@@ -2111,7 +2120,7 @@ func printGitOpsUsage(out io.Writer) {
 			Lines: []string{
 				"  - Start with 'gitops import' if you want provenance immediately",
 				"  - Use 'gitops discover' first when you want to filter or explore a repo",
-				"  - In most examples, <render-target-path> is the same repo path",
+				"  - If omitted, <render-target-path> defaults to <target-path>",
 				"  - For cluster-side import, use 'cub gitops' instead of 'cub-gen gitops'",
 			},
 		},
@@ -2129,20 +2138,20 @@ func printPublishUsage(out io.Writer) {
 			Title: "Usage",
 			Lines: []string{
 				"  cub-gen publish [--in FILE|-] [--out FILE|-] [--pretty]",
-				"  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-path> <render-target-path>",
+				"  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]",
 			},
 		},
 		helpSection{
 			Title: "Examples",
 			Lines: []string{
-				"  cub-gen gitops import --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen publish --in - --out -",
-				"  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas > bundle.json",
+				"  cub-gen gitops import --space my-space ./examples/helm-paas | cub-gen publish --in - --out -",
+				"  cub-gen publish --space my-space ./examples/helm-paas > bundle.json",
 			},
 		},
 		helpSection{
 			Title: "Tips",
 			Lines: []string{
-				"  - Direct mode is local-first; <render-target-path> is usually the same repo path",
+				"  - If omitted, <render-target-path> defaults to <target-path>",
 				"  - Pipe to 'cub-gen verify' and 'cub-gen attest' for release evidence",
 			},
 		},

@@ -37,7 +37,7 @@ Optional output directory:
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
 ./cub-gen generators --markdown --details
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, rendered_lineage: .provenance[0].rendered_object_lineage}'
 ```
 
@@ -50,9 +50,9 @@ What value is visible:
 ### 2) App team: "If a field changes, where do I edit DRY?"
 
 ```bash
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas \
   | jq '{profile: .discovered[0].generator_profile, field_origin_map: .provenance[0].field_origin_map, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
-./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas \
+./cub-gen gitops import --space platform --json ./examples/springboot-paas \
   | jq '{profile: .discovered[0].generator_profile, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
 ```
 
@@ -65,7 +65,7 @@ What value is visible:
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/helm-paas
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/helm-bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > /tmp/helm-bundle.json
 ./cub-gen verify --in /tmp/helm-bundle.json
 ./cub-gen attest --in /tmp/helm-bundle.json --verifier ci-bot
 ```

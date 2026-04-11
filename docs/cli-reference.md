@@ -29,7 +29,7 @@ not cluster/runtime ones.
 but in this local-first CLI they are usually local repo paths.
 
 - `<target-path>`: the repo path to inspect and classify
-- `<render-target-path>`: the local render target path; in most examples it is the same repo path
+- `<render-target-path>`: optional local render target path; if omitted, `cub-gen` reuses `<target-path>`
 - For cluster-side import against a real render target, use `cub gitops`, not `cub-gen`
 
 ### `gitops discover`
@@ -51,7 +51,7 @@ cub-gen gitops discover --space <space> [--json] [--where-resource <expr>] <targ
 Import DRY/WET classification with provenance and inverse-edit guidance.
 
 ```
-cub-gen gitops import --space <space> [--json] [--wait] <target-path> <render-target-path>
+cub-gen gitops import --space <space> [--json] [--wait] <target-path> [<render-target-path>]
 ```
 
 | Flag | Description |
@@ -63,7 +63,7 @@ cub-gen gitops import --space <space> [--json] [--wait] <target-path> <render-ta
 Arguments:
 
 - `<target-path>`: local repo path to discover and import
-- `<render-target-path>`: local render target path; usually the same repo path in examples
+- `<render-target-path>`: optional local render target path; omit it when the render target is the same repo path
 
 Output includes: `generator_profile`, `dry_inputs`, `wet_manifest_targets`, `provenance` (field-origin map, inverse-edit pointers).
 
@@ -88,7 +88,7 @@ Generate a ConfigHub-ready change bundle from import output.
 cub-gen gitops import ... | cub-gen publish --in - --out -
 
 # Direct mode (import + bundle in one step)
-cub-gen publish --space <space> <target-path> <render-target-path>
+cub-gen publish --space <space> <target-path> [<render-target-path>]
 ```
 
 Output includes `digest_algorithm` (sha256) and `bundle_digest` for verification.
@@ -239,12 +239,12 @@ What does not work today:
 Reality-check example:
 
 ```bash
-./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas \
+./cub-gen gitops import --space platform --json ./examples/springboot-paas \
   | jq '.provenance[0].field_origin_map[] | select(.dry_path=="server.port")'
 
 ./cub-gen change explain --space platform \
   --wet-path "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort" \
-  ./examples/springboot-paas ./examples/springboot-paas
+  ./examples/springboot-paas
 ```
 
 Use this section as the answer for "can cub-gen render N explicit variants from one generator in one command?":
@@ -264,7 +264,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/helm-paas
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
 ./cub-gen gitops cleanup --space platform ./examples/helm-paas
 ```
@@ -273,7 +273,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/scoredev-paas
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas \
   | jq '{profile: .discovered[0].generator_profile, field_origin_map: .provenance[0].field_origin_map, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
 ./cub-gen gitops cleanup --space platform ./examples/scoredev-paas
 ```
@@ -282,7 +282,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/springboot-paas
-./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas \
+./cub-gen gitops import --space platform --json ./examples/springboot-paas \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
 ./cub-gen gitops cleanup --space platform ./examples/springboot-paas
 ```
@@ -291,7 +291,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/backstage-idp
-./cub-gen gitops import --space platform --json ./examples/backstage-idp ./examples/backstage-idp \
+./cub-gen gitops import --space platform --json ./examples/backstage-idp \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
 ./cub-gen gitops cleanup --space platform ./examples/backstage-idp
 ```
@@ -300,7 +300,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/just-apps-no-platform-config
-./cub-gen gitops import --space platform --json ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config \
+./cub-gen gitops import --space platform --json ./examples/just-apps-no-platform-config \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
 ./cub-gen gitops cleanup --space platform ./examples/just-apps-no-platform-config
 ```
@@ -309,7 +309,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/ops-workflow
-./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+./cub-gen gitops import --space platform --json ./examples/ops-workflow \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
 ./cub-gen gitops cleanup --space platform ./examples/ops-workflow
 ```
@@ -318,7 +318,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/c3agent
-./cub-gen gitops import --space platform --json ./examples/c3agent ./examples/c3agent \
+./cub-gen gitops import --space platform --json ./examples/c3agent \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets_count: (.wet_manifest_targets|length), inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
 ./cub-gen gitops cleanup --space platform ./examples/c3agent
 ```
@@ -327,7 +327,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/swamp-automation
-./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation \
+./cub-gen gitops import --space platform --json ./examples/swamp-automation \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets, inverse_edit_pointers: .provenance[0].inverse_edit_pointers}'
 ./cub-gen gitops cleanup --space platform ./examples/swamp-automation
 ```
@@ -339,7 +339,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 ### Publish + verify (pipe mode)
 
 ```bash
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | ./cub-gen publish --in - --out - \
   | jq '{schema_version, source, change_id, summary}'
 ```
@@ -347,7 +347,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 ### Publish + verify + attest (file mode)
 
 ```bash
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > bundle.json
 ./cub-gen verify --in bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 ./cub-gen verify-attestation --in attestation.json --bundle bundle.json
@@ -357,7 +357,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 # 1) Build bundle and attestation artifacts
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
 # 2) Ingest to ConfigHub bridge endpoint
@@ -393,14 +393,14 @@ go build -o ./cub-gen ./cmd/cub-gen
 ### Direct publish for all generators
 
 ```bash
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas
-./cub-gen publish --space platform ./examples/springboot-paas ./examples/springboot-paas
-./cub-gen publish --space platform ./examples/backstage-idp ./examples/backstage-idp
-./cub-gen publish --space platform ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config
-./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow
-./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent
-./cub-gen publish --space platform ./examples/swamp-automation ./examples/swamp-automation
+./cub-gen publish --space platform ./examples/helm-paas
+./cub-gen publish --space platform ./examples/scoredev-paas
+./cub-gen publish --space platform ./examples/springboot-paas
+./cub-gen publish --space platform ./examples/backstage-idp
+./cub-gen publish --space platform ./examples/just-apps-no-platform-config
+./cub-gen publish --space platform ./examples/ops-workflow
+./cub-gen publish --space platform ./examples/c3agent
+./cub-gen publish --space platform ./examples/swamp-automation
 ```
 
 ---

@@ -192,7 +192,7 @@ If you want the raw commands underneath the wrappers:
 ./cub-gen gitops discover --space platform --json ./examples/scoredev-paas
 
 # Import with full field-origin mapping
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas \
   | jq '{profile: .discovered[0].generator_profile, field_origin_map: .provenance[0].field_origin_map}'
 ```
 
@@ -220,10 +220,10 @@ resources:
 
 ```bash
 # cub-gen detects the new resource dependency
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas
 
 # Produce evidence chain
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas > bundle.json
+./cub-gen publish --space platform ./examples/scoredev-paas > bundle.json
 ./cub-gen verify --in bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
@@ -310,7 +310,7 @@ If you specifically need the deeper bridge API path, use:
 ```bash
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas > /tmp/bundle.json
+./cub-gen publish --space platform ./examples/scoredev-paas > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
 ./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
@@ -322,15 +322,15 @@ After running discover/import, inspect:
 
 ```bash
 # Field-origin map (Score → Kubernetes)
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas \
   | jq '.provenance[0].field_origin_map'
 
 # Score-specific analysis
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas \
   | jq '.provenance[0].score_workload_analysis'
 
 # Evidence bundle
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas \
+./cub-gen publish --space platform ./examples/scoredev-paas \
   | jq '{change_id, bundle_digest: .bundle.digest}'
 ```
 

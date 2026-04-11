@@ -60,6 +60,41 @@ func TestChangePreviewJSON(t *testing.T) {
 	}
 }
 
+func TestChangePreviewDefaultsRenderTargetToTarget(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "examples", "scoredev-paas"))
+	if err != nil {
+		t.Fatalf("resolve score path: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{
+		"change", "preview",
+		"--space", "platform",
+		repoPath,
+	})
+	if err != nil {
+		t.Fatalf("change preview shorthand returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal change preview shorthand output: %v\noutput=%s", err, out)
+	}
+
+	input, ok := got["input"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected input object, got %T", got["input"])
+	}
+	if input["target_slug"] != repoPath {
+		t.Fatalf("expected target_slug=%s, got %v", repoPath, input["target_slug"])
+	}
+	if input["render_target_slug"] != repoPath {
+		t.Fatalf("expected render_target_slug=%s, got %v", repoPath, input["render_target_slug"])
+	}
+}
+
 func TestChangeRunLocalJSON(t *testing.T) {
 	setupAliases(t)
 

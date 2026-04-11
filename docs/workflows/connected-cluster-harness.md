@@ -42,7 +42,7 @@ source examples/demo/lib/cluster-harness.sh
 setup_connected_cluster flux
 
 # Run your connected tests
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
 

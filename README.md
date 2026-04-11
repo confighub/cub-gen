@@ -33,7 +33,7 @@ to source file, line, and owner before anything reaches the cluster.
 ## What it looks like
 
 ```bash
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '{origin: .provenance[0].field_origin_map[0], inverse: .provenance[0].inverse_edit_pointers[0]}'
 ```
 
@@ -82,10 +82,10 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 REPO=/path/to/your/repo
-./cub-gen change preview --space platform "$REPO" "$REPO"
-./cub-gen gitops import --space platform --json "$REPO" "$REPO" \
+./cub-gen change preview --space platform "$REPO"
+./cub-gen gitops import --space platform --json "$REPO" \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
-./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
+./cub-gen change explain --space platform --owner app-team "$REPO"
 ```
 
 ## Next step (connected, ConfigHub)

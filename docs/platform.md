@@ -168,7 +168,7 @@ publish → verify → attest → bridge ingest → decision → promote
 
 ```bash
 # Build a change bundle from your repo
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > bundle.json
 
 # Verify integrity
 ./cub-gen verify --in bundle.json

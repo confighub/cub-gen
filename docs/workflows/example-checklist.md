@@ -69,7 +69,7 @@ Connected mode instructions for users who already have ConfigHub:
 
 ```bash
 cub auth login
-./cub-gen publish --space <space> ./examples/<name> ./examples/<name> > /tmp/bundle.json
+./cub-gen publish --space <space> ./examples/<name> > /tmp/bundle.json
 ./cub-gen bridge ingest --in /tmp/bundle.json ...
 ```
 
@@ -80,7 +80,7 @@ Local mode instructions for users starting from their existing platform tool:
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
 ./cub-gen gitops discover --space <space> ./examples/<name>
-./cub-gen gitops import --space <space> --json ./examples/<name> ./examples/<name>
+./cub-gen gitops import --space <space> --json ./examples/<name>
 ```
 
 Then: how to add ConfigHub connection when ready.
@@ -244,10 +244,10 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./cub-gen gitops discover --space test --json ./examples/<name>
 
 # Import (should produce provenance with field-origin map)
-./cub-gen gitops import --space test --json ./examples/<name> ./examples/<name>
+./cub-gen gitops import --space test --json ./examples/<name>
 
 # Bridge flow (should produce bundle + verification + attestation)
-./cub-gen publish --space test ./examples/<name> ./examples/<name> > /tmp/bundle.json
+./cub-gen publish --space test ./examples/<name> > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
 ./cub-gen verify-attestation --in /tmp/attestation.json --bundle /tmp/bundle.json

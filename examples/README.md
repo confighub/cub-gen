@@ -177,9 +177,9 @@ After that, use [`live-reconcile`](./live-reconcile/) for WET to LIVE proof and
 
 ```bash
 REPO=/path/to/your/repo
-./cub-gen change preview --space platform "$REPO" "$REPO"
-./cub-gen change run --mode local --space platform "$REPO" "$REPO"
-./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
+./cub-gen change preview --space platform "$REPO"
+./cub-gen change run --mode local --space platform "$REPO"
+./cub-gen change explain --space platform --owner app-team "$REPO"
 ```
 
 Advanced connected decision path for the same repo:
@@ -188,7 +188,7 @@ Advanced connected decision path for the same repo:
 cub auth login
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO" "$REPO"
+./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO"
 ```
 
 Use that path when your backend exposes the bridge endpoints used by
@@ -244,12 +244,12 @@ If your users mostly run workflows (not app manifests), start with these two:
 ```bash
 # Ops workflows: actions/schedules/approval-gates as governed config
 ./examples/ops-workflow/demo-local.sh
-./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+./cub-gen gitops import --space platform --json ./examples/ops-workflow \
   | jq '.provenance[0].ops_workflow_analysis'
 
 # Swamp workflows: model/method/required-step structural governance
 ./examples/swamp-automation/demo-local.sh
-./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation \
+./cub-gen gitops import --space platform --json ./examples/swamp-automation \
   | jq '.provenance[0].swamp_workflow_analysis'
 ```
 

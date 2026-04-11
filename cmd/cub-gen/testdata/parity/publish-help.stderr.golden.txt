@@ -4,12 +4,12 @@ Use pipe mode when you already have gitops import JSON, or direct mode to import
 
 Usage:
   cub-gen publish [--in FILE|-] [--out FILE|-] [--pretty]
-  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-path> <render-target-path>
+  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]
 
 Examples:
-  cub-gen gitops import --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen publish --in - --out -
-  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas > bundle.json
+  cub-gen gitops import --space my-space ./examples/helm-paas | cub-gen publish --in - --out -
+  cub-gen publish --space my-space ./examples/helm-paas > bundle.json
 
 Tips:
-  - Direct mode is local-first; <render-target-path> is usually the same repo path
+  - If omitted, <render-target-path> defaults to <target-path>
   - Pipe to 'cub-gen verify' and 'cub-gen attest' for release evidence

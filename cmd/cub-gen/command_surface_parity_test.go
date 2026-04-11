@@ -84,7 +84,7 @@ func TestTopLevelCommandErrorModes(t *testing.T) {
 	}{
 		{
 			name: "publish-extra-arg",
-			args: []string{"publish", "one"},
+			args: []string{"publish", "one", "two", "three"},
 			sub:  "usage: cub-gen publish",
 		},
 		{

@@ -22,13 +22,13 @@ ADVANCED CONNECTED:
   bridge            Advanced ingest/decision/promote workflows
 
 FIRST RUNS:
-  cub-gen gitops import --space my-space ./examples/helm-paas ./examples/helm-paas
-  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas
-  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen verify --in -
-  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot
+  cub-gen gitops import --space my-space ./examples/helm-paas
+  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas
+  cub-gen publish --space my-space ./examples/helm-paas | cub-gen verify --in -
+  cub-gen publish --space my-space ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot
 
 BOUNDARIES:
   - cub-gen does not deploy and does not read live cluster state
   - Use 'cub-scout' for runtime/cluster questions
   - Use 'cub gitops' for cluster-side import and ConfigHub management
-  - In most examples, the target path and render-target path are the same repo path
+  - If you omit <render-target-path>, cub-gen reuses <target-path>

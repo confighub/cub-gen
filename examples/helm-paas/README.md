@@ -199,7 +199,7 @@ If you want the raw commands underneath the wrappers:
 ./cub-gen gitops discover --space platform --json ./examples/helm-paas
 
 # Import with full provenance and field-origin tracing
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
 ```
 
@@ -229,10 +229,10 @@ featureFlags:
 
 ```bash
 # cub-gen detects the change and traces field origins
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas
+./cub-gen gitops import --space platform --json ./examples/helm-paas
 
 # Produce evidence bundle
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > bundle.json
 ./cub-gen verify --in bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
@@ -264,10 +264,10 @@ resources:
 
 ```bash
 # cub-gen detects the template edit
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas
+./cub-gen gitops import --space platform --json ./examples/helm-paas
 
 # Produce evidence
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > bundle.json
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 ./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
@@ -369,7 +369,7 @@ If you specifically need the deeper bridge API path, use:
 ```bash
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
 ./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
@@ -381,15 +381,15 @@ After running discover/import, inspect:
 
 ```bash
 # Field-origin map
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '.provenance[0].field_origin_map'
 
 # Inverse-edit guidance
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '.provenance[0].inverse_edit_pointers'
 
 # Evidence bundle digest
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas \
+./cub-gen publish --space platform ./examples/helm-paas \
   | jq '{change_id, bundle_digest: .bundle.digest}'
 ```
 
@@ -411,7 +411,7 @@ Answer: Trace from cluster labels through overlay selection to the deployed fiel
 
 ```bash
 # Show rendered lineage
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '.provenance[0].rendered_object_lineage'
 ```
 

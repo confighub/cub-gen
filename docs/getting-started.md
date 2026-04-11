@@ -75,9 +75,9 @@ go build -o cub-gen ./cmd/cub-gen
 ```bash
 REPO=/path/to/your/repo
 ./cub-gen gitops discover --space platform "$REPO"
-./cub-gen gitops import --space platform --json "$REPO" "$REPO" \
+./cub-gen gitops import --space platform --json "$REPO" \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
-./cub-gen change preview --space platform "$REPO" "$REPO"
+./cub-gen change preview --space platform "$REPO"
 ```
 
 Connected smoke first:
@@ -94,7 +94,7 @@ Advanced connected decision path for the same repo:
 cub auth login
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO" "$REPO"
+./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO"
 ```
 
 Use the smoke wrappers first to confirm your ConfigHub environment. The direct
@@ -117,7 +117,7 @@ This scans the repo and classifies it as a Helm generator (`helm-paas` profile).
 
 ```bash
 ./cub-gen gitops import --space platform --json \
-  ./examples/helm-paas ./examples/helm-paas | jq .
+  ./examples/helm-paas | jq .
 ```
 
 The import output includes:
@@ -139,7 +139,7 @@ The key value of cub-gen is the provenance trail. Focus on the inverse-edit poin
 
 ```bash
 ./cub-gen gitops import --space platform --json \
-  ./examples/helm-paas ./examples/helm-paas \
+  ./examples/helm-paas \
   | jq '{
       profile: .discovered[0].generator_profile,
       dry_inputs,
@@ -179,7 +179,7 @@ Each generator follows the same three-command flow:
     ```bash
     ./cub-gen gitops discover --space platform ./examples/scoredev-paas
     ./cub-gen gitops import --space platform --json \
-      ./examples/scoredev-paas ./examples/scoredev-paas | jq .
+      ./examples/scoredev-paas | jq .
     ./cub-gen gitops cleanup --space platform ./examples/scoredev-paas
     ```
 
@@ -188,7 +188,7 @@ Each generator follows the same three-command flow:
     ```bash
     ./cub-gen gitops discover --space platform ./examples/springboot-paas
     ./cub-gen gitops import --space platform --json \
-      ./examples/springboot-paas ./examples/springboot-paas | jq .
+      ./examples/springboot-paas | jq .
     ./cub-gen gitops cleanup --space platform ./examples/springboot-paas
     ```
 
@@ -197,7 +197,7 @@ Each generator follows the same three-command flow:
     ```bash
     ./cub-gen gitops discover --space platform ./examples/backstage-idp
     ./cub-gen gitops import --space platform --json \
-      ./examples/backstage-idp ./examples/backstage-idp | jq .
+      ./examples/backstage-idp | jq .
     ./cub-gen gitops cleanup --space platform ./examples/backstage-idp
     ```
 
@@ -207,7 +207,7 @@ Generate a ConfigHub-ready change bundle with digest verification:
 
 ```bash
 ./cub-gen publish --space platform \
-  ./examples/helm-paas ./examples/helm-paas \
+  ./examples/helm-paas \
   | jq '{schema_version, source, change_id, summary}'
 ```
 
@@ -215,7 +215,7 @@ Verify bundle integrity:
 
 ```bash
 ./cub-gen publish --space platform \
-  ./examples/helm-paas ./examples/helm-paas \
+  ./examples/helm-paas \
   | ./cub-gen verify --in -
 ```
 
@@ -223,7 +223,7 @@ Emit an attestation record:
 
 ```bash
 ./cub-gen publish --space platform \
-  ./examples/helm-paas ./examples/helm-paas \
+  ./examples/helm-paas \
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{status, verifier, bundle_digest, attestation_digest}'
 ```
