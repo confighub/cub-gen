@@ -24,14 +24,30 @@ runtime proof elsewhere in the repo right now, use [`springboot-paas`](../spring
 or [`live-reconcile`](../live-reconcile/) as the current runtime companions
 while the Score-specific live path is being finished.
 
+## Start here by audience
+
+| If you are... | First command | Then do this | What you can inspect |
+|---|---|---|---|
+| Existing Score.dev user | `./examples/scoredev-paas/demo-local.sh` | `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `score.yaml` field trace now, connected governed output next |
+| Existing ConfigHub user adding Score governance | `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `./examples/demo/start-score-first.sh` for the repo-side first-run story | bundle, attestation, and decision evidence plus source mapping |
+| Existing cluster-first operator | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) first | come back to `./examples/scoredev-paas/demo-local.sh` for source provenance | live workload first, Score contract trace second |
+
+Both paths lead to the same outcome: governed Score workloads with field-origin tracing.
+
+## What you can inspect after each step
+
+| Step | Command | Inspectable result |
+|---|---|---|
+| Local source-side proof | `./examples/scoredev-paas/demo-local.sh` | `score.yaml` field origin, inverse edit pointers, and rendered targets |
+| Connected governance proof | `./examples/scoredev-paas/demo-connected.sh` | change ID, bundle digest, attestation, and connected decision/query output |
+| Runtime companion today | [`springboot-paas`](../springboot-paas/) or [`live-reconcile`](../live-reconcile/) | current standalone live app proof elsewhere in the repo while Score runtime proof is being finished |
+
 ## 1. Who this is for
 
 | If you are... | Start here |
 |---------------|------------|
 | **Existing ConfigHub user** adding Score governance | Jump to [Run from ConfigHub](#run-from-configHub-connected-mode) |
 | **Existing Score.dev user** adding ConfigHub | Jump to [Fastest path](#fastest-path-to-believe-it) then connect later |
-
-Both paths lead to the same outcome: governed Score workloads with field-origin tracing.
 
 ## 2. What runs
 
@@ -40,7 +56,7 @@ Both paths lead to the same outcome: governed Score workloads with field-origin 
 | **Real app** | Node.js checkout API defined in `score.yaml` |
 | **Real cluster objects** | Kubernetes Deployment, Service, ConfigMap |
 | **Real inspection target** | `kubectl get deployment checkout-api -o yaml` |
-| **GitOps transport** | Flux Kustomization or ArgoCD Application |
+| **GitOps transport** | Argo CD Application or Flux Kustomization |
 
 ## 3. Why ConfigHub + cub-gen helps here
 
@@ -68,9 +84,9 @@ For Score users, start with `cub-gen`, not ConfigHub's GitOps Import wizard.
 - ConfigHub GitOps Import is for importing ArgoCD/Flux application resources that already exist in a cluster.
 - This example is about source-side Score intent in `score.yaml`.
 
-That distinction matters because a Score team thinks in workload intent, workload
-classes, and provisioners, not in Argo `Application` or Flux `HelmRelease`
-objects.
+That distinction matters because a Score team thinks in workload intent,
+workload classes, and provisioners, not in Argo `Application` or Flux
+transport objects.
 
 So the recommended path is:
 

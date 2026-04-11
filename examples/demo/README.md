@@ -29,22 +29,31 @@ For workflow and AI example quality, use the
 
 ## 1. Start with one of these
 
-| If you already run... | Start here | What you should prove first |
-|---------|-----------|------------------------------|
-| Helm plus Flux/Argo | `./examples/demo/start-platform-first.sh` | Which values file/path controls the rendered field |
-| Spring Boot app repos | `./examples/demo/start-app-first.sh` | Which app or platform config file should be edited |
-| Score.dev workloads | `./examples/demo/module-2-score-field-map.sh` | Which `score.yaml` field produced the runtime field |
-| Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | WET to LIVE create, update, and drift-correction |
+| If you already run... | Start here | What actually runs | What you can inspect next |
+|---|---|---|---|
+| Helm plus Argo/Flux | `./examples/demo/start-platform-first.sh` | local lifecycle for `helm-paas`, then paired runtime next steps | values ownership now, `live-reconcile` runtime proof after |
+| Spring Boot app repos | `./examples/demo/start-app-first.sh` | local lifecycle for `springboot-paas` | app-vs-platform config ownership now, standalone live app proof after |
+| Score.dev workloads | `./examples/demo/start-score-first.sh` | Score field trace and inverse edit map | `score.yaml` to runtime-field mapping now, connected governed output after |
+| Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | real Flux and Argo reconciliation on kind | pods, rollout, and drift correction |
 
 Cluster-side follow-on: pair the above with [`cub-scout`](https://github.com/confighub/cub-scout)
 when you want to inspect what is actually running after reconciliation.
 
-## 2. Pick your demo by persona
+## 2. What ends with live proof today
+
+| Path | Live thing you can inspect | Command | Truth today |
+|---|---|---|---|
+| Spring standalone app path | `inventory-api` on kind plus HTTP verification | `./examples/springboot-paas/verify-e2e.sh` | Strongest standalone app proof |
+| Helm runtime companion path | Argo and Flux reconciliation of Helm-derived manifests | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | Paired runtime proof for `helm-paas` |
+| Connected smoke | ConfigHub-authenticated flagship bundle/attestation chain | `./examples/demo/run-connected-smoke.sh` | Release-facing connected proof lane |
+| Score path | no standalone live-cluster Score proof yet | `./examples/scoredev-paas/demo-connected.sh` | Honest connected-only flagship for now |
+
+## 3. Pick your demo by persona
 
 | Persona | Start here | What you'll prove |
 |---------|------------|-------------------|
 | **Helm platform engineer** | `module-1-helm-import.sh` | DRY source mapping for chart/value changes |
-| **Score platform team** | `module-2-score-field-map.sh` | `score.yaml` → runtime field trace |
+| **Score platform team** | `start-score-first.sh` | `score.yaml` → runtime field trace with connected next steps |
 | **Spring app/platform team** | `module-3-spring-ownership.sh` | App-vs-platform ownership boundaries |
 | **Backstage catalog admin** | [`backstage-idp`](../backstage-idp/) demo | Owner/lifecycle governance |
 | **AI fleet operator** | `ai-work-platform/scenario-1-c3agent.sh` | 30 DRY lines → 11 governed WET targets |
@@ -56,7 +65,7 @@ when you want to inspect what is actually running after reconciliation.
 
 See also: [Domain POV Matrix](../../docs/workflows/domain-pov-matrix.md) | [Persona 5-minute runbooks](../../docs/workflows/persona-5-minute-runbooks.md)
 
-## 3. Quick start
+## 4. Quick start
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
@@ -68,7 +77,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./examples/demo/start-app-first.sh
 
 # Score-first first run
-./examples/demo/module-2-score-field-map.sh
+./examples/demo/start-score-first.sh
 
 # Runtime proof after source-side import
 RECONCILER=both ./examples/live-reconcile/demo-local.sh
@@ -81,7 +90,7 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 ./examples/demo/ai-work-platform/run-all.sh
 ```
 
-## 4. Local mode (no ConfigHub login required)
+## 5. Local mode (no ConfigHub login required)
 
 ### Core platform/app track
 
@@ -89,6 +98,7 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 |--------|---------|---------------------|
 | `start-platform-first.sh` | [`helm-paas`](../helm-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated platform-first starter path |
 | `start-app-first.sh` | [`springboot-paas`](../springboot-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated app-first starter path |
+| `start-score-first.sh` | [`scoredev-paas`](../scoredev-paas/) | Opinionated Score-first starter path with honest runtime-gap handoff |
 | `module-1-helm-import.sh` | [`helm-paas`](../helm-paas/) | Helm detection, values ownership, field-origin tracing |
 | `module-2-score-field-map.sh` | [`scoredev-paas`](../scoredev-paas/) | Score field-origin and inverse edit mapping |
 | `module-3-spring-ownership.sh` | [`springboot-paas`](../springboot-paas/) | Spring ownership boundaries (app vs platform) |
@@ -122,7 +132,7 @@ If your platform is workflow-heavy, start here before app-manifest demos:
   | jq '.provenance[0].ops_workflow_analysis'
 ```
 
-## 5. Connected mode (ConfigHub)
+## 6. Connected mode (ConfigHub)
 
 Start with authentication:
 
@@ -131,6 +141,11 @@ cub auth login
 cub info
 cub context get --json | jq -r '.coordinate.user'
 ```
+
+`--space` means the ConfigHub space where the connected scripts record their
+bundle, decision, and evidence context. In the starter scripts, the current
+ConfigHub context is the source of truth. In local-only runs, `platform` is the
+default teaching value.
 
 Connected smoke shape:
 
@@ -185,7 +200,7 @@ CI behavior:
 
 See also: [connected-ci-bootstrap.md](../../docs/workflows/connected-ci-bootstrap.md)
 
-## 6. Live reconciler e2e (Flux + Argo + kind)
+## 7. Live reconciler e2e (Flux + Argo + kind)
 
 | Script | What it demonstrates |
 |--------|---------------------|
@@ -207,7 +222,7 @@ cub auth login
 RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 ```
 
-## 7. Lifecycle simulation scripts
+## 8. Lifecycle simulation scripts
 
 | Script | What it demonstrates |
 |--------|---------------------|
@@ -226,7 +241,7 @@ RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 | `change-api-adapter.sh --request <json> [--out <json>]` | API-style JSON wrapper for `change preview\|run\|explain` |
 | `change-api-http-e2e.sh [repo] [render-target]` | Native repo-first HTTP flow using `/v1/changes` endpoints |
 
-## 8. CI policy gates (PR path)
+## 9. CI policy gates (PR path)
 
 Use these when you want merge-blocking enforcement, not just local guidance:
 
@@ -237,7 +252,7 @@ Use these when you want merge-blocking enforcement, not just local guidance:
   - Runs the gate for Helm + Spring examples
   - Posts a PR comment with actionable DRY edit guidance
 
-## 9. PR-MR pairing and promotion flows
+## 10. PR-MR pairing and promotion flows
 
 | Script | What it demonstrates |
 |--------|---------------------|
@@ -245,7 +260,7 @@ Use these when you want merge-blocking enforcement, not just local guidance:
 | `flow-b-mr-to-git-pr-connected.sh` | Flow B: ConfigHub MR → Git PR proposal |
 | `fr8-promotion-upstream-dry-connected.sh` | FR8: live→WET→DRY upstream promotion |
 
-## 10. Phase 3 connected story scripts
+## 11. Phase 3 connected story scripts
 
 | Script | User story | What it demonstrates |
 |--------|------------|---------------------|
@@ -256,7 +271,7 @@ Use these when you want merge-blocking enforcement, not just local guidance:
 | `story-12-unified-actor-evidence.sh` | 12 | Unified human/CI/AI attestation chain |
 | `run-phase-3-connected-stories.sh` | 1,7,9,12 | Run all Phase 3 stories |
 
-## 11. Phase 4 connected story scripts
+## 12. Phase 4 connected story scripts
 
 | Script | User story | What it demonstrates |
 |--------|------------|---------------------|

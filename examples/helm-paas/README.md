@@ -29,28 +29,35 @@ Known gaps still open:
 - one-command multi-variant fan-out is not exposed yet ([#237](https://github.com/confighub/cub-gen/issues/237))
 - CLI override capture for `--set` / `--set-file` is not modeled yet ([#242](https://github.com/confighub/cub-gen/issues/242))
 
-## Start here first
+## Start here by audience
 
-If you are new, use this sequence:
+| If you are... | First command | Then do this | What you can inspect |
+|---|---|---|---|
+| Existing Helm plus Argo/Flux user | `./examples/helm-paas/demo-local.sh` | `cub auth login && ./examples/helm-paas/demo-connected.sh` | values ownership, rendered targets, then connected evidence |
+| Existing ConfigHub user adding Helm governance | `cub auth login && ./examples/helm-paas/demo-connected.sh` | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | change/bundle/decision output, then Argo+Flux runtime proof |
+| Existing Argo-first operator starting from a running app | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) first | come back to `./examples/helm-paas/demo-local.sh` for source provenance | live app first, source trace second |
 
-1. `./examples/helm-paas/demo-local.sh`
-2. `./examples/helm-paas/demo-connected.sh`
-3. `RECONCILER=both ./examples/live-reconcile/demo-local.sh`
-4. inspect the runtime side with [`cub-scout`](https://github.com/confighub/cub-scout)
-
-That gives you:
+That sequence gives you:
 
 1. source-side provenance and ownership,
 2. connected ConfigHub evidence and governed decision state,
-3. WET to LIVE reconciliation proof,
+3. WET to LIVE reconciliation proof across Argo and Flux,
 4. cluster-side inspection of what actually ran.
+
+## What you can inspect after each step
+
+| Step | Command | Inspectable result |
+|---|---|---|
+| Local source-side proof | `./examples/helm-paas/demo-local.sh` | field origin, inverse-edit guidance, dry inputs, and rendered targets |
+| Connected governance proof | `./examples/helm-paas/demo-connected.sh` | change ID, bundle digest, attestation, and backend decision/query output |
+| Runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | live Deployment rollout, pods, and drift correction for Flux and Argo |
 
 ## 1. Who this is for
 
 | If you are... | Start here |
 |---------------|------------|
 | **Existing ConfigHub user** adding Helm governance | Jump to [Run from ConfigHub](#run-from-configHub-connected-mode) |
-| **Existing Helm/Flux/Argo user** adding ConfigHub | Jump to [Fastest path](#fastest-path-to-believe-it) then connect later |
+| **Existing Helm/Argo/Flux user** adding ConfigHub | Jump to [Fastest path](#fastest-path-to-believe-it) then connect later |
 
 Both paths lead to the same outcome: governed Helm with field-origin tracing.
 
@@ -61,7 +68,17 @@ Both paths lead to the same outcome: governed Helm with field-origin tracing.
 | **Real app** | `payments-api` Helm chart (Deployment + Service + ConfigMap) |
 | **Real cluster objects** | Kubernetes Deployment, Service, ConfigMap |
 | **Real inspection target** | `kubectl get deployment payments-api -o yaml` |
-| **GitOps transport** | Flux HelmRelease or ArgoCD Application |
+| **GitOps transport** | Argo CD Application or Flux HelmRelease |
+
+## Argo/Flux note
+
+Argo is not an afterthought in this example. The repo includes both:
+
+- `gitops/argo/application.yaml`
+- `gitops/flux/helmrelease.yaml`
+
+The current runtime proof is paired through [`live-reconcile`](../live-reconcile/)
+so you can inspect both reconcilers from the same flagship Helm story.
 
 ## 3. Why ConfigHub + cub-gen helps here
 
