@@ -39,6 +39,7 @@ type IngestPayload struct {
 	TargetSlug         string                       `json:"target_slug"`
 	TargetPath         string                       `json:"target_path"`
 	RenderTargetSlug   string                       `json:"render_target_slug"`
+	RenderTargetPath   string                       `json:"render_target_path,omitempty"`
 	Ref                string                       `json:"ref"`
 	ChangeID           string                       `json:"change_id"`
 	DigestAlgorithm    string                       `json:"digest_algorithm"`
@@ -87,6 +88,7 @@ func BuildIngestPayload(bundle publish.ChangeBundle) (IngestPayload, error) {
 		TargetSlug:         bundle.TargetSlug,
 		TargetPath:         bundle.TargetPath,
 		RenderTargetSlug:   bundle.RenderTargetSlug,
+		RenderTargetPath:   bundle.RenderTargetPath,
 		Ref:                bundle.Ref,
 		ChangeID:           bundle.ChangeID,
 		DigestAlgorithm:    bundle.DigestAlgorithm,

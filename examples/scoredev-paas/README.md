@@ -10,12 +10,26 @@ ConfigHub adds the missing piece: traceable provenance from Score workload spec
 through to governed Kubernetes manifests, with field-level ownership and
 inverse-edit guidance.
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Source-side Score provenance | Real | `./examples/scoredev-paas/demo-local.sh` |
+| Connected governance path | Real | `./examples/scoredev-paas/demo-connected.sh` |
+| Standalone Score live app proof | Not yet | still open work in [#178](https://github.com/confighub/cub-gen/issues/178) |
+
+This README is intentionally honest: today the strongest Score proof in this
+repo is source-side tracing plus connected governance output. If you need real
+runtime proof elsewhere in the repo right now, use [`springboot-paas`](../springboot-paas/)
+or [`live-reconcile`](../live-reconcile/) as the current runtime companions
+while the Score-specific live path is being finished.
+
 ## 1. Who this is for
 
 | If you are... | Start here |
 |---------------|------------|
 | **Existing ConfigHub user** adding Score governance | Jump to [Run from ConfigHub](#run-from-configHub-connected-mode) |
-| **Existing Score.dev user** adding ConfigHub | Jump to [Try it](#try-it) then connect later |
+| **Existing Score.dev user** adding ConfigHub | Jump to [Fastest path](#fastest-path-to-believe-it) then connect later |
 
 Both paths lead to the same outcome: governed Score workloads with field-origin tracing.
 
@@ -158,16 +172,27 @@ rules. This is why provenance must include both:
 That combined trace is what makes Score practical at scale without forcing app
 teams to learn Kubernetes internals.
 
-## Try it
+## Fastest path to believe it
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
 
+# Local source-side path
+./examples/scoredev-paas/demo-local.sh
+
+# Connected ConfigHub path
+cub auth login
+./examples/scoredev-paas/demo-connected.sh
+```
+
+If you want the raw commands underneath the wrappers:
+
+```bash
 # Detect Score workload spec
 ./cub-gen gitops discover --space platform --json ./examples/scoredev-paas
 
 # Import with full field-origin mapping
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas \
   | jq '{profile: .discovered[0].generator_profile, field_origin_map: .provenance[0].field_origin_map}'
 ```
 
@@ -195,10 +220,10 @@ resources:
 
 ```bash
 # cub-gen detects the new resource dependency
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas
 
 # Produce evidence chain
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas > bundle.json
+./cub-gen publish --space platform ./examples/scoredev-paas > bundle.json
 ./cub-gen verify --in bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
@@ -271,15 +296,21 @@ WET:  Deployment/spec/template/spec/containers[name=main]/image
 
 ## Run from ConfigHub (connected mode)
 
-If you already have ConfigHub, start here:
+If you already have ConfigHub, start with the wrapper entrypoint:
 
 ```bash
 cub auth login
+./examples/scoredev-paas/demo-connected.sh
+```
+
+That is the current first-run connected path for this example.
+
+If you specifically need the deeper bridge API path, use:
+
+```bash
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-
-# Publish and ingest
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas > /tmp/bundle.json
+./cub-gen publish --space platform ./examples/scoredev-paas > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
 ./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
@@ -291,15 +322,15 @@ After running discover/import, inspect:
 
 ```bash
 # Field-origin map (Score → Kubernetes)
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas \
   | jq '.provenance[0].field_origin_map'
 
 # Score-specific analysis
-./cub-gen gitops import --space platform --json ./examples/scoredev-paas ./examples/scoredev-paas \
+./cub-gen gitops import --space platform --json ./examples/scoredev-paas \
   | jq '.provenance[0].score_workload_analysis'
 
 # Evidence bundle
-./cub-gen publish --space platform ./examples/scoredev-paas ./examples/scoredev-paas \
+./cub-gen publish --space platform ./examples/scoredev-paas \
   | jq '{change_id, bundle_digest: .bundle.digest}'
 ```
 

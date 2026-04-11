@@ -7,7 +7,7 @@ This contract defines the HTTP API surface that mirrors `cub-gen change preview|
 
 Goal: CI systems, agents, and UIs can consume one JSON contract without shelling across multiple files.
 
-Run the compatibility server locally:
+Run the HTTP server locally:
 
 ```bash
 ./cub-gen change api serve --listen 127.0.0.1:8787 --space platform --ref HEAD --verifier ci-bot
@@ -24,10 +24,14 @@ Request fields:
 - `action`: `preview` or `run`
 - `mode`: `local` or `connected` (required for `action=run`)
 - `input`: target/render target + labels (`space`, `ref`, `where_resource`)
+  Prefer `target_path`.
+  `render_target_path` is optional and defaults to the same repo path.
+  Legacy `target_slug` and `render_target_slug` remain accepted for compatibility.
 - `connected`: optional backend connection fields (`base_url`, `token`, endpoint overrides)
 
 Response:
 
+- `input` (normalized repo identity: `target_path`, `render_target_path`, plus compatibility slugs)
 - `change` (`change_id`, `bundle_digest`, `attestation_digest`)
 - `edit_recommendation` (owner, paths, hint, confidence)
 - `verification` (bundle/attestation validity)
@@ -44,6 +48,7 @@ Schema:
 
 Response:
 
+- `input`
 - `change`
 - `decision`
 - `verification`
@@ -80,8 +85,7 @@ Schema:
 {
   "action": "preview",
   "input": {
-    "target_slug": "./examples/scoredev-paas",
-    "render_target_slug": "./examples/scoredev-paas",
+    "target_path": "./examples/scoredev-paas",
     "space": "platform",
     "ref": "HEAD"
   }
@@ -95,8 +99,7 @@ Schema:
   "action": "run",
   "mode": "connected",
   "input": {
-    "target_slug": "./examples/helm-paas",
-    "render_target_slug": "./examples/helm-paas",
+    "target_path": "./examples/helm-paas",
     "space": "platform"
   },
   "connected": {
@@ -113,8 +116,7 @@ Schema:
   "action": "run",
   "mode": "local",
   "input": {
-    "target_slug": "./examples/scoredev-paas",
-    "render_target_slug": "./examples/scoredev-paas",
+    "target_path": "./examples/scoredev-paas",
     "space": "platform"
   }
 }
@@ -124,6 +126,14 @@ Schema:
 
 ```json
 {
+  "input": {
+    "target_path": "./examples/scoredev-paas",
+    "render_target_path": "./examples/scoredev-paas",
+    "target_slug": "scoredev-paas",
+    "render_target_slug": "scoredev-paas",
+    "space": "platform",
+    "ref": "HEAD"
+  },
   "change": {
     "change_id": "chg_01J...",
     "bundle_digest": "sha256:...",
@@ -177,10 +187,12 @@ Error body shape:
 - `POST /v1/changes {action:"run"}` ↔ `cub-gen change run ...`
 - `GET /v1/changes/{change_id}/explanations` ↔ `cub-gen change explain ...`
 
-Compatibility adapter in this repo:
+Helpers in this repo:
 
 - Native HTTP server: `cub-gen change api serve ...`
 - CI sample using direct HTTP calls: `examples/demo/change-api-http-e2e.sh`
+- Preferred request shape: `input.target_path` with optional `input.render_target_path`
+- Legacy request shape still accepted: `input.target_slug` with optional `input.render_target_slug`
 
 ## See also
 

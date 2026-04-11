@@ -42,7 +42,7 @@ source examples/demo/lib/cluster-harness.sh
 setup_connected_cluster flux
 
 # Run your connected tests
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
 
@@ -178,6 +178,6 @@ kubectl --context kind-cub-gen-connected logs -n flux-system deployment/kustomiz
 
 ## Related documentation
 
-- [Connected preflight](../examples/demo/lib/connected-preflight.sh) — ConfigHub auth validation
-- [Live reconcile Flux](../examples/demo/e2e-live-reconcile-flux.sh) — Flux e2e proof
-- [Live reconcile Argo](../examples/demo/e2e-live-reconcile-argo.sh) — Argo e2e proof
+- [Connected preflight](https://github.com/confighub/cub-gen/blob/main/examples/demo/lib/connected-preflight.sh) — ConfigHub auth validation
+- [Live reconcile Flux](https://github.com/confighub/cub-gen/blob/main/examples/demo/e2e-live-reconcile-flux.sh) — Flux e2e proof
+- [Live reconcile Argo](https://github.com/confighub/cub-gen/blob/main/examples/demo/e2e-live-reconcile-argo.sh) — Argo e2e proof

@@ -423,23 +423,23 @@ The example in this repo makes the split visible.
 
 App-facing inputs:
 
-- [examples/springboot-paas/src/main/resources/application.yaml](../../../examples/springboot-paas/src/main/resources/application.yaml)
-- [examples/springboot-paas/src/main/resources/application-prod.yaml](../../../examples/springboot-paas/src/main/resources/application-prod.yaml)
+- [examples/springboot-paas/src/main/resources/application.yaml](https://github.com/confighub/cub-gen/blob/main/examples/springboot-paas/src/main/resources/application.yaml)
+- [examples/springboot-paas/src/main/resources/application-prod.yaml](https://github.com/confighub/cub-gen/blob/main/examples/springboot-paas/src/main/resources/application-prod.yaml)
 
 Platform-facing inputs:
 
-- [examples/springboot-paas/platform/base/runtime-policy.yaml](../../../examples/springboot-paas/platform/base/runtime-policy.yaml)
-- [examples/springboot-paas/platform/overlays/prod/slo-policy.yaml](../../../examples/springboot-paas/platform/overlays/prod/slo-policy.yaml)
-- [examples/springboot-paas/platform/registry.yaml](../../../examples/springboot-paas/platform/registry.yaml)
+- [examples/springboot-paas/platform/base/runtime-policy.yaml](https://github.com/confighub/cub-gen/blob/main/examples/springboot-paas/platform/base/runtime-policy.yaml)
+- [examples/springboot-paas/platform/overlays/prod/slo-policy.yaml](https://github.com/confighub/cub-gen/blob/main/examples/springboot-paas/platform/overlays/prod/slo-policy.yaml)
+- [examples/springboot-paas/platform/registry.yaml](https://github.com/confighub/cub-gen/blob/main/examples/springboot-paas/platform/registry.yaml)
 
 Rendered operational state:
 
-- [examples/springboot-paas/confighub/inventory-api-prod.yaml](../../../examples/springboot-paas/confighub/inventory-api-prod.yaml)
+- [examples/springboot-paas/confighub/inventory-api-prod.yaml](https://github.com/confighub/cub-gen/blob/main/examples/springboot-paas/confighub/inventory-api-prod.yaml)
 
 Transport to reconciliation:
 
-- [examples/springboot-paas/gitops/flux/kustomization.yaml](../../../examples/springboot-paas/gitops/flux/kustomization.yaml)
-- [examples/springboot-paas/gitops/argo/application.yaml](../../../examples/springboot-paas/gitops/argo/application.yaml)
+- [examples/springboot-paas/gitops/flux/kustomization.yaml](https://github.com/confighub/cub-gen/blob/main/examples/springboot-paas/gitops/flux/kustomization.yaml)
+- [examples/springboot-paas/gitops/argo/application.yaml](https://github.com/confighub/cub-gen/blob/main/examples/springboot-paas/gitops/argo/application.yaml)
 
 In plain English:
 

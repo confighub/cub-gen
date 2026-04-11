@@ -25,29 +25,36 @@ require_make_dep() {
   fi
 }
 
+forbid_make_dep() {
+  local dep="$1"
+  if grep -Eq "^ci-connected: .*\b${dep}\b" Makefile; then
+    fail "ci-connected target should not depend on: $dep"
+  fi
+}
+
 tmp_json="$(mktemp)"
 trap 'rm -f "$tmp_json"' EXIT
 
 go run ./tools/example-truth-matrix --format json >"$tmp_json"
 
-require_make_dep "test-connected-lifecycles"
-require_make_dep "test-phase-3-stories"
-require_make_dep "test-phase-4-stories"
-require_make_dep "test-flow-a-git-pr-to-mr"
-require_make_dep "test-flow-b-mr-to-git-pr"
-require_make_dep "test-connected-governed-reconcile-helm"
-require_make_dep "test-live-reconcile-flux"
-require_make_dep "test-live-reconcile-argo"
-require_make_dep "check-story-evidence"
-require_make_dep "check-flow-evidence"
+require_make_dep "test-connected-smoke"
+forbid_make_dep "test-connected-lifecycles"
+forbid_make_dep "test-phase-3-stories"
+forbid_make_dep "test-phase-4-stories"
+forbid_make_dep "test-flow-a-git-pr-to-mr"
+forbid_make_dep "test-flow-b-mr-to-git-pr"
+forbid_make_dep "test-connected-governed-reconcile-helm"
+forbid_make_dep "test-live-reconcile-flux"
+forbid_make_dep "test-live-reconcile-argo"
+forbid_make_dep "check-story-evidence"
+forbid_make_dep "check-flow-evidence"
 
 assert_jq "$tmp_json" '.summary.generator_fixtures == 8' "expected eight first-class generator fixtures"
-assert_jq "$tmp_json" '.summary.connected_release_gated == 12' "expected every featured example to be connected-release-gated"
-assert_jq "$tmp_json" '[.rows[] | select(.generator_fixture and (.connected_release_gated | not))] | length == 0' "all generator fixtures must be in the connected release gate"
-assert_jq "$tmp_json" '[.rows[] | select(.connected_release_gated and (.connected_mode_present | not))] | length == 0' "release-gated examples must expose connected mode entrypoints"
-assert_jq "$tmp_json" '[.rows[] | select(.real_live_proof == "paired-harness" and .connected_release_gated)] | length >= 1' "release gate must keep a paired real-live proof path"
-assert_jq "$tmp_json" '[.rows[] | select(.real_live_proof == "standalone" and .connected_release_gated)] | length >= 1' "release gate must keep a standalone real-live proof path"
-assert_jq "$tmp_json" '[.rows[] | select(.example == "helm-paas" and .real_live_proof == "paired-harness")] | length == 1' "helm-paas must remain the paired flagship live-proof example"
+assert_jq "$tmp_json" '.summary.connected_release_gated == 2' "expected exactly two flagship examples in the connected smoke lane"
+assert_jq "$tmp_json" '[.rows[] | select(.connected_release_gated)] | map(.example) | sort == ["helm-paas", "springboot-paas"]' "connected smoke lane should cover helm-paas and springboot-paas"
+assert_jq "$tmp_json" '[.rows[] | select(.connected_release_gated and (.connected_mode_present | not))] | length == 0' "connected smoke examples must expose connected mode entrypoints"
+assert_jq "$tmp_json" '[.rows[] | select(.real_live_proof == "paired-harness" and .connected_release_gated)] | length >= 1' "connected smoke lane must keep a paired real-live proof path"
+assert_jq "$tmp_json" '[.rows[] | select(.real_live_proof == "standalone" and .connected_release_gated)] | length >= 1' "connected smoke lane must keep a standalone real-live proof path"
 assert_jq "$tmp_json" '[.rows[] | select(.example == "live-reconcile" and .real_live_proof == "standalone")] | length == 1' "live-reconcile must remain the standalone runtime proof harness"
 
-echo "ok: connected release gate still covers the flagship connected, flow A/B, and real-live proof lanes"
+echo "ok: connected smoke lane stays small, honest, and anchored to the flagship proof paths"

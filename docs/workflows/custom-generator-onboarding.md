@@ -148,6 +148,6 @@ For now, custom generators require Go code and recompilation.
 
 ## Getting help
 
-- [CONTRIBUTING.md](../../CONTRIBUTING.md) — full technical details
+- [CONTRIBUTING.md](https://github.com/confighub/cub-gen/blob/main/CONTRIBUTING.md) — full technical details
 - [Example checklist](example-checklist.md) — universal contract requirements
 - [Generator PRD](../agentic-gitops/02-design/10-generators-prd.md) — design context

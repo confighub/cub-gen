@@ -33,19 +33,18 @@ fi
 jq -n \
   --arg action "run" \
   --arg mode "connected" \
-  --arg target_slug "$REPO_PATH" \
-  --arg render_target_slug "$RENDER_TARGET" \
+  --arg target_path "$REPO_PATH" \
+  --arg render_target_path "$RENDER_TARGET" \
   --arg space "$SPACE" \
   --arg base_url "$CONFIGHUB_BASE_URL" \
   --arg token "$CONFIGHUB_TOKEN" \
   '{
     action: $action,
     mode: $mode,
-    input: {
-      target_slug: $target_slug,
-      render_target_slug: $render_target_slug,
+    input: ({
+      target_path: $target_path,
       space: $space
-    },
+    } + (if $render_target_path == $target_path then {} else {render_target_path: $render_target_path} end)),
     connected: {
       base_url: $base_url,
       token: $token

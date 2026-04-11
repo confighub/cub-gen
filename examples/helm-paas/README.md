@@ -14,6 +14,21 @@ The first question it should answer is:
 This example is the source-side half of that story. For the runtime proof half,
 pair it with [`live-reconcile`](../live-reconcile/).
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Source-side Helm provenance | Real | `./examples/helm-paas/demo-local.sh` |
+| Connected governance path | Real | `./examples/helm-paas/demo-connected.sh` |
+| Runtime WET->LIVE proof | Paired | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
+| Standalone live Helm proof in this example | Not yet | pair `helm-paas` with `live-reconcile` today |
+
+Known gaps still open:
+
+- umbrella/subchart/alias/conditional chart support is still open work ([#238](https://github.com/confighub/cub-gen/issues/238))
+- one-command multi-variant fan-out is not exposed yet ([#237](https://github.com/confighub/cub-gen/issues/237))
+- CLI override capture for `--set` / `--set-file` is not modeled yet ([#242](https://github.com/confighub/cub-gen/issues/242))
+
 ## Start here first
 
 If you are new, use this sequence:
@@ -35,7 +50,7 @@ That gives you:
 | If you are... | Start here |
 |---------------|------------|
 | **Existing ConfigHub user** adding Helm governance | Jump to [Run from ConfigHub](#run-from-configHub-connected-mode) |
-| **Existing Helm/Flux/Argo user** adding ConfigHub | Jump to [Run from Helm](#try-it) then connect later |
+| **Existing Helm/Flux/Argo user** adding ConfigHub | Jump to [Fastest path](#fastest-path-to-believe-it) then connect later |
 
 Both paths lead to the same outcome: governed Helm with field-origin tracing.
 
@@ -159,7 +174,7 @@ The key outcome does not change: every WET field should have one clear edit
 path and owner. That is what prevents "edit rendered manifests and hope" during
 incidents.
 
-## Try it
+## Fastest path to believe it
 
 Start with the documented entrypoints:
 
@@ -172,6 +187,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Connected ConfigHub path
 cub auth login
 ./examples/helm-paas/demo-connected.sh
+
+# Runtime proof paired through the reconciler harness
+RECONCILER=both ./examples/live-reconcile/demo-local.sh
 ```
 
 If you want the raw commands underneath the wrappers:
@@ -181,7 +199,7 @@ If you want the raw commands underneath the wrappers:
 ./cub-gen gitops discover --space platform --json ./examples/helm-paas
 
 # Import with full provenance and field-origin tracing
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
 ```
 
@@ -211,10 +229,10 @@ featureFlags:
 
 ```bash
 # cub-gen detects the change and traces field origins
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas
+./cub-gen gitops import --space platform --json ./examples/helm-paas
 
 # Produce evidence bundle
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > bundle.json
 ./cub-gen verify --in bundle.json
 ./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
 
@@ -246,10 +264,10 @@ resources:
 
 ```bash
 # cub-gen detects the template edit
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas
+./cub-gen gitops import --space platform --json ./examples/helm-paas
 
 # Produce evidence
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > bundle.json
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 ./cub-gen bridge ingest --in bundle.json --base-url "$BASE_URL" > ingest.json
 ./cub-gen bridge decision create --ingest ingest.json > decision.json
@@ -336,15 +354,22 @@ WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payme
 
 ## Run from ConfigHub (connected mode)
 
-If you already have ConfigHub, start here:
+If you already have ConfigHub, start with the wrapper entrypoint:
 
 ```bash
 cub auth login
+./examples/helm-paas/demo-connected.sh
+```
+
+That is the current first-run connected path for this example and the same
+surface used by the connected smoke lane.
+
+If you specifically need the deeper bridge API path, use:
+
+```bash
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-
-# Publish and ingest
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas > /tmp/bundle.json
+./cub-gen publish --space platform ./examples/helm-paas > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
 ./cub-gen bridge ingest --in /tmp/bundle.json --base-url "$BASE_URL" --token "$TOKEN"
@@ -356,19 +381,19 @@ After running discover/import, inspect:
 
 ```bash
 # Field-origin map
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '.provenance[0].field_origin_map'
 
 # Inverse-edit guidance
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '.provenance[0].inverse_edit_pointers'
 
 # Evidence bundle digest
-./cub-gen publish --space platform ./examples/helm-paas ./examples/helm-paas \
+./cub-gen publish --space platform ./examples/helm-paas \
   | jq '{change_id, bundle_digest: .bundle.digest}'
 ```
 
-After connected ingest, query ConfigHub for decision state.
+After the deep bridge API path, query ConfigHub for decision state.
 
 ## 8. Generation chain (Kubara-like platforms)
 
@@ -386,7 +411,7 @@ Answer: Trace from cluster labels through overlay selection to the deployed fiel
 
 ```bash
 # Show rendered lineage
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '.provenance[0].rendered_object_lineage'
 ```
 

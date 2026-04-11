@@ -16,7 +16,7 @@ As part of Sprint 1 closeout, the v0.2 parity baseline is now explicitly frozen.
 
 Freeze scope:
 
-1. `gitops discover|import|cleanup` command names and arity.
+1. `gitops discover|cleanup` command names and arity. `gitops import` keeps the two-path parity form and also allows an additive local-first shorthand when the render target is the same path.
 2. `generators` flags and output contracts (table + JSON + `--details` JSON).
 3. Top-level help + subcommand help surfaces captured in parity goldens.
 4. Bridge command contracts (`publish`, `verify`, `attest`, `verify-attestation`) and golden outputs.
@@ -26,7 +26,8 @@ When a change needs to modify any frozen contract, it must follow the contract d
 1. `docs/testing/contract-drift-checklist.md`
 
 Contract lock means:
-- command names/arity for `discover|import|cleanup` are frozen for v0.1
+- command names/arity for `discover|cleanup` are frozen for v0.1
+- `gitops import` keeps the explicit two-path parity form while also allowing a one-path shorthand that reuses the same local target path as the render target
 - JSON and table output contracts are golden-tested
 - help/usage output for `gitops` and subcommands is golden-tested
 - unsupported behavior must fail explicitly (never silently degrade)
@@ -42,7 +43,7 @@ Contract lock means:
 |---|---|---|---|---|
 | Command group | `gitops` | `gitops` | matched | Same top-level grouping |
 | Discover command | `gitops discover <target-slug>` | `gitops discover <target-slug>` | matched | Same arity and purpose |
-| Import command | `gitops import <target-slug> <render-target-slug>` | `gitops import <target-slug> <render-target-slug>` | matched | Same arity |
+| Import command | `gitops import <target-slug> <render-target-slug>` | `gitops import <target-slug> [<render-target-slug>]` | partial | Two-path parity form preserved; omitted render target defaults to the same local path |
 | Cleanup command | `gitops cleanup <target-slug>` | `gitops cleanup <target-slug>` | matched | Same arity |
 | `--space` | required context in cub | accepted label in prototype | partial | Used for discover slug/state partitioning |
 | `--where-resource` | full where expression support | subset support (`kind`, `name`, `root`, `id`, `LIKE`, `IN`, `AND`) | partial | Unsupported clauses return explicit error |
@@ -73,6 +74,7 @@ Contract lock means:
 |---|---|---|
 | Direct path target (`<target-slug>` as repo path) | matched | Directory path resolves directly |
 | Alias target (`<target-slug>` from config) | matched | Uses `CUB_GEN_TARGETS_FILE` or `.cub-gen/targets.json` |
+| Implicit render target default (omitted `<render-target-slug>`) | partial | Local-first shorthand resolves the render target to the same target path or alias |
 | Toolchain + provider capability checks | partial | Enforced from local target metadata (not ConfigHub server targets) |
 | ConfigHub target lookup (`cub target list`, target IDs) | deferred | Planned bridge step after parity baseline |
 

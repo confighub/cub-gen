@@ -10,6 +10,32 @@ This is the infrastructure side of the Swamp story: deploying the engine
 itself. For governance over the *workflows* that run on Swamp, see
 [`swamp-automation`](../swamp-automation/).
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Runnable local and connected runtime walkthrough | Real | `./examples/swamp-project/demo-local.sh` then `./examples/swamp-project/demo-connected.sh` |
+| First-class source-chain coverage in the truth matrix | Not yet | this example is still a companion runtime story, not a first-class verified fixture |
+| Standalone live Swamp runtime proof | Not yet | current proof is runtime deployment governance, not live runtime evidence |
+
+This README is intentionally positioning this example as the runtime half of the
+Swamp story. Start with [`swamp-automation`](../swamp-automation/) when you
+need the strongest current AI-first workflow governance example, then use this
+to understand the Helm/runtime side.
+
+## Fastest path to believe it
+
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Local runtime walkthrough
+./examples/swamp-project/demo-local.sh
+
+# Connected governance path
+cub auth login
+./examples/swamp-project/demo-connected.sh
+```
+
 ## Domain POV (runtime platform owners)
 
 Use this example when your team owns Swamp runtime delivery as infrastructure:

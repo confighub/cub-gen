@@ -25,7 +25,7 @@ func TestCollect(t *testing.T) {
 	if got, want := matrix.Summary.SourceChainVerified, 8; got != want {
 		t.Fatalf("source-chain verified = %d, want %d", got, want)
 	}
-	if got, want := matrix.Summary.ConnectedReleaseGated, 12; got != want {
+	if got, want := matrix.Summary.ConnectedReleaseGated, 2; got != want {
 		t.Fatalf("connected release gated = %d, want %d", got, want)
 	}
 
@@ -41,6 +41,17 @@ func TestCollect(t *testing.T) {
 	if !helm.SourceChainVerified {
 		t.Fatal("helm-paas should be source-chain verified")
 	}
+	if !helm.ConnectedReleaseGated {
+		t.Fatal("helm-paas should be in the connected smoke lane")
+	}
+
+	spring := rows["springboot-paas"]
+	if !spring.ConnectedReleaseGated {
+		t.Fatal("springboot-paas should be in the connected smoke lane")
+	}
+	if spring.RealLiveProof != RealLiveStandalone {
+		t.Fatalf("springboot-paas real_live_proof = %q, want %q", spring.RealLiveProof, RealLiveStandalone)
+	}
 
 	live := rows["live-reconcile"]
 	if live.RealLiveProof != RealLiveStandalone {
@@ -48,6 +59,9 @@ func TestCollect(t *testing.T) {
 	}
 	if live.SourceChainVerified {
 		t.Fatal("live-reconcile must not be marked source-chain verified")
+	}
+	if live.ConnectedReleaseGated {
+		t.Fatal("live-reconcile should not be in the connected smoke lane")
 	}
 
 	c3agent := rows["c3agent"]

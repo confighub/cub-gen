@@ -15,11 +15,22 @@ Each example in this directory is runnable and maps to a real platform/app patte
 
 Do not start by scanning the whole catalog. Start with one of these:
 
-| Journey | Start here | Why this should be first |
-|---------|------------|--------------------------|
-| Platform-first GitOps team | [`helm-paas`](./helm-paas/) then [`live-reconcile`](./live-reconcile/) | Most direct story for existing Helm plus Flux/Argo users |
-| App-first team | [`springboot-paas`](./springboot-paas/) | Most recognizable "I already ship this app" path |
-| Cluster-first companion path | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | Start from running reality, then trace back to source |
+| Journey | Start here | What is real today | Why this should be first |
+|---------|------------|--------------------|--------------------------|
+| Platform-first GitOps team | [`helm-paas`](./helm-paas/) then [`live-reconcile`](./live-reconcile/) | `helm-paas` has real source-side + connected proof; runtime proof is paired through `live-reconcile` | Most direct story for existing Helm plus Flux/Argo users |
+| App-first team | [`springboot-paas`](./springboot-paas/) | Real source-side, connected, and standalone live-cluster proof | Most recognizable "I already ship this app" path |
+| Score-first team | [`scoredev-paas`](./scoredev-paas/) | Real source-side + connected proof; standalone live Score runtime proof is still open work | Canonical "keep `score.yaml` as the contract" path |
+| Cluster-first companion path | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | Start from live reality, then trace back to source | Best path when the cluster is already the source of urgency |
+
+## Flagship truth right now
+
+Use these three first when evaluating whether `cub-gen` feels trustworthy:
+
+| Example | Best current answer for | Current trust level |
+|---------|-------------------------|---------------------|
+| [`helm-paas`](./helm-paas/) | Helm + Flux/Argo + values ownership | Strongest platform-first source-side path; pair with [`live-reconcile`](./live-reconcile/) for runtime proof |
+| [`springboot-paas`](./springboot-paas/) | Real app-team + platform-team config ownership | Strongest standalone end-to-end example in the repo today |
+| [`scoredev-paas`](./scoredev-paas/) | Score intent to rendered runtime fields | Strongest Score source-side path today; runtime proof still needs its own standalone finish |
 
 ## Two audiences, two entry points
 
@@ -27,7 +38,7 @@ Every example supports both paths explicitly:
 
 | If you are... | Your path |
 |---------------|-----------|
-| **Existing ConfigHub user** adding a platform tool | Start with connected mode, import your existing repos |
+| **Existing ConfigHub user** adding a platform tool | Start with the connected wrapper for one example, then expand into deeper bridge/promotion flows only if you need them |
 | **Existing platform-tool user** adding ConfigHub | Start with local mode, see value first, then connect |
 
 Neither audience is an afterthought. Pick your path and each example will guide you.
@@ -69,9 +80,17 @@ Use the generated [Example Truth Matrix](../docs/testing/example-truth-matrix.md
 
 - which examples are first-class generator fixtures,
 - which ones are CI-proven through the full source-side `cub-gen` chain,
-- which ones are in the connected release gate,
+- which ones are in the connected smoke lane,
 - which ones have real WET->LIVE proof today,
 - which ones are explicitly AI-first versus only adjacent.
+
+If you are about to spend real time on one example, check the matrix first.
+It is the repo's source of truth for what is source-side only, what is connected,
+and what has real live proof today.
+
+For workflow and AI examples specifically, use the
+[AI Example Hygiene Checklist](../docs/workflows/ai-example-hygiene-checklist.md)
+as the repo's current bar for "what good looks like."
 
 ## Pick your domain POV first
 
@@ -131,13 +150,14 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./examples/springboot-paas/demo-local.sh
 ```
 
-## Connected mode (ConfigHub)
+## Connected mode (ConfigHub smoke first)
 
 ```bash
 cub auth login
-TOKEN="$(cub auth get-token)"
-cub context get --json | jq -r '.coordinate.user'
-BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
+cub info
+
+# Repo-wide smoke check for the current connected surface
+./examples/demo/run-connected-smoke.sh
 
 # Platform-first
 ./examples/helm-paas/demo-connected.sh
@@ -146,7 +166,9 @@ BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.se
 ./examples/springboot-paas/demo-connected.sh
 ```
 
-Use local mode for first value. Use connected mode for centralized governance state and cross-repo visibility.
+Use local mode for first value. Use connected smoke to confirm your ConfigHub
+environment and the flagship wrappers. Use the deeper bridge/promotion scripts
+only when you specifically need backend decision-query or promotion flows.
 
 After that, use [`live-reconcile`](./live-reconcile/) for WET to LIVE proof and
 [`cub-scout`](https://github.com/confighub/cub-scout) for cluster-side inspection.
@@ -155,21 +177,25 @@ After that, use [`live-reconcile`](./live-reconcile/) for WET to LIVE proof and
 
 ```bash
 REPO=/path/to/your/repo
-./cub-gen change preview --space platform "$REPO" "$REPO"
-./cub-gen change run --mode local --space platform "$REPO" "$REPO"
-./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
+./cub-gen change preview --space platform "$REPO"
+./cub-gen change run --mode local --space platform "$REPO"
+./cub-gen change explain --space platform --owner app-team "$REPO"
 ```
 
-Connected run against the same repo:
+Advanced connected decision path for the same repo:
 
 ```bash
 cub auth login
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO" "$REPO"
+./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO"
 ```
 
-Connected full-entrypoint runner:
+Use that path when your backend exposes the bridge endpoints used by
+`change run --mode connected`. For a simpler connected first run, prefer the
+example wrappers and `./examples/demo/run-connected-smoke.sh`.
+
+Deep connected full-entrypoint runner:
 
 ```bash
 cub auth login
@@ -218,12 +244,12 @@ If your users mostly run workflows (not app manifests), start with these two:
 ```bash
 # Ops workflows: actions/schedules/approval-gates as governed config
 ./examples/ops-workflow/demo-local.sh
-./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
+./cub-gen gitops import --space platform --json ./examples/ops-workflow \
   | jq '.provenance[0].ops_workflow_analysis'
 
 # Swamp workflows: model/method/required-step structural governance
 ./examples/swamp-automation/demo-local.sh
-./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation \
+./cub-gen gitops import --space platform --json ./examples/swamp-automation \
   | jq '.provenance[0].swamp_workflow_analysis'
 ```
 

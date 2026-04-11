@@ -1,8 +1,12 @@
 # cub-gen
 
-**Governance + traceability sidecar for GitOps.**
+**Start from a repo, see what it renders, and know what to edit.**
 
-**gen = generator.** A generator is a function that maps DRY source (`values.yaml`, `score.yaml`, `application.yaml`) to WET rendered output (the manifests that reach your cluster). `cub-gen` detects which generators your repo uses, runs the mapping, and records provenance — so every deployed field traces back to a source file, line, and owner.
+`cub-gen` is the repo-side traceability CLI for GitOps config. It detects which
+generators your repo uses, renders them locally, and records provenance so
+every deployed field traces back to a source file, line, and owner.
+
+**gen = generator.** A generator is a function that maps DRY source (`values.yaml`, `score.yaml`, `application.yaml`) to WET rendered output (the manifests that reach your cluster).
 
 cub-gen works with what teams already run today:
 
@@ -128,7 +132,7 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
 -   **Check what is really proven**
 
-    Use the derived example matrix to see which examples are source-chain verified, connected-release-gated, AI-first, or backed by real live proof.
+    Use the derived example matrix to see which examples are source-chain verified, in the connected smoke lane, AI-first, or backed by real live proof.
 
     [Example Truth Matrix](testing/example-truth-matrix.md)
 
@@ -175,7 +179,17 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
 ## Current status
 
-**v0.2-preview-parity-locked** (2026-03-06)
+**Latest shipped:** `v0.2-preview.1` (2026-03-06)
+
+**Current target:** `v0.2-preview.2`
+
+- repo-first CLI and contract coverage remain green,
+- current release work is focused on full example-catalog quality,
+- CLI/help/docs must match clean-checkout behavior,
+- connected release status must be backed by a credible lane the team actually runs.
+
+See the [v0.2-preview.2 Release Plan](releases/v0.2-preview.2-plan.md) for the
+current must-ship and post-release split.
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
 - Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 8 generators

@@ -17,20 +17,25 @@ func TestChangeAPIHTTPRunLifecycleGolden(t *testing.T) {
 	srv := httptest.NewServer(newChangeAPIHandler("platform", "HEAD", "ci-bot"))
 	defer srv.Close()
 
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "examples", "scoredev-paas"))
+	if err != nil {
+		t.Fatalf("resolve score path: %v", err)
+	}
+
 	postReq := map[string]any{
 		"action": "run",
 		"mode":   "local",
 		"input": map[string]any{
-			"target_slug":        "score",
-			"render_target_slug": "render-target",
-			"space":              "platform",
-			"ref":                "HEAD",
+			"target_path": repoPath,
+			"space":       "platform",
+			"ref":         "HEAD",
 		},
 	}
 	status, postResp := mustJSONRequest(t, http.MethodPost, srv.URL+"/v1/changes", postReq)
 	if status != http.StatusOK {
 		t.Fatalf("expected 200 from POST /v1/changes, got %d body=%v", status, postResp)
 	}
+	assertChangeAPIInputPaths(t, postResp, repoPath, repoPath)
 
 	changeID := nestedString(t, postResp, "change", "change_id")
 	if !strings.HasPrefix(changeID, "chg_") {
@@ -41,11 +46,13 @@ func TestChangeAPIHTTPRunLifecycleGolden(t *testing.T) {
 	if status != http.StatusOK {
 		t.Fatalf("expected 200 from GET /v1/changes/{id}, got %d body=%v", status, getResp)
 	}
+	assertChangeAPIInputPaths(t, getResp, repoPath, repoPath)
 
 	status, explainResp := mustJSONRequest(t, http.MethodGet, srv.URL+"/v1/changes/"+changeID+"/explanations?owner=app-team", nil)
 	if status != http.StatusOK {
 		t.Fatalf("expected 200 from GET /v1/changes/{id}/explanations, got %d body=%v", status, explainResp)
 	}
+	assertChangeAPIInputPaths(t, explainResp, repoPath, repoPath)
 
 	snapshot := map[string]any{
 		"post":    postResp,
@@ -75,6 +82,27 @@ func TestChangeAPIHTTPErrorGolden(t *testing.T) {
 	}
 
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "change-api-http-error.golden.json"), body)
+}
+
+func TestChangeAPIHTTPPreviewAcceptsLegacySlugInput(t *testing.T) {
+	setupAliases(t)
+
+	srv := httptest.NewServer(newChangeAPIHandler("platform", "HEAD", "ci-bot"))
+	defer srv.Close()
+
+	req := map[string]any{
+		"action": "preview",
+		"input": map[string]any{
+			"target_slug":        "score",
+			"render_target_slug": "render-target",
+			"space":              "platform",
+		},
+	}
+
+	status, body := mustJSONRequest(t, http.MethodPost, srv.URL+"/v1/changes", req)
+	if status != http.StatusOK {
+		t.Fatalf("expected 200 from legacy slug preview request, got %d body=%v", status, body)
+	}
 }
 
 func mustJSONRequest(t *testing.T, method, url string, payload any) (int, map[string]any) {
@@ -135,6 +163,21 @@ func nestedString(t *testing.T, root map[string]any, path ...string) string {
 	return s
 }
 
+func assertChangeAPIInputPaths(t *testing.T, root map[string]any, wantTargetPath, wantRenderTargetPath string) {
+	t.Helper()
+
+	input, ok := root["input"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected input object, got %T", root["input"])
+	}
+	if got := input["target_path"]; got != wantTargetPath {
+		t.Fatalf("expected target_path=%s, got %v", wantTargetPath, got)
+	}
+	if got := input["render_target_path"]; got != wantRenderTargetPath {
+		t.Fatalf("expected render_target_path=%s, got %v", wantRenderTargetPath, got)
+	}
+}
+
 func normalizeChangeAPIHTTPRunSnapshot(snapshot map[string]any) {
 	for _, key := range []string{"post", "get", "explain"} {
 		obj, ok := snapshot[key].(map[string]any)
@@ -151,6 +194,15 @@ func normalizeChangeAPIHTTPRunSnapshot(snapshot map[string]any) {
 			}
 			if digest, ok := change["attestation_digest"].(string); ok && strings.HasPrefix(digest, "sha256:") {
 				change["attestation_digest"] = "sha256:REDACTED"
+			}
+		}
+
+		if input, ok := obj["input"].(map[string]any); ok {
+			if path, ok := input["target_path"].(string); ok && path != "" {
+				input["target_path"] = "<target_path>"
+			}
+			if path, ok := input["render_target_path"].(string); ok && path != "" {
+				input["render_target_path"] = "<render_target_path>"
 			}
 		}
 

@@ -70,6 +70,9 @@ func TestIngestBundleCreated(t *testing.T) {
 	if gotPayload.BundleDigest != bundle.BundleDigest {
 		t.Fatalf("expected payload bundle_digest %q, got %q", bundle.BundleDigest, gotPayload.BundleDigest)
 	}
+	if gotPayload.RenderTargetPath != bundle.RenderTargetPath {
+		t.Fatalf("expected payload render_target_path %q, got %q", bundle.RenderTargetPath, gotPayload.RenderTargetPath)
+	}
 	if len(gotPayload.Contracts) != 1 || len(gotPayload.Provenance) != 1 || len(gotPayload.InversePlans) != 1 {
 		t.Fatalf("expected triple payload count of 1, got contracts=%d provenance=%d inverse=%d", len(gotPayload.Contracts), len(gotPayload.Provenance), len(gotPayload.InversePlans))
 	}
@@ -135,6 +138,7 @@ func sampleBundle(changeID string) publish.ChangeBundle {
 		TargetSlug:       "repo",
 		TargetPath:       "/tmp/repo",
 		RenderTargetSlug: "render",
+		RenderTargetPath: "/tmp/render",
 		Ref:              "main",
 		Discovered: []gitopsflow.DiscoveredResource{
 			{

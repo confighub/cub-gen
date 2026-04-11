@@ -5,10 +5,10 @@ already have.
 
 > Working on this repo as a contributor or AI agent? Start with [AI-README-FIRST.md](AI-README-FIRST.md).
 
-`cub-gen` is a source-side provenance and governed-change companion for GitOps
-teams. It is for people who already run GitHub, Helm, Score, Spring Boot, or
-workflow config, and already rely on Flux or Argo CD to reconcile what reaches
-their clusters.
+`cub-gen` starts from a Git repo, shows what config it renders, and tells you
+which source file or path to edit. It is for teams who already run GitHub,
+Helm, Score, Spring Boot, or workflow config, and already rely on Flux or Argo
+CD to reconcile what reaches their clusters.
 
 **gen = generator.** A generator is a function that maps DRY source (your `values.yaml`, `score.yaml`, etc.) to WET rendered output (the manifests that reach your cluster). `cub-gen` detects which generators your repo uses, runs the mapping, and records provenance — so every deployed field traces back to a source file, line, and owner.
 
@@ -20,7 +20,7 @@ If you already run app/config in Git, OCI artifacts, and Flux/Argo reconciliatio
 - Can we block unsafe edits before they hit cluster?
 
 It does this by classifying your existing repo and mapping rendered fields back
-to source file, line, and owner.
+to source file, line, and owner before anything reaches the cluster.
 
 ## Start with the path you already have
 
@@ -30,48 +30,10 @@ to source file, line, and owner.
 | Spring Boot services in GitOps | [springboot-paas](examples/springboot-paas/) | Which `application.yaml` setting or platform file should I edit? |
 | Cluster-first GitOps operations | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 
-## What it is not
-
-- Not a Kubernetes reconciler
-- Not a Flux/Argo replacement
-- Not an OCI replacement
-
-Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability after deploy.
-
-## Why import?
-
-Import should answer something useful right away:
-
-- what rendered manifests this repo produces,
-- which DRY file controls a deployed field,
-- what evidence bundle or governed change to inspect next,
-- how the repo-side answer lines up with cluster-side inspection in `cub-scout`
-  and ConfigHub.
-
-## Two import paths, two jobs
-
-There are two related import flows in the ConfigHub world:
-
-- `cub gitops import` in ConfigHub imports existing Argo/Flux applications from a cluster or worker target.
-- `cub-gen gitops import` reads source repos such as Helm, Score.dev, Spring Boot, or workflow config and emits provenance, inverse-edit guidance, and evidence.
-
-They complement each other:
-
-- use ConfigHub GitOps import for brownfield cluster/app onboarding,
-- use `cub-gen` when you want source-to-runtime traceability and governed changes from DRY config.
-
-## How the tools fit together
-
-| Tool | Starts from | Best first question |
-|------|-------------|---------------------|
-| `cub-gen` | Source repo and generator inputs | Which DRY file/path produced this rendered field? |
-| [`cub-scout`](https://github.com/confighub/cub-scout) | Cluster, reconciler, and live runtime state | What is running, who owns it, and where is drift? |
-| [ConfigHub](https://github.com/confighubai/confighub) | Shared intended state, evidence, and governance state | What changed, what was approved, and what evidence exists across repos and clusters? |
-
 ## What it looks like
 
 ```bash
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '{origin: .provenance[0].field_origin_map[0], inverse: .provenance[0].inverse_edit_pointers[0]}'
 ```
 
@@ -120,10 +82,10 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 ```bash
 REPO=/path/to/your/repo
-./cub-gen change preview --space platform "$REPO" "$REPO"
-./cub-gen gitops import --space platform --json "$REPO" "$REPO" \
+./cub-gen change preview --space platform "$REPO"
+./cub-gen gitops import --space platform --json "$REPO" \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
-./cub-gen change explain --space platform --owner app-team "$REPO" "$REPO"
+./cub-gen change explain --space platform --owner app-team "$REPO"
 ```
 
 ## Next step (connected, ConfigHub)
@@ -198,6 +160,14 @@ Platform engineers, SREs, and app developers who want to know exactly what chang
 | Governed decisions (ALLOW/ESCALATE/BLOCK) | -- | Yes |
 | Bridge workers + cluster integration | -- | Yes |
 
+## What it is not
+
+- Not a Kubernetes reconciler
+- Not a Flux/Argo replacement
+- Not an OCI replacement
+
+Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability before and around deploy.
+
 ## Documentation
 
 Docs currently live in this repo:
@@ -206,6 +176,7 @@ Docs currently live in this repo:
 - [Getting Started](docs/getting-started.md) — 10-minute quickstart
 - [CLI Reference](docs/cli-reference.md) — all commands, flags, and generator recipes
 - [Demo Guide](docs/demo-guide.md) — runnable demo scripts and scenarios
+- [Current release plan](docs/releases/v0.2-preview.2-plan.md) — must-ship and post-release work for the next preview
 - [Examples](examples/README.md) — complete runnable scenarios for every generator
 - [Platform](docs/platform.md) — how cub-gen connects to ConfigHub
 - [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md) — stack-specific entry paths
@@ -225,11 +196,17 @@ Both prove create, update, and drift-correction on a real cluster.
 
 | Status | What is true today |
 |---|---|
-| Strong now | Dual-mode example entrypoints exist across the main catalog; connected story scripts exist for stories 1-13; Flux and Argo live reconciler proofs run on real clusters |
+| Latest shipped | `v0.2-preview.1` was released on 2026-03-06 |
+| Strong now | Dual-mode example entrypoints exist across the main catalog; a smaller ConfigHub smoke lane covers the flagship examples; Flux and Argo live reconciler proofs run on real clusters |
 | In progress | Flagship examples are still being hardened against the universal example contract: real-cluster outcome, two-audience path, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` proof |
-| Actively tracked | Example reset execution is being driven through issues `#173`, `#177`, `#178`, `#179`, `#180`, `#182`, `#183`, `#185`, and `#187` |
+| Current release target | `v0.2-preview.2` focuses on all featured examples working well, CLI/docs trust, and a credible connected release signal |
+| Current plan | See [docs/releases/v0.2-preview.2-plan.md](docs/releases/v0.2-preview.2-plan.md) |
+| Example quality | `#177`, `#178`, `#180`, `#182`, `#185`, `#187`, `#200`, `#202`, `#207`, `#208` |
+| CLI/docs | `#232`, `#233`, `#234`, `#237`, `#238`, `#239`, `#240`, `#241`, `#242` |
+| Release gate | `#218`, `#226`, `#227` |
+| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#182`, `#185`, `#187`, `#200`, `#202`, `#207`, `#208`, `#218`, `#226`, `#227`, `#232`, `#233`, `#234`, `#237`-`#242` |
 
-For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, connected runners, and real live-proof harnesses.
+For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, the connected smoke lane, and real live-proof harnesses.
 
 We have runnable paths for the full PRD story surface, but we are not treating every
 story as fully acceptance-complete until the flagship examples and release gates
@@ -239,8 +216,9 @@ prove the new standard end to end.
 
 ```bash
 make ci                # build + all tests (local)
-make ci-connected      # connected mode tests (requires cub auth login)
-go test ./...          # unit + golden + parity tests
+make ci-connected      # connected smoke against a real ConfigHub space
+make ci-connected-deep # optional extended connected proof lane
+go test ./...          # unit + golden + contract tests
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development rules, test requirements, and how to add a new generator.

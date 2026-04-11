@@ -9,6 +9,7 @@
   "source": "cub-gen",
   "space": "platform",
   "status": "verified",
+  "target_path": "\u003ctarget_path\u003e",
   "target_slug": "helm",
   "verifier": "ci-bot"
 }

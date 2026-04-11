@@ -122,7 +122,9 @@ func executeChangeRun(targetSlug, renderTargetSlug string, opts changeRunOptions
 
 type changeAPIInput struct {
 	TargetSlug       string `json:"target_slug"`
+	TargetPath       string `json:"target_path,omitempty"`
 	RenderTargetSlug string `json:"render_target_slug"`
+	RenderTargetPath string `json:"render_target_path,omitempty"`
 	Space            string `json:"space,omitempty"`
 	Ref              string `json:"ref,omitempty"`
 	WhereResource    string `json:"where_resource,omitempty"`
@@ -143,6 +145,7 @@ type changeAPIRequest struct {
 }
 
 type changeAPIResponse struct {
+	Input              changePreviewInput        `json:"input"`
 	Change             changePreviewSummary      `json:"change"`
 	Decision           *changeRunDecision        `json:"decision,omitempty"`
 	PromotionReady     *bool                     `json:"promotion_ready,omitempty"`
@@ -281,12 +284,12 @@ func (s *changeAPIServer) handlePostChanges(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	targetSlug := strings.TrimSpace(req.Input.TargetSlug)
-	renderTargetSlug := strings.TrimSpace(req.Input.RenderTargetSlug)
-	if targetSlug == "" || renderTargetSlug == "" {
-		writeAPIError(w, http.StatusBadRequest, "INVALID_REQUEST", "input.target_slug and input.render_target_slug are required", map[string]any{"field": "input"})
+	targetSlug := firstNonEmpty(req.Input.TargetPath, req.Input.TargetSlug)
+	if targetSlug == "" {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_REQUEST", "input.target_path or input.target_slug is required", map[string]any{"field": "input"})
 		return
 	}
+	renderTargetSlug := firstNonEmpty(req.Input.RenderTargetPath, req.Input.RenderTargetSlug, targetSlug)
 
 	space := strings.TrimSpace(req.Input.Space)
 	if space == "" {
@@ -314,6 +317,7 @@ func (s *changeAPIServer) handlePostChanges(w http.ResponseWriter, r *http.Reque
 		}
 		s.upsertRecord(record)
 		writeJSONResponse(w, http.StatusOK, changeAPIResponse{
+			Input:              record.Input,
 			Change:             record.Change,
 			Verification:       record.Verification,
 			EditRecommendation: record.EditRecommendation,
@@ -366,6 +370,7 @@ func (s *changeAPIServer) handlePostChanges(w http.ResponseWriter, r *http.Reque
 	s.upsertRecord(record)
 
 	writeJSONResponse(w, http.StatusOK, changeAPIResponse{
+		Input:              record.Input,
 		Change:             record.Change,
 		Decision:           record.Decision,
 		PromotionReady:     record.PromotionReady,
@@ -373,6 +378,15 @@ func (s *changeAPIServer) handlePostChanges(w http.ResponseWriter, r *http.Reque
 		EditRecommendation: record.EditRecommendation,
 		Artifacts:          cloneStringMap(record.Artifacts),
 	})
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if trimmed := strings.TrimSpace(value); trimmed != "" {
+			return trimmed
+		}
+	}
+	return ""
 }
 
 func (s *changeAPIServer) handleChangeByID(w http.ResponseWriter, r *http.Request) {
@@ -401,6 +415,7 @@ func (s *changeAPIServer) handleChangeByID(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		writeJSONResponse(w, http.StatusOK, changeAPIResponse{
+			Input:              record.Input,
 			Change:             record.Change,
 			Decision:           record.Decision,
 			PromotionReady:     record.PromotionReady,
@@ -509,8 +524,13 @@ func printChangeAPIUsage(out *os.File) {
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintln(out, "  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]")
 	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Compatibility HTTP endpoints:")
+	fmt.Fprintln(out, "Repo-first HTTP endpoints:")
 	fmt.Fprintln(out, "  POST /v1/changes")
 	fmt.Fprintln(out, "  GET  /v1/changes/{change_id}")
 	fmt.Fprintln(out, "  GET  /v1/changes/{change_id}/explanations")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "Request shape:")
+	fmt.Fprintln(out, "  input.target_path=<repo-path>")
+	fmt.Fprintln(out, "  input.render_target_path=<repo-path> (optional; defaults to target_path)")
+	fmt.Fprintln(out, "  legacy input.target_slug/render_target_slug still work for compatibility")
 }

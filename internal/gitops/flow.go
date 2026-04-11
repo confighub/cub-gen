@@ -70,6 +70,7 @@ type ImportFlowResult struct {
 	TargetSlug         string                       `json:"target_slug"`
 	TargetPath         string                       `json:"target_path"`
 	RenderTargetSlug   string                       `json:"render_target_slug"`
+	RenderTargetPath   string                       `json:"render_target_path,omitempty"`
 	Ref                string                       `json:"ref"`
 	WhereResource      string                       `json:"where_resource,omitempty"`
 	DiscoverUnitSlug   string                       `json:"discover_unit_slug"`
@@ -86,8 +87,18 @@ type ImportFlowResult struct {
 	WetManifestTargets []model.WetManifestTarget    `json:"wet_manifest_targets"`
 }
 
+// CleanupResult reports the resolved target identity and discover state path
+// removed by a cleanup call.
+type CleanupResult struct {
+	Space        string `json:"space"`
+	TargetSlug   string `json:"target_slug"`
+	TargetPath   string `json:"target_path"`
+	DiscoverFile string `json:"discover_file"`
+	Deleted      bool   `json:"deleted"`
+}
+
 // targetRef is a locally-resolved target identifier.
-// In this prototype, target slugs can be direct repo paths or alias names.
+// In the local-first CLI, target slugs can be direct repo paths or alias names.
 type targetRef struct {
 	Slug      string
 	Path      string
@@ -184,6 +195,7 @@ func Import(targetPath, renderTargetSlug, ref, space, whereResource string) (Imp
 			TargetSlug:       discovered.TargetSlug,
 			TargetPath:       discovered.TargetPath,
 			RenderTargetSlug: renderTarget.Slug,
+			RenderTargetPath: renderTarget.Path,
 			Ref:              discovered.Ref,
 			WhereResource:    discovered.WhereResource,
 			DiscoverUnitSlug: discovered.DiscoverUnitSlug,
@@ -213,6 +225,7 @@ func Import(targetPath, renderTargetSlug, ref, space, whereResource string) (Imp
 		TargetSlug:         discovered.TargetSlug,
 		TargetPath:         discovered.TargetPath,
 		RenderTargetSlug:   renderTarget.Slug,
+		RenderTargetPath:   renderTarget.Path,
 		Ref:                discovered.Ref,
 		WhereResource:      discovered.WhereResource,
 		DiscoverUnitSlug:   discovered.DiscoverUnitSlug,
@@ -231,9 +244,9 @@ func Import(targetPath, renderTargetSlug, ref, space, whereResource string) (Imp
 }
 
 // Cleanup deletes the persisted discover-unit state for a local target.
-func Cleanup(targetPath, space string) (bool, string, error) {
+func Cleanup(targetPath, space string) (CleanupResult, error) {
 	if strings.TrimSpace(targetPath) == "" {
-		return false, "", errors.New("target slug is required")
+		return CleanupResult{}, errors.New("target slug is required")
 	}
 	if strings.TrimSpace(space) == "" {
 		space = "default"
@@ -241,21 +254,28 @@ func Cleanup(targetPath, space string) (bool, string, error) {
 
 	resolved, err := resolveTarget(targetPath, targetModeDiscover)
 	if err != nil {
-		return false, "", err
+		return CleanupResult{}, err
 	}
 	discoverSlug := discoverUnitSlug(resolved.Slug, space, resolved.Path)
 	discoverFile := filepath.Join(resolved.Path, discoverDirName, discoverSlug+".json")
+	result := CleanupResult{
+		Space:        space,
+		TargetSlug:   resolved.Slug,
+		TargetPath:   resolved.Path,
+		DiscoverFile: discoverFile,
+	}
 
 	if _, err := os.Stat(discoverFile); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return false, discoverFile, nil
+			return result, nil
 		}
-		return false, discoverFile, fmt.Errorf("stat discover file: %w", err)
+		return CleanupResult{}, fmt.Errorf("stat discover file: %w", err)
 	}
 	if err := os.Remove(discoverFile); err != nil {
-		return false, discoverFile, fmt.Errorf("remove discover file: %w", err)
+		return CleanupResult{}, fmt.Errorf("remove discover file: %w", err)
 	}
-	return true, discoverFile, nil
+	result.Deleted = true
+	return result, nil
 }
 
 func resolveTarget(targetArg string, mode targetMode) (targetRef, error) {

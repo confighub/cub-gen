@@ -213,6 +213,32 @@ func TestGitOpsParityGoldenImport(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import.golden.json"), got)
 }
 
+func TestGitOpsImportDefaultsRenderTargetToTarget(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "examples", "helm-paas"))
+	if err != nil {
+		t.Fatalf("resolve helm path: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", repoPath})
+	if err != nil {
+		t.Fatalf("run shorthand import returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal shorthand import json: %v\noutput=%s", err, out)
+	}
+	if got["target_slug"] != "helm-paas" {
+		t.Fatalf("expected target_slug=helm-paas, got %v", got["target_slug"])
+	}
+	if got["render_target_slug"] != "helm-paas" {
+		t.Fatalf("expected render_target_slug=helm-paas, got %v", got["render_target_slug"])
+	}
+}
+
 func TestGitOpsParityGoldenImportSpring(t *testing.T) {
 	setupAliases(t)
 
@@ -514,8 +540,8 @@ func TestGitOpsParityErrorModes(t *testing.T) {
 			sub:  "usage: cub-gen gitops discover",
 		},
 		{
-			name: "import-missing-render-target",
-			args: []string{"gitops", "import", "helm"},
+			name: "import-missing-target",
+			args: []string{"gitops", "import"},
 			sub:  "usage: cub-gen gitops import",
 		},
 		{
@@ -704,6 +730,7 @@ func normalizeDiscover(m map[string]any) {
 
 func normalizeImport(m map[string]any) {
 	replaceString(m, "target_path", "<target_path>")
+	replaceString(m, "render_target_path", "<render_target_path>")
 	replaceString(m, "discover_unit_slug", "<discover_unit_slug>")
 	replaceString(m, "imported_at", "<timestamp>")
 
@@ -729,6 +756,7 @@ func normalizeImport(m map[string]any) {
 }
 
 func normalizeCleanup(m map[string]any) {
+	replaceString(m, "target_path", "<target_path>")
 	replaceString(m, "discover_file", "<discover_file>")
 }
 

@@ -1,12 +1,15 @@
-cub-gen gitops: local parity commands for cub gitops pattern
+cub-gen gitops: inspect a repo and map DRY source to WET output
+
+Start here when your first question is: what does this repo render, and where did it come from?
+These commands read local repo paths. They do not import from a cluster or deploy.
 
 Usage:
-  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--json] <target-slug>
-  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--wait] [--json] <target-slug> <render-target-slug>
-  cub-gen gitops cleanup [--space SPACE] [--json] <target-slug>
+  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--json] <target-path>
+  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--wait] [--json] <target-path> [<render-target-path>]
+  cub-gen gitops cleanup [--space SPACE] [--json] <target-path>
 
 Supported where-resource clauses:
-  kind = kind = 'Application' | kind = 'Component' | kind = 'ConfigMap' | kind = 'HelmRelease' | kind = 'Kustomization' | kind = 'Workflow'
+  kind = 'Application' | kind = 'Component' | kind = 'ConfigMap' | kind = 'HelmRelease' | kind = 'Kustomization' | kind = 'Workflow'
   kind IN ('Application','Component','ConfigMap','HelmRelease','Kustomization','Workflow')
   name = 'checkout-api' | resource_name LIKE '<contains-api>' | root LIKE '<contains-prod>'
   combine clauses with AND
@@ -14,10 +17,11 @@ Supported where-resource clauses:
 Examples:
   cub-gen gitops discover --space my-space ./examples/scoredev-paas
   cub-gen gitops discover --where-resource "kind IN ('HelmRelease') AND resource_name LIKE '<contains-payments>'" ./examples/helm-paas
-  cub-gen gitops import --space my-space ./examples/springboot-paas render-target
-  cub-gen gitops import --space my-space ./examples/backstage-idp render-target
-  cub-gen gitops import --space my-space ./examples/just-apps-no-platform-config render-target
-  cub-gen gitops import --space my-space ./examples/ops-workflow render-target
+  cub-gen gitops import --space my-space ./examples/springboot-paas
   cub-gen gitops cleanup --space my-space ./examples/springboot-paas
 
-Tip: <target-slug> is a local repo path in this prototype.
+Tips:
+  - Start with 'gitops import' if you want provenance immediately
+  - Use 'gitops discover' first when you want to filter or explore a repo
+  - If omitted, <render-target-path> defaults to <target-path>
+  - For cluster-side import, use 'cub gitops' instead of 'cub-gen gitops'

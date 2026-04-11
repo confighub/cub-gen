@@ -9,12 +9,43 @@ This is the simplest cub-gen example: app-only configuration with no platform
 contracts. It proves the governance model works for *any* configuration, not
 just Kubernetes workloads.
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Source-side provider-config provenance | Real | `./examples/just-apps-no-platform-config/demo-local.sh` |
+| Connected governance path | Real | `./examples/just-apps-no-platform-config/demo-connected.sh` |
+| Empty-platform governance baseline | Real | this example intentionally keeps `platform/` empty and still produces provenance |
+| Standalone provider runtime proof | Not yet | this repo proves governed config flow more than a specific live provider deployment |
+
+Known gaps still open:
+
+- no provider-specific live fixture ships in-repo yet, so runtime proof is still external
+- the future policy examples in this README are illustrative; the example intentionally does not ship those policy files yet
+
+This example is strongest as the smallest honest path for teams that want
+field-origin tracing and governed change flow before they have a formal
+platform layer.
+
+## Fastest path to believe it
+
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Local app-only governance walkthrough
+./examples/just-apps-no-platform-config/demo-local.sh
+
+# Connected governance path
+cub auth login
+./examples/just-apps-no-platform-config/demo-connected.sh
+```
+
 ## 1. Who this is for
 
 | If you are... | Start here |
 |---------------|------------|
 | **Existing ConfigHub user** adding provider config governance | Jump to [Run from ConfigHub](#run-from-confighub-connected-mode) |
-| **App team without a platform layer** | Jump to [Try it](#try-it) — simplest path |
+| **App team without a platform layer** | Jump to [Fastest path](#fastest-path-to-believe-it) — simplest path |
 
 Both paths lead to the same outcome: governed provider config with field-origin tracing.
 
@@ -236,14 +267,20 @@ platform policies, the pipeline already exists.
 
 ## Run from ConfigHub (connected mode)
 
-If you already have ConfigHub, start here:
+If you already have ConfigHub, start with the wrapper entrypoint:
 
 ```bash
 cub auth login
+./examples/just-apps-no-platform-config/demo-connected.sh
+```
+
+That is the current first-run connected path for this example.
+
+If you specifically need the deeper bridge API path, use:
+
+```bash
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-
-# Publish and ingest
 ./cub-gen publish --space platform \
   ./examples/just-apps-no-platform-config ./examples/just-apps-no-platform-config > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json

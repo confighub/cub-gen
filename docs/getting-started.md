@@ -8,8 +8,9 @@ This guide is for teams that already have:
 - Helm, Score, Spring Boot, or workflow config as authoring input,
 - Flux or Argo CD handling WET to LIVE reconciliation.
 
-`cub-gen` adds source-side provenance. ConfigHub adds shared governance and
-evidence. [`cub-scout`](https://github.com/confighub/cub-scout) adds
+`cub-gen` answers repo-side GitOps questions: what this repo renders, where a
+rendered field came from, and what to edit. ConfigHub adds shared governance
+and evidence. [`cub-scout`](https://github.com/confighub/cub-scout) adds
 cluster-side inspection.
 
 ## Start from the setup you already have
@@ -22,8 +23,7 @@ cluster-side inspection.
 
 ## What cub-gen does
 
-`cub-gen` is a deterministic generator importer. It reads your existing config
-and tells you:
+`cub-gen` starts from your existing repo and tells you:
 
 | Question | Answer |
 |----------|--------|
@@ -75,23 +75,35 @@ go build -o cub-gen ./cmd/cub-gen
 ```bash
 REPO=/path/to/your/repo
 ./cub-gen gitops discover --space platform "$REPO"
-./cub-gen gitops import --space platform --json "$REPO" "$REPO" \
+./cub-gen gitops import --space platform --json "$REPO" \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
-./cub-gen change preview --space platform "$REPO" "$REPO"
+./cub-gen change preview --space platform "$REPO"
 ```
 
-Connected mode for the same repo:
+Connected smoke first:
+
+```bash
+cub auth login
+./examples/helm-paas/demo-connected.sh
+./examples/springboot-paas/demo-connected.sh
+```
+
+Advanced connected decision path for the same repo:
 
 ```bash
 cub auth login
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO" "$REPO"
+./cub-gen change run --mode connected --base-url "$BASE_URL" --token "$TOKEN" --space platform "$REPO"
 ```
+
+Use the smoke wrappers first to confirm your ConfigHub environment. The direct
+`change run --mode connected` path is deeper and depends on backend bridge
+endpoints.
 
 ## Your first import (Helm)
 
-The three core commands mirror `cub gitops`:
+The three core repo-first commands are:
 
 ### 1. Discover generator roots
 
@@ -105,7 +117,7 @@ This scans the repo and classifies it as a Helm generator (`helm-paas` profile).
 
 ```bash
 ./cub-gen gitops import --space platform --json \
-  ./examples/helm-paas ./examples/helm-paas | jq .
+  ./examples/helm-paas | jq .
 ```
 
 The import output includes:
@@ -127,7 +139,7 @@ The key value of cub-gen is the provenance trail. Focus on the inverse-edit poin
 
 ```bash
 ./cub-gen gitops import --space platform --json \
-  ./examples/helm-paas ./examples/helm-paas \
+  ./examples/helm-paas \
   | jq '{
       profile: .discovered[0].generator_profile,
       dry_inputs,
@@ -167,7 +179,7 @@ Each generator follows the same three-command flow:
     ```bash
     ./cub-gen gitops discover --space platform ./examples/scoredev-paas
     ./cub-gen gitops import --space platform --json \
-      ./examples/scoredev-paas ./examples/scoredev-paas | jq .
+      ./examples/scoredev-paas | jq .
     ./cub-gen gitops cleanup --space platform ./examples/scoredev-paas
     ```
 
@@ -176,7 +188,7 @@ Each generator follows the same three-command flow:
     ```bash
     ./cub-gen gitops discover --space platform ./examples/springboot-paas
     ./cub-gen gitops import --space platform --json \
-      ./examples/springboot-paas ./examples/springboot-paas | jq .
+      ./examples/springboot-paas | jq .
     ./cub-gen gitops cleanup --space platform ./examples/springboot-paas
     ```
 
@@ -185,7 +197,7 @@ Each generator follows the same three-command flow:
     ```bash
     ./cub-gen gitops discover --space platform ./examples/backstage-idp
     ./cub-gen gitops import --space platform --json \
-      ./examples/backstage-idp ./examples/backstage-idp | jq .
+      ./examples/backstage-idp | jq .
     ./cub-gen gitops cleanup --space platform ./examples/backstage-idp
     ```
 
@@ -195,7 +207,7 @@ Generate a ConfigHub-ready change bundle with digest verification:
 
 ```bash
 ./cub-gen publish --space platform \
-  ./examples/helm-paas ./examples/helm-paas \
+  ./examples/helm-paas \
   | jq '{schema_version, source, change_id, summary}'
 ```
 
@@ -203,7 +215,7 @@ Verify bundle integrity:
 
 ```bash
 ./cub-gen publish --space platform \
-  ./examples/helm-paas ./examples/helm-paas \
+  ./examples/helm-paas \
   | ./cub-gen verify --in -
 ```
 
@@ -211,7 +223,7 @@ Emit an attestation record:
 
 ```bash
 ./cub-gen publish --space platform \
-  ./examples/helm-paas ./examples/helm-paas \
+  ./examples/helm-paas \
   | ./cub-gen attest --in - --verifier ci-bot \
   | jq '{status, verifier, bundle_digest, attestation_digest}'
 ```
@@ -236,7 +248,7 @@ Import is day 1. The real value shows on day 2:
 After import, your next steps are:
 
 1. **Make a governed change**: Edit a DRY file, run `publish`, and see the decision
-2. **Connect to ConfigHub**: Push the bundle to ConfigHub for cross-repo visibility
+2. **Connect to ConfigHub**: Verify the connected smoke path first, then use the deeper bridge path if your backend exposes it
 3. **Enable promotion**: Use ConfigHub to promote patterns to reusable base config
 
 The governance model treats human and AI-assisted changes the same way:
@@ -276,12 +288,12 @@ What you add:
 - ConfigHub for shared evidence and governed decisions
 - `cub-scout` for cluster-side inspection after reconciliation
 
-Boundary language (aligned with [PARITY.md](parity.md)):
+Current delivery status:
 
-- **matched**: `gitops discover|import|cleanup` command shape and output contracts
-- **matched**: bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 8 generators
-- **partial**: local state/artifacts stand in for server-side units during this phase
-- **partial**: bridge flow commands (`ingest`, `decision`, `promote`) produce correct contract shapes; [ConfigHub backend integration](platform.md) is the next step
+- `gitops discover|import|cleanup` are stable and good for first-run local use
+- `publish`, `verify`, `attest`, and `verify-attestation` are stable across all supported generators
+- local mode uses file-backed state and artifacts instead of server-side units
+- deeper bridge commands exist, but the recommended connected first run is still the smoke wrappers and example `demo-connected.sh` paths
 
 ## Terminology
 

@@ -31,6 +31,7 @@ Proposed flags:
 
 Expected output fields (`ChangePreviewResult`):
 
+- `input.{target_path,render_target_path,target_slug,render_target_slug}`
 - `change_id`
 - `bundle_digest`
 - `detected_profiles[]`
@@ -56,6 +57,7 @@ Proposed flags:
 
 Expected output fields (`ChangeRunResult`):
 
+- `preview.input.{target_path,render_target_path,target_slug,render_target_slug}`
 - `change_id`
 - `bundle_digest`
 - `decision.{state,authority,source}`
@@ -72,7 +74,7 @@ Purpose:
 Supported invocation modes:
 
 1. Fresh analysis mode (mints a new lifecycle):
-- `cub-gen change explain [filters] <target-slug> <render-target-slug>`
+- `cub-gen change explain [filters] <target-path> [<render-target-path>]`
 
 2. Existing lifecycle mode (no new lifecycle minted):
 - `cub-gen change explain --change-id <id> --bundle <bundle.json> [filters]`
@@ -86,6 +88,7 @@ Filters:
 
 Expected output fields (`ChangeExplainResult`):
 
+- `input.{target_path,render_target_path,target_slug,render_target_slug}`
 - `change.{change_id,bundle_digest,attestation_digest}`
 - `query.{wet_path_filter,dry_path_filter,owner_filter,match_count}`
 - `explanation.{owner,wet_path,dry_path,edit_hint,confidence,source_path,source_transform,generator_name,generator_profile}`

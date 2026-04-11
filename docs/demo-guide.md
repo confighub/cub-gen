@@ -122,7 +122,7 @@ create reconciliation, update reconciliation, and drift correction against LIVE 
 - Repo-first wizard simulation: `./examples/demo/simulate-repo-wizard.sh`
 - Core module aggregator: `./examples/demo/run-all-modules.sh`
 - Live reconciler E2E: `./examples/demo/e2e-live-reconcile-flux.sh`
-- Demo index and track entrypoints: [`examples/demo/README.md`](../examples/demo/README.md)
+- Demo index and track entrypoints: [`examples/demo/README.md`](https://github.com/confighub/cub-gen/tree/main/examples/demo)
 - Story-card matrix: [Eight Example Story Cards](agentic-gitops/03-worked-examples/04-eight-example-story-cards.md)
 
 !!! note "Qualification"

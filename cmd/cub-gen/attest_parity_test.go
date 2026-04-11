@@ -30,6 +30,8 @@ func TestAttestGoldenJSON(t *testing.T) {
 	replaceString(got, "bundle_digest", "<bundle_digest>")
 	replaceString(got, "attestation_digest", "<attestation_digest>")
 	replaceString(got, "change_id", "<change_id>")
+	replaceString(got, "target_path", "<target_path>")
+	replaceString(got, "render_target_path", "<render_target_path>")
 	assertGoldenJSON(t, "testdata/parity/attest.json.golden.json", got)
 }
 

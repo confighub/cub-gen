@@ -45,6 +45,7 @@ type ChangeBundle struct {
 	TargetSlug         string                          `json:"target_slug"`
 	TargetPath         string                          `json:"target_path"`
 	RenderTargetSlug   string                          `json:"render_target_slug"`
+	RenderTargetPath   string                          `json:"render_target_path,omitempty"`
 	Ref                string                          `json:"ref"`
 	ChangeID           string                          `json:"change_id,omitempty"`
 	Summary            Summary                         `json:"summary"`
@@ -83,6 +84,7 @@ func BuildBundleAt(imported gitopsflow.ImportFlowResult, at time.Time) ChangeBun
 		TargetSlug:       imported.TargetSlug,
 		TargetPath:       imported.TargetPath,
 		RenderTargetSlug: imported.RenderTargetSlug,
+		RenderTargetPath: imported.RenderTargetPath,
 		Ref:              imported.Ref,
 		ChangeID:         extractChangeID(imported),
 		Summary: Summary{

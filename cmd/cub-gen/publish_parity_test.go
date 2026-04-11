@@ -128,6 +128,7 @@ func normalizePublish(m map[string]any) {
 	replaceString(m, "change_id", "<change_id>")
 	replaceString(m, "bundle_digest", "<bundle_digest>")
 	replaceString(m, "target_path", "<target_path>")
+	replaceString(m, "render_target_path", "<render_target_path>")
 
 	for _, item := range asSlice(m["contracts"]) {
 		replaceString(item, "source_repo", "<target_path>")

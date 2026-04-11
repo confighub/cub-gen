@@ -29,10 +29,10 @@ Confidence depends on generator structure:
 
 ```bash
 # Top recommendations with confidence
-./cub-gen change explain --space platform --owner app-team ./examples/helm-paas ./examples/helm-paas
+./cub-gen change explain --space platform --owner app-team ./examples/helm-paas
 
 # Raw provenance data (includes confidence fields)
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas
+./cub-gen gitops import --space platform --json ./examples/helm-paas
 ```
 
 ## Related

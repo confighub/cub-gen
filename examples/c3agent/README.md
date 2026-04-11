@@ -13,6 +13,32 @@ properly isolated? ConfigHub makes AI fleet governance explicit and traceable.
 > For the full platform story with registry and constraint enforcement, see
 > [`ai-ops-paas`](../ai-ops-paas/).
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Source-side fleet provenance | Real | `./examples/c3agent/demo-local.sh` |
+| Connected governance path | Real | `./examples/c3agent/demo-connected.sh` |
+| First-class source-chain coverage in the truth matrix | Real | `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v` |
+| Standalone live fleet runtime proof | Not yet | current example stops at governed fleet config and connected evidence |
+
+## Fastest path to believe it
+
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Local source-side path
+./examples/c3agent/demo-local.sh
+
+# Connected governance path
+cub auth login
+./examples/c3agent/demo-connected.sh
+```
+
+This is the strongest compact AI fleet example in the repo today. Use
+[`ai-ops-paas`](../ai-ops-paas/) when you need the broader registry/constraint
+platform story, but start here when you want the cleaner source-side proof.
+
 ## 1. Who this is for
 
 | If you are... | Start here |
@@ -230,14 +256,20 @@ WET:  Deployment(controlplane)/spec/template/spec/containers[0]/env[AGENT_MODEL]
 
 ## Run from ConfigHub (connected mode)
 
-If you already have ConfigHub, start here:
+If you already have ConfigHub, start with the wrapper entrypoint:
 
 ```bash
 cub auth login
+./examples/c3agent/demo-connected.sh
+```
+
+That is the current first-run connected path for this example.
+
+If you specifically need the deeper bridge API path, use:
+
+```bash
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-
-# Publish and ingest
 ./cub-gen publish --space platform ./examples/c3agent ./examples/c3agent > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json

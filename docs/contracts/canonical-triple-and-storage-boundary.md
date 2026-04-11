@@ -109,7 +109,7 @@ go build ./cmd/cub-gen
 Inspect canonical triple from Helm example:
 
 ```bash
-./cub-gen gitops import --space platform --json ./examples/helm-paas ./examples/helm-paas \
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '{
       contract: (.contracts[0] | {schema_version,generator_id,name,kind,profile,source_repo,source_ref,inputs,capabilities,deterministic}),
       provenance: (.provenance[0] | {schema_version,provenance_id,change_id,generator_id,sources,outputs,field_origin_map,inverse_edit_pointers,chart_path,values_paths}),

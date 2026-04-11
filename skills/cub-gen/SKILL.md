@@ -18,7 +18,7 @@ Start here when the task is about:
 ## Read first
 
 1. `AI-README-FIRST.md`
-2. `AI-HANDOVER.md`
+2. `HANDOVER.md`
 3. `docs/cli-reference.md`
 4. `docs/contracts/change-cli-v1.md`
 5. `docs/workflows/confidence-scores.md`
@@ -27,7 +27,7 @@ If the user is asking you to *use* cub-gen against a real source repo (not work 
 
 ## Product value in one breath
 
-`cub-gen` is the source-side provenance and governed-change companion. It maps DRY source files to WET rendered manifests, records field-level origins with confidence scores, and emits inverse-edit hints so app/platform teams know exactly where to edit safely.
+`cub-gen` is the repo-side traceability and governed-change CLI. It starts from DRY source files, maps them to WET rendered manifests, records field-level origins with confidence scores, and emits inverse-edit hints so app/platform teams know exactly where to edit safely.
 
 ## Tool boundaries
 
@@ -68,6 +68,16 @@ If the user is asking you to *use* cub-gen against a real source repo (not work 
 - Change CLI: preview, run (local|connected), explain
 - Bridge workflow: ingest, decision query, promote init
 - Live reconciler proofs against Flux and ArgoCD on kind clusters
+
+## Variants and overlays today
+
+Current status: partial support.
+
+- One `gitops import` or `publish` invocation works on one repo path pair.
+- Supported generators can pick up overlay files that already live in that repo, such as Helm `values-prod.yaml`, Spring `application-dev.yaml`, or generator-specific overlay files.
+- Provenance records can distinguish base vs overlay source paths when the generator emits separate overlay transforms.
+- `change explain` can point operators toward overlay-specific edits, but it does not expose a full CLI surface for "render N explicit variants and emit N bundles" yet.
+- There is no `--values`, `--overlay`, or `--variant` fan-out flag today.
 
 ## Confidence score routing
 

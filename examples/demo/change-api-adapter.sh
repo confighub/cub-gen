@@ -14,8 +14,8 @@ Request shape (see docs/contracts/change-api-v1.md):
     "action": "preview" | "run" | "explain",
     "mode": "local" | "connected",          # required for run
     "input": {
-      "target_slug": "./examples/scoredev-paas",
-      "render_target_slug": "./examples/scoredev-paas",
+      "target_path": "./examples/scoredev-paas",
+      "render_target_path": "./examples/scoredev-paas",
       "space": "platform",
       "ref": "HEAD",
       "where_resource": "..."
@@ -38,8 +38,9 @@ Request shape (see docs/contracts/change-api-v1.md):
   }
 
 Explain modes:
-  1) By input slugs (legacy): provide input.target_slug + input.render_target_slug
-  2) By lifecycle id (recommended): provide change.change_id + change.bundle
+  1) By input paths (preferred): provide input.target_path; input.render_target_path is optional
+  2) By input slugs (legacy): provide input.target_slug; input.render_target_slug is optional
+  3) By lifecycle id (recommended): provide change.change_id + change.bundle
 USAGE
 }
 
@@ -83,11 +84,18 @@ if [ "${SKIP_BUILD:-0}" != "1" ]; then
 fi
 
 action="$(jq -r '.action // empty' "$REQUEST")"
+target_path="$(jq -r '.input.target_path // empty' "$REQUEST")"
+render_target_path="$(jq -r '.input.render_target_path // empty' "$REQUEST")"
 target_slug="$(jq -r '.input.target_slug // empty' "$REQUEST")"
 render_target_slug="$(jq -r '.input.render_target_slug // empty' "$REQUEST")"
 space="$(jq -r '.input.space // "platform"' "$REQUEST")"
 ref="$(jq -r '.input.ref // "HEAD"' "$REQUEST")"
 where_resource="$(jq -r '.input.where_resource // empty' "$REQUEST")"
+target_arg="${target_path:-$target_slug}"
+render_target_arg="${render_target_path:-$render_target_slug}"
+if [ -z "$render_target_arg" ]; then
+  render_target_arg="$target_arg"
+fi
 
 if [ -z "$action" ]; then
   echo "error: request must include action" >&2
@@ -98,19 +106,19 @@ cmd=(./cub-gen change)
 
 case "$action" in
   preview)
-    if [ -z "$target_slug" ] || [ -z "$render_target_slug" ]; then
-      echo "error: action=preview requires input.target_slug + input.render_target_slug" >&2
+    if [ -z "$target_arg" ]; then
+      echo "error: action=preview requires input.target_path or input.target_slug" >&2
       exit 1
     fi
     cmd+=(preview --space "$space" --ref "$ref")
     if [ -n "$where_resource" ]; then
       cmd+=(--where-resource "$where_resource")
     fi
-    cmd+=("$target_slug" "$render_target_slug")
+    cmd+=("$target_arg" "$render_target_arg")
     ;;
   run)
-    if [ -z "$target_slug" ] || [ -z "$render_target_slug" ]; then
-      echo "error: action=run requires input.target_slug + input.render_target_slug" >&2
+    if [ -z "$target_arg" ]; then
+      echo "error: action=run requires input.target_path or input.target_slug" >&2
       exit 1
     fi
     mode="$(jq -r '.mode // empty' "$REQUEST")"
@@ -140,7 +148,7 @@ case "$action" in
         cmd+=(--decision-endpoint "$decision_endpoint")
       fi
     fi
-    cmd+=("$target_slug" "$render_target_slug")
+    cmd+=("$target_arg" "$render_target_arg")
     ;;
   explain)
     explain_change_id="$(jq -r '.change.change_id // empty' "$REQUEST")"
@@ -157,8 +165,8 @@ case "$action" in
       fi
       cmd+=(--change-id "$explain_change_id" --bundle "$explain_bundle")
     else
-      if [ -z "$target_slug" ] || [ -z "$render_target_slug" ]; then
-        echo "error: action=explain requires input.target_slug + input.render_target_slug when change.change_id is not set" >&2
+      if [ -z "$target_arg" ]; then
+        echo "error: action=explain requires input.target_path or input.target_slug when change.change_id is not set" >&2
         exit 1
       fi
       cmd+=(--space "$space" --ref "$ref")
@@ -177,7 +185,7 @@ case "$action" in
       cmd+=(--owner "$owner")
     fi
     if [ -z "$explain_change_id" ]; then
-      cmd+=("$target_slug" "$render_target_slug")
+      cmd+=("$target_arg" "$render_target_arg")
     fi
     ;;
   *)

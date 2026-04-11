@@ -181,6 +181,32 @@ func TestPublishDirectTargetModeSupportedTargets(t *testing.T) {
 	}
 }
 
+func TestPublishDirectTargetModeDefaultsRenderTargetToTarget(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "examples", "helm-paas"))
+	if err != nil {
+		t.Fatalf("resolve helm path: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{"publish", "--space", "platform", repoPath})
+	if err != nil {
+		t.Fatalf("publish shorthand returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr from publish shorthand, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal publish shorthand output: %v\noutput=%s", err, out)
+	}
+	if got["target_slug"] != "helm-paas" {
+		t.Fatalf("expected target_slug=helm-paas, got %v", got["target_slug"])
+	}
+	if got["render_target_slug"] != "helm-paas" {
+		t.Fatalf("expected render_target_slug=helm-paas, got %v", got["render_target_slug"])
+	}
+}
+
 func TestPublishRejectsMixedInAndDirectMode(t *testing.T) {
 	setupAliases(t)
 

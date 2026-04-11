@@ -1,5 +1,9 @@
 # cub-gen v0.2 Preview Roadmap
 
+Historical roadmap snapshot as of 2026-03-06.
+
+For active release planning, see `docs/releases/v0.2-preview.2-plan.md`.
+
 Status date: 2026-03-06
 
 ## Goal

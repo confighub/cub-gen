@@ -9,9 +9,9 @@
 
 ## Core mental model
 
-`cub-gen` is a **source-side provenance and governed-change companion**. It
-maps DRY source files (the things humans edit) to WET rendered manifests (the
-things controllers deploy) and answers four questions:
+`cub-gen` is the **repo-side traceability and governed-change CLI**. It starts
+from DRY source files (the things humans edit), maps them to WET rendered
+manifests (the things controllers deploy), and answers four questions:
 
 1. **What generators is this repo using?** — Helm, Score, Spring Boot, etc.
 2. **Where does this deployed field come from?** — DRY file/path/owner
@@ -21,21 +21,26 @@ things controllers deploy) and answers four questions:
 cub-gen never deploys to a cluster. It runs locally against a source repo and
 optionally talks to ConfigHub for governed workflows.
 
+When the local render target is the same repo path, omit the second path
+argument. Use the explicit two-path form only when you need different source
+and render target paths.
+
 ## Task → command map
 
 When the operator asks... | Run this | What you get
 ---|---|---
 "What generators does this repo use?" | `./cub-gen detect --repo $REPO --pretty` | Detected generator profiles
 "What generators are supported?" | `./cub-gen generators --markdown --details` | Full generator catalog
-"Render and show provenance" | `./cub-gen gitops import --space my-space $REPO local-renderer --json` | Rendered manifests + field origin map
-"Build a provenance bundle" | `./cub-gen publish --space my-space $REPO $REPO --pretty` | Bundle JSON ready for verify/attest
+"Render and show provenance" | `./cub-gen gitops import --space my-space $REPO --json` | Rendered manifests + field origin map
+"Build a provenance bundle" | `./cub-gen publish --space my-space $REPO --pretty` | Bundle JSON ready for verify/attest
 "Verify a bundle" | `./cub-gen publish ... \| ./cub-gen verify --in -` | Pass/fail with reasons
 "Sign a bundle" | `./cub-gen publish ... \| ./cub-gen attest --in - --verifier ci-bot` | Signed attestation
-"Preview a change" | `./cub-gen change preview --space my-space $REPO $REPO` | Diff + provenance + confidence
-"Where do I edit this field?" | `./cub-gen change explain --wet-path "<path>" $REPO $REPO` | DRY file/path/owner
-"Run a governed change" | `./cub-gen change run --mode local --space my-space $REPO $REPO` | Local change report (or connected to ConfigHub)
-"Send to ConfigHub for decision" | `./cub-gen bridge ingest --in bundle.json --base-url <url>` | Ingest receipt
-"Check decision status" | `./cub-gen bridge decision query --change-id <id> --base-url <url>` | ALLOW / ESCALATE / BLOCK
+"Preview a change" | `./cub-gen change preview --space my-space $REPO` | Diff + provenance + confidence
+"Where do I edit this field?" | `./cub-gen change explain --wet-path "<path>" $REPO` | DRY file/path/owner
+"Run a governed change" | `./cub-gen change run --mode local --space my-space $REPO` | Local change report (or connected to ConfigHub)
+"Verify the connected smoke path" | `cub auth login && ./examples/demo/run-connected-smoke.sh` | ConfigHub auth/context + flagship connected wrappers
+"Use the deep bridge API path" | `./cub-gen bridge ingest --in bundle.json --base-url <url>` | Ingest receipt
+"Check deep decision status" | `./cub-gen bridge decision query --change-id <id> --base-url <url>` | ALLOW / ESCALATE / BLOCK
 
 ## First commands for any source repo
 
@@ -54,12 +59,12 @@ enough to answer most "what is this repo doing?" questions.
 
 ```bash
 # 1. Build a publish bundle and inspect field origin
-./cub-gen publish --space my-space $REPO $REPO --pretty | jq '.provenance[0].field_origin_map'
+./cub-gen publish --space my-space $REPO --pretty | jq '.provenance[0].field_origin_map'
 
 # 2. Or query a specific WET path directly
 ./cub-gen change explain --space my-space \
   --wet-path "Deployment/spec/template/spec/containers[0]/image" \
-  $REPO $REPO
+  $REPO
 ```
 
 The output includes:
@@ -74,22 +79,22 @@ The output includes:
 
 ```bash
 # 1. Preview the change locally
-./cub-gen change preview --space my-space $REPO $REPO --json
+./cub-gen change preview --space my-space $REPO --json
 
 # 2. Run it (still local, just produces a change report)
-./cub-gen change run --mode local --space my-space $REPO $REPO --json
+./cub-gen change run --mode local --space my-space $REPO --json
 
-# 3. (Connected) Send for governed decision
+# 3. (Connected, advanced) Send for governed decision
 ./cub-gen change run --mode connected --base-url <confighub-url> \
-  --space my-space $REPO $REPO --json
+  --space my-space $REPO --json
 ```
 
-In connected mode, ConfigHub returns a decision: ALLOW / ESCALATE / BLOCK.
+In the advanced connected path, ConfigHub returns a decision: ALLOW / ESCALATE / BLOCK.
 
 ### Task: Build an evidence bundle for a release
 
 ```bash
-./cub-gen publish --space my-space $REPO $REPO \
+./cub-gen publish --space my-space $REPO \
   | ./cub-gen verify --in - \
   | ./cub-gen attest --in - --verifier ci-bot \
   > release-evidence.json
@@ -191,12 +196,34 @@ Command surface and generator catalog evolve. Use `--help` and `generators
 
 ```bash
 ./cub-gen change run --mode local      # local report, no backend
+./examples/demo/run-connected-smoke.sh # connected smoke lane
 ./cub-gen change run --mode connected --base-url <url>  # ConfigHub decision
 ```
 
-Connected mode requires a ConfigHub base URL and (usually) authentication via
-`cub auth login`. If the user does not have ConfigHub set up, all the
-source-side and provenance work still works in local mode.
+Start with the connected smoke lane after `cub auth login`. The direct
+`change run --mode connected` path is deeper and requires a ConfigHub base URL
+plus the backend bridge endpoints. If the user does not have ConfigHub set up,
+all the source-side and provenance work still works in local mode.
+
+## Variants and overlays
+
+Current status: partial support.
+
+- A single `gitops import` / `publish` invocation works on one repo path pair.
+- If the repo already contains generator-native overlay files, `cub-gen` can include them in provenance and dry input reporting.
+- For example, Spring Boot can emit both base and overlay field-origin entries for `server.port`, while `change explain` points to the profile-specific edit path:
+
+```bash
+./cub-gen gitops import --space my-space --json ./examples/springboot-paas \
+  | jq '.provenance[0].field_origin_map[] | select(.dry_path=="server.port")'
+
+./cub-gen change explain --space my-space \
+  --wet-path "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort" \
+  ./examples/springboot-paas
+```
+
+- There is no current CLI for repeated `--values`, `--overlay`, `--variant`, or globbed fan-out that emits one bundle per environment in a single command.
+- If the user asks for per-environment bundle fan-out, describe it as a current product gap instead of inventing a flag.
 
 ## JSON-first for automation
 
@@ -206,7 +233,7 @@ output when the result will be parsed:
 ```bash
 ./cub-gen detect --repo $REPO --pretty
 ./cub-gen generators --json --details
-./cub-gen gitops import --space my-space $REPO local-renderer --json
+./cub-gen gitops import --space my-space $REPO $REPO --json
 ./cub-gen publish --space my-space $REPO $REPO --pretty
 ./cub-gen change preview --space my-space $REPO $REPO --json
 ./cub-gen change explain --space my-space --wet-path "<path>" $REPO $REPO --json
@@ -221,7 +248,7 @@ If asked about something cub-gen cannot do today, do not invent. Be honest:
 - **Generator coverage is finite** — only generators in `./cub-gen generators` are supported
 - **Confidence is a heuristic** — not a guarantee of correctness; threshold-based routing exists for a reason
 - **No cluster reach** — cub-gen never reads or writes a cluster; that's `cub-scout`'s job
-- **Connected mode requires ConfigHub** — bridge workflows depend on a backend
+- **Connected smoke and deep connected paths require ConfigHub** — the smoke lane checks auth/context; bridge workflows also depend on backend endpoints
 - **Inverse-edit hints are advisory** — they tell you where to edit, they don't perform the edit
 
 When a capability is missing, offer to file an issue at

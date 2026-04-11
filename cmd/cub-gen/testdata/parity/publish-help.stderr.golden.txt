@@ -1,13 +1,15 @@
-Usage of publish:
-  -in string
-    	ImportFlow JSON input path, or '-' for stdin (default "-")
-  -out string
-    	Bundle JSON output path, or '-' for stdout (default "-")
-  -pretty
-    	Pretty-print JSON output (default true)
-  -ref string
-    	Git ref label to include in output (direct mode) (default "HEAD")
-  -space string
-    	ConfigHub space label (direct mode) (default "default")
-  -where-resource string
-    	Additional resource filter expression (direct mode)
+cub-gen publish: build verifiable evidence from import output or repo paths
+
+Use pipe mode when you already have gitops import JSON, or direct mode to import + bundle in one step.
+
+Usage:
+  cub-gen publish [--in FILE|-] [--out FILE|-] [--pretty]
+  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]
+
+Examples:
+  cub-gen gitops import --space my-space ./examples/helm-paas | cub-gen publish --in - --out -
+  cub-gen publish --space my-space ./examples/helm-paas > bundle.json
+
+Tips:
+  - If omitted, <render-target-path> defaults to <target-path>
+  - Pipe to 'cub-gen verify' and 'cub-gen attest' for release evidence

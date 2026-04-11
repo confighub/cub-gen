@@ -7,11 +7,11 @@ cd "$ROOT_DIR"
 usage() {
   cat <<'USAGE'
 Usage:
-  ./examples/demo/change-api-http-e2e.sh [target-slug] [render-target-slug]
+  ./examples/demo/change-api-http-e2e.sh [target-path] [render-target-path]
 
 Default:
-  target-slug: ./examples/scoredev-paas
-  render-target-slug: ./examples/scoredev-paas
+  target-path: ./examples/scoredev-paas
+  render-target-path: ./examples/scoredev-paas
 USAGE
 }
 
@@ -20,8 +20,10 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
-TARGET_SLUG="${1:-./examples/scoredev-paas}"
-RENDER_TARGET_SLUG="${2:-$TARGET_SLUG}"
+TARGET_PATH="${1:-./examples/scoredev-paas}"
+RENDER_TARGET_PATH="${2:-$TARGET_PATH}"
+TARGET_PATH_ABS="$(cd "$TARGET_PATH" && pwd)"
+RENDER_TARGET_PATH_ABS="$(cd "$RENDER_TARGET_PATH" && pwd)"
 LISTEN_ADDR="${CHANGE_API_LISTEN_ADDR:-127.0.0.1:18787}"
 BASE_URL="http://${LISTEN_ADDR}"
 
@@ -63,18 +65,18 @@ if ! curl -fsS "$BASE_URL/healthz" >/dev/null 2>&1; then
   exit 1
 fi
 
-cat > "$tmpdir/run-request.json" <<JSON
-{
-  "action": "run",
-  "mode": "local",
-  "input": {
-    "target_slug": "${TARGET_SLUG}",
-    "render_target_slug": "${RENDER_TARGET_SLUG}",
-    "space": "platform",
-    "ref": "HEAD"
-  }
-}
-JSON
+jq -n \
+  --arg target_path "$TARGET_PATH" \
+  --arg render_target_path "$RENDER_TARGET_PATH" \
+  '{
+    action: "run",
+    mode: "local",
+    input: ({
+      target_path: $target_path,
+      space: "platform",
+      ref: "HEAD"
+    } + (if $render_target_path == $target_path then {} else {render_target_path: $render_target_path} end))
+  }' > "$tmpdir/run-request.json"
 
 curl -fsS \
   -H 'Content-Type: application/json' \
@@ -93,11 +95,16 @@ curl -fsS "$BASE_URL/v1/changes/$change_id" > "$tmpdir/get-response.json"
 curl -fsS "$BASE_URL/v1/changes/$change_id/explanations?owner=app-team" > "$tmpdir/explain-response.json"
 
 jq -e '.decision.state == "ALLOW" and .promotion_ready == true and (.verification.bundle_valid == true) and (.verification.attestation_valid == true)' "$tmpdir/run-response.json" >/dev/null
+jq -e --arg repo "$TARGET_PATH_ABS" --arg render_target "$RENDER_TARGET_PATH_ABS" '.input.target_path == $repo and .input.render_target_path == $render_target' "$tmpdir/run-response.json" >/dev/null
 jq -e --arg id "$change_id" '.change.change_id == $id and .decision.state == "ALLOW"' "$tmpdir/get-response.json" >/dev/null
+jq -e --arg repo "$TARGET_PATH_ABS" --arg render_target "$RENDER_TARGET_PATH_ABS" '.input.target_path == $repo and .input.render_target_path == $render_target' "$tmpdir/get-response.json" >/dev/null
 jq -e --arg id "$change_id" '.change.change_id == $id and .query.match_count >= 1 and (.explanation.owner == "app-team")' "$tmpdir/explain-response.json" >/dev/null
+jq -e --arg repo "$TARGET_PATH_ABS" --arg render_target "$RENDER_TARGET_PATH_ABS" '.input.target_path == $repo and .input.render_target_path == $render_target' "$tmpdir/explain-response.json" >/dev/null
 
 jq -n \
   --arg change_id "$change_id" \
+  --arg target_path "$(jq -r '.input.target_path' "$tmpdir/run-response.json")" \
+  --arg render_target_path "$(jq -r '.input.render_target_path' "$tmpdir/run-response.json")" \
   --arg decision_state "$(jq -r '.decision.state' "$tmpdir/run-response.json")" \
   --arg decision_source "$(jq -r '.decision.source' "$tmpdir/run-response.json")" \
   --arg dry_path "$(jq -r '.explanation.dry_path' "$tmpdir/explain-response.json")" \
@@ -110,6 +117,10 @@ jq -n \
       "GET /v1/changes/{change_id}/explanations"
     ],
     change_id: $change_id,
+    input: {
+      target_path: $target_path,
+      render_target_path: $render_target_path
+    },
     decision: {
       state: $decision_state,
       source: $decision_source

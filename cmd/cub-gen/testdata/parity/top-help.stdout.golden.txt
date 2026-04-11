@@ -1,34 +1,34 @@
-cub-gen: source-side provenance and governed-change companion for GitOps
+cub-gen: trace repo config to rendered output so you know what to edit
 
-Maps DRY source files (values.yaml, score.yaml, application.yaml, etc.)
-to WET rendered manifests, recording field-level provenance and inverse-edit hints.
+Use cub-gen when your question starts in the repo, not the cluster:
+  - Which file/path/owner produced this rendered field?
+  - What manifests did this repo actually produce?
+  - What evidence bundle should I verify or send to ConfigHub?
 
-POPULAR COMMANDS
+START HERE:
+  gitops import     See what a repo renders and where each field came from
+  change explain    Find the DRY file/path to edit for a rendered field
+  change preview    Preview a safe repo change
   detect            Detect generators in a repo
   generators        List supported generators (Helm, Score, Spring Boot, ...)
-  gitops discover   Discover renderable artifacts in a repo
-  gitops import     Import + render to a target
-  publish           Build a provenance bundle for a target
+
+BUILD EVIDENCE:
+  publish           Build a provenance bundle from a repo or import output
   verify            Verify a provenance bundle
   attest            Sign a provenance bundle
-  change preview    Preview a change with provenance and inverse-edit hints
-  change run        Run a change in local or connected mode
-  change explain    Explain field origin and where to edit DRY source
-  bridge            Connected ingest/decision/promote workflows
 
-QUICK START
-  cub-gen generators --markdown --details
-  cub-gen gitops discover --space my-space ./examples/helm-paas
-  cub-gen gitops import --space my-space ./examples/helm-paas local-renderer
-  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas
-  cub-gen change preview --space my-space ./examples/scoredev-paas ./examples/scoredev-paas
-  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas
+ADVANCED CONNECTED:
+  change run        Ask ConfigHub for a decision (does not deploy)
+  bridge            Advanced ingest/decision/promote workflows
 
-TIPS
-  • Add --json or --pretty for machine-readable output
-  • Pipe publish | verify | attest for an end-to-end provenance chain
-  • Use 'cub-gen <command> --help' for full flag detail
-  • For per-generator recipes, see docs/cli-reference.md
+FIRST RUNS:
+  cub-gen gitops import --space my-space ./examples/helm-paas
+  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas
+  cub-gen publish --space my-space ./examples/helm-paas | cub-gen verify --in -
+  cub-gen publish --space my-space ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot
 
-Note: gitops commands are local-only and mirror 'cub gitops' command shape.
-      For cluster-side import, use 'cub gitops' from the ConfigHub CLI.
+BOUNDARIES:
+  - cub-gen does not deploy and does not read live cluster state
+  - Use 'cub-scout' for runtime/cluster questions
+  - Use 'cub gitops' for cluster-side import and ConfigHub management
+  - If you omit <render-target-path>, cub-gen reuses <target-path>

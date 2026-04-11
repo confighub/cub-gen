@@ -18,9 +18,11 @@
     },
     "input": {
       "ref": "HEAD",
-      "render_target_slug": "render-target",
+      "render_target_path": "\u003crender_target_path\u003e",
+      "render_target_slug": "scoredev-paas",
       "space": "platform",
-      "target_slug": "score"
+      "target_path": "\u003ctarget_path\u003e",
+      "target_slug": "scoredev-paas"
     },
     "query": {
       "match_count": 3,
@@ -49,6 +51,14 @@
       "edit_hint": "Edit the Score container image in score.yaml.",
       "owner": "app-team",
       "wet_path": "Deployment/spec/template/spec/containers[name=main]/image"
+    },
+    "input": {
+      "ref": "HEAD",
+      "render_target_path": "\u003crender_target_path\u003e",
+      "render_target_slug": "scoredev-paas",
+      "space": "platform",
+      "target_path": "\u003ctarget_path\u003e",
+      "target_slug": "scoredev-paas"
     },
     "promotion_ready": true,
     "verification": {
@@ -79,6 +89,14 @@
       "edit_hint": "Edit the Score container image in score.yaml.",
       "owner": "app-team",
       "wet_path": "Deployment/spec/template/spec/containers[name=main]/image"
+    },
+    "input": {
+      "ref": "HEAD",
+      "render_target_path": "\u003crender_target_path\u003e",
+      "render_target_slug": "scoredev-paas",
+      "space": "platform",
+      "target_path": "\u003ctarget_path\u003e",
+      "target_slug": "scoredev-paas"
     },
     "promotion_ready": true,
     "verification": {

@@ -7,7 +7,7 @@ If your AI host supports repo-local skills, load [skills/cub-gen/SKILL.md](skill
 If you are starting work in this repo, read files in this order:
 
 1. `AI-README-FIRST.md`
-2. `AI-HANDOVER.md`
+2. `HANDOVER.md`
 3. `CLAUDE.md`
 4. `docs/cli-reference.md`
 5. `docs/contracts/change-cli-v1.md`
@@ -18,7 +18,7 @@ Use these for different AI scenarios:
 
 ## What cub-gen is
 
-`cub-gen` is a **source-side provenance and governed-change companion** for GitOps teams.
+`cub-gen` is the **repo-side traceability and governed-change CLI** for GitOps teams.
 
 It maps DRY source files (Helm `values.yaml`, Score `score.yaml`, Spring Boot `application.yaml`, etc.) to WET rendered manifests and records:
 

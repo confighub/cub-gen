@@ -603,47 +603,92 @@ func writeJSONOutput(path string, v any, pretty bool) error {
 }
 
 func printBridgeUsage(out io.Writer) {
-	fmt.Fprintln(out, "cub-gen bridge: ConfigHub bridge flow commands (ingest, decision, promotion)")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Usage:")
-	fmt.Fprintln(out, "  cub-gen bridge ingest [--in FILE|-] --base-url URL [--token TOKEN] [--endpoint PATH] [--json] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen bridge decision <create|attach|apply|query> [flags]")
-	fmt.Fprintln(out, "  cub-gen bridge promote <init|govern|verify|open|approve|merge> [flags]")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Examples:")
-	fmt.Fprintln(out, "  cub-gen bridge ingest --in bundle.json --base-url https://confighub.example")
-	fmt.Fprintln(out, "  cub-gen bridge decision create --ingest ingest-result.json")
-	fmt.Fprintln(out, "  cub-gen bridge decision attach --decision decision.json --attestation attestation.json")
-	fmt.Fprintln(out, "  cub-gen bridge decision apply --decision decision.json --state ALLOW --approved-by platform-admin --reason \"policy checks passed\"")
-	fmt.Fprintln(out, "  cub-gen bridge decision query --base-url https://confighub.example --change-id chg_123")
-	fmt.Fprintln(out, "  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123")
+	printCommandHelp(
+		out,
+		"cub-gen bridge: advanced ConfigHub API workflows",
+		[]string{
+			"Use bridge after local repo proof or connected smoke is already clear.",
+			"Most users should start with demo-connected.sh or run-connected-smoke.sh first.",
+		},
+		helpSection{
+			Title: "Usage",
+			Lines: []string{
+				"  cub-gen bridge ingest [--in FILE|-] --base-url URL [--token TOKEN] [--endpoint PATH] [--json] [--pretty]",
+				"  cub-gen bridge decision <create|attach|apply|query> [flags]",
+				"  cub-gen bridge promote <init|govern|verify|open|approve|merge> [flags]",
+			},
+		},
+		helpSection{
+			Title: "What it's for",
+			Lines: []string{
+				"  ingest      Submit a verified bundle to ConfigHub",
+				"  decision    Query backend decision state or simulate it offline",
+				"  promote     Track PR<->MR and upstream DRY promotion flows",
+			},
+		},
+		helpSection{
+			Title: "Examples",
+			Lines: []string{
+				"  cub-gen bridge ingest --in bundle.json --base-url https://confighub.example",
+				"  cub-gen bridge decision create --ingest ingest-result.json",
+				"  cub-gen bridge decision attach --decision decision.json --attestation attestation.json",
+				"  cub-gen bridge decision apply --decision decision.json --state ALLOW --approved-by platform-admin --reason \"policy checks passed\"",
+				"  cub-gen bridge decision query --base-url https://confighub.example --change-id chg_123",
+				"  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123",
+			},
+		},
+		helpSection{
+			Title: "Tips",
+			Lines: []string{
+				"  - bridge decision query is the authoritative backend lookup path",
+				"  - local decision create|attach|apply commands are for offline contract simulation",
+			},
+		},
+	)
 }
 
 func printBridgeDecisionUsage(out io.Writer) {
-	fmt.Fprintln(out, "cub-gen bridge decision: governed decision-state commands")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Usage:")
-	fmt.Fprintln(out, "  cub-gen bridge decision create --ingest FILE|- [--out FILE|-] [--at RFC3339] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen bridge decision attach --decision FILE|- --attestation FILE [--out FILE|-] [--at RFC3339] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen bridge decision apply --decision FILE|- --state ALLOW|ESCALATE|BLOCK --reason TEXT [--approved-by NAME|--policy-ref REF] [--out FILE|-] [--at RFC3339] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen bridge decision query --base-url URL --change-id ID [--token TOKEN] [--endpoint PATH] [--pretty]")
+	printCommandHelp(
+		out,
+		"cub-gen bridge decision: governed decision-state commands",
+		nil,
+		helpSection{
+			Title: "Usage",
+			Lines: []string{
+				"  cub-gen bridge decision create --ingest FILE|- [--out FILE|-] [--at RFC3339] [--pretty]",
+				"  cub-gen bridge decision attach --decision FILE|- --attestation FILE [--out FILE|-] [--at RFC3339] [--pretty]",
+				"  cub-gen bridge decision apply --decision FILE|- --state ALLOW|ESCALATE|BLOCK --reason TEXT [--approved-by NAME|--policy-ref REF] [--out FILE|-] [--at RFC3339] [--pretty]",
+				"  cub-gen bridge decision query --base-url URL --change-id ID [--token TOKEN] [--endpoint PATH] [--pretty]",
+			},
+		},
+	)
 }
 
 func printBridgePromoteUsage(out io.Writer) {
-	fmt.Fprintln(out, "cub-gen bridge promote: PR<->MR and upstream DRY promotion flow commands")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Usage:")
-	fmt.Fprintln(out, "  cub-gen bridge promote init --change-id ID --app-pr-repo REPO --app-pr-number N --app-pr-url URL --mr-id ID --mr-url URL [--app-pr-sha SHA] [--mr-status STATUS] [--out FILE|-] [--at RFC3339] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen bridge promote govern --flow FILE|- --state ALLOW|ESCALATE|BLOCK [--decision-ref REF] [--out FILE|-] [--at RFC3339] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen bridge promote verify --flow FILE|- [--out FILE|-] [--at RFC3339] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen bridge promote open --flow FILE|- --repo REPO --number N --url URL [--sha SHA] [--out FILE|-] [--at RFC3339] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen bridge promote approve --flow FILE|- --by NAME [--out FILE|-] [--at RFC3339] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen bridge promote merge --flow FILE|- --by NAME [--out FILE|-] [--at RFC3339] [--pretty]")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Examples:")
-	fmt.Fprintln(out, "  cub-gen bridge promote govern --flow flow.json --state ALLOW --decision-ref decision_123")
-	fmt.Fprintln(out, "  cub-gen bridge promote verify --flow flow.json")
-	fmt.Fprintln(out, "  cub-gen bridge promote open --flow flow.json --repo github.com/confighub/platform-dry --number 7 --url https://github.com/confighub/platform-dry/pull/7")
-	fmt.Fprintln(out, "  cub-gen bridge promote approve --flow flow.json --by platform-owner")
-	fmt.Fprintln(out, "  cub-gen bridge promote merge --flow flow.json --by platform-owner")
+	printCommandHelp(
+		out,
+		"cub-gen bridge promote: PR<->MR and upstream DRY promotion flow commands",
+		nil,
+		helpSection{
+			Title: "Usage",
+			Lines: []string{
+				"  cub-gen bridge promote init --change-id ID --app-pr-repo REPO --app-pr-number N --app-pr-url URL --mr-id ID --mr-url URL [--app-pr-sha SHA] [--mr-status STATUS] [--out FILE|-] [--at RFC3339] [--pretty]",
+				"  cub-gen bridge promote govern --flow FILE|- --state ALLOW|ESCALATE|BLOCK [--decision-ref REF] [--out FILE|-] [--at RFC3339] [--pretty]",
+				"  cub-gen bridge promote verify --flow FILE|- [--out FILE|-] [--at RFC3339] [--pretty]",
+				"  cub-gen bridge promote open --flow FILE|- --repo REPO --number N --url URL [--sha SHA] [--out FILE|-] [--at RFC3339] [--pretty]",
+				"  cub-gen bridge promote approve --flow FILE|- --by NAME [--out FILE|-] [--at RFC3339] [--pretty]",
+				"  cub-gen bridge promote merge --flow FILE|- --by NAME [--out FILE|-] [--at RFC3339] [--pretty]",
+			},
+		},
+		helpSection{
+			Title: "Examples",
+			Lines: []string{
+				"  cub-gen bridge promote govern --flow flow.json --state ALLOW --decision-ref decision_123",
+				"  cub-gen bridge promote verify --flow flow.json",
+				"  cub-gen bridge promote open --flow flow.json --repo github.com/confighub/platform-dry --number 7 --url https://github.com/confighub/platform-dry/pull/7",
+				"  cub-gen bridge promote approve --flow flow.json --by platform-owner",
+				"  cub-gen bridge promote merge --flow flow.json --by platform-owner",
+			},
+		},
+	)
 }

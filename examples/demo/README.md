@@ -4,11 +4,28 @@ Runnable demo scripts for every `cub-gen` example. Each script demonstrates
 part of the governed change flow:
 
 ```
-detect → import → publish → verify → attest → (optional) bridge ingest/query
+detect → import → publish → verify → attest → (optional, deep) bridge ingest/query
 ```
 
 If you are new, do not start with "run everything." Start with one concrete
 adoption path that matches what you already run.
+
+## Proof ladder
+
+Use the demo surface in this order:
+
+1. **Local source-side proof**: `detect -> import -> publish -> verify -> attest`
+2. **Connected smoke proof**: `cub auth login` plus `./examples/demo/run-connected-smoke.sh`
+3. **Deep connected proof**: bridge ingest/query, promotion, and multi-story ConfigHub flows
+4. **Runtime proof**: real WET->LIVE reconciliation or a real deployed app
+
+That ordering matters. The first run should answer "do I trust the source-side
+trace?" before you spend time on backend or cluster setup.
+
+For exact per-example proof tiers, use the generated
+[Example Truth Matrix](../../docs/testing/example-truth-matrix.md).
+For workflow and AI example quality, use the
+[AI Example Hygiene Checklist](../../docs/workflows/ai-example-hygiene-checklist.md).
 
 ## 1. Start with one of these
 
@@ -16,6 +33,7 @@ adoption path that matches what you already run.
 |---------|-----------|------------------------------|
 | Helm plus Flux/Argo | `./examples/demo/start-platform-first.sh` | Which values file/path controls the rendered field |
 | Spring Boot app repos | `./examples/demo/start-app-first.sh` | Which app or platform config file should be edited |
+| Score.dev workloads | `./examples/demo/module-2-score-field-map.sh` | Which `score.yaml` field produced the runtime field |
 | Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | WET to LIVE create, update, and drift-correction |
 
 Cluster-side follow-on: pair the above with [`cub-scout`](https://github.com/confighub/cub-scout)
@@ -48,6 +66,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 # App-first first run
 ./examples/demo/start-app-first.sh
+
+# Score-first first run
+./examples/demo/module-2-score-field-map.sh
 
 # Runtime proof after source-side import
 RECONCILER=both ./examples/live-reconcile/demo-local.sh
@@ -107,17 +128,34 @@ Start with authentication:
 
 ```bash
 cub auth login
-TOKEN="$(cub auth get-token)"
+cub info
 cub context get --json | jq -r '.coordinate.user'
 ```
 
-Connected flow shape:
+Connected smoke shape:
+
+```bash
+cub auth login
+./examples/demo/run-connected-smoke.sh
+```
+
+Deep connected flow shape:
 
 ```
 publish → verify → attest → bridge ingest → decision query
 ```
 
-### Connected runners
+### Connected smoke runner
+
+```bash
+./examples/demo/run-connected-smoke.sh
+```
+
+This is the repo's release-facing connected proof lane. It verifies ConfigHub
+auth/context and runs the flagship example wrappers without depending on bridge
+ingest/query endpoints.
+
+### Deep connected runners
 
 ```bash
 ./examples/demo/run-all-connected-lifecycles.sh
@@ -126,7 +164,7 @@ publish → verify → attest → bridge ingest → decision query
 ./examples/demo/run-phase-4-connected-stories.sh
 ```
 
-Connected CI also release-gates:
+The extended deep-proof lane also covers:
 
 - `flow-a-git-pr-to-mr-connected.sh`
 - `flow-b-mr-to-git-pr-connected.sh`
@@ -141,8 +179,9 @@ Connected CI also release-gates:
 | Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`) | Always use backend fallback (troubleshooting) |
 
 CI behavior:
-- `make ci-connected` enforces strict mode (`CONNECTED_FALLBACK_MODE=off`)
-- `make ci-connected-troubleshoot` is the only fallback-enabled lane
+- `make ci-connected` runs the smaller ConfigHub smoke lane and does not touch bridge endpoints
+- `make ci-connected-deep` runs the broader connected stories, flows, and live reconciler proofs
+- `make ci-connected-troubleshoot` is the only fallback-enabled deep lane
 
 See also: [connected-ci-bootstrap.md](../../docs/workflows/connected-ci-bootstrap.md)
 
@@ -174,18 +213,18 @@ RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 |--------|---------------------|
 | `app-ai-change-run.sh <repo> [target]` | One-command app/AI path: import + publish + verify + attest + mutation card |
 | `prompt-as-dry-local.sh [repo]` | Prompt-as-DRY local path with AI-only scope guardrails |
-| `prompt-as-dry-connected.sh [repo] [target] [slug]` | Prompt-as-DRY connected path with backend ingest/query |
+| `prompt-as-dry-connected.sh [repo] [target] [slug]` | Prompt-as-DRY deep connected path with backend ingest/query |
 | `simulate-confighub-lifecycle.sh <repo> <target> [slug]` | Full local lifecycle simulation |
 | `run-all-confighub-lifecycles.sh` | Lifecycle simulation across all fixtures |
-| `run-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Connected lifecycle with ConfigHub ingest/query |
+| `run-confighub-lifecycle-connected.sh <repo> <target> [slug]` | Deep connected lifecycle with ConfigHub ingest/query |
 | `simulate-repo-wizard.sh <repo> <target> [hint]` | GUI wizard simulation path |
 
-### Change API adapters
+### Change API helpers
 
 | Script | What it demonstrates |
 |--------|---------------------|
-| `change-api-adapter.sh --request <json> [--out <json>]` | API-style JSON adapter for `change preview\|run\|explain` |
-| `change-api-http-e2e.sh [repo] [target]` | Native HTTP compatibility flow using `/v1/changes` endpoints |
+| `change-api-adapter.sh --request <json> [--out <json>]` | API-style JSON wrapper for `change preview\|run\|explain` |
+| `change-api-http-e2e.sh [repo] [render-target]` | Native repo-first HTTP flow using `/v1/changes` endpoints |
 
 ## 8. CI policy gates (PR path)
 
@@ -325,7 +364,7 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 |--------|--------------------|
 | Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
 | In progress | The flagship examples still need contract-based proof for real-cluster outcome, two-audience onboarding, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` paths |
-| Actively tracked | Example reset execution is being driven through issues `#173`, `#177`, `#178`, `#179`, `#180`, `#182`, `#183`, `#185`, and `#187` |
+| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#182`, `#185`, `#187`, `#200`, `#202`, `#207`, `#208`, `#218`, `#226`, `#227`, `#232`, `#233`, `#234`, `#237`-`#242` |
 
 For the per-example truth behind those claims, use the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md). It is derived from the example catalog, connected runners, source-side tests, and live proof scripts.
 

@@ -10,6 +10,36 @@ workflow definition gets the same field-origin tracing, ownership mapping,
 and decision pipeline as a Helm chart. Nothing executes without an explicit
 ALLOW decision.
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Source-side workflow provenance | Real | `./examples/ops-workflow/demo-local.sh` |
+| Connected governance path | Real | `./examples/ops-workflow/demo-connected.sh` |
+| AI/workflow governance story | Partial | strong workflow governance story today; `swamp-automation` is still the stronger AI-first workflow example |
+| Standalone live workflow run or runtime artifact | Not yet | current example proves governed workflow config more than a real executed workflow result |
+
+Known gaps still open:
+
+- real workflow runtime or live artifact proof is still open work ([#180](https://github.com/confighub/cub-gen/issues/180))
+- the fuller AI-first example bundle standard is still open work ([#202](https://github.com/confighub/cub-gen/issues/202))
+
+## Fastest path to believe it
+
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Local source-side path
+./examples/ops-workflow/demo-local.sh
+
+# Connected governance path
+cub auth login
+./examples/ops-workflow/demo-connected.sh
+```
+
+If you need the repo-wide quality bar for workflow/AI examples, use the
+[AI Example Hygiene Checklist](../../docs/workflows/ai-example-hygiene-checklist.md).
+
 ## 1. Who this is for
 
 | If you are... | Start here |
@@ -271,14 +301,20 @@ cub-gen's `ops-workflow` generator detects `operations.yaml` containing
 
 ## Run from ConfigHub (connected mode)
 
-If you already have ConfigHub, start here:
+If you already have ConfigHub, start with the wrapper entrypoint:
 
 ```bash
 cub auth login
+./examples/ops-workflow/demo-connected.sh
+```
+
+That is the current first-run connected path for this example.
+
+If you specifically need the deeper bridge API path, use:
+
+```bash
 BASE_URL="${CONFIGHUB_BASE_URL:-$(cub context get --json | jq -r '.coordinate.serverURL')}"
 TOKEN="$(cub auth get-token)"
-
-# Publish and ingest
 ./cub-gen publish --space platform ./examples/ops-workflow ./examples/ops-workflow > /tmp/bundle.json
 ./cub-gen verify --in /tmp/bundle.json
 ./cub-gen attest --in /tmp/bundle.json --verifier ci-bot > /tmp/attestation.json
