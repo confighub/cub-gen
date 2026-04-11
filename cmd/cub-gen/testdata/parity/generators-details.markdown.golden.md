@@ -198,6 +198,7 @@ Total: 8
 - Default input role: `helm-input`
 - Default owner: `platform-engineer`
 - Field-origin transform: `helm-template`
+- Field-origin overlay transform: `helm-values-overlay`
 
 ### Input Role Rules
 | Role | Exact basenames | Prefixes | Extensions |
@@ -223,7 +224,8 @@ Total: 8
 ### Field Origin Confidences
 | Key | Confidence |
 | --- | --- |
-| `image_tag` | 0.86 |
+| `image_tag_base` | 0.86 |
+| `image_tag_overlay` | 0.90 |
 
 ### Hint Defaults
 | Key | Value |
@@ -241,7 +243,8 @@ Total: 8
 ### Inverse Edit Hints
 | Key | Hint |
 | --- | --- |
-| `image_tag` | Edit chart values file and keep chart template unchanged. |
+| `image_tag_base` | Edit values.image.tag in {{base_values_path}}. |
+| `image_tag_overlay` | Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults. |
 
 ### WET Targets
 | Kind | Name template | Owner | Namespace | Source DRY path template |

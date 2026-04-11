@@ -90,7 +90,8 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"image_tag": "Container image tag maps cleanly to helm values.",
 		},
 		InverseEditHints: map[string]string{
-			"image_tag": "Edit chart values file and keep chart template unchanged.",
+			"image_tag_base":    "Edit values.image.tag in {{base_values_path}}.",
+			"image_tag_overlay": "Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults.",
 		},
 		InversePatchTemplates: map[string]InversePatchTemplate{
 			"image_tag": {EditableBy: "app-team", Confidence: 0.86, RequiresReview: false},
@@ -99,14 +100,16 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"image_tag": {Owner: "app-team", Confidence: 0.86},
 		},
 		FieldOriginConfidences: map[string]float64{
-			"image_tag": 0.86,
+			"image_tag_base":    0.86,
+			"image_tag_overlay": 0.90,
 		},
 		RenderedLineageTemplates: []RenderedLineageTemplate{
 			{Kind: "HelmRelease", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "chart_path", SourceDryPathTemplate: "Chart.yaml"},
 			{Kind: "Deployment", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "values_paths", SourcePathHintFallback: "chart_path", SourcePathHintMulti: true, SourceDryPathTemplate: "values.image.tag"},
 			{Kind: "Service", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "values_paths", SourcePathHintFallback: "chart_path", SourcePathHintMulti: true, SourceDryPathTemplate: "values.service.port"},
 		},
-		FieldOriginTransform: "helm-template",
+		FieldOriginTransform:        "helm-template",
+		FieldOriginOverlayTransform: "helm-values-overlay",
 		InputRoleRules: []InputRoleRule{
 			{Role: "chart", ExactBasenames: []string{"chart.yaml"}},
 			{Role: "values", Prefixes: []string{"values"}, Extensions: []string{".yaml", ".yml"}},

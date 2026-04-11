@@ -21,6 +21,7 @@ inspect_with:
   - jq '.discovered[0].generator_profile'
   - jq '.dry_inputs | length'
   - jq '.wet_manifest_targets | length'
+  - jq '.provenance[0].field_origin_map'
   - jq '.provenance[0].inverse_edit_pointers[0]'
 ```
 

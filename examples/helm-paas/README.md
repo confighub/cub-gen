@@ -333,19 +333,22 @@ alongside `values*.yaml` files. On import, it:
 1. **Classifies inputs** — `Chart.yaml` (role: chart), `values.yaml` (role:
    values-base), `values-prod.yaml` (role: values-overlay)
 2. **Maps field origins** — traces `image.tag` through the Helm template
-   structure to the Deployment spec (confidence: 0.86)
+   structure to the Deployment spec, keeping both the base values source
+   (`values.yaml`, confidence: 0.86) and the winning prod overlay
+   (`values-prod.yaml`, confidence: 0.90)
 3. **Computes ownership** — values files are app-team editable; chart templates
    and platform policies are platform-owned
-4. **Emits inverse-edit guidance** — "to change `image.tag`, edit `values.yaml`
-   line 5; to change resource structure, edit `templates/deployment.yaml`
-   (platform review required)"
+4. **Emits inverse-edit guidance** — "to change the prod `image.tag`, edit
+   `values-prod.yaml`; use `values.yaml` for defaults; to change resource
+   structure, edit `templates/deployment.yaml` (platform review required)"
 
 A concrete field trace:
 
 ```
-DRY:  values.yaml → image.tag = "v1.0.0"
-      ↓ helm-template transform (confidence: 0.86)
-WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payments-api:v1.0.0"
+DRY:  values.yaml      → image.tag = "v1.0.0"
+      values-prod.yaml → image.tag = "v1.0.3"
+      ↓ helm-template + helm-values-overlay
+WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payments-api:v1.0.3"
 ```
 
 ## Key files

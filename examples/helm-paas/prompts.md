@@ -23,6 +23,7 @@ Start in read-only mode.
    - main DRY inputs
    - one rendered target
    - one inverse edit hint with owner and confidence
+   - whether `values-prod.yaml` or `values.yaml` is the winning source for the rendered image tag
 4. Tell me exactly what the command read and what it did not mutate.
 
 Do not run connected or live commands yet.

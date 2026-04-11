@@ -520,15 +520,25 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 	switch g.Kind {
 	case model.GeneratorHelm:
 		hints := helmProvenancePathsForGenerator(g)
-		return []model.FieldOrigin{
+		origins := []model.FieldOrigin{
 			{
 				DryPath:    "values.image.tag",
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
 				SourcePath: hints.PrimaryValuesPath,
 				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image_tag", 0.86),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image_tag_base", 0.86),
 			},
 		}
+		if hints.OverlayValuesPath != "" {
+			origins = append(origins, model.FieldOrigin{
+				DryPath:    "values.image.tag",
+				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+				SourcePath: hints.OverlayValuesPath,
+				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image_tag_overlay", 0.90),
+			})
+		}
+		return origins
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		return []model.FieldOrigin{
@@ -813,15 +823,26 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 func inversePointersForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.InverseEditPointer {
 	switch g.Kind {
 	case model.GeneratorHelm:
+		hints := helmProvenancePathsForGenerator(g)
 		policy := registry.InversePointerTemplateFor(g.Kind, "image_tag", registry.InversePointerTemplate{
 			Owner: "app-team", Confidence: 0.86,
 		})
+		vars := map[string]string{
+			"base_values_path":    hints.PrimaryValuesPath,
+			"overlay_values_path": hints.OverlayValuesPath,
+		}
+		hintKey := "image_tag_base"
+		hintFallback := "Edit values.image.tag in {{base_values_path}}."
+		if hints.OverlayValuesPath != "" {
+			hintKey = "image_tag_overlay"
+			hintFallback = "Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults."
+		}
 		return []model.InverseEditPointer{
 			{
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
 				DryPath:    "values.image.tag",
 				Owner:      policy.Owner,
-				EditHint:   registry.InverseEditHint(g.Kind, "image_tag", "Edit chart values file and keep chart template unchanged."),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, hintKey, hintFallback), vars),
 				Confidence: policy.Confidence,
 			},
 		}
@@ -1310,6 +1331,7 @@ type helmProvenancePaths struct {
 	ChartPath         string
 	ValuesPaths       []string
 	PrimaryValuesPath string
+	OverlayValuesPath string
 }
 
 func helmProvenancePathsForGenerator(g model.GeneratorDetection) helmProvenancePaths {
@@ -1339,12 +1361,16 @@ func helmProvenancePathsForGenerator(g model.GeneratorDetection) helmProvenanceP
 	primaryValuesPath := primaryValuesBase
 	if selected := selectPreferredPathByBase(valuesPaths, primaryValuesBase); selected != "" {
 		primaryValuesPath = selected
+	} else if len(valuesPaths) > 0 {
+		primaryValuesPath = valuesPaths[0]
 	}
+	overlayValuesPath := firstDistinctPath(valuesPaths, primaryValuesPath)
 
 	return helmProvenancePaths{
 		ChartPath:         chartPath,
 		ValuesPaths:       valuesPaths,
 		PrimaryValuesPath: primaryValuesPath,
+		OverlayValuesPath: overlayValuesPath,
 	}
 }
 
@@ -1371,6 +1397,15 @@ func inputPathsForRole(kind model.GeneratorKind, inputs []string, role string) [
 func selectPreferredPathByBase(paths []string, preferredBase string) string {
 	for _, p := range paths {
 		if strings.EqualFold(filepath.Base(p), preferredBase) {
+			return p
+		}
+	}
+	return ""
+}
+
+func firstDistinctPath(paths []string, primary string) string {
+	for _, p := range paths {
+		if p != primary {
 			return p
 		}
 	}

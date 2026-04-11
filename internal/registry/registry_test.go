@@ -249,8 +249,8 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := FieldOriginOverlayTransform(model.GeneratorSpringBoot); got != "spring-profile-overlay" {
 		t.Fatalf("expected spring overlay field origin transform, got %q", got)
 	}
-	if got := FieldOriginOverlayTransform(model.GeneratorHelm); got != "helm-template" {
-		t.Fatalf("expected helm overlay transform to fall back to base transform, got %q", got)
+	if got := FieldOriginOverlayTransform(model.GeneratorHelm); got != "helm-values-overlay" {
+		t.Fatalf("expected helm overlay field origin transform helm-values-overlay, got %q", got)
 	}
 	if got := InversePatchReason(model.GeneratorBackstage, "identity", "fallback"); got != "Backstage component identity is sourced from {{catalog_path}}." {
 		t.Fatalf("expected backstage inverse patch reason template, got %q", got)
@@ -261,6 +261,9 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := FieldOriginConfidenceFor(model.GeneratorOpsFlow, "schedule_overlay", 0.0); got != 0.80 {
 		t.Fatalf("expected ops schedule overlay field origin confidence 0.80, got %v", got)
 	}
+	if got := FieldOriginConfidenceFor(model.GeneratorHelm, "image_tag_overlay", 0.0); got != 0.90 {
+		t.Fatalf("expected helm image_tag_overlay field origin confidence 0.90, got %v", got)
+	}
 	if got := InversePatchTemplateFor(model.GeneratorOpsFlow, "schedule", InversePatchTemplate{}); got.EditableBy != "platform-engineer" || got.Confidence != 0.84 || !got.RequiresReview {
 		t.Fatalf("expected ops schedule inverse patch template, got %+v", got)
 	}
@@ -269,6 +272,9 @@ func TestRegistryHintDefaults(t *testing.T) {
 	}
 	if got := InverseEditHint(model.GeneratorScore, "env_var", "fallback"); got != "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}." {
 		t.Fatalf("expected score env_var inverse edit hint template, got %q", got)
+	}
+	if got := InverseEditHint(model.GeneratorHelm, "image_tag_overlay", "fallback"); got != "Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults." {
+		t.Fatalf("expected helm image_tag_overlay inverse edit hint template, got %q", got)
 	}
 	if got := InverseEditHint(model.GeneratorSpringBoot, "server_port_overlay", "fallback"); got != "Edit server.port in {{profile_config_path}} for environment overrides; use {{base_config_path}} for the default." {
 		t.Fatalf("expected spring server_port_overlay inverse edit hint template, got %q", got)

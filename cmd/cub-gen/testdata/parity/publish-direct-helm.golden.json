@@ -141,6 +141,13 @@
           "source_path": "values.yaml",
           "transform": "helm-template",
           "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "values.image.tag",
+          "source_path": "values-prod.yaml",
+          "transform": "helm-values-overlay",
+          "wet_path": "Deployment/spec/template/spec/containers[0]/image"
         }
       ],
       "generator_id": "gen_635643e45fbf3410",
@@ -151,7 +158,7 @@
         {
           "confidence": 0.86,
           "dry_path": "values.image.tag",
-          "edit_hint": "Edit chart values file and keep chart template unchanged.",
+          "edit_hint": "Edit values.image.tag in values-prod.yaml for environment-specific overrides; use values.yaml for defaults.",
           "owner": "app-team",
           "wet_path": "Deployment/spec/template/spec/containers[0]/image"
         }

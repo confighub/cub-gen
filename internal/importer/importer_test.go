@@ -283,6 +283,15 @@ func TestImportRepoHelmDryWetContract(t *testing.T) {
 	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "values.yaml") {
 		t.Fatalf("expected Helm field origin values.image.tag to resolve source_path values.yaml, got %+v", prov.FieldOriginMap)
 	}
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "values-prod.yaml") {
+		t.Fatalf("expected Helm field origin values.image.tag to resolve source_path values-prod.yaml, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "values-prod.yaml") {
+		t.Fatalf("expected Helm inverse pointer to prefer values-prod.yaml overlay, got %+v", prov.InverseEditPointers)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "values.yaml") {
+		t.Fatalf("expected Helm inverse pointer to mention values.yaml defaults, got %+v", prov.InverseEditPointers)
+	}
 
 	if !dryInputHasRolePath(result.DryInputs, "chart", "Chart.yaml") {
 		t.Fatalf("expected chart dry input, got %+v", result.DryInputs)

@@ -53,6 +53,7 @@ Success looks like:
 - `dry_inputs` includes values/chart inputs
 - `wet_manifest_targets` is non-empty
 - `inverse_hint.owner` is populated
+- `inverse_hint.edit_hint` points at `values-prod.yaml` for the prod override and mentions `values.yaml` as the default
 
 ## Safe run order
 

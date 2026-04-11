@@ -58,13 +58,14 @@ flowchart LR
 ## Provenance
 
 - Field-origin transform: `helm-template`
-- Field-origin overlay transform: ``
+- Field-origin overlay transform: `helm-values-overlay`
 
 ### Field-origin confidences
 
 | Key | Confidence |
 | --- | --- |
-| `image_tag` | 0.86 |
+| `image_tag_base` | 0.86 |
+| `image_tag_overlay` | 0.90 |
 
 ### Rendered lineage templates
 
@@ -98,7 +99,8 @@ flowchart LR
 
 | Key | Hint |
 | --- | --- |
-| `image_tag` | Edit chart values file and keep chart template unchanged. |
+| `image_tag_base` | Edit values.image.tag in {{base_values_path}}. |
+| `image_tag_overlay` | Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults. |
 
 ### Hint defaults
 

@@ -40,8 +40,10 @@ contract:
       source_dry_path_template: "values.service.port"
 provenance:
   field_origin_transform: "helm-template"
+  field_origin_overlay_transform: "helm-values-overlay"
   field_origin_confidences:
-    image_tag: 0.86
+    image_tag_base: 0.86
+    image_tag_overlay: 0.90
   rendered_lineage_templates:
     - kind: "HelmRelease"
       name_template: "{{name}}"
@@ -74,7 +76,8 @@ inverse:
   inverse_patch_reasons:
     image_tag: "Container image tag maps cleanly to helm values."
   inverse_edit_hints:
-    image_tag: "Edit chart values file and keep chart template unchanged."
+    image_tag_base: "Edit values.image.tag in {{base_values_path}}."
+    image_tag_overlay: "Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults."
 hints:
   defaults:
     chart_path: "Chart.yaml"
