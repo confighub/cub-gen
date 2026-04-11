@@ -46,6 +46,25 @@ Run the AI-safe local prompt-as-DRY loop for ./examples/swamp-automation.
 Do not run connected steps in this prompt.
 ```
 
+## Local governed structure prompt
+
+```text
+Run the example-owned local governed proof for ./examples/swamp-automation.
+
+1. Use:
+   ./examples/swamp-automation/demo-governed-structure.sh
+2. Capture the artifact directory from the script output.
+3. Summarize:
+   - which approved model-method change stayed ALLOW
+   - which missing-step/unapproved-model change was BLOCKED
+   - the key files created under the artifact directory
+4. Show me the most important evidence from:
+   - allow-summary.json
+   - block-summary.json
+
+Do not run connected or live steps in this prompt.
+```
+
 ## Connected workflow prompt
 
 ```text

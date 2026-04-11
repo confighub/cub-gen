@@ -12,6 +12,7 @@ slowing down the agent iteration loop.
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side structural workflow governance | Real | `./examples/swamp-automation/demo-local.sh` |
+| Local governed ALLOW + BLOCK structural proof | Real | `./examples/swamp-automation/demo-governed-structure.sh` |
 | Deep connected bridge path | Real | `./examples/swamp-automation/demo-connected.sh` |
 | AI-first prompt-as-DRY story | Strongest current lane | `./examples/demo/prompt-as-dry-local.sh` then `./examples/demo/prompt-as-dry-connected.sh` |
 | Standalone live workflow runtime or task artifact | Not yet | current example proves structural governance more than runtime execution |
@@ -36,6 +37,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 # Local source-side path
 ./examples/swamp-automation/demo-local.sh
+
+# Local governed ALLOW/BLOCK proof
+./examples/swamp-automation/demo-governed-structure.sh
 
 # AI-first prompt-as-DRY path
 ./examples/demo/prompt-as-dry-local.sh
@@ -372,6 +376,17 @@ After running discover/import, inspect:
 
 ## 7. Try one governed change
 
+Use the example-owned wrapper when you want this proven end to end:
+
+```bash
+./examples/swamp-automation/demo-governed-structure.sh
+```
+
+That writes paired summaries under `.tmp/swamp-governed-structure/<run>/` for:
+
+- one `ALLOW` path where an approved model-method is added
+- one `BLOCK` path where the required `validate` step disappears and an unapproved model-method is introduced
+
 **ALLOW path**: Agent adds step using approved model:
 
 ```yaml
@@ -407,6 +422,7 @@ From repo root:
 ```bash
 # Local/offline
 ./examples/swamp-automation/demo-local.sh
+./examples/swamp-automation/demo-governed-structure.sh
 
 # Connected (requires ConfigHub auth)
 cub auth login
