@@ -204,10 +204,10 @@ Both prove create, update, and drift-correction on a real cluster.
 | Current release target | `v0.2-preview.2` focuses on all featured examples working well, CLI/docs trust, and a credible connected release signal |
 | Current plan | See [docs/releases/v0.2-preview.2-plan.md](docs/releases/v0.2-preview.2-plan.md) |
 | Current ship checklist | See [docs/releases/v0.2-preview.2-ship-checklist.md](docs/releases/v0.2-preview.2-ship-checklist.md) |
-| Example quality | `#177`, `#178`, `#180`, `#182`, `#185`, `#187`, `#200`, `#202`, `#207`, `#208` |
+| Example quality | `#177`, `#178`, `#180`, `#182`, `#185`, `#187`, `#200`, `#202`, `#208` |
 | CLI/docs | `#232`, `#233`, `#234`, `#237`, `#238`, `#239`, `#240`, `#241`, `#242` |
 | Release gate | `#218`, `#226`, `#227` |
-| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#182`, `#185`, `#187`, `#200`, `#202`, `#207`, `#208`, `#218`, `#226`, `#227`, `#232`, `#233`, `#234`, `#237`-`#242` |
+| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#182`, `#185`, `#187`, `#200`, `#202`, `#208`, `#218`, `#226`, `#227`, `#232`, `#233`, `#234`, `#237`-`#242` |
 
 For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, the connected smoke lane, and real live-proof harnesses.
 
