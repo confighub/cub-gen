@@ -24,6 +24,11 @@ This example is strongest as a control-plane governance companion to
 cleaner first proof of governed workflow config, then use this to see the same
 model applied recursively to ConfigHub's own lifecycle.
 
+For the repo-wide AI/workflow example bar behind this example, use the
+[AI Example Hygiene Checklist](../../docs/workflows/ai-example-hygiene-checklist.md).
+For the non-deterministic companion model, see
+[Prompt as DRY](../../docs/workflows/prompt-as-dry.md).
+
 ## Fastest path to believe it
 
 ```bash
@@ -84,6 +89,8 @@ same rigor as app/runtime changes.
   policies are platform-owned configuration
 - **Break-glass override**: emergency changes bypass approval thresholds and
   deploy windows, with mandatory post-incident retrospective
+- **Attestable audit trail**: lifecycle changes keep the same evidence-first
+  review loop as other governed changes in the repo
 
 ## How ConfigHub Actions map to DRY / WET / LIVE
 
