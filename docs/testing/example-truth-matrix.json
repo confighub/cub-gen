@@ -125,6 +125,7 @@
         "./examples/demo/e2e-connected-governed-reconcile-helm.sh",
         "./examples/demo/run-connected-smoke.sh",
         "./examples/helm-paas/demo-connected.sh",
+        "./examples/helm-paas/demo-runtime.sh",
         "./examples/live-reconcile/demo-local.sh",
         "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v",
         "make ci-connected"
@@ -141,6 +142,7 @@
           "./examples/demo/run-connected-smoke.sh"
         ],
         "real_live": [
+          "./examples/helm-paas/demo-runtime.sh",
           "./examples/demo/e2e-connected-governed-reconcile-helm.sh",
           "./examples/live-reconcile/demo-local.sh"
         ]
@@ -152,7 +154,7 @@
         "#187"
       ],
       "notes": [
-        "Real LIVE proof is paired through the live-reconcile harness, not standalone in helm-paas."
+        "Real LIVE proof is exposed through an example-owned helm-paas wrapper, but still uses the shared live-reconcile harness under the hood."
       ]
     },
     {

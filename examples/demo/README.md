@@ -31,7 +31,7 @@ For workflow and AI example quality, use the
 
 | If you already run... | Start here | What actually runs | What you can inspect next |
 |---|---|---|---|
-| Helm plus Argo/Flux | `./examples/demo/start-platform-first.sh` | local lifecycle for `helm-paas`, then paired runtime next steps | values ownership now, `live-reconcile` runtime proof after |
+| Helm plus Argo/Flux | `./examples/demo/start-platform-first.sh` | local lifecycle for `helm-paas`, then the Helm flagship's own live wrapper next | values ownership now, connected + live proof after |
 | Spring Boot app repos | `./examples/demo/start-app-first.sh` | local lifecycle for `springboot-paas` | app-vs-platform config ownership now, standalone live app proof after |
 | Score.dev workloads | `./examples/demo/start-score-first.sh` | Score field trace and inverse edit map | `score.yaml` to runtime-field mapping now, connected governed output after |
 | Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | real Flux and Argo reconciliation on kind | pods, rollout, and drift correction |
@@ -44,7 +44,7 @@ when you want to inspect what is actually running after reconciliation.
 | Path | Live thing you can inspect | Command | Truth today |
 |---|---|---|---|
 | Spring standalone app path | `inventory-api` on kind plus HTTP verification | `./examples/springboot-paas/verify-e2e.sh` | Strongest standalone app proof |
-| Helm runtime companion path | Argo and Flux reconciliation of Helm-derived manifests | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | Paired runtime proof for `helm-paas` |
+| Helm flagship live path | Argo and Flux reconciliation of Helm-derived manifests plus connected governance evidence | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` | Example-owned wrapper over the shared live-reconcile harness |
 | Connected smoke | ConfigHub-authenticated flagship bundle/attestation chain | `./examples/demo/run-connected-smoke.sh` | Release-facing connected proof lane |
 | Score path | no standalone live-cluster Score proof yet | `./examples/scoredev-paas/demo-connected.sh` | Honest connected-only flagship for now |
 
