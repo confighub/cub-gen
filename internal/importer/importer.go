@@ -149,7 +149,7 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 	outputURI := fmt.Sprintf("oci://example.local/%s/%s:latest", space, sanitizeName(g.Name))
 	outputDigest := digestFor(strings.Join([]string{changeID, g.ID, outputURI}, "|"))
 	inputDigest := digestFor(strings.Join(g.Inputs, "|"))
-	helmPaths := helmProvenancePathsForGenerator(g)
+	helmPaths := helmProvenancePathsForGenerator(detection.Repo, g)
 
 	return model.ProvenanceRecord{
 		SchemaVersion:    provenanceSchema,
@@ -521,23 +521,24 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 func fieldOriginsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.FieldOrigin {
 	switch g.Kind {
 	case model.GeneratorHelm:
-		hints := helmProvenancePathsForGenerator(g)
-		origins := []model.FieldOrigin{
-			{
-				DryPath:    "values.image.tag",
-				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
-				SourcePath: hints.PrimaryValuesPath,
-				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image_tag_base", 0.86),
-			},
-		}
-		if hints.OverlayValuesPath != "" {
+		hints := helmProvenancePathsForGenerator(detection.Repo, g)
+		imageTagPaths := helmImageTagSourcePaths(detection.Repo, hints)
+		origins := make([]model.FieldOrigin, 0, len(imageTagPaths))
+		for idx, sourcePath := range imageTagPaths {
+			transform := registry.FieldOriginTransform(g.Kind)
+			confidenceKey := "image_tag_base"
+			confidenceFallback := 0.86
+			if idx > 0 || sourcePath != hints.PrimaryValuesPath {
+				transform = registry.FieldOriginOverlayTransform(g.Kind)
+				confidenceKey = "image_tag_overlay"
+				confidenceFallback = 0.90
+			}
 			origins = append(origins, model.FieldOrigin{
 				DryPath:    "values.image.tag",
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
-				SourcePath: hints.OverlayValuesPath,
-				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
-				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image_tag_overlay", 0.90),
+				SourcePath: sourcePath,
+				Transform:  transform,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, confidenceKey, confidenceFallback),
 			})
 		}
 		return origins
@@ -825,17 +826,24 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 func inversePointersForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.InverseEditPointer {
 	switch g.Kind {
 	case model.GeneratorHelm:
-		hints := helmProvenancePathsForGenerator(g)
+		hints := helmProvenancePathsForGenerator(detection.Repo, g)
+		imageTagPaths := helmImageTagSourcePaths(detection.Repo, hints)
 		policy := registry.InversePointerTemplateFor(g.Kind, "image_tag", registry.InversePointerTemplate{
 			Owner: "app-team", Confidence: 0.86,
 		})
+		preferredImageTagPath := hints.PrimaryValuesPath
+		if hints.OverlayValuesPath != "" {
+			preferredImageTagPath = hints.OverlayValuesPath
+		} else if len(imageTagPaths) > 0 {
+			preferredImageTagPath = imageTagPaths[0]
+		}
 		vars := map[string]string{
 			"base_values_path":    hints.PrimaryValuesPath,
-			"overlay_values_path": hints.OverlayValuesPath,
+			"overlay_values_path": preferredImageTagPath,
 		}
 		hintKey := "image_tag_base"
 		hintFallback := "Edit values.image.tag in {{base_values_path}}."
-		if hints.OverlayValuesPath != "" {
+		if preferredImageTagPath != "" && preferredImageTagPath != hints.PrimaryValuesPath {
 			hintKey = "image_tag_overlay"
 			hintFallback = "Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults."
 		}
@@ -1336,7 +1344,7 @@ type helmProvenancePaths struct {
 	OverlayValuesPath string
 }
 
-func helmProvenancePathsForGenerator(g model.GeneratorDetection) helmProvenancePaths {
+func helmProvenancePathsForGenerator(repoPath string, g model.GeneratorDetection) helmProvenancePaths {
 	if g.Kind != model.GeneratorHelm {
 		return helmProvenancePaths{}
 	}
@@ -1356,9 +1364,6 @@ func helmProvenancePathsForGenerator(g model.GeneratorDetection) helmProvenanceP
 
 	chartPath := firstInputPathForRole(g.Kind, g.Inputs, chartRole)
 	valuesPaths := inputPathsForRole(g.Kind, g.Inputs, valuesRole)
-	if len(valuesPaths) == 0 && chartPath != "" {
-		valuesPaths = []string{chartPath}
-	}
 
 	primaryValuesPath := primaryValuesBase
 	if selected := selectPreferredPathByBase(valuesPaths, primaryValuesBase); selected != "" {
@@ -1366,7 +1371,12 @@ func helmProvenancePathsForGenerator(g model.GeneratorDetection) helmProvenanceP
 	} else if len(valuesPaths) > 0 {
 		primaryValuesPath = valuesPaths[0]
 	}
-	overlayValuesPath := firstDistinctPath(valuesPaths, primaryValuesPath)
+	imageTagPaths := helmImageTagSourcePaths(repoPath, helmProvenancePaths{
+		ChartPath:         chartPath,
+		ValuesPaths:       valuesPaths,
+		PrimaryValuesPath: primaryValuesPath,
+	})
+	overlayValuesPath := firstDistinctPath(imageTagPaths, primaryValuesPath)
 
 	return helmProvenancePaths{
 		ChartPath:         chartPath,
@@ -1383,6 +1393,83 @@ func firstInputPathForRole(kind model.GeneratorKind, inputs []string, role strin
 		}
 	}
 	return ""
+}
+
+func helmImageTagSourcePaths(repoPath string, hints helmProvenancePaths) []string {
+	imageTagPaths := make([]string, 0, len(hints.ValuesPaths))
+	for _, path := range hints.ValuesPaths {
+		if helmValuesPathDefinesImageTag(repoPath, path) {
+			imageTagPaths = append(imageTagPaths, path)
+		}
+	}
+	if len(imageTagPaths) == 0 {
+		if strings.TrimSpace(hints.PrimaryValuesPath) == "" {
+			return nil
+		}
+		return []string{hints.PrimaryValuesPath}
+	}
+
+	ordered := make([]string, 0, len(imageTagPaths))
+	if stringSliceContains(imageTagPaths, hints.PrimaryValuesPath) {
+		ordered = append(ordered, hints.PrimaryValuesPath)
+	}
+	for _, path := range imageTagPaths {
+		if path == hints.PrimaryValuesPath {
+			continue
+		}
+		ordered = append(ordered, path)
+	}
+	return ordered
+}
+
+func stringSliceContains(items []string, want string) bool {
+	for _, item := range items {
+		if item == want {
+			return true
+		}
+	}
+	return false
+}
+
+func helmValuesPathDefinesImageTag(repoPath, relPath string) bool {
+	if strings.TrimSpace(repoPath) == "" || strings.TrimSpace(relPath) == "" {
+		return false
+	}
+	content, err := os.ReadFile(filepath.Join(repoPath, relPath))
+	if err != nil {
+		return false
+	}
+
+	var doc yaml.Node
+	if err := yaml.Unmarshal(content, &doc); err != nil {
+		return false
+	}
+	return yamlPathExists(&doc, []string{"image", "tag"})
+}
+
+func yamlPathExists(node *yaml.Node, path []string) bool {
+	if node == nil {
+		return false
+	}
+	if node.Kind == yaml.DocumentNode && len(node.Content) > 0 {
+		return yamlPathExists(node.Content[0], path)
+	}
+	if len(path) == 0 {
+		return true
+	}
+	if node.Kind != yaml.MappingNode {
+		if node.Kind == yaml.AliasNode {
+			return yamlPathExists(node.Alias, path)
+		}
+		return false
+	}
+	for i := 0; i+1 < len(node.Content); i += 2 {
+		if node.Content[i].Value != path[0] {
+			continue
+		}
+		return yamlPathExists(node.Content[i+1], path[1:])
+	}
+	return false
 }
 
 func inputPathsForRole(kind model.GeneratorKind, inputs []string, role string) []string {
@@ -1452,7 +1539,7 @@ func helmLayeredAnalysisForGenerator(detection model.DetectionResult, g model.Ge
 		return nil
 	}
 
-	helmPaths := helmProvenancePathsForGenerator(g)
+	helmPaths := helmProvenancePathsForGenerator(detection.Repo, g)
 	analysis := &model.HelmLayeredAnalysis{
 		ApplicationSetPath:    appsetPath,
 		ClusterInventoryPaths: append([]string(nil), clusterPaths...),
@@ -1818,7 +1905,7 @@ func lineageTemplateContext(detection model.DetectionResult, g model.GeneratorDe
 
 	switch g.Kind {
 	case model.GeneratorHelm:
-		helmPaths := helmProvenancePathsForGenerator(g)
+		helmPaths := helmProvenancePathsForGenerator(detection.Repo, g)
 		singleHints["chart_path"] = helmPaths.ChartPath
 		singleHints["primary_values_path"] = helmPaths.PrimaryValuesPath
 		multiHints["values_paths"] = helmPaths.ValuesPaths

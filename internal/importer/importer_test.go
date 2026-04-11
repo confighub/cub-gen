@@ -454,6 +454,56 @@ spec:
 	}
 }
 
+func TestImportRepoHelmOverlayOriginRequiresActualOverride(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: layered-demo\nversion: 0.1.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values.yaml"), "image:\n  tag: v1.0.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values-prod.yaml"), "replicaCount: 2\n")
+
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+
+	prov := result.Provenance[0]
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "values.yaml") {
+		t.Fatalf("expected Helm field origin values.image.tag to resolve source_path values.yaml, got %+v", prov.FieldOriginMap)
+	}
+	if fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "values-prod.yaml") {
+		t.Fatalf("expected values-prod.yaml to be ignored when it does not override values.image.tag, got %+v", prov.FieldOriginMap)
+	}
+	if inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "values-prod.yaml") {
+		t.Fatalf("expected Helm inverse pointer not to prefer values-prod.yaml when it does not override values.image.tag, got %+v", prov.InverseEditPointers)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "values.yaml") {
+		t.Fatalf("expected Helm inverse pointer to keep values.yaml guidance, got %+v", prov.InverseEditPointers)
+	}
+}
+
+func TestImportRepoHelmWithoutValuesDoesNotPointToChartYaml(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: no-values\nversion: 0.1.0\n")
+
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+
+	prov := result.Provenance[0]
+	if fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "Chart.yaml") {
+		t.Fatalf("expected Chart.yaml not to be treated as a values source, got %+v", prov.FieldOriginMap)
+	}
+	if inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "Chart.yaml") {
+		t.Fatalf("expected Chart.yaml not to appear in Helm inverse edit guidance, got %+v", prov.InverseEditPointers)
+	}
+}
+
 func TestImportRepoSpringBootDryWetContract(t *testing.T) {
 	repo := filepath.Join("..", "..", "examples", "springboot-paas")
 	result, err := ImportRepo(repo, "main", "platform")
