@@ -145,6 +145,7 @@ type changeAPIRequest struct {
 }
 
 type changeAPIResponse struct {
+	Input              changePreviewInput        `json:"input"`
 	Change             changePreviewSummary      `json:"change"`
 	Decision           *changeRunDecision        `json:"decision,omitempty"`
 	PromotionReady     *bool                     `json:"promotion_ready,omitempty"`
@@ -316,6 +317,7 @@ func (s *changeAPIServer) handlePostChanges(w http.ResponseWriter, r *http.Reque
 		}
 		s.upsertRecord(record)
 		writeJSONResponse(w, http.StatusOK, changeAPIResponse{
+			Input:              record.Input,
 			Change:             record.Change,
 			Verification:       record.Verification,
 			EditRecommendation: record.EditRecommendation,
@@ -368,6 +370,7 @@ func (s *changeAPIServer) handlePostChanges(w http.ResponseWriter, r *http.Reque
 	s.upsertRecord(record)
 
 	writeJSONResponse(w, http.StatusOK, changeAPIResponse{
+		Input:              record.Input,
 		Change:             record.Change,
 		Decision:           record.Decision,
 		PromotionReady:     record.PromotionReady,
@@ -412,6 +415,7 @@ func (s *changeAPIServer) handleChangeByID(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		writeJSONResponse(w, http.StatusOK, changeAPIResponse{
+			Input:              record.Input,
 			Change:             record.Change,
 			Decision:           record.Decision,
 			PromotionReady:     record.PromotionReady,
@@ -520,8 +524,13 @@ func printChangeAPIUsage(out *os.File) {
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintln(out, "  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]")
 	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Compatibility HTTP endpoints:")
+	fmt.Fprintln(out, "Repo-first HTTP endpoints:")
 	fmt.Fprintln(out, "  POST /v1/changes")
 	fmt.Fprintln(out, "  GET  /v1/changes/{change_id}")
 	fmt.Fprintln(out, "  GET  /v1/changes/{change_id}/explanations")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "Request shape:")
+	fmt.Fprintln(out, "  input.target_path=<repo-path>")
+	fmt.Fprintln(out, "  input.render_target_path=<repo-path> (optional; defaults to target_path)")
+	fmt.Fprintln(out, "  legacy input.target_slug/render_target_slug still work for compatibility")
 }

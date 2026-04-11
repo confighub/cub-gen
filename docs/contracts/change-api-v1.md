@@ -31,6 +31,7 @@ Request fields:
 
 Response:
 
+- `input` (normalized repo identity: `target_path`, `render_target_path`, plus compatibility slugs)
 - `change` (`change_id`, `bundle_digest`, `attestation_digest`)
 - `edit_recommendation` (owner, paths, hint, confidence)
 - `verification` (bundle/attestation validity)
@@ -47,6 +48,7 @@ Schema:
 
 Response:
 
+- `input`
 - `change`
 - `decision`
 - `verification`
@@ -124,6 +126,14 @@ Schema:
 
 ```json
 {
+  "input": {
+    "target_path": "./examples/scoredev-paas",
+    "render_target_path": "./examples/scoredev-paas",
+    "target_slug": "scoredev-paas",
+    "render_target_slug": "scoredev-paas",
+    "space": "platform",
+    "ref": "HEAD"
+  },
   "change": {
     "change_id": "chg_01J...",
     "bundle_digest": "sha256:...",

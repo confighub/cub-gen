@@ -35,6 +35,7 @@ func TestChangeAPIHTTPRunLifecycleGolden(t *testing.T) {
 	if status != http.StatusOK {
 		t.Fatalf("expected 200 from POST /v1/changes, got %d body=%v", status, postResp)
 	}
+	assertChangeAPIInputPaths(t, postResp, repoPath, repoPath)
 
 	changeID := nestedString(t, postResp, "change", "change_id")
 	if !strings.HasPrefix(changeID, "chg_") {
@@ -45,11 +46,13 @@ func TestChangeAPIHTTPRunLifecycleGolden(t *testing.T) {
 	if status != http.StatusOK {
 		t.Fatalf("expected 200 from GET /v1/changes/{id}, got %d body=%v", status, getResp)
 	}
+	assertChangeAPIInputPaths(t, getResp, repoPath, repoPath)
 
 	status, explainResp := mustJSONRequest(t, http.MethodGet, srv.URL+"/v1/changes/"+changeID+"/explanations?owner=app-team", nil)
 	if status != http.StatusOK {
 		t.Fatalf("expected 200 from GET /v1/changes/{id}/explanations, got %d body=%v", status, explainResp)
 	}
+	assertChangeAPIInputPaths(t, explainResp, repoPath, repoPath)
 
 	snapshot := map[string]any{
 		"post":    postResp,
@@ -158,6 +161,21 @@ func nestedString(t *testing.T, root map[string]any, path ...string) string {
 		t.Fatalf("expected string at %v, got %T", path, cur)
 	}
 	return s
+}
+
+func assertChangeAPIInputPaths(t *testing.T, root map[string]any, wantTargetPath, wantRenderTargetPath string) {
+	t.Helper()
+
+	input, ok := root["input"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected input object, got %T", root["input"])
+	}
+	if got := input["target_path"]; got != wantTargetPath {
+		t.Fatalf("expected target_path=%s, got %v", wantTargetPath, got)
+	}
+	if got := input["render_target_path"]; got != wantRenderTargetPath {
+		t.Fatalf("expected render_target_path=%s, got %v", wantRenderTargetPath, got)
+	}
 }
 
 func normalizeChangeAPIHTTPRunSnapshot(snapshot map[string]any) {

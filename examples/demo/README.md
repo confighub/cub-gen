@@ -224,7 +224,7 @@ RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh
 | Script | What it demonstrates |
 |--------|---------------------|
 | `change-api-adapter.sh --request <json> [--out <json>]` | API-style JSON adapter for `change preview\|run\|explain` |
-| `change-api-http-e2e.sh [repo] [target]` | Native HTTP compatibility flow using `/v1/changes` endpoints |
+| `change-api-http-e2e.sh [repo] [render-target]` | Native repo-first HTTP flow using `/v1/changes` endpoints |
 
 ## 8. CI policy gates (PR path)
 
