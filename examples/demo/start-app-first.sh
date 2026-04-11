@@ -10,6 +10,9 @@ echo "[start-app] step 1: Spring config ownership and provenance"
 cat <<'EOF'
 
 [start-app] next steps
+  embedded apply-here proof:
+    ./examples/springboot-paas/demo-embedded-config-mutation.sh
+
   governed route proof:
     ./examples/springboot-paas/demo-governed-routes.sh
 

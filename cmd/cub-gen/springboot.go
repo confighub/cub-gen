@@ -22,6 +22,8 @@ func runSpringBoot(args []string) error {
 		return nil
 	case "init":
 		return runSpringBootInit(args[1:])
+	case "set-embedded-config":
+		return runSpringBootSetEmbeddedConfig(args[1:])
 	case "validate-mutation":
 		return runSpringBootValidateMutation(args[1:])
 	default:
@@ -205,6 +207,118 @@ func runSpringBootValidateMutation(args []string) error {
 	return fmt.Errorf("mutation to %s is blocked by field routes", result.FieldPath)
 }
 
+func runSpringBootSetEmbeddedConfig(args []string) error {
+	fs := flag.NewFlagSet("springboot set-embedded-config", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	fs.Usage = func() {
+		fmt.Fprintln(fs.Output(), "Usage: cub-gen springboot set-embedded-config [flags] <field-path> <value>")
+		fmt.Fprintln(fs.Output())
+		fmt.Fprintln(fs.Output(), "Set a field inside ConfigMap.data[\"application.yaml\"] (or another config key)")
+		fmt.Fprintln(fs.Output(), "for a Spring Boot ConfigHub payload or rendered ConfigMap file.")
+		fmt.Fprintln(fs.Output())
+		fmt.Fprintln(fs.Output(), "Examples:")
+		fmt.Fprintln(fs.Output(), "  # Allowed: update the app-owned reservation mode directly in the embedded payload")
+		fmt.Fprintln(fs.Output(), "  cub-gen springboot set-embedded-config --routes ./operational/field-routes.yaml --file ./confighub/inventory-api-prod.yaml --configmap inventory-api-config feature.inventory.reservationMode optimistic")
+		fmt.Fprintln(fs.Output())
+		fmt.Fprintln(fs.Output(), "  # Blocked: platform-owned datasource field")
+		fmt.Fprintln(fs.Output(), "  cub-gen springboot set-embedded-config --routes ./operational/field-routes.yaml --file ./confighub/inventory-api-prod.yaml --configmap inventory-api-config spring.datasource.url jdbc:postgresql://shadow.platform.svc:5432/inventory")
+		fmt.Fprintln(fs.Output())
+		fmt.Fprintln(fs.Output(), "Flags:")
+		fs.PrintDefaults()
+	}
+
+	filePath := fs.String("file", "", "Path to a Spring ConfigHub payload YAML or ConfigMap YAML (required)")
+	configMapName := fs.String("configmap", "", "ConfigMap name to edit (optional when exactly one ConfigMap matches)")
+	configKey := fs.String("config-key", "application.yaml", "Embedded config key inside the ConfigMap data section")
+	routesPath := fs.String("routes", "", "Optional path to field-routes.yaml for ownership validation before editing")
+	jsonOut := fs.Bool("json", false, "Output JSON")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+
+	if fs.NArg() != 2 {
+		return errors.New("usage: cub-gen springboot set-embedded-config --file <path> [--configmap <name>] [--config-key <key>] [--routes <path>] <field-path> <value>")
+	}
+	if *filePath == "" {
+		return errors.New("--file is required")
+	}
+
+	result, err := springboot.SetEmbeddedConfig(springboot.SetEmbeddedConfigOptions{
+		FilePath:        *filePath,
+		ConfigMapName:   *configMapName,
+		ConfigKey:       *configKey,
+		FieldRoutesPath: *routesPath,
+		FieldPath:       fs.Arg(0),
+		Value:           fs.Arg(1),
+	})
+	if err != nil {
+		return err
+	}
+
+	if *jsonOut {
+		if err := writeJSON(os.Stdout, result, *pretty); err != nil {
+			return err
+		}
+		if !result.Allowed {
+			return fmt.Errorf("mutation to %s is blocked by field routes", result.FieldPath)
+		}
+		return nil
+	}
+
+	if result.Allowed {
+		fmt.Println("UPDATED")
+		fmt.Printf("  File:      %s\n", result.FilePath)
+		if result.ConfigMapName != "" {
+			fmt.Printf("  ConfigMap: %s\n", result.ConfigMapName)
+		}
+		fmt.Printf("  Key:       %s\n", result.ConfigKey)
+		fmt.Printf("  Field:     %s\n", result.FieldPath)
+		if result.Owner != "" {
+			fmt.Printf("  Owner:     %s\n", result.Owner)
+		}
+		if result.Action != "" {
+			fmt.Printf("  Action:    %s\n", result.Action)
+		}
+		if result.MatchedRule != "" {
+			fmt.Printf("  Rule:      %s\n", result.MatchedRule)
+		}
+		if result.OldValue != "" || result.NewValue != "" {
+			fmt.Printf("  Old:       %s\n", result.OldValue)
+			fmt.Printf("  New:       %s\n", result.NewValue)
+		}
+		if result.Reason != "" {
+			fmt.Printf("  Reason:    %s\n", result.Reason)
+		}
+		return nil
+	}
+
+	fmt.Println("BLOCKED")
+	fmt.Printf("  File:      %s\n", result.FilePath)
+	if result.ConfigMapName != "" {
+		fmt.Printf("  ConfigMap: %s\n", result.ConfigMapName)
+	}
+	fmt.Printf("  Key:       %s\n", result.ConfigKey)
+	fmt.Printf("  Field:     %s\n", result.FieldPath)
+	if result.Owner != "" {
+		fmt.Printf("  Owner:     %s\n", result.Owner)
+	}
+	if result.Action != "" {
+		fmt.Printf("  Action:    %s\n", result.Action)
+	}
+	if result.MatchedRule != "" {
+		fmt.Printf("  Rule:      %s\n", result.MatchedRule)
+	}
+	if result.Reason != "" {
+		fmt.Printf("  Reason:    %s\n", result.Reason)
+	}
+	return fmt.Errorf("mutation to %s is blocked by field routes", result.FieldPath)
+}
+
 func printSpringBootUsage(out *os.File) {
 	fmt.Fprintln(out, "Usage: cub-gen springboot <subcommand> [flags]")
 	fmt.Fprintln(out)
@@ -212,6 +326,7 @@ func printSpringBootUsage(out *os.File) {
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Subcommands:")
 	fmt.Fprintln(out, "  init               Generate starter cub-gen material for a Spring Boot app")
+	fmt.Fprintln(out, "  set-embedded-config Edit an embedded application.yaml field inside a ConfigMap payload")
 	fmt.Fprintln(out, "  validate-mutation  Check if a field mutation is allowed by field-routes.yaml")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Run 'cub-gen springboot <subcommand> --help' for details.")

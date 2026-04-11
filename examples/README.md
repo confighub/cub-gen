@@ -19,7 +19,7 @@ what you already run:
 | If you already run... | Start here | Then do this | What you can inspect | Current truth |
 |---|---|---|---|---|
 | Helm plus Argo/Flux platform repos | `./examples/demo/start-platform-first.sh` | `./examples/helm-paas/demo-governed-change.sh`, then `cub auth login && RECONCILER=argo ./examples/helm-paas/demo-runtime.sh` | values ownership now, local ALLOW/BLOCK proof next, and live Argo/Flux proof from the Helm flagship itself after | Strongest platform-first source-side path today |
-| Spring Boot app repos | `./examples/demo/start-app-first.sh` | `./examples/springboot-paas/demo-governed-routes.sh`, then `cub auth login && ./examples/springboot-paas/demo-connected.sh` | config ownership now, local `ALLOW`/`BLOCKED` route proof next, live `inventory-api` proof after | Strongest standalone end-to-end example in the repo today |
+| Spring Boot app repos | `./examples/demo/start-app-first.sh` | `./examples/springboot-paas/demo-embedded-config-mutation.sh`, then `cub auth login && ./examples/springboot-paas/demo-connected.sh` | config ownership now, direct embedded apply-here proof next, live `inventory-api` proof after | Strongest standalone end-to-end example in the repo today |
 | Score.dev workloads | `./examples/demo/start-score-first.sh` | `./examples/scoredev-paas/demo-governed-workload.sh`, then `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `score.yaml` field origin now, local ALLOW/ESCALATE proof next, governed connected output after | Strongest Score source-side path today; standalone live Score proof is still open work |
 | A running cluster and GitOps controller | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | trace one chosen field back to source | live cluster state first, source provenance second | Best when the cluster is already the urgent source of truth |
 
@@ -71,7 +71,7 @@ That split is especially important for:
 | Example | Best current answer for | Current trust level |
 |---|---|---|
 | [`helm-paas`](./helm-paas/) | Helm + Argo/Flux + values ownership | Strongest platform-first source-side path, with example-owned ALLOW/BLOCK and runtime wrappers |
-| [`springboot-paas`](./springboot-paas/) | Real app-team + platform-team config ownership | Strongest standalone end-to-end example in the repo today |
+| [`springboot-paas`](./springboot-paas/) | Real app-team + platform-team config ownership | Strongest standalone end-to-end example in the repo today, now with direct embedded ConfigHub payload mutation proof |
 | [`scoredev-paas`](./scoredev-paas/) | Score intent to rendered runtime fields plus workload-contract escalation | Strongest Score source-side path today, now with example-owned ALLOW/ESCALATE proof; runtime proof still needs its own standalone finish |
 
 ## What happens after import? (Day-2 stories)

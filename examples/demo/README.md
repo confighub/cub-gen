@@ -32,7 +32,7 @@ For workflow and AI example quality, use the
 | If you already run... | Start here | What actually runs | What you can inspect next |
 |---|---|---|---|
 | Helm plus Argo/Flux | `./examples/demo/start-platform-first.sh` | local lifecycle for `helm-paas`, then the example-owned governed-change proof and live wrapper | values ownership now, local ALLOW/BLOCK proof next, connected + live proof after |
-| Spring Boot app repos | `./examples/demo/start-app-first.sh` | local lifecycle for `springboot-paas`, then the example-owned governed-route proof | app-vs-platform config ownership now, local `ALLOW`/`BLOCKED` proof next, standalone live app proof after |
+| Spring Boot app repos | `./examples/demo/start-app-first.sh` | local lifecycle for `springboot-paas`, then the example-owned embedded payload mutation proof | app-vs-platform config ownership now, direct embedded apply-here proof next, standalone live app proof after |
 | Score.dev workloads | `./examples/demo/start-score-first.sh` | Score field trace, inverse edit map, and governed workload-contract proof | `score.yaml` to runtime-field mapping now, local ALLOW/ESCALATE proof next, connected governed output after |
 | Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | real Flux and Argo reconciliation on kind | pods, rollout, and drift correction |
 
@@ -100,6 +100,7 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 | `../helm-paas/demo-governed-change.sh` | [`helm-paas`](../helm-paas/) | App-team ALLOW path vs platform-contract BLOCK path with the real PR ownership gate |
 | `start-app-first.sh` | [`springboot-paas`](../springboot-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated app-first starter path |
 | `../springboot-paas/demo-governed-routes.sh` | [`springboot-paas`](../springboot-paas/) | App-owned field ALLOW versus platform-owned field BLOCKED with `springboot validate-mutation` |
+| `../springboot-paas/demo-embedded-config-mutation.sh` | [`springboot-paas`](../springboot-paas/) | Direct embedded `application.yaml` mutation in the ConfigHub payload plus blocked datasource proof |
 | `start-score-first.sh` | [`scoredev-paas`](../scoredev-paas/) | Opinionated Score-first starter path with honest runtime-gap handoff |
 | `../scoredev-paas/demo-governed-workload.sh` | [`scoredev-paas`](../scoredev-paas/) | App-owned image change ALLOW versus unapproved resource type ESCALATE with `score validate-workload` |
 | `module-1-helm-import.sh` | [`helm-paas`](../helm-paas/) | Helm detection, values ownership, field-origin tracing |
