@@ -27,7 +27,7 @@ When the operator asks... | Run this | What you get
 ---|---|---
 "What generators does this repo use?" | `./cub-gen detect --repo $REPO --pretty` | Detected generator profiles
 "What generators are supported?" | `./cub-gen generators --markdown --details` | Full generator catalog
-"Render and show provenance" | `./cub-gen gitops import --space my-space $REPO local-renderer --json` | Rendered manifests + field origin map
+"Render and show provenance" | `./cub-gen gitops import --space my-space $REPO $REPO --json` | Rendered manifests + field origin map
 "Build a provenance bundle" | `./cub-gen publish --space my-space $REPO $REPO --pretty` | Bundle JSON ready for verify/attest
 "Verify a bundle" | `./cub-gen publish ... \| ./cub-gen verify --in -` | Pass/fail with reasons
 "Sign a bundle" | `./cub-gen publish ... \| ./cub-gen attest --in - --verifier ci-bot` | Signed attestation
@@ -206,7 +206,7 @@ output when the result will be parsed:
 ```bash
 ./cub-gen detect --repo $REPO --pretty
 ./cub-gen generators --json --details
-./cub-gen gitops import --space my-space $REPO local-renderer --json
+./cub-gen gitops import --space my-space $REPO $REPO --json
 ./cub-gen publish --space my-space $REPO $REPO --pretty
 ./cub-gen change preview --space my-space $REPO $REPO --json
 ./cub-gen change explain --space my-space --wet-path "<path>" $REPO $REPO --json
