@@ -168,6 +168,60 @@ cub-gen bridge promote merge --flow <flow.json> --by <who>
 
 ---
 
+## Generator helper commands
+
+These helper groups are narrower than the main repo-first flow. Use them when a
+generator-specific example wants a local contract check or scaffold step after
+you already know the repo path.
+
+### `score validate-workload`
+
+Check whether a `score.yaml` resource set stays inside the platform-approved
+workload class.
+
+```bash
+cub-gen score validate-workload --score <score.yaml> --contract <workload-class.yaml>
+```
+
+Typical example path:
+
+```bash
+./cub-gen score validate-workload \
+  --score ./examples/scoredev-paas/score.yaml \
+  --contract ./examples/scoredev-paas/platform/contracts/workload-class.yaml
+```
+
+Output:
+
+- `ALLOW` when all declared Score resource types are approved
+- `ESCALATE` when a new resource type needs platform review
+
+### `springboot validate-mutation`
+
+Check whether a Spring field path stays inside the app-owned route map.
+
+```bash
+cub-gen springboot validate-mutation --routes <field-routes.yaml> <field-path>
+```
+
+Typical example path:
+
+```bash
+./cub-gen springboot validate-mutation \
+  --routes ./examples/springboot-paas/operational/field-routes.yaml \
+  feature.inventory.reservationMode
+```
+
+### `springboot init`
+
+Bootstrap the Spring example's operational route files for a repo.
+
+```bash
+cub-gen springboot init [flags] <source-path>
+```
+
+---
+
 ## Generator catalog
 
 ### `generators`

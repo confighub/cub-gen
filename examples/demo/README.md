@@ -33,7 +33,7 @@ For workflow and AI example quality, use the
 |---|---|---|---|
 | Helm plus Argo/Flux | `./examples/demo/start-platform-first.sh` | local lifecycle for `helm-paas`, then the example-owned governed-change proof and live wrapper | values ownership now, local ALLOW/BLOCK proof next, connected + live proof after |
 | Spring Boot app repos | `./examples/demo/start-app-first.sh` | local lifecycle for `springboot-paas`, then the example-owned governed-route proof | app-vs-platform config ownership now, local `ALLOW`/`BLOCKED` proof next, standalone live app proof after |
-| Score.dev workloads | `./examples/demo/start-score-first.sh` | Score field trace and inverse edit map | `score.yaml` to runtime-field mapping now, connected governed output after |
+| Score.dev workloads | `./examples/demo/start-score-first.sh` | Score field trace, inverse edit map, and governed workload-contract proof | `score.yaml` to runtime-field mapping now, local ALLOW/ESCALATE proof next, connected governed output after |
 | Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | real Flux and Argo reconciliation on kind | pods, rollout, and drift correction |
 
 Cluster-side follow-on: pair the above with [`cub-scout`](https://github.com/confighub/cub-scout)
@@ -46,7 +46,7 @@ when you want to inspect what is actually running after reconciliation.
 | Spring standalone app path | `inventory-api` on kind plus HTTP verification | `./examples/springboot-paas/verify-e2e.sh` | Strongest standalone app proof |
 | Helm flagship live path | Argo and Flux reconciliation of Helm-derived manifests plus connected governance evidence | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` | Example-owned wrapper over the shared live-reconcile harness |
 | Connected smoke | ConfigHub-authenticated flagship bundle/attestation chain | `./examples/demo/run-connected-smoke.sh` | Release-facing connected proof lane |
-| Score path | no standalone live-cluster Score proof yet | `./examples/scoredev-paas/demo-connected.sh` | Honest connected-only flagship for now |
+| Score path | governed workload-contract proof plus connected output, but no standalone live-cluster Score proof yet | `./examples/scoredev-paas/demo-governed-workload.sh` | Honest flagship with local ALLOW/ESCALATE proof and connected next step |
 
 ## 3. Pick your demo by persona
 
@@ -101,6 +101,7 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 | `start-app-first.sh` | [`springboot-paas`](../springboot-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated app-first starter path |
 | `../springboot-paas/demo-governed-routes.sh` | [`springboot-paas`](../springboot-paas/) | App-owned field ALLOW versus platform-owned field BLOCKED with `springboot validate-mutation` |
 | `start-score-first.sh` | [`scoredev-paas`](../scoredev-paas/) | Opinionated Score-first starter path with honest runtime-gap handoff |
+| `../scoredev-paas/demo-governed-workload.sh` | [`scoredev-paas`](../scoredev-paas/) | App-owned image change ALLOW versus unapproved resource type ESCALATE with `score validate-workload` |
 | `module-1-helm-import.sh` | [`helm-paas`](../helm-paas/) | Helm detection, values ownership, field-origin tracing |
 | `module-2-score-field-map.sh` | [`scoredev-paas`](../scoredev-paas/) | Score field-origin and inverse edit mapping |
 | `module-3-spring-ownership.sh` | [`springboot-paas`](../springboot-paas/) | Spring ownership boundaries (app vs platform) |

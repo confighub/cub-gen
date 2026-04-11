@@ -15,6 +15,7 @@ inverse-edit guidance.
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side Score provenance | Real | `./examples/scoredev-paas/demo-local.sh` |
+| Local governed Score contract proof | Real | `./examples/scoredev-paas/demo-governed-workload.sh` |
 | Connected governance path | Real | `./examples/scoredev-paas/demo-connected.sh` |
 | Standalone Score live app proof | Not yet | still open work in [#178](https://github.com/confighub/cub-gen/issues/178) |
 
@@ -28,7 +29,7 @@ while the Score-specific live path is being finished.
 
 | If you are... | First command | Then do this | What you can inspect |
 |---|---|---|---|
-| Existing Score.dev user | `./examples/scoredev-paas/demo-local.sh` | `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `score.yaml` field trace now, connected governed output next |
+| Existing Score.dev user | `./examples/scoredev-paas/demo-local.sh` | `./examples/scoredev-paas/demo-governed-workload.sh`, then `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `score.yaml` field trace now, local ALLOW/ESCALATE proof next, connected governed output after |
 | Existing ConfigHub user adding Score governance | `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `./examples/demo/start-score-first.sh` for the repo-side first-run story | bundle, attestation, and decision evidence plus source mapping |
 | Existing cluster-first operator | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) first | come back to `./examples/scoredev-paas/demo-local.sh` for source provenance | live workload first, Score contract trace second |
 
@@ -39,6 +40,7 @@ Both paths lead to the same outcome: governed Score workloads with field-origin 
 | Step | Command | Inspectable result |
 |---|---|---|
 | Local source-side proof | `./examples/scoredev-paas/demo-local.sh` | `score.yaml` field origin, inverse edit pointers, and rendered targets |
+| Local governed contract proof | `./examples/scoredev-paas/demo-governed-workload.sh` | app-owned image change returns `ALLOW`, unapproved resource type returns `ESCALATE` |
 | Connected governance proof | `./examples/scoredev-paas/demo-connected.sh` | change ID, bundle digest, attestation, and connected decision/query output |
 | Runtime companion today | [`springboot-paas`](../springboot-paas/) or [`live-reconcile`](../live-reconcile/) | current standalone live app proof elsewhere in the repo while Score runtime proof is being finished |
 
@@ -196,6 +198,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Local source-side path
 ./examples/scoredev-paas/demo-local.sh
 
+# Local governed contract path
+./examples/scoredev-paas/demo-governed-workload.sh
+
 # Connected ConfigHub path
 cub auth login
 ./examples/scoredev-paas/demo-connected.sh
@@ -259,6 +264,12 @@ allowed to reach Redis?). Both pass → **ALLOW**.
 
 If Redis weren't in the approved resource types, the decision engine would
 **ESCALATE** to the platform owner for review.
+
+You can now prove that branch locally too:
+
+```bash
+./examples/scoredev-paas/demo-governed-workload.sh
+```
 
 ## How it works
 
@@ -376,6 +387,12 @@ resources:
 
 Result: GPU pool not in workload class approved types → **ESCALATE** to platform team
 
+Runnable wrapper for both outcomes:
+
+```bash
+./examples/scoredev-paas/demo-governed-workload.sh
+```
+
 ## Local and Connected Entrypoints
 
 From repo root:
@@ -383,6 +400,7 @@ From repo root:
 ```bash
 # Local/offline
 ./examples/scoredev-paas/demo-local.sh
+./examples/scoredev-paas/demo-governed-workload.sh
 
 # Connected (requires ConfigHub auth)
 cub auth login
