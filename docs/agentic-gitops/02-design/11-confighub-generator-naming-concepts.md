@@ -179,6 +179,6 @@ Adopt:
 1. External + internal primary name: `ConfigHub Generators`
 2. Supporting phrase: `Generator Render Pipeline`
 3. Keep contract triple names unchanged.
-4. Treat `cub-gen` as prototype packaging and `cub gitops` as official integrated surface.
+4. Treat `cub-gen` as the repo-side source surface and `cub gitops` as the cluster-integrated surface.
 
 This gives immediate clarity now and preserves room for stronger branded packaging later.
