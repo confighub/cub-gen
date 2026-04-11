@@ -30,44 +30,6 @@ to source file, line, and owner.
 | Spring Boot services in GitOps | [springboot-paas](examples/springboot-paas/) | Which `application.yaml` setting or platform file should I edit? |
 | Cluster-first GitOps operations | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 
-## What it is not
-
-- Not a Kubernetes reconciler
-- Not a Flux/Argo replacement
-- Not an OCI replacement
-
-Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability after deploy.
-
-## Why import?
-
-Import should answer something useful right away:
-
-- what rendered manifests this repo produces,
-- which DRY file controls a deployed field,
-- what evidence bundle or governed change to inspect next,
-- how the repo-side answer lines up with cluster-side inspection in `cub-scout`
-  and ConfigHub.
-
-## Two import paths, two jobs
-
-There are two related import flows in the ConfigHub world:
-
-- `cub gitops import` in ConfigHub imports existing Argo/Flux applications from a cluster or worker target.
-- `cub-gen gitops import` reads source repos such as Helm, Score.dev, Spring Boot, or workflow config and emits provenance, inverse-edit guidance, and evidence.
-
-They complement each other:
-
-- use ConfigHub GitOps import for brownfield cluster/app onboarding,
-- use `cub-gen` when you want source-to-runtime traceability and governed changes from DRY config.
-
-## How the tools fit together
-
-| Tool | Starts from | Best first question |
-|------|-------------|---------------------|
-| `cub-gen` | Source repo and generator inputs | Which DRY file/path produced this rendered field? |
-| [`cub-scout`](https://github.com/confighub/cub-scout) | Cluster, reconciler, and live runtime state | What is running, who owns it, and where is drift? |
-| [ConfigHub](https://github.com/confighubai/confighub) | Shared intended state, evidence, and governance state | What changed, what was approved, and what evidence exists across repos and clusters? |
-
 ## What it looks like
 
 ```bash
@@ -197,6 +159,14 @@ Platform engineers, SREs, and app developers who want to know exactly what chang
 | Cross-repo queries + policy enforcement | -- | Yes |
 | Governed decisions (ALLOW/ESCALATE/BLOCK) | -- | Yes |
 | Bridge workers + cluster integration | -- | Yes |
+
+## What it is not
+
+- Not a Kubernetes reconciler
+- Not a Flux/Argo replacement
+- Not an OCI replacement
+
+Flux/Argo still reconcile to LIVE. `cub-gen` adds governance before deploy and traceability before and around deploy.
 
 ## Documentation
 
