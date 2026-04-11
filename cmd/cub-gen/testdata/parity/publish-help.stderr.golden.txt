@@ -1,15 +1,15 @@
-cub-gen publish: build a provenance bundle from import output or a repo path
+cub-gen publish: build verifiable evidence from import output or repo paths
 
 Use pipe mode when you already have gitops import JSON, or direct mode to import + bundle in one step.
 
 Usage:
   cub-gen publish [--in FILE|-] [--out FILE|-] [--pretty]
-  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-slug> <render-target-slug>
+  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-path> <render-target-path>
 
 Examples:
   cub-gen gitops import --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen publish --in - --out -
   cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas > bundle.json
 
 Tips:
-  - Direct mode is local-first; <render-target-slug> is usually the same repo path
+  - Direct mode is local-first; <render-target-path> is usually the same repo path
   - Pipe to 'cub-gen verify' and 'cub-gen attest' for release evidence

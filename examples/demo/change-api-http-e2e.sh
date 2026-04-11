@@ -7,11 +7,11 @@ cd "$ROOT_DIR"
 usage() {
   cat <<'USAGE'
 Usage:
-  ./examples/demo/change-api-http-e2e.sh [target-slug] [render-target-slug]
+  ./examples/demo/change-api-http-e2e.sh [target-path] [render-target-path]
 
 Default:
-  target-slug: ./examples/scoredev-paas
-  render-target-slug: ./examples/scoredev-paas
+  target-path: ./examples/scoredev-paas
+  render-target-path: ./examples/scoredev-paas
 USAGE
 }
 

@@ -8,8 +8,9 @@ This guide is for teams that already have:
 - Helm, Score, Spring Boot, or workflow config as authoring input,
 - Flux or Argo CD handling WET to LIVE reconciliation.
 
-`cub-gen` adds source-side provenance. ConfigHub adds shared governance and
-evidence. [`cub-scout`](https://github.com/confighub/cub-scout) adds
+`cub-gen` answers repo-side GitOps questions: what this repo renders, where a
+rendered field came from, and what to edit. ConfigHub adds shared governance
+and evidence. [`cub-scout`](https://github.com/confighub/cub-scout) adds
 cluster-side inspection.
 
 ## Start from the setup you already have
@@ -22,8 +23,7 @@ cluster-side inspection.
 
 ## What cub-gen does
 
-`cub-gen` is a deterministic generator importer. It reads your existing config
-and tells you:
+`cub-gen` starts from your existing repo and tells you:
 
 | Question | Answer |
 |----------|--------|

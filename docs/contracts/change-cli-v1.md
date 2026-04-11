@@ -72,7 +72,7 @@ Purpose:
 Supported invocation modes:
 
 1. Fresh analysis mode (mints a new lifecycle):
-- `cub-gen change explain [filters] <target-slug> <render-target-slug>`
+- `cub-gen change explain [filters] <target-path> <render-target-path>`
 
 2. Existing lifecycle mode (no new lifecycle minted):
 - `cub-gen change explain --change-id <id> --bundle <bundle.json> [filters]`

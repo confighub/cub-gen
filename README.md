@@ -5,10 +5,10 @@ already have.
 
 > Working on this repo as a contributor or AI agent? Start with [AI-README-FIRST.md](AI-README-FIRST.md).
 
-`cub-gen` is a source-side provenance and governed-change companion for GitOps
-teams. It is for people who already run GitHub, Helm, Score, Spring Boot, or
-workflow config, and already rely on Flux or Argo CD to reconcile what reaches
-their clusters.
+`cub-gen` starts from a Git repo, shows what config it renders, and tells you
+which source file or path to edit. It is for teams who already run GitHub,
+Helm, Score, Spring Boot, or workflow config, and already rely on Flux or Argo
+CD to reconcile what reaches their clusters.
 
 **gen = generator.** A generator is a function that maps DRY source (your `values.yaml`, `score.yaml`, etc.) to WET rendered output (the manifests that reach your cluster). `cub-gen` detects which generators your repo uses, runs the mapping, and records provenance — so every deployed field traces back to a source file, line, and owner.
 
@@ -20,7 +20,7 @@ If you already run app/config in Git, OCI artifacts, and Flux/Argo reconciliatio
 - Can we block unsafe edits before they hit cluster?
 
 It does this by classifying your existing repo and mapping rendered fields back
-to source file, line, and owner.
+to source file, line, and owner before anything reaches the cluster.
 
 ## Start with the path you already have
 

@@ -18,7 +18,7 @@ Use these for different AI scenarios:
 
 ## What cub-gen is
 
-`cub-gen` is a **source-side provenance and governed-change companion** for GitOps teams.
+`cub-gen` is the **repo-side traceability and governed-change CLI** for GitOps teams.
 
 It maps DRY source files (Helm `values.yaml`, Score `score.yaml`, Spring Boot `application.yaml`, etc.) to WET rendered manifests and records:
 

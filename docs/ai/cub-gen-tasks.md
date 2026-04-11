@@ -9,9 +9,9 @@
 
 ## Core mental model
 
-`cub-gen` is a **source-side provenance and governed-change companion**. It
-maps DRY source files (the things humans edit) to WET rendered manifests (the
-things controllers deploy) and answers four questions:
+`cub-gen` is the **repo-side traceability and governed-change CLI**. It starts
+from DRY source files (the things humans edit), maps them to WET rendered
+manifests (the things controllers deploy), and answers four questions:
 
 1. **What generators is this repo using?** — Helm, Score, Spring Boot, etc.
 2. **Where does this deployed field come from?** — DRY file/path/owner

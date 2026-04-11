@@ -27,7 +27,7 @@ If the user is asking you to *use* cub-gen against a real source repo (not work 
 
 ## Product value in one breath
 
-`cub-gen` is the source-side provenance and governed-change companion. It maps DRY source files to WET rendered manifests, records field-level origins with confidence scores, and emits inverse-edit hints so app/platform teams know exactly where to edit safely.
+`cub-gen` is the repo-side traceability and governed-change CLI. It starts from DRY source files, maps them to WET rendered manifests, records field-level origins with confidence scores, and emits inverse-edit hints so app/platform teams know exactly where to edit safely.
 
 ## Tool boundaries
 

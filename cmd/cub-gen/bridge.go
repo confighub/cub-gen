@@ -605,14 +605,25 @@ func writeJSONOutput(path string, v any, pretty bool) error {
 func printBridgeUsage(out io.Writer) {
 	printCommandHelp(
 		out,
-		"cub-gen bridge: ConfigHub bridge flow commands (ingest, decision, promotion)",
-		nil,
+		"cub-gen bridge: advanced ConfigHub API workflows",
+		[]string{
+			"Use bridge after local repo proof or connected smoke is already clear.",
+			"Most users should start with demo-connected.sh or run-connected-smoke.sh first.",
+		},
 		helpSection{
 			Title: "Usage",
 			Lines: []string{
 				"  cub-gen bridge ingest [--in FILE|-] --base-url URL [--token TOKEN] [--endpoint PATH] [--json] [--pretty]",
 				"  cub-gen bridge decision <create|attach|apply|query> [flags]",
 				"  cub-gen bridge promote <init|govern|verify|open|approve|merge> [flags]",
+			},
+		},
+		helpSection{
+			Title: "What it's for",
+			Lines: []string{
+				"  ingest      Submit a verified bundle to ConfigHub",
+				"  decision    Query backend decision state or simulate it offline",
+				"  promote     Track PR<->MR and upstream DRY promotion flows",
 			},
 		},
 		helpSection{
@@ -624,6 +635,13 @@ func printBridgeUsage(out io.Writer) {
 				"  cub-gen bridge decision apply --decision decision.json --state ALLOW --approved-by platform-admin --reason \"policy checks passed\"",
 				"  cub-gen bridge decision query --base-url https://confighub.example --change-id chg_123",
 				"  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123",
+			},
+		},
+		helpSection{
+			Title: "Tips",
+			Lines: []string{
+				"  - bridge decision query is the authoritative backend lookup path",
+				"  - local decision create|attach|apply commands are for offline contract simulation",
 			},
 		},
 	)

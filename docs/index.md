@@ -1,8 +1,12 @@
 # cub-gen
 
-**Governance + traceability sidecar for GitOps.**
+**Start from a repo, see what it renders, and know what to edit.**
 
-**gen = generator.** A generator is a function that maps DRY source (`values.yaml`, `score.yaml`, `application.yaml`) to WET rendered output (the manifests that reach your cluster). `cub-gen` detects which generators your repo uses, runs the mapping, and records provenance — so every deployed field traces back to a source file, line, and owner.
+`cub-gen` is the repo-side traceability CLI for GitOps config. It detects which
+generators your repo uses, renders them locally, and records provenance so
+every deployed field traces back to a source file, line, and owner.
+
+**gen = generator.** A generator is a function that maps DRY source (`values.yaml`, `score.yaml`, `application.yaml`) to WET rendered output (the manifests that reach your cluster).
 
 cub-gen works with what teams already run today:
 

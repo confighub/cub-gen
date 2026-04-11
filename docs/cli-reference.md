@@ -2,7 +2,26 @@
 
 All commands are deterministic: same input produces same output.
 
-## Core flow
+`cub-gen` starts from a repo, shows what it renders, and traces each rendered
+field back to the file you should edit. It is for repo-side GitOps questions,
+not cluster/runtime ones.
+
+## Start By Question
+
+| If you want to know... | Start with |
+|---|---|
+| What does this repo render, and where did it come from? | `gitops import` |
+| Which DRY file/path should I edit for a rendered field? | `change explain` |
+| What would change if I made this edit? | `change preview` |
+| What evidence bundle should I verify or ship? | `publish -> verify -> attest` |
+| How do I use the deeper ConfigHub API flow? | `bridge` |
+
+## Boundaries
+
+- `cub-gen` reads repos and produces provenance/evidence.
+- `cub-gen` does not deploy and does not read live cluster state.
+- Use `cub-scout` for runtime/cluster questions.
+- Use `cub gitops` for cluster-side import and ConfigHub management.
 
 ## Path model
 
@@ -53,7 +72,7 @@ Output includes: `generator_profile`, `dry_inputs`, `wet_manifest_targets`, `pro
 Remove local discover state.
 
 ```
-cub-gen gitops cleanup --space <space> <target-slug>
+cub-gen gitops cleanup --space <space> <target-path>
 ```
 
 ---
