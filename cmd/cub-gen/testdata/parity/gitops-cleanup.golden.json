@@ -2,5 +2,6 @@
   "deleted": true,
   "discover_file": "\u003cdiscover_file\u003e",
   "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
   "target_slug": "helm"
 }

@@ -1638,26 +1638,19 @@ func runGitOpsCleanup(args []string) error {
 	}
 	targetSlug := fs.Arg(0)
 
-	deleted, filePath, err := gitopsflow.Cleanup(targetSlug, *space)
+	cleanupResult, err := gitopsflow.Cleanup(targetSlug, *space)
 	if err != nil {
 		return err
 	}
 
-	result := map[string]any{
-		"space":         *space,
-		"target_slug":   targetSlug,
-		"discover_file": filePath,
-		"deleted":       deleted,
-	}
-
 	if *jsonOut {
-		return writeJSON(os.Stdout, result, *pretty)
+		return writeJSON(os.Stdout, cleanupResult, *pretty)
 	}
 
-	if deleted {
-		fmt.Printf("Deleted discover unit state file: %s\n", filePath)
+	if cleanupResult.Deleted {
+		fmt.Printf("Deleted discover unit state file: %s\n", cleanupResult.DiscoverFile)
 	} else {
-		fmt.Printf("No discover unit state file found: %s\n", filePath)
+		fmt.Printf("No discover unit state file found: %s\n", cleanupResult.DiscoverFile)
 	}
 	return nil
 }

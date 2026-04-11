@@ -756,6 +756,7 @@ func normalizeImport(m map[string]any) {
 }
 
 func normalizeCleanup(m map[string]any) {
+	replaceString(m, "target_path", "<target_path>")
 	replaceString(m, "discover_file", "<discover_file>")
 }
 

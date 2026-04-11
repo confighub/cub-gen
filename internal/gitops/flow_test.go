@@ -49,19 +49,22 @@ func TestDiscoverImportCleanupFlow(t *testing.T) {
 		t.Fatalf("expected render target path %q, got %q", repo, imported.RenderTargetPath)
 	}
 
-	deleted, _, err := Cleanup(repo, "platform")
+	cleanupResult, err := Cleanup(repo, "platform")
 	if err != nil {
 		t.Fatalf("Cleanup returned error: %v", err)
 	}
-	if !deleted {
+	if !cleanupResult.Deleted {
 		t.Fatal("expected discover state to be deleted")
 	}
+	if cleanupResult.TargetPath != repo {
+		t.Fatalf("expected cleanup target path %q, got %q", repo, cleanupResult.TargetPath)
+	}
 
-	deleted, _, err = Cleanup(repo, "platform")
+	cleanupResult, err = Cleanup(repo, "platform")
 	if err != nil {
 		t.Fatalf("Cleanup second call returned error: %v", err)
 	}
-	if deleted {
+	if cleanupResult.Deleted {
 		t.Fatal("expected no discover state to delete on second cleanup")
 	}
 }
@@ -123,12 +126,15 @@ func TestTargetAliasResolution(t *testing.T) {
 		t.Fatalf("expected target path %q, got %q", repo, discovered.TargetPath)
 	}
 
-	deleted, _, err := Cleanup("helm-dev", "platform")
+	cleanupResult, err := Cleanup("helm-dev", "platform")
 	if err != nil {
 		t.Fatalf("Cleanup alias returned error: %v", err)
 	}
-	if !deleted {
+	if !cleanupResult.Deleted {
 		t.Fatal("expected alias cleanup to delete discover state")
+	}
+	if cleanupResult.TargetSlug != "helm-dev" {
+		t.Fatalf("expected cleanup target slug helm-dev, got %q", cleanupResult.TargetSlug)
 	}
 }
 
