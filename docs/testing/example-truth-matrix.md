@@ -9,7 +9,7 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Source-chain verified: `8`
 - Connected mode present: `12`
 - Connected smoke gated: `2`
-- Real live proof: `none=9`, `paired-harness=1`, `standalone=2`
+- Real live proof: `none=8`, `paired-harness=1`, `standalone=3`
 - AI-first surface: `none=3`, `partial=2`, `explicit=7`
 
 ## Matrix
@@ -24,7 +24,7 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 | `just-apps-no-platform-config` | yes | yes | yes | no | `none` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
 | `live-reconcile` | no | no | yes | no | `standalone` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
 | `ops-workflow` | yes | yes | yes | no | `none` | `partial` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `scoredev-paas` | yes | yes | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#178](https://github.com/confighub/cub-gen/issues/178), [#183](https://github.com/confighub/cub-gen/issues/183) |
+| `scoredev-paas` | yes | yes | yes | no | `standalone` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#183](https://github.com/confighub/cub-gen/issues/183) |
 | `springboot-paas` | yes | yes | yes | yes | `standalone` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#179](https://github.com/confighub/cub-gen/issues/179), [#183](https://github.com/confighub/cub-gen/issues/183) |
 | `swamp-automation` | yes | yes | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183) |
 | `swamp-project` | no | no | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183) |
@@ -102,9 +102,9 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Source chain: `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v`
 - Connected mode: `./examples/scoredev-paas/demo-connected.sh`
 - Connected smoke lane: --
-- Real live: --
+- Real live: `./examples/scoredev-paas/demo-runtime.sh`, `./examples/scoredev-paas/verify-e2e.sh`, `./examples/scoredev-paas/bin/create-cluster`, `./examples/scoredev-paas/bin/build-image`
 - AI-first: `./examples/scoredev-paas/AI_START_HERE.md`, `./examples/scoredev-paas/prompts.md`, `./examples/scoredev-paas/contracts.md`
-- Notes: Score now has example-owned local governed proof via ./examples/scoredev-paas/demo-governed-workload.sh for ALLOW versus ESCALATE, even though standalone live-cluster proof is still open.
+- Notes: Standalone real-cluster proof: merged score.yaml + score-prod.yaml rendered into a live checkout-api deployment on kind.
 
 ### `springboot-paas`
 

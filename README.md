@@ -27,6 +27,7 @@ to source file, line, and owner before anything reaches the cluster.
 | If you already run... | Start here | First useful answer |
 |-----------|-----------|---------------------|
 | Helm plus Flux/Argo platform repos | [helm-paas](examples/helm-paas/) | Which values file owns this rendered field? |
+| Score.dev workloads | [scoredev-paas](examples/scoredev-paas/) | Which `score.yaml` field produced this runtime value, and does the workload stay inside contract? |
 | Spring Boot services in GitOps | [springboot-paas](examples/springboot-paas/) | Which `application.yaml` setting or platform file should I edit? |
 | Cluster-first GitOps operations | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 
@@ -92,6 +93,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Platform-first: existing Helm + Flux/Argo team
 ./examples/helm-paas/demo-local.sh
 
+# Score-first: existing Score.dev team
+./examples/scoredev-paas/demo-local.sh
+
 # App-first: existing Spring Boot team
 ./examples/springboot-paas/demo-local.sh
 ```
@@ -113,6 +117,9 @@ cub auth login
 
 # Platform-first connected path
 ./examples/helm-paas/demo-connected.sh
+
+# Score-first connected path
+./examples/scoredev-paas/demo-connected.sh
 
 # App-first connected path
 ./examples/springboot-paas/demo-connected.sh
@@ -225,10 +232,10 @@ Both prove create, update, and drift-correction on a real cluster.
 | Current release target | `v0.2-preview.2` focuses on all featured examples working well, CLI/docs trust, and a credible connected release signal |
 | Current plan | See [docs/releases/v0.2-preview.2-plan.md](docs/releases/v0.2-preview.2-plan.md) |
 | Current ship checklist | See [docs/releases/v0.2-preview.2-ship-checklist.md](docs/releases/v0.2-preview.2-ship-checklist.md) |
-| Example quality | `#177`, `#178`, `#180`, `#187` |
+| Example quality | `#177`, `#180`, `#187` |
 | CLI/docs follow-on | `#238`, `#239`, `#240`, `#241`, `#242` |
 | Release gate | `#218` |
-| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#187`, `#218`, `#238`-`#242` |
+| Actively tracked | `#173`, `#177`, `#180`, `#187`, `#218`, `#238`-`#242` |
 
 For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, the connected smoke lane, and real live-proof harnesses.
 

@@ -17,13 +17,13 @@ inverse-edit guidance.
 | Source-side Score provenance | Real | `./examples/scoredev-paas/demo-local.sh` |
 | Local governed Score contract proof | Real | `./examples/scoredev-paas/demo-governed-workload.sh` |
 | Deep connected bridge path | Real | `./examples/scoredev-paas/demo-connected.sh` |
-| Standalone Score live app proof | Not yet | still open work in [#178](https://github.com/confighub/cub-gen/issues/178) |
+| Standalone Score live app proof | Real | `./examples/scoredev-paas/demo-runtime.sh` |
 
-This README is intentionally honest: today the strongest Score proof in this
-repo is source-side tracing plus connected governance output. If you need real
-runtime proof elsewhere in the repo right now, use [`springboot-paas`](../springboot-paas/)
-or [`live-reconcile`](../live-reconcile/) as the current runtime companions
-while the Score-specific live path is being finished.
+This README is intentionally honest: the strongest Score proof in this repo is
+now example-owned end to end. You can start with source-side tracing, prove a
+governed ALLOW versus ESCALATE boundary locally, and then run the same Score
+workload as a real app on a kind cluster from the merged `score.yaml` plus
+`score-prod.yaml` inputs.
 
 ## AI-first bundle
 
@@ -39,7 +39,7 @@ safe, step-by-step handoff:
 | If you are... | First command | Then do this | What you can inspect |
 |---|---|---|---|
 | Existing Score.dev user | `./examples/scoredev-paas/demo-local.sh` | `./examples/scoredev-paas/demo-governed-workload.sh`, then `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `score.yaml` field trace now, local ALLOW/ESCALATE proof next, connected governed output after |
-| Existing ConfigHub user adding Score governance | `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `./examples/demo/start-score-first.sh` for the repo-side first-run story | bundle, attestation, and decision evidence plus source mapping |
+| Existing ConfigHub user adding Score governance | `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `./examples/demo/start-score-first.sh` for the repo-side first-run story, then `./examples/scoredev-paas/demo-runtime.sh` for the standalone runtime proof | bundle, attestation, decision evidence, then a real `checkout-api` deployment |
 | Existing cluster-first operator | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) first | come back to `./examples/scoredev-paas/demo-local.sh` for source provenance | live workload first, Score contract trace second |
 
 Both paths lead to the same outcome: governed Score workloads with field-origin tracing.
@@ -51,7 +51,7 @@ Both paths lead to the same outcome: governed Score workloads with field-origin 
 | Local source-side proof | `./examples/scoredev-paas/demo-local.sh` | `score.yaml` field origin, inverse edit pointers, and rendered targets |
 | Local governed contract proof | `./examples/scoredev-paas/demo-governed-workload.sh` | app-owned image change returns `ALLOW`, unapproved resource type returns `ESCALATE` |
 | Deep connected bridge proof | `./examples/scoredev-paas/demo-connected.sh` | change ID, bundle digest, attestation, and connected decision/query output |
-| Runtime companion today | [`springboot-paas`](../springboot-paas/) or [`live-reconcile`](../live-reconcile/) | current standalone live app proof elsewhere in the repo while Score runtime proof is being finished |
+| Standalone runtime proof | `./examples/scoredev-paas/demo-runtime.sh` | a live `checkout-api` Deployment and Service on kind, with `/healthz` and `/` verified from the merged Score inputs |
 
 ## 1. Who this is for
 
@@ -65,7 +65,7 @@ Both paths lead to the same outcome: governed Score workloads with field-origin 
 | Component | What it is |
 |-----------|------------|
 | **Real app** | Node.js checkout API defined in `score.yaml` |
-| **Real cluster objects** | Kubernetes Deployment, Service, ConfigMap |
+| **Real cluster objects** | Kubernetes Deployment and Service |
 | **Real inspection target** | `kubectl get deployment checkout-api -o yaml` |
 | **GitOps transport** | Argo CD Application or Flux Kustomization |
 
@@ -124,7 +124,7 @@ So the recommended path is:
 ┌─────────────────────┐          ┌──────────────────────┐         ┌─────────────────┐
 │ score.yaml          │          │ Deployment           │         │ Running pods     │
 │ app/src/server.js   │──import─▶│ Service              │──sync──▶│ Live service     │
-│ platform/contracts/ │          │ ConfigMap            │         │ Cluster state    │
+│ platform/contracts/ │          │ runtime policy trace │         │ Cluster state    │
 │ platform/policies/  │          │ Kustomization (Flux) │         │                 │
 └─────────────────────┘          └──────────────────────┘         └─────────────────┘
   App team: score.yaml.            Rendered K8s manifests            What's actually
@@ -135,9 +135,10 @@ So the recommended path is:
 containers, env vars, ports, and resource dependencies (Postgres, Redis). This
 is platform-agnostic intent.
 
-**WET** is what cub-gen produces: Kubernetes Deployments, Services, and ConfigMaps
-with every field traced back to Score. The platform's workload class contract
-validates that the rendered output meets requirements.
+**WET** is what cub-gen produces: Kubernetes Deployments, Services, and the
+transport/policy metadata around them, with every field traced back to Score.
+The platform's workload class contract validates that the rendered output meets
+requirements.
 
 **LIVE** is what's running. Flux or ArgoCD reconciles WET to LIVE. Your
 reconciler stays in control.
@@ -209,6 +210,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 # Local governed contract path
 ./examples/scoredev-paas/demo-governed-workload.sh
+
+# Standalone live runtime path
+./examples/scoredev-paas/demo-runtime.sh
 
 # Connected ConfigHub path
 cub auth login

@@ -42,7 +42,7 @@ The flagship examples also now publish an explicit AI-first bundle:
 |---|---|---|---|
 | Helm plus Argo/Flux | `./examples/demo/start-platform-first.sh` | local lifecycle for `helm-paas`, then the example-owned governed-change proof and live wrapper | values ownership now, local ALLOW/BLOCK proof next, connected + live proof after |
 | Spring Boot app repos | `./examples/demo/start-app-first.sh` | local lifecycle for `springboot-paas`, then the example-owned embedded payload mutation proof | app-vs-platform config ownership now, direct embedded apply-here proof next, standalone live app proof after |
-| Score.dev workloads | `./examples/demo/start-score-first.sh` | Score field trace, inverse edit map, and governed workload-contract proof | `score.yaml` to runtime-field mapping now, local ALLOW/ESCALATE proof next, connected governed output after |
+| Score.dev workloads | `./examples/demo/start-score-first.sh` | Score field trace, inverse edit map, governed workload-contract proof, and standalone runtime proof | `score.yaml` to runtime-field mapping now, local ALLOW/ESCALATE proof next, live `checkout-api` proof after |
 | Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | real Flux and Argo reconciliation on kind | pods, rollout, and drift correction |
 
 Cluster-side follow-on: pair the above with [`cub-scout`](https://github.com/confighub/cub-scout)
@@ -55,7 +55,7 @@ when you want to inspect what is actually running after reconciliation.
 | Spring standalone app path | `inventory-api` on kind plus HTTP verification | `./examples/springboot-paas/verify-e2e.sh` | Strongest standalone app proof |
 | Helm flagship live path | Argo and Flux reconciliation of Helm-derived manifests plus connected governance evidence | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` | Example-owned wrapper over the shared live-reconcile harness |
 | Connected smoke | ConfigHub-authenticated flagship bundle/attestation chain | `./examples/demo/run-connected-smoke.sh` | Release-facing connected proof lane |
-| Score path | governed workload-contract proof plus connected output, but no standalone live-cluster Score proof yet | `./examples/scoredev-paas/demo-governed-workload.sh` | Honest flagship with local ALLOW/ESCALATE proof and connected next step |
+| Score standalone path | `checkout-api` on kind plus HTTP verification from merged Score inputs | `./examples/scoredev-paas/verify-e2e.sh` | Standalone Score live proof is now real |
 
 ## 3. Pick your demo by persona
 
@@ -110,7 +110,7 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 | `start-app-first.sh` | [`springboot-paas`](../springboot-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated app-first starter path |
 | `../springboot-paas/demo-governed-routes.sh` | [`springboot-paas`](../springboot-paas/) | App-owned field ALLOW versus platform-owned field BLOCKED with `springboot validate-mutation` |
 | `../springboot-paas/demo-embedded-config-mutation.sh` | [`springboot-paas`](../springboot-paas/) | Direct embedded `application.yaml` mutation in the ConfigHub payload plus blocked datasource proof |
-| `start-score-first.sh` | [`scoredev-paas`](../scoredev-paas/) | Opinionated Score-first starter path with honest runtime-gap handoff |
+| `start-score-first.sh` | [`scoredev-paas`](../scoredev-paas/) | Opinionated Score-first starter path with local governance and standalone runtime proof |
 | `../scoredev-paas/demo-governed-workload.sh` | [`scoredev-paas`](../scoredev-paas/) | App-owned image change ALLOW versus unapproved resource type ESCALATE with `score validate-workload` |
 | `module-1-helm-import.sh` | [`helm-paas`](../helm-paas/) | Helm detection, values ownership, field-origin tracing |
 | `module-2-score-field-map.sh` | [`scoredev-paas`](../scoredev-paas/) | Score field-origin and inverse edit mapping |
@@ -397,7 +397,7 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 |--------|--------------------|
 | Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
 | In progress | The flagship examples still need contract-based proof for real-cluster outcome, two-audience onboarding, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` paths |
-| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#187`, `#218`, `#238`-`#242` |
+| Actively tracked | `#173`, `#177`, `#180`, `#187`, `#218`, `#238`-`#242` |
 
 For the per-example truth behind those claims, use the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md). It is derived from the example catalog, connected runners, source-side tests, and live proof scripts.
 

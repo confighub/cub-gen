@@ -155,7 +155,14 @@ func Collect(root string) (Matrix, error) {
 			}
 			row.Notes = append(row.Notes, "Runtime harness for WET->LIVE proof; source-side generator proof lives in paired examples.")
 		case "scoredev-paas":
-			row.Notes = append(row.Notes, "Score now has example-owned local governed proof via ./examples/scoredev-paas/demo-governed-workload.sh for ALLOW versus ESCALATE, even though standalone live-cluster proof is still open.")
+			row.RealLiveProof = RealLiveStandalone
+			row.ProofRefs.RealLive = []string{
+				"./examples/scoredev-paas/demo-runtime.sh",
+				"./examples/scoredev-paas/verify-e2e.sh",
+				"./examples/scoredev-paas/bin/create-cluster",
+				"./examples/scoredev-paas/bin/build-image",
+			}
+			row.Notes = append(row.Notes, "Standalone real-cluster proof: merged score.yaml + score-prod.yaml rendered into a live checkout-api deployment on kind.")
 		}
 
 		if hasAIFirstBundle(root, slug) {
@@ -354,8 +361,6 @@ func trackingIssuesForExample(slug, aiSurface string) []string {
 	switch slug {
 	case "helm-paas":
 		issues = append(issues, "#177", "#187")
-	case "scoredev-paas":
-		issues = append(issues, "#178")
 	case "springboot-paas":
 		issues = append(issues, "#179")
 	case "ops-workflow", "swamp-automation":

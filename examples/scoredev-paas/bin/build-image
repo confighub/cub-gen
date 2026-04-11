@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
+CLUSTER_NAME="${1:-scoredev-runtime}"
+IMAGE_TAG="${2:-}"
+
+if [[ -z "${IMAGE_TAG}" ]]; then
+  IMAGE_TAG="$(go run "${PROJECT_DIR}/bin/render_runtime.go" \
+    --score "${PROJECT_DIR}/score.yaml" \
+    --overlay "${PROJECT_DIR}/score-prod.yaml" \
+    --print-image)"
+fi
+
+echo "Building Docker image ${IMAGE_TAG}..."
+docker build -t "${IMAGE_TAG}" "${PROJECT_DIR}"
+echo "  Image built."
+
+echo "Loading image into Kind cluster '${CLUSTER_NAME}'..."
+kind load docker-image "${IMAGE_TAG}" --name "${CLUSTER_NAME}"
+echo "  Image loaded."
+
+echo ""
+echo "====================================="
+echo "Image ${IMAGE_TAG} ready in cluster."
+echo "====================================="
