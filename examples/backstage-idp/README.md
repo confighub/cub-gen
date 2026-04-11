@@ -15,7 +15,7 @@ change traceable, auditable, and queryable across repos.
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side catalog provenance | Real | `./examples/backstage-idp/demo-local.sh` |
-| Connected governance path | Real | `./examples/backstage-idp/demo-connected.sh` |
+| Deep connected bridge path | Real | `./examples/backstage-idp/demo-connected.sh` |
 | Catalog standards and ownership scenario | Real | inspect `platform/catalog-standards.yaml` after either wrapper run |
 | Standalone live Backstage portal proof | Not yet | this repo proves governed source flow more than a seeded live portal deployment |
 
@@ -36,7 +36,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Local catalog governance walkthrough
 ./examples/backstage-idp/demo-local.sh
 
-# Connected governance path
+# Deep connected bridge path
 cub auth login
 ./examples/backstage-idp/demo-connected.sh
 ```
@@ -262,7 +262,9 @@ cub auth login
 ./examples/backstage-idp/demo-connected.sh
 ```
 
-That is the current first-run connected path for this example.
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
 
 If you specifically need the deeper bridge API path, use:
 

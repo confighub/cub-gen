@@ -15,7 +15,7 @@ pipeline that governs your app changes also governs the governance rules.
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Recursive governance walkthrough | Real | `./examples/confighub-actions/demo-local.sh` |
-| Connected governance path | Real | `./examples/confighub-actions/demo-connected.sh` |
+| Deep connected bridge path | Real | `./examples/confighub-actions/demo-connected.sh` |
 | First-class source-chain coverage in the truth matrix | Not yet | this example is still a companion workflow story, not a first-class verified fixture |
 | Standalone live execution artifact | Not yet | current example proves governed lifecycle config more than a real executed platform run |
 
@@ -32,7 +32,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Local recursive-governance walkthrough
 ./examples/confighub-actions/demo-local.sh
 
-# Connected governance path
+# Deep connected bridge path
 cub auth login
 ./examples/confighub-actions/demo-connected.sh
 ```
@@ -273,7 +273,9 @@ cub auth login
 ./examples/confighub-actions/demo-connected.sh
 ```
 
-That is the current first-run connected path for this example.
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
 
 If you specifically need the deeper bridge API path, use:
 

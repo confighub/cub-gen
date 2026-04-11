@@ -39,8 +39,8 @@ When the operator asks... | Run this | What you get
 "Where do I edit this field?" | `./cub-gen change explain --wet-path "<path>" $REPO` | DRY file/path/owner
 "Run a governed change" | `./cub-gen change run --mode local --space my-space $REPO` | Local change report (or connected to ConfigHub)
 "Verify the connected smoke path" | `cub auth login && ./examples/demo/run-connected-smoke.sh` | ConfigHub auth/context + flagship connected wrappers
-"Use the deep bridge API path" | `./cub-gen bridge ingest --in bundle.json --base-url <url>` | Ingest receipt
-"Check deep decision status" | `./cub-gen bridge decision query --change-id <id> --base-url <url>` | ALLOW / ESCALATE / BLOCK
+"Use the advanced bridge-only path" | `./cub-gen bridge ingest --in bundle.json --base-url <url>` | Explicit bridge receipt for deep demos or bridge-only gaps
+"Check advanced bridge decision status" | `./cub-gen bridge decision query --change-id <id> --base-url <url>` | ALLOW / ESCALATE / BLOCK
 
 ## First commands for any source repo
 

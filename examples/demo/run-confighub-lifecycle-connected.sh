@@ -40,6 +40,9 @@ if [ -z "$SPACE" ]; then
 fi
 print_connected_context
 
+echo "[lifecycle][connected] note: this is the advanced bridge-backed connected walkthrough."
+echo "[lifecycle][connected] note: use ./examples/demo/run-connected-smoke.sh first for the standard connected environment check."
+
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   echo "[lifecycle][connected] build cub-gen"
   go build -o ./cub-gen ./cmd/cub-gen

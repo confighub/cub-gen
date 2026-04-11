@@ -23,7 +23,7 @@ This example now owns three flagship proof paths:
 |-------|--------|---------------------|
 | Source-side Helm provenance | Real | `./examples/helm-paas/demo-local.sh` |
 | Governed ALLOW + BLOCK ownership proof | Real | `./examples/helm-paas/demo-governed-change.sh` |
-| Connected governance path | Real | `./examples/helm-paas/demo-connected.sh` |
+| Deep connected bridge path | Real | `./examples/helm-paas/demo-connected.sh` |
 | Connected + live Helm proof from this example | Real | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` |
 | Runtime WET->LIVE harness beneath the wrapper | Paired | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
 
@@ -54,7 +54,7 @@ That sequence gives you:
 |---|---|---|
 | Local source-side proof | `./examples/helm-paas/demo-local.sh` | field origin, inverse-edit guidance, dry inputs, and rendered targets |
 | Local governed ownership proof | `./examples/helm-paas/demo-governed-change.sh` | one app-team change that passes and one platform-contract change that fails the DRY ownership gate |
-| Connected governance proof | `./examples/helm-paas/demo-connected.sh` | change ID, bundle digest, attestation, and backend decision/query output |
+| Deep connected bridge proof | `./examples/helm-paas/demo-connected.sh` | change ID, bundle digest, attestation, and backend decision/query output |
 | Connected + live proof | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` | live Deployment rollout, pods, services, and reconciler status for Flux and Argo |
 
 ## 1. Who this is for
@@ -388,8 +388,9 @@ cub auth login
 ./examples/helm-paas/demo-connected.sh
 ```
 
-That is the current first-run connected path for this example and the same
-surface used by the connected smoke lane.
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
 
 If you want the connected path that also deploys and proves the live result:
 

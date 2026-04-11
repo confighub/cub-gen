@@ -14,7 +14,7 @@ itself. For governance over the *workflows* that run on Swamp, see
 
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
-| Runnable local and connected runtime walkthrough | Real | `./examples/swamp-project/demo-local.sh` then `./examples/swamp-project/demo-connected.sh` |
+| Runnable local walkthrough + deep connected bridge companion | Real | `./examples/swamp-project/demo-local.sh` then `./examples/swamp-project/demo-connected.sh` |
 | First-class source-chain coverage in the truth matrix | Not yet | this example is still a companion runtime story, not a first-class verified fixture |
 | Standalone live Swamp runtime proof | Not yet | current proof is runtime deployment governance, not live runtime evidence |
 
@@ -31,10 +31,15 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Local runtime walkthrough
 ./examples/swamp-project/demo-local.sh
 
-# Connected governance path
+# Deep connected bridge path
 cub auth login
 ./examples/swamp-project/demo-connected.sh
 ```
+
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. Use
+`./examples/swamp-project/demo-connected.sh` when you specifically want this
+example's deeper bridge-backed walkthrough.
 
 ## Domain POV (runtime platform owners)
 
@@ -218,3 +223,7 @@ echo "connected (requires ConfigHub auth)"
 cub auth login
 ./examples/swamp-project/demo-connected.sh
 ```
+
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
