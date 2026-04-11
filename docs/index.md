@@ -175,7 +175,17 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
 ## Current status
 
-**v0.2-preview-parity-locked** (2026-03-06)
+**Latest shipped:** `v0.2-preview.1` (2026-03-06)
+
+**Current target:** `v0.2-preview.2`
+
+- local-first parity coverage remains green,
+- current release work is focused on full example-catalog quality,
+- CLI/help/docs must match clean-checkout behavior,
+- connected release status must be backed by a credible lane the team actually runs.
+
+See the [v0.2-preview.2 Release Plan](releases/v0.2-preview.2-plan.md) for the
+current must-ship and post-release split.
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
 - Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 8 generators
