@@ -10,12 +10,43 @@ governance over *what* changed. When 50 teams rename owners during a reorg,
 you need traceability — not just commit history. ConfigHub makes every catalog
 change traceable, auditable, and queryable across repos.
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Source-side catalog provenance | Real | `./examples/backstage-idp/demo-local.sh` |
+| Connected governance path | Real | `./examples/backstage-idp/demo-connected.sh` |
+| Catalog standards and ownership scenario | Real | inspect `platform/catalog-standards.yaml` after either wrapper run |
+| Standalone live Backstage portal proof | Not yet | this repo proves governed source flow more than a seeded live portal deployment |
+
+Known gaps still open:
+
+- this repo does not ship a live Backstage instance or catalog sync harness
+- policy outcomes here are examples; your real allow/block thresholds depend on your team registry and lifecycle standards
+
+This example is strongest as a source-side governance companion for teams that
+already run Backstage and want traceability before investing in a fuller live
+portal fixture.
+
+## Fastest path to believe it
+
+```bash
+go build -o ./cub-gen ./cmd/cub-gen
+
+# Local catalog governance walkthrough
+./examples/backstage-idp/demo-local.sh
+
+# Connected governance path
+cub auth login
+./examples/backstage-idp/demo-connected.sh
+```
+
 ## 1. Who this is for
 
 | If you are... | Start here |
 |---------------|------------|
 | **Existing ConfigHub user** adding catalog governance | Jump to [Run from ConfigHub](#run-from-confighub-connected-mode) |
-| **Existing Backstage user** adding ConfigHub | Jump to [Try it](#try-it) then connect later |
+| **Existing Backstage user** adding ConfigHub | Jump to [Fastest path](#fastest-path-to-believe-it) then connect later |
 
 Both paths lead to the same outcome: governed catalog entities with field-origin tracing.
 

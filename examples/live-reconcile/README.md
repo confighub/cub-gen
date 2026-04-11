@@ -10,22 +10,22 @@ If your first question is "which values file or source path owns this field?",
 start with [`helm-paas`](../helm-paas/) first. Come here when you want to prove
 that the governed WET output really survives Flux or Argo reconciliation.
 
-## What this example proves
+## What this proves today
 
-- Flux or Argo can create the workload from the declared source
-- Flux or Argo can update it when the source changes
-- Flux or Argo can correct manual drift back to declared state
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Flux create/update/drift correction | Real | `./examples/live-reconcile/demo-local.sh` |
+| Argo create/update/drift correction | Real | `RECONCILER=argo ./examples/live-reconcile/demo-local.sh` |
+| Connected governed runtime loop | Real | `RECONCILER=both ./examples/demo/e2e-connected-governed-reconcile-helm.sh` |
+| Source-side Helm provenance | Paired | `./examples/helm-paas/demo-local.sh` |
+| Standalone source-side governance in this example | Not yet | pair `live-reconcile` with `helm-paas` today |
 
-## What this example does not prove by itself
+Known gaps still open:
 
-- DRY ownership boundaries
-- source-side field provenance
-- whether a repo change should be ALLOW, ESCALATE, or BLOCK before delivery
+- this harness is runtime-first, so it does not answer DRY ownership or policy questions by itself
+- the connected governed path still depends on the paired `helm-paas` source fixture rather than a standalone source-side story here
 
-Those are the source-side and governance questions handled by `cub-gen`,
-ConfigHub, and the paired [`helm-paas`](../helm-paas/) example.
-
-## Start here first
+## Fastest path to believe it
 
 Use this sequence:
 
@@ -40,7 +40,7 @@ Use this sequence:
 | If you are... | Start here |
 |---------------|------------|
 | **Existing ConfigHub user** proving reconciler integration | Jump to [Run from ConfigHub](#run-from-confighub-connected-mode) |
-| **Flux/Argo operator** validating reconciler behavior | Jump to [Try it](#try-it) — local Flux/Argo proof |
+| **Flux/Argo operator** validating reconciler behavior | Jump to [Fastest path](#fastest-path-to-believe-it) — local Flux/Argo proof |
 
 Both paths lead to the same outcome: proven WET→LIVE reconciliation with create/update/drift-correction.
 
