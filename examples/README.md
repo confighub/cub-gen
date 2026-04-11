@@ -15,11 +15,22 @@ Each example in this directory is runnable and maps to a real platform/app patte
 
 Do not start by scanning the whole catalog. Start with one of these:
 
-| Journey | Start here | Why this should be first |
-|---------|------------|--------------------------|
-| Platform-first GitOps team | [`helm-paas`](./helm-paas/) then [`live-reconcile`](./live-reconcile/) | Most direct story for existing Helm plus Flux/Argo users |
-| App-first team | [`springboot-paas`](./springboot-paas/) | Most recognizable "I already ship this app" path |
-| Cluster-first companion path | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | Start from running reality, then trace back to source |
+| Journey | Start here | What is real today | Why this should be first |
+|---------|------------|--------------------|--------------------------|
+| Platform-first GitOps team | [`helm-paas`](./helm-paas/) then [`live-reconcile`](./live-reconcile/) | `helm-paas` has real source-side + connected proof; runtime proof is paired through `live-reconcile` | Most direct story for existing Helm plus Flux/Argo users |
+| App-first team | [`springboot-paas`](./springboot-paas/) | Real source-side, connected, and standalone live-cluster proof | Most recognizable "I already ship this app" path |
+| Score-first team | [`scoredev-paas`](./scoredev-paas/) | Real source-side + connected proof; standalone live Score runtime proof is still open work | Canonical "keep `score.yaml` as the contract" path |
+| Cluster-first companion path | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | Start from live reality, then trace back to source | Best path when the cluster is already the source of urgency |
+
+## Flagship truth right now
+
+Use these three first when evaluating whether `cub-gen` feels trustworthy:
+
+| Example | Best current answer for | Current trust level |
+|---------|-------------------------|---------------------|
+| [`helm-paas`](./helm-paas/) | Helm + Flux/Argo + values ownership | Strongest platform-first source-side path; pair with [`live-reconcile`](./live-reconcile/) for runtime proof |
+| [`springboot-paas`](./springboot-paas/) | Real app-team + platform-team config ownership | Strongest standalone end-to-end example in the repo today |
+| [`scoredev-paas`](./scoredev-paas/) | Score intent to rendered runtime fields | Strongest Score source-side path today; runtime proof still needs its own standalone finish |
 
 ## Two audiences, two entry points
 
@@ -72,6 +83,10 @@ Use the generated [Example Truth Matrix](../docs/testing/example-truth-matrix.md
 - which ones are in the connected release gate,
 - which ones have real WET->LIVE proof today,
 - which ones are explicitly AI-first versus only adjacent.
+
+If you are about to spend real time on one example, check the matrix first.
+It is the repo's source of truth for what is source-side only, what is connected,
+and what has real live proof today.
 
 ## Pick your domain POV first
 

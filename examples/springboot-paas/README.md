@@ -16,6 +16,19 @@ These map to the three mutation routes every platform team needs:
 
 The app is `inventory-api`, a Spring Boot 3.3.2 service (Java 21) deployed across `dev`, `stage`, and `prod`.
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Source-side provenance and ownership | Real | `./examples/springboot-paas/demo-local.sh` |
+| Connected governance path | Real | `./examples/springboot-paas/demo-connected.sh` |
+| Standalone live-cluster app proof | Real | `./bin/create-cluster && ./bin/build-image && ./bin/install-worker && ./verify-e2e.sh` |
+| Block/escalate boundary | Real but client-side | `cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml spring.datasource.url` |
+
+The strongest caveat is enforcement depth, not demo truth. The ownership
+boundary is real and documented, but server-side rejection in ConfigHub is not
+implemented yet.
+
 ## What this example is (and isn't)
 
 This is a minimal but real Spring Boot application. You can build it with
@@ -101,11 +114,6 @@ example to learn from spring-platform. They complement each other.
 ## Quick start
 
 ```bash
-# Structural proof (no cluster, no ConfigHub needed)
-./verify.sh                           # all fixtures consistent
-./lift-upstream-verify.sh             # Redis bundle consistent
-./block-escalate-verify.sh           # datasource boundary consistent
-
 # cub-gen source-side path
 go build -o ./cub-gen ./cmd/cub-gen
 ./examples/springboot-paas/demo-local.sh
@@ -113,6 +121,21 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Connected ConfigHub path
 cub auth login
 ./examples/springboot-paas/demo-connected.sh
+
+# Standalone live-cluster proof
+./bin/create-cluster
+./bin/build-image
+./bin/install-worker
+./confighub-setup.sh
+./verify-e2e.sh
+```
+
+Fixture consistency checks and bundle-only proofs:
+
+```bash
+./verify.sh                  # all fixtures consistent
+./lift-upstream-verify.sh    # Redis bundle consistent
+./block-escalate-verify.sh   # datasource boundary consistent
 ```
 
 ## Understand the generator

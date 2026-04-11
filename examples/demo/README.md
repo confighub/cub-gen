@@ -10,12 +10,27 @@ detect → import → publish → verify → attest → (optional) bridge ingest
 If you are new, do not start with "run everything." Start with one concrete
 adoption path that matches what you already run.
 
+## Proof ladder
+
+Use the demo surface in this order:
+
+1. **Local source-side proof**: `detect -> import -> publish -> verify -> attest`
+2. **Connected governance proof**: bridge ingest/query plus decision state in ConfigHub
+3. **Runtime proof**: real WET->LIVE reconciliation or a real deployed app
+
+That ordering matters. The first run should answer "do I trust the source-side
+trace?" before you spend time on backend or cluster setup.
+
+For exact per-example proof tiers, use the generated
+[Example Truth Matrix](../../docs/testing/example-truth-matrix.md).
+
 ## 1. Start with one of these
 
 | If you already run... | Start here | What you should prove first |
 |---------|-----------|------------------------------|
 | Helm plus Flux/Argo | `./examples/demo/start-platform-first.sh` | Which values file/path controls the rendered field |
 | Spring Boot app repos | `./examples/demo/start-app-first.sh` | Which app or platform config file should be edited |
+| Score.dev workloads | `./examples/demo/module-2-score-field-map.sh` | Which `score.yaml` field produced the runtime field |
 | Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | WET to LIVE create, update, and drift-correction |
 
 Cluster-side follow-on: pair the above with [`cub-scout`](https://github.com/confighub/cub-scout)
@@ -48,6 +63,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 # App-first first run
 ./examples/demo/start-app-first.sh
+
+# Score-first first run
+./examples/demo/module-2-score-field-map.sh
 
 # Runtime proof after source-side import
 RECONCILER=both ./examples/live-reconcile/demo-local.sh

@@ -14,6 +14,21 @@ The first question it should answer is:
 This example is the source-side half of that story. For the runtime proof half,
 pair it with [`live-reconcile`](../live-reconcile/).
 
+## What this proves today
+
+| Slice | Status | How to prove it now |
+|-------|--------|---------------------|
+| Source-side Helm provenance | Real | `./examples/helm-paas/demo-local.sh` |
+| Connected governance path | Real | `./examples/helm-paas/demo-connected.sh` |
+| Runtime WET->LIVE proof | Paired | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
+| Standalone live Helm proof in this example | Not yet | pair `helm-paas` with `live-reconcile` today |
+
+Known gaps still open:
+
+- umbrella/subchart/alias/conditional chart support is still open work ([#238](https://github.com/confighub/cub-gen/issues/238))
+- one-command multi-variant fan-out is not exposed yet ([#237](https://github.com/confighub/cub-gen/issues/237))
+- CLI override capture for `--set` / `--set-file` is not modeled yet ([#242](https://github.com/confighub/cub-gen/issues/242))
+
 ## Start here first
 
 If you are new, use this sequence:
@@ -35,7 +50,7 @@ That gives you:
 | If you are... | Start here |
 |---------------|------------|
 | **Existing ConfigHub user** adding Helm governance | Jump to [Run from ConfigHub](#run-from-configHub-connected-mode) |
-| **Existing Helm/Flux/Argo user** adding ConfigHub | Jump to [Run from Helm](#try-it) then connect later |
+| **Existing Helm/Flux/Argo user** adding ConfigHub | Jump to [Fastest path](#fastest-path-to-believe-it) then connect later |
 
 Both paths lead to the same outcome: governed Helm with field-origin tracing.
 
@@ -159,7 +174,7 @@ The key outcome does not change: every WET field should have one clear edit
 path and owner. That is what prevents "edit rendered manifests and hope" during
 incidents.
 
-## Try it
+## Fastest path to believe it
 
 Start with the documented entrypoints:
 
@@ -172,6 +187,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Connected ConfigHub path
 cub auth login
 ./examples/helm-paas/demo-connected.sh
+
+# Runtime proof paired through the reconciler harness
+RECONCILER=both ./examples/live-reconcile/demo-local.sh
 ```
 
 If you want the raw commands underneath the wrappers:
