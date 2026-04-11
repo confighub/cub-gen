@@ -11,68 +11,82 @@ You already have a deployment pipeline: Git, Helm, Flux, Argo, Spring Boot, Scor
 
 Each example in this directory is runnable and maps to a real platform/app pattern.
 
-## Start here first
+## Pick a path in 30 seconds
 
-Do not start by scanning the whole catalog. Start with one of these:
+Do not start by scanning the whole catalog. Start with the path that matches
+what you already run:
 
-| Journey | Start here | What is real today | Why this should be first |
-|---------|------------|--------------------|--------------------------|
-| Platform-first GitOps team | [`helm-paas`](./helm-paas/) then [`live-reconcile`](./live-reconcile/) | `helm-paas` has real source-side + connected proof; runtime proof is paired through `live-reconcile` | Most direct story for existing Helm plus Flux/Argo users |
-| App-first team | [`springboot-paas`](./springboot-paas/) | Real source-side, connected, and standalone live-cluster proof | Most recognizable "I already ship this app" path |
-| Score-first team | [`scoredev-paas`](./scoredev-paas/) | Real source-side + connected proof; standalone live Score runtime proof is still open work | Canonical "keep `score.yaml` as the contract" path |
-| Cluster-first companion path | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | Start from live reality, then trace back to source | Best path when the cluster is already the source of urgency |
+| If you already run... | Start here | Then do this | What you can inspect | Current truth |
+|---|---|---|---|---|
+| Helm plus Argo/Flux platform repos | `./examples/demo/start-platform-first.sh` | `cub auth login && ./examples/helm-paas/demo-connected.sh` | values ownership, rendered targets, then paired runtime proof via [`live-reconcile`](./live-reconcile/) | Strongest platform-first source-side path today |
+| Spring Boot app repos | `./examples/demo/start-app-first.sh` | `cub auth login && ./examples/springboot-paas/demo-connected.sh` | config ownership now, live `inventory-api` proof next | Strongest standalone end-to-end example in the repo today |
+| Score.dev workloads | `./examples/demo/start-score-first.sh` | `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `score.yaml` field origin now, governed connected output next | Strongest Score source-side path today; standalone live Score proof is still open work |
+| A running cluster and GitOps controller | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | trace one chosen field back to source | live cluster state first, source provenance second | Best when the cluster is already the urgent source of truth |
+
+## What ends with something live today
+
+| Path | Live thing you can inspect | Command | Truth today |
+|---|---|---|---|
+| [`springboot-paas`](./springboot-paas/) | real `inventory-api` app on a kind cluster | `./examples/springboot-paas/verify-e2e.sh` | Standalone live app proof is real |
+| [`helm-paas`](./helm-paas/) + [`live-reconcile`](./live-reconcile/) | Flux and Argo reconciliation of rendered Helm output | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | Runtime proof is paired, not standalone in `helm-paas` |
+| [`scoredev-paas`](./scoredev-paas/) | connected governed output plus rendered runtime fields | `./examples/scoredev-paas/demo-connected.sh` | Standalone Score live proof is still open |
+
+## Two audiences, one set of wrappers
+
+Every flagship example supports the same two entry points:
+
+- Local first: `./examples/<example>/demo-local.sh`
+- Connected next: `cub auth login && ./examples/<example>/demo-connected.sh`
+
+If you already use ConfigHub, start with the connected wrapper for one example.
+If you already use Helm, Argo, Flux, Score, or Spring, start with local mode so
+you see value before backend setup.
+
+## What `--space` means
+
+`--space` is the ConfigHub space where cub-gen records bundle metadata and
+decision-related context.
+
+- In local examples, `platform` is the default teaching value.
+- In connected runs, use the space from your current ConfigHub context.
+- If you only want source-side proof, you can treat `--space` as descriptive
+  context rather than a deployment target.
+
+## Source-first vs cluster-first
+
+Use the `cub-gen` examples when your starting point is a source repo and your
+question is "what rendered this field?" Use ConfigHub GitOps import plus
+[`cub-scout`](https://github.com/confighub/cub-scout) when your starting point
+is a live Argo or Flux workload and your question is "what is running right
+now?"
+
+That split is especially important for:
+
+- Helm plus Argo/Flux teams using chart values and overlays,
+- Score teams keeping `score.yaml` as the app-team contract,
+- platform teams tracing one cluster field back to the DRY source that produced it.
 
 ## Flagship truth right now
 
-Use these three first when evaluating whether `cub-gen` feels trustworthy:
-
 | Example | Best current answer for | Current trust level |
-|---------|-------------------------|---------------------|
-| [`helm-paas`](./helm-paas/) | Helm + Flux/Argo + values ownership | Strongest platform-first source-side path; pair with [`live-reconcile`](./live-reconcile/) for runtime proof |
+|---|---|---|
+| [`helm-paas`](./helm-paas/) | Helm + Argo/Flux + values ownership | Strongest platform-first source-side path; pair with [`live-reconcile`](./live-reconcile/) for runtime proof |
 | [`springboot-paas`](./springboot-paas/) | Real app-team + platform-team config ownership | Strongest standalone end-to-end example in the repo today |
 | [`scoredev-paas`](./scoredev-paas/) | Score intent to rendered runtime fields | Strongest Score source-side path today; runtime proof still needs its own standalone finish |
-
-## Two audiences, two entry points
-
-Every example supports both paths explicitly:
-
-| If you are... | Your path |
-|---------------|-----------|
-| **Existing ConfigHub user** adding a platform tool | Start with the connected wrapper for one example, then expand into deeper bridge/promotion flows only if you need them |
-| **Existing platform-tool user** adding ConfigHub | Start with local mode, see value first, then connect |
-
-Neither audience is an afterthought. Pick your path and each example will guide you.
-
-## How the tools fit together
-
-| Tool | Starts from | Best first question |
-|------|-------------|---------------------|
-| `cub-gen` | Source repo | Which DRY file or path produced this rendered field? |
-| [`cub-scout`](https://github.com/confighub/cub-scout) | Cluster and reconciler runtime | What is running and where is drift? |
-| ConfigHub | Shared evidence and governance state | What changed, what was approved, and what proof exists? |
 
 ## What happens after import? (Day-2 stories)
 
 Import is day 1. The real value shows on day 2:
 
 | Day | What you do | What you gain |
-|-----|-------------|---------------|
+|---|---|---|
 | **Day 1** | Import and explain | Field-origin tracing, ownership clarity, inverse-edit guidance |
 | **Day 2** | Governed change, promotion, or live-origin proposal | ALLOW/BLOCK decisions, cross-repo promotion, live→DRY proposals |
 | **Day 3** | Optional AI-assisted change lane | Prompt-as-DRY, mutation-ledger evidence, verification boundary |
 
 Every example should answer: "I imported my config. Now what?" The answer is
-governed change, promotion, or live-origin proposal — not "wait for the next feature."
-
-## What runs locally vs what needs ConfigHub
-
-Everything in these examples runs locally with no backend:
-- Generator detection
-- Field-origin tracing
-- Evidence bundles (`publish`, `verify`, `attest`)
-
-Cross-repo queries, policy enforcement, and governed decisions require
-[ConfigHub](../docs/platform.md).
+governed change, promotion, or live-origin proposal, not "wait for the next
+feature."
 
 ## Current truth matrix
 
@@ -148,6 +162,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 # App-first
 ./examples/springboot-paas/demo-local.sh
+
+# Score-first
+./examples/scoredev-paas/demo-local.sh
 ```
 
 ## Connected mode (ConfigHub smoke first)
@@ -164,6 +181,9 @@ cub info
 
 # App-first
 ./examples/springboot-paas/demo-connected.sh
+
+# Score-first
+./examples/scoredev-paas/demo-connected.sh
 ```
 
 Use local mode for first value. Use connected smoke to confirm your ConfigHub
