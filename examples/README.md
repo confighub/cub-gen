@@ -23,6 +23,17 @@ what you already run:
 | Score.dev workloads | `./examples/demo/start-score-first.sh` | `./examples/scoredev-paas/demo-governed-workload.sh`, then `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `score.yaml` field origin now, local ALLOW/ESCALATE proof next, governed connected output after | Strongest Score source-side path today; standalone live Score proof is still open work |
 | A running cluster and GitOps controller | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | trace one chosen field back to source | live cluster state first, source provenance second | Best when the cluster is already the urgent source of truth |
 
+## Flagship AI bundles
+
+The four flagship examples now carry the same AI-first operator bundle:
+
+| Example | AI start | Prompt pack | Inspection contract |
+|---|---|---|---|
+| [`helm-paas`](./helm-paas/) | [AI_START_HERE.md](./helm-paas/AI_START_HERE.md) | [prompts.md](./helm-paas/prompts.md) | [contracts.md](./helm-paas/contracts.md) |
+| [`scoredev-paas`](./scoredev-paas/) | [AI_START_HERE.md](./scoredev-paas/AI_START_HERE.md) | [prompts.md](./scoredev-paas/prompts.md) | [contracts.md](./scoredev-paas/contracts.md) |
+| [`springboot-paas`](./springboot-paas/) | [AI_START_HERE.md](./springboot-paas/AI_START_HERE.md) | [prompts.md](./springboot-paas/prompts.md) | [contracts.md](./springboot-paas/contracts.md) |
+| [`swamp-automation`](./swamp-automation/) | [AI_START_HERE.md](./swamp-automation/AI_START_HERE.md) | [prompts.md](./swamp-automation/prompts.md) | [contracts.md](./swamp-automation/contracts.md) |
+
 ## What ends with something live today
 
 | Path | Live thing you can inspect | Command | Truth today |

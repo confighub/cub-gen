@@ -158,7 +158,14 @@ func Collect(root string) (Matrix, error) {
 			row.Notes = append(row.Notes, "Score now has example-owned local governed proof via ./examples/scoredev-paas/demo-governed-workload.sh for ALLOW versus ESCALATE, even though standalone live-cluster proof is still open.")
 		}
 
-		if _, ok := aiExplicit[slug]; ok {
+		if hasAIFirstBundle(root, slug) {
+			row.AIFirstSurface = AIFirstExplicit
+			row.ProofRefs.AIFirst = []string{
+				fmt.Sprintf("./examples/%s/AI_START_HERE.md", slug),
+				fmt.Sprintf("./examples/%s/prompts.md", slug),
+				fmt.Sprintf("./examples/%s/contracts.md", slug),
+			}
+		} else if _, ok := aiExplicit[slug]; ok {
 			row.AIFirstSurface = AIFirstExplicit
 			row.ProofRefs.AIFirst = []string{"examples/README.md#ai--automation-patterns"}
 		} else if _, ok := aiTrack[slug]; ok {
@@ -358,13 +365,17 @@ func trackingIssuesForExample(slug, aiSurface string) []string {
 	case "swamp-project":
 		issues = append(issues, "#180")
 	}
-	if aiSurface != AIFirstNone {
-		issues = append(issues, "#202")
-	}
 	if slug == "c3agent" {
 		issues = append(issues, "#216")
 	}
 	return uniqueStrings(issues)
+}
+
+func hasAIFirstBundle(root, slug string) bool {
+	exampleDir := filepath.Join(root, "examples", slug)
+	return fileExists(filepath.Join(exampleDir, "AI_START_HERE.md")) &&
+		fileExists(filepath.Join(exampleDir, "prompts.md")) &&
+		fileExists(filepath.Join(exampleDir, "contracts.md"))
 }
 
 func hasAll(values []string, wanted ...string) bool {

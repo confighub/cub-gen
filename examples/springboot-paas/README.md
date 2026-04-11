@@ -30,6 +30,15 @@ The strongest caveat is enforcement depth, not demo truth. The ownership
 boundary is real and documented, but server-side rejection in ConfigHub is not
 implemented yet.
 
+## AI-first bundle
+
+Use these together if the first operator is an AI assistant or if you want a
+safe, step-by-step handoff:
+
+- [AI_START_HERE.md](./AI_START_HERE.md)
+- [prompts.md](./prompts.md)
+- [contracts.md](./contracts.md)
+
 ## What this example is (and isn't)
 
 This is a minimal but real Spring Boot application. You can build it with

@@ -30,6 +30,16 @@ to source file, line, and owner before anything reaches the cluster.
 | Spring Boot services in GitOps | [springboot-paas](examples/springboot-paas/) | Which `application.yaml` setting or platform file should I edit? |
 | Cluster-first GitOps operations | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 
+## AI-first flagship bundles
+
+The flagship examples now include a matching operator bundle for humans and AI
+assistants:
+
+- [helm-paas](examples/helm-paas/) -> [AI_START_HERE](examples/helm-paas/AI_START_HERE.md), [prompts](examples/helm-paas/prompts.md), [contracts](examples/helm-paas/contracts.md)
+- [scoredev-paas](examples/scoredev-paas/) -> [AI_START_HERE](examples/scoredev-paas/AI_START_HERE.md), [prompts](examples/scoredev-paas/prompts.md), [contracts](examples/scoredev-paas/contracts.md)
+- [springboot-paas](examples/springboot-paas/) -> [AI_START_HERE](examples/springboot-paas/AI_START_HERE.md), [prompts](examples/springboot-paas/prompts.md), [contracts](examples/springboot-paas/contracts.md)
+- [swamp-automation](examples/swamp-automation/) -> [AI_START_HERE](examples/swamp-automation/AI_START_HERE.md), [prompts](examples/swamp-automation/prompts.md), [contracts](examples/swamp-automation/contracts.md)
+
 ## What it looks like
 
 ```bash
@@ -204,10 +214,10 @@ Both prove create, update, and drift-correction on a real cluster.
 | Current release target | `v0.2-preview.2` focuses on all featured examples working well, CLI/docs trust, and a credible connected release signal |
 | Current plan | See [docs/releases/v0.2-preview.2-plan.md](docs/releases/v0.2-preview.2-plan.md) |
 | Current ship checklist | See [docs/releases/v0.2-preview.2-ship-checklist.md](docs/releases/v0.2-preview.2-ship-checklist.md) |
-| Example quality | `#177`, `#178`, `#180`, `#185`, `#187`, `#200`, `#202` |
+| Example quality | `#177`, `#178`, `#180`, `#185`, `#187`, `#200` |
 | CLI/docs follow-on | `#238`, `#239`, `#240`, `#241`, `#242` |
 | Release gate | `#218` |
-| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#185`, `#187`, `#200`, `#202`, `#218`, `#238`-`#242` |
+| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#185`, `#187`, `#200`, `#218`, `#238`-`#242` |
 
 For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, the connected smoke lane, and real live-proof harnesses.
 

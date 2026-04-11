@@ -29,6 +29,13 @@ For exact per-example proof tiers, use the generated
 For workflow and AI example quality, use the
 [AI Example Hygiene Checklist](../../docs/workflows/ai-example-hygiene-checklist.md).
 
+The flagship examples also now publish an explicit AI-first bundle:
+
+- [`helm-paas`](../helm-paas/AI_START_HERE.md) with companion [prompts](../helm-paas/prompts.md) and [contracts](../helm-paas/contracts.md)
+- [`scoredev-paas`](../scoredev-paas/AI_START_HERE.md) with companion [prompts](../scoredev-paas/prompts.md) and [contracts](../scoredev-paas/contracts.md)
+- [`springboot-paas`](../springboot-paas/AI_START_HERE.md) with companion [prompts](../springboot-paas/prompts.md) and [contracts](../springboot-paas/contracts.md)
+- [`swamp-automation`](../swamp-automation/AI_START_HERE.md) with companion [prompts](../swamp-automation/prompts.md) and [contracts](../swamp-automation/contracts.md)
+
 ## 1. Start with one of these
 
 | If you already run... | Start here | What actually runs | What you can inspect next |
@@ -390,7 +397,7 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 |--------|--------------------|
 | Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
 | In progress | The flagship examples still need contract-based proof for real-cluster outcome, two-audience onboarding, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` paths |
-| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#185`, `#187`, `#200`, `#202`, `#218`, `#238`-`#242` |
+| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#185`, `#187`, `#200`, `#218`, `#238`-`#242` |
 
 For the per-example truth behind those claims, use the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md). It is derived from the example catalog, connected runners, source-side tests, and live proof scripts.
 
