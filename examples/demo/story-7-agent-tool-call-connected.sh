@@ -65,16 +65,15 @@ fi
 # 1) Agent requests preview via adapter.
 jq -n \
   --arg action "preview" \
-  --arg target_slug "$REPO_PATH" \
-  --arg render_target_slug "$RENDER_TARGET" \
+  --arg target_path "$REPO_PATH" \
+  --arg render_target_path "$RENDER_TARGET" \
   --arg space "$SPACE" \
   '{
     action: $action,
-    input: {
-      target_slug: $target_slug,
-      render_target_slug: $render_target_slug,
+    input: ({
+      target_path: $target_path,
       space: $space
-    }
+    } + (if $render_target_path == $target_path then {} else {render_target_path: $render_target_path} end))
   }' > "$OUT_DIR/preview-request.json"
 
 SKIP_BUILD=1 ./examples/demo/change-api-adapter.sh \
@@ -85,8 +84,8 @@ SKIP_BUILD=1 ./examples/demo/change-api-adapter.sh \
 jq -n \
   --arg action "run" \
   --arg mode "connected" \
-  --arg target_slug "$REPO_PATH" \
-  --arg render_target_slug "$RENDER_TARGET" \
+  --arg target_path "$REPO_PATH" \
+  --arg render_target_path "$RENDER_TARGET" \
   --arg space "$SPACE" \
   --arg base_url "$CONFIGHUB_BASE_URL" \
   --arg token "$CONFIGHUB_TOKEN" \
@@ -95,11 +94,10 @@ jq -n \
   '{
     action: $action,
     mode: $mode,
-    input: {
-      target_slug: $target_slug,
-      render_target_slug: $render_target_slug,
+    input: ({
+      target_path: $target_path,
       space: $space
-    },
+    } + (if $render_target_path == $target_path then {} else {render_target_path: $render_target_path} end)),
     connected: ({
       base_url: $base_url,
       token: $token

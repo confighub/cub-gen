@@ -16,15 +16,20 @@
     },
     "input": {
       "type": "object",
-      "required": ["target_slug", "render_target_slug"],
       "additionalProperties": false,
       "properties": {
+        "target_path": {"type": "string", "minLength": 1},
+        "render_target_path": {"type": "string", "minLength": 1},
         "target_slug": {"type": "string", "minLength": 1},
         "render_target_slug": {"type": "string", "minLength": 1},
         "space": {"type": "string"},
         "ref": {"type": "string"},
         "where_resource": {"type": "string"}
-      }
+      },
+      "anyOf": [
+        {"required": ["target_path"]},
+        {"required": ["target_slug"]}
+      ]
     },
     "connected": {
       "type": "object",

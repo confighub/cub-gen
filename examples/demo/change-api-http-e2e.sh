@@ -20,8 +20,8 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
-TARGET_SLUG="${1:-./examples/scoredev-paas}"
-RENDER_TARGET_SLUG="${2:-$TARGET_SLUG}"
+TARGET_PATH="${1:-./examples/scoredev-paas}"
+RENDER_TARGET_PATH="${2:-$TARGET_PATH}"
 LISTEN_ADDR="${CHANGE_API_LISTEN_ADDR:-127.0.0.1:18787}"
 BASE_URL="http://${LISTEN_ADDR}"
 
@@ -63,18 +63,18 @@ if ! curl -fsS "$BASE_URL/healthz" >/dev/null 2>&1; then
   exit 1
 fi
 
-cat > "$tmpdir/run-request.json" <<JSON
-{
-  "action": "run",
-  "mode": "local",
-  "input": {
-    "target_slug": "${TARGET_SLUG}",
-    "render_target_slug": "${RENDER_TARGET_SLUG}",
-    "space": "platform",
-    "ref": "HEAD"
-  }
-}
-JSON
+jq -n \
+  --arg target_path "$TARGET_PATH" \
+  --arg render_target_path "$RENDER_TARGET_PATH" \
+  '{
+    action: "run",
+    mode: "local",
+    input: ({
+      target_path: $target_path,
+      space: "platform",
+      ref: "HEAD"
+    } + (if $render_target_path == $target_path then {} else {render_target_path: $render_target_path} end))
+  }' > "$tmpdir/run-request.json"
 
 curl -fsS \
   -H 'Content-Type: application/json' \

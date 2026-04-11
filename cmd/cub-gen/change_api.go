@@ -122,7 +122,9 @@ func executeChangeRun(targetSlug, renderTargetSlug string, opts changeRunOptions
 
 type changeAPIInput struct {
 	TargetSlug       string `json:"target_slug"`
+	TargetPath       string `json:"target_path,omitempty"`
 	RenderTargetSlug string `json:"render_target_slug"`
+	RenderTargetPath string `json:"render_target_path,omitempty"`
 	Space            string `json:"space,omitempty"`
 	Ref              string `json:"ref,omitempty"`
 	WhereResource    string `json:"where_resource,omitempty"`
@@ -281,12 +283,12 @@ func (s *changeAPIServer) handlePostChanges(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	targetSlug := strings.TrimSpace(req.Input.TargetSlug)
-	renderTargetSlug := strings.TrimSpace(req.Input.RenderTargetSlug)
-	if targetSlug == "" || renderTargetSlug == "" {
-		writeAPIError(w, http.StatusBadRequest, "INVALID_REQUEST", "input.target_slug and input.render_target_slug are required", map[string]any{"field": "input"})
+	targetSlug := firstNonEmpty(req.Input.TargetPath, req.Input.TargetSlug)
+	if targetSlug == "" {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_REQUEST", "input.target_path or input.target_slug is required", map[string]any{"field": "input"})
 		return
 	}
+	renderTargetSlug := firstNonEmpty(req.Input.RenderTargetPath, req.Input.RenderTargetSlug, targetSlug)
 
 	space := strings.TrimSpace(req.Input.Space)
 	if space == "" {
@@ -373,6 +375,15 @@ func (s *changeAPIServer) handlePostChanges(w http.ResponseWriter, r *http.Reque
 		EditRecommendation: record.EditRecommendation,
 		Artifacts:          cloneStringMap(record.Artifacts),
 	})
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if trimmed := strings.TrimSpace(value); trimmed != "" {
+			return trimmed
+		}
+	}
+	return ""
 }
 
 func (s *changeAPIServer) handleChangeByID(w http.ResponseWriter, r *http.Request) {

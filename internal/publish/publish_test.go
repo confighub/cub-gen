@@ -38,6 +38,12 @@ func TestBuildBundleAtFromHelmImport(t *testing.T) {
 	if bundle.Space != "platform" {
 		t.Fatalf("expected space=platform, got %q", bundle.Space)
 	}
+	if bundle.TargetPath != imported.TargetPath {
+		t.Fatalf("expected target_path %q, got %q", imported.TargetPath, bundle.TargetPath)
+	}
+	if bundle.RenderTargetPath != imported.RenderTargetPath {
+		t.Fatalf("expected render_target_path %q, got %q", imported.RenderTargetPath, bundle.RenderTargetPath)
+	}
 	if bundle.ChangeID == "" {
 		t.Fatal("expected non-empty change_id")
 	}

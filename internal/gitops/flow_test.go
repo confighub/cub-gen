@@ -45,6 +45,9 @@ func TestDiscoverImportCleanupFlow(t *testing.T) {
 	if len(imported.Links) != 1 {
 		t.Fatalf("expected 1 link, got %d", len(imported.Links))
 	}
+	if imported.RenderTargetPath != repo {
+		t.Fatalf("expected render target path %q, got %q", repo, imported.RenderTargetPath)
+	}
 
 	deleted, _, err := Cleanup(repo, "platform")
 	if err != nil {

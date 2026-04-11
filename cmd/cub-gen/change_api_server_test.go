@@ -17,14 +17,18 @@ func TestChangeAPIHTTPRunLifecycleGolden(t *testing.T) {
 	srv := httptest.NewServer(newChangeAPIHandler("platform", "HEAD", "ci-bot"))
 	defer srv.Close()
 
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "examples", "scoredev-paas"))
+	if err != nil {
+		t.Fatalf("resolve score path: %v", err)
+	}
+
 	postReq := map[string]any{
 		"action": "run",
 		"mode":   "local",
 		"input": map[string]any{
-			"target_slug":        "score",
-			"render_target_slug": "render-target",
-			"space":              "platform",
-			"ref":                "HEAD",
+			"target_path": repoPath,
+			"space":       "platform",
+			"ref":         "HEAD",
 		},
 	}
 	status, postResp := mustJSONRequest(t, http.MethodPost, srv.URL+"/v1/changes", postReq)
@@ -75,6 +79,27 @@ func TestChangeAPIHTTPErrorGolden(t *testing.T) {
 	}
 
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "change-api-http-error.golden.json"), body)
+}
+
+func TestChangeAPIHTTPPreviewAcceptsLegacySlugInput(t *testing.T) {
+	setupAliases(t)
+
+	srv := httptest.NewServer(newChangeAPIHandler("platform", "HEAD", "ci-bot"))
+	defer srv.Close()
+
+	req := map[string]any{
+		"action": "preview",
+		"input": map[string]any{
+			"target_slug":        "score",
+			"render_target_slug": "render-target",
+			"space":              "platform",
+		},
+	}
+
+	status, body := mustJSONRequest(t, http.MethodPost, srv.URL+"/v1/changes", req)
+	if status != http.StatusOK {
+		t.Fatalf("expected 200 from legacy slug preview request, got %d body=%v", status, body)
+	}
 }
 
 func mustJSONRequest(t *testing.T, method, url string, payload any) (int, map[string]any) {
@@ -151,6 +176,15 @@ func normalizeChangeAPIHTTPRunSnapshot(snapshot map[string]any) {
 			}
 			if digest, ok := change["attestation_digest"].(string); ok && strings.HasPrefix(digest, "sha256:") {
 				change["attestation_digest"] = "sha256:REDACTED"
+			}
+		}
+
+		if input, ok := obj["input"].(map[string]any); ok {
+			if path, ok := input["target_path"].(string); ok && path != "" {
+				input["target_path"] = "<target_path>"
+			}
+			if path, ok := input["render_target_path"].(string); ok && path != "" {
+				input["render_target_path"] = "<render_target_path>"
 			}
 		}
 

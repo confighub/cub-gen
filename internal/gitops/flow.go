@@ -70,6 +70,7 @@ type ImportFlowResult struct {
 	TargetSlug         string                       `json:"target_slug"`
 	TargetPath         string                       `json:"target_path"`
 	RenderTargetSlug   string                       `json:"render_target_slug"`
+	RenderTargetPath   string                       `json:"render_target_path,omitempty"`
 	Ref                string                       `json:"ref"`
 	WhereResource      string                       `json:"where_resource,omitempty"`
 	DiscoverUnitSlug   string                       `json:"discover_unit_slug"`
@@ -184,6 +185,7 @@ func Import(targetPath, renderTargetSlug, ref, space, whereResource string) (Imp
 			TargetSlug:       discovered.TargetSlug,
 			TargetPath:       discovered.TargetPath,
 			RenderTargetSlug: renderTarget.Slug,
+			RenderTargetPath: renderTarget.Path,
 			Ref:              discovered.Ref,
 			WhereResource:    discovered.WhereResource,
 			DiscoverUnitSlug: discovered.DiscoverUnitSlug,
@@ -213,6 +215,7 @@ func Import(targetPath, renderTargetSlug, ref, space, whereResource string) (Imp
 		TargetSlug:         discovered.TargetSlug,
 		TargetPath:         discovered.TargetPath,
 		RenderTargetSlug:   renderTarget.Slug,
+		RenderTargetPath:   renderTarget.Path,
 		Ref:                discovered.Ref,
 		WhereResource:      discovered.WhereResource,
 		DiscoverUnitSlug:   discovered.DiscoverUnitSlug,

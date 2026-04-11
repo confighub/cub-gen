@@ -968,7 +968,9 @@ func runVerifyAttestation(args []string) error {
 
 type changePreviewInput struct {
 	TargetSlug       string `json:"target_slug"`
+	TargetPath       string `json:"target_path,omitempty"`
 	RenderTargetSlug string `json:"render_target_slug"`
+	RenderTargetPath string `json:"render_target_path,omitempty"`
 	Space            string `json:"space"`
 	Ref              string `json:"ref"`
 	WhereResource    string `json:"where_resource,omitempty"`
@@ -1232,7 +1234,9 @@ func runChangeExplain(args []string) error {
 		}
 		input = changePreviewInput{
 			TargetSlug:       bundle.TargetSlug,
+			TargetPath:       bundle.TargetPath,
 			RenderTargetSlug: bundle.RenderTargetSlug,
+			RenderTargetPath: bundle.RenderTargetPath,
 			Space:            bundle.Space,
 			Ref:              bundle.Ref,
 		}
@@ -1331,10 +1335,12 @@ func buildChangePreviewResult(
 
 	result := changePreviewResult{
 		Input: changePreviewInput{
-			TargetSlug:       targetSlug,
-			RenderTargetSlug: renderTargetSlug,
-			Space:            space,
-			Ref:              ref,
+			TargetSlug:       imported.TargetSlug,
+			TargetPath:       imported.TargetPath,
+			RenderTargetSlug: imported.RenderTargetSlug,
+			RenderTargetPath: imported.RenderTargetPath,
+			Space:            imported.Space,
+			Ref:              imported.Ref,
 			WhereResource:    strings.TrimSpace(whereResource),
 		},
 		Change: changePreviewSummary{

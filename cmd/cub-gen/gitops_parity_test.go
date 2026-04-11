@@ -730,6 +730,7 @@ func normalizeDiscover(m map[string]any) {
 
 func normalizeImport(m map[string]any) {
 	replaceString(m, "target_path", "<target_path>")
+	replaceString(m, "render_target_path", "<render_target_path>")
 	replaceString(m, "discover_unit_slug", "<discover_unit_slug>")
 	replaceString(m, "imported_at", "<timestamp>")
 

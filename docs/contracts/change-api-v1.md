@@ -24,6 +24,9 @@ Request fields:
 - `action`: `preview` or `run`
 - `mode`: `local` or `connected` (required for `action=run`)
 - `input`: target/render target + labels (`space`, `ref`, `where_resource`)
+  Prefer `target_path`.
+  `render_target_path` is optional and defaults to the same repo path.
+  Legacy `target_slug` and `render_target_slug` remain accepted for compatibility.
 - `connected`: optional backend connection fields (`base_url`, `token`, endpoint overrides)
 
 Response:
@@ -80,8 +83,7 @@ Schema:
 {
   "action": "preview",
   "input": {
-    "target_slug": "./examples/scoredev-paas",
-    "render_target_slug": "./examples/scoredev-paas",
+    "target_path": "./examples/scoredev-paas",
     "space": "platform",
     "ref": "HEAD"
   }
@@ -95,8 +97,7 @@ Schema:
   "action": "run",
   "mode": "connected",
   "input": {
-    "target_slug": "./examples/helm-paas",
-    "render_target_slug": "./examples/helm-paas",
+    "target_path": "./examples/helm-paas",
     "space": "platform"
   },
   "connected": {
@@ -113,8 +114,7 @@ Schema:
   "action": "run",
   "mode": "local",
   "input": {
-    "target_slug": "./examples/scoredev-paas",
-    "render_target_slug": "./examples/scoredev-paas",
+    "target_path": "./examples/scoredev-paas",
     "space": "platform"
   }
 }
@@ -181,6 +181,8 @@ Compatibility adapter in this repo:
 
 - Native HTTP server: `cub-gen change api serve ...`
 - CI sample using direct HTTP calls: `examples/demo/change-api-http-e2e.sh`
+- Preferred request shape: `input.target_path` with optional `input.render_target_path`
+- Legacy request shape still accepted: `input.target_slug` with optional `input.render_target_slug`
 
 ## See also
 

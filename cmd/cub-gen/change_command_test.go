@@ -87,11 +87,17 @@ func TestChangePreviewDefaultsRenderTargetToTarget(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected input object, got %T", got["input"])
 	}
-	if input["target_slug"] != repoPath {
-		t.Fatalf("expected target_slug=%s, got %v", repoPath, input["target_slug"])
+	if input["target_slug"] != "scoredev-paas" {
+		t.Fatalf("expected target_slug=scoredev-paas, got %v", input["target_slug"])
 	}
-	if input["render_target_slug"] != repoPath {
-		t.Fatalf("expected render_target_slug=%s, got %v", repoPath, input["render_target_slug"])
+	if input["render_target_slug"] != "scoredev-paas" {
+		t.Fatalf("expected render_target_slug=scoredev-paas, got %v", input["render_target_slug"])
+	}
+	if input["target_path"] != repoPath {
+		t.Fatalf("expected target_path=%s, got %v", repoPath, input["target_path"])
+	}
+	if input["render_target_path"] != repoPath {
+		t.Fatalf("expected render_target_path=%s, got %v", repoPath, input["render_target_path"])
 	}
 }
 

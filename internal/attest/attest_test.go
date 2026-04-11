@@ -32,6 +32,12 @@ func TestBuildAt(t *testing.T) {
 	if rec.Verifier != "ci-bot" {
 		t.Fatalf("unexpected verifier: %q", rec.Verifier)
 	}
+	if rec.TargetPath != bundle.TargetPath {
+		t.Fatalf("expected target_path %q, got %q", bundle.TargetPath, rec.TargetPath)
+	}
+	if rec.RenderTargetPath != bundle.RenderTargetPath {
+		t.Fatalf("expected render_target_path %q, got %q", bundle.RenderTargetPath, rec.RenderTargetPath)
+	}
 	if rec.Status != "verified" {
 		t.Fatalf("unexpected status: %q", rec.Status)
 	}

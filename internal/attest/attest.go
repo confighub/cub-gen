@@ -29,7 +29,9 @@ type Record struct {
 	ChangeID          string `json:"change_id,omitempty"`
 	Space             string `json:"space,omitempty"`
 	TargetSlug        string `json:"target_slug,omitempty"`
+	TargetPath        string `json:"target_path,omitempty"`
 	RenderTargetSlug  string `json:"render_target_slug,omitempty"`
+	RenderTargetPath  string `json:"render_target_path,omitempty"`
 	AttestationDigest string `json:"attestation_digest"`
 }
 
@@ -53,7 +55,9 @@ func BuildAt(bundle publish.ChangeBundle, at time.Time, verifier string) (Record
 		ChangeID:         bundle.ChangeID,
 		Space:            bundle.Space,
 		TargetSlug:       bundle.TargetSlug,
+		TargetPath:       bundle.TargetPath,
 		RenderTargetSlug: bundle.RenderTargetSlug,
+		RenderTargetPath: bundle.RenderTargetPath,
 	}
 	rec.AttestationDigest = computeAttestationDigest(rec)
 	return rec, nil
