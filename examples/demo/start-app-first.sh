@@ -10,6 +10,9 @@ echo "[start-app] step 1: Spring config ownership and provenance"
 cat <<'EOF'
 
 [start-app] next steps
+  governed route proof:
+    ./examples/springboot-paas/demo-governed-routes.sh
+
   connected governance:
     cub auth login
     ./examples/springboot-paas/demo-connected.sh

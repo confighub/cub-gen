@@ -19,7 +19,7 @@ what you already run:
 | If you already run... | Start here | Then do this | What you can inspect | Current truth |
 |---|---|---|---|---|
 | Helm plus Argo/Flux platform repos | `./examples/demo/start-platform-first.sh` | `./examples/helm-paas/demo-governed-change.sh`, then `cub auth login && RECONCILER=argo ./examples/helm-paas/demo-runtime.sh` | values ownership now, local ALLOW/BLOCK proof next, and live Argo/Flux proof from the Helm flagship itself after | Strongest platform-first source-side path today |
-| Spring Boot app repos | `./examples/demo/start-app-first.sh` | `cub auth login && ./examples/springboot-paas/demo-connected.sh` | config ownership now, live `inventory-api` proof next | Strongest standalone end-to-end example in the repo today |
+| Spring Boot app repos | `./examples/demo/start-app-first.sh` | `./examples/springboot-paas/demo-governed-routes.sh`, then `cub auth login && ./examples/springboot-paas/demo-connected.sh` | config ownership now, local `ALLOW`/`BLOCKED` route proof next, live `inventory-api` proof after | Strongest standalone end-to-end example in the repo today |
 | Score.dev workloads | `./examples/demo/start-score-first.sh` | `cub auth login && ./examples/scoredev-paas/demo-connected.sh` | `score.yaml` field origin now, governed connected output next | Strongest Score source-side path today; standalone live Score proof is still open work |
 | A running cluster and GitOps controller | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) + then `cub-gen` | trace one chosen field back to source | live cluster state first, source provenance second | Best when the cluster is already the urgent source of truth |
 

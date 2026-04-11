@@ -32,7 +32,7 @@ For workflow and AI example quality, use the
 | If you already run... | Start here | What actually runs | What you can inspect next |
 |---|---|---|---|
 | Helm plus Argo/Flux | `./examples/demo/start-platform-first.sh` | local lifecycle for `helm-paas`, then the example-owned governed-change proof and live wrapper | values ownership now, local ALLOW/BLOCK proof next, connected + live proof after |
-| Spring Boot app repos | `./examples/demo/start-app-first.sh` | local lifecycle for `springboot-paas` | app-vs-platform config ownership now, standalone live app proof after |
+| Spring Boot app repos | `./examples/demo/start-app-first.sh` | local lifecycle for `springboot-paas`, then the example-owned governed-route proof | app-vs-platform config ownership now, local `ALLOW`/`BLOCKED` proof next, standalone live app proof after |
 | Score.dev workloads | `./examples/demo/start-score-first.sh` | Score field trace and inverse edit map | `score.yaml` to runtime-field mapping now, connected governed output after |
 | Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | real Flux and Argo reconciliation on kind | pods, rollout, and drift correction |
 
@@ -99,6 +99,7 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 | `start-platform-first.sh` | [`helm-paas`](../helm-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated platform-first starter path |
 | `../helm-paas/demo-governed-change.sh` | [`helm-paas`](../helm-paas/) | App-team ALLOW path vs platform-contract BLOCK path with the real PR ownership gate |
 | `start-app-first.sh` | [`springboot-paas`](../springboot-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated app-first starter path |
+| `../springboot-paas/demo-governed-routes.sh` | [`springboot-paas`](../springboot-paas/) | App-owned field ALLOW versus platform-owned field BLOCKED with `springboot validate-mutation` |
 | `start-score-first.sh` | [`scoredev-paas`](../scoredev-paas/) | Opinionated Score-first starter path with honest runtime-gap handoff |
 | `module-1-helm-import.sh` | [`helm-paas`](../helm-paas/) | Helm detection, values ownership, field-origin tracing |
 | `module-2-score-field-map.sh` | [`scoredev-paas`](../scoredev-paas/) | Score field-origin and inverse edit mapping |
