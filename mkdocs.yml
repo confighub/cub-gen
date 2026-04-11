@@ -184,6 +184,7 @@ nav:
       - "Contract Drift Checklist": testing/contract-drift-checklist.md
       - "Current Release Plan (v0.2-preview.2)": releases/v0.2-preview.2-plan.md
       - "Current Ship Checklist (v0.2-preview.2)": releases/v0.2-preview.2-ship-checklist.md
+      - "Draft Release Notes (v0.2-preview.2)": releases/v0.2-preview.2.md
       - "Release Notes (v0.2-preview.1)": releases/v0.2-preview.1.md
       - Decisions:
           - "Sprint 2 Go/No-Go": decisions/2026-03-06-sprint-2-go-no-go.md

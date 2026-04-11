@@ -178,6 +178,7 @@ Docs currently live in this repo:
 - [Demo Guide](docs/demo-guide.md) — runnable demo scripts and scenarios
 - [Current release plan](docs/releases/v0.2-preview.2-plan.md) — must-ship and post-release work for the next preview
 - [Current ship checklist](docs/releases/v0.2-preview.2-ship-checklist.md) — what is already landed on `main`, what still blocks the tag, and what can wait
+- [Draft release notes](docs/releases/v0.2-preview.2.md) — the current `v0.2-preview.2` release-note draft to finalize from green `main`
 - [Examples](examples/README.md) — complete runnable scenarios for every generator
 - [Platform](docs/platform.md) — how cub-gen connects to ConfigHub
 - [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md) — stack-specific entry paths

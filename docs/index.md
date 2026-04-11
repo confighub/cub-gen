@@ -191,7 +191,9 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 See the [v0.2-preview.2 Release Plan](releases/v0.2-preview.2-plan.md) for the
 current must-ship and post-release split, and the
 [v0.2-preview.2 Ship Checklist](releases/v0.2-preview.2-ship-checklist.md) for
-what is already landed on `main` versus what still blocks the tag.
+what is already landed on `main` versus what still blocks the tag. The current
+[draft release notes](releases/v0.2-preview.2.md) are also in the repo now so
+the final tag write-up can be tightened from the eventual green `main`.
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
 - Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 8 generators
