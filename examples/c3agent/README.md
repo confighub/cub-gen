@@ -18,7 +18,7 @@ properly isolated? ConfigHub makes AI fleet governance explicit and traceable.
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side fleet provenance | Real | `./examples/c3agent/demo-local.sh` |
-| Connected governance path | Real | `./examples/c3agent/demo-connected.sh` |
+| Deep connected bridge path | Real | `./examples/c3agent/demo-connected.sh` |
 | First-class source-chain coverage in the truth matrix | Real | `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v` |
 | Standalone live fleet runtime proof | Not yet | current example stops at governed fleet config and connected evidence |
 
@@ -30,7 +30,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Local source-side path
 ./examples/c3agent/demo-local.sh
 
-# Connected governance path
+# Deep connected bridge path
 cub auth login
 ./examples/c3agent/demo-connected.sh
 ```
@@ -263,7 +263,9 @@ cub auth login
 ./examples/c3agent/demo-connected.sh
 ```
 
-That is the current first-run connected path for this example.
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
 
 If you specifically need the deeper bridge API path, use:
 

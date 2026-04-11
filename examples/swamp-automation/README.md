@@ -12,7 +12,7 @@ slowing down the agent iteration loop.
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side structural workflow governance | Real | `./examples/swamp-automation/demo-local.sh` |
-| Connected governance path | Real | `./examples/swamp-automation/demo-connected.sh` |
+| Deep connected bridge path | Real | `./examples/swamp-automation/demo-connected.sh` |
 | AI-first prompt-as-DRY story | Strongest current lane | `./examples/demo/prompt-as-dry-local.sh` then `./examples/demo/prompt-as-dry-connected.sh` |
 | Standalone live workflow runtime or task artifact | Not yet | current example proves structural governance more than runtime execution |
 
@@ -32,7 +32,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 # AI-first prompt-as-DRY path
 ./examples/demo/prompt-as-dry-local.sh
 
-# Connected governance path
+# Deep connected bridge path
 cub auth login
 ./examples/swamp-automation/demo-connected.sh
 ```
@@ -329,7 +329,9 @@ cub auth login
 ./examples/swamp-automation/demo-connected.sh
 ```
 
-That is the current first-run connected path for this example.
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
 
 If you specifically need the deeper bridge API path, use:
 

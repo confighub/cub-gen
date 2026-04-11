@@ -4,7 +4,9 @@ Runnable demo scripts for every `cub-gen` example. Each script demonstrates
 part of the governed change flow:
 
 ```
-detect → import → publish → verify → attest → (optional, deep) bridge ingest/query
+detect → import → publish → verify → attest
+                                          → connected smoke
+                                          → (optional, deep) bridge ingest/query
 ```
 
 If you are new, do not start with "run everything." Start with one concrete
@@ -16,7 +18,7 @@ Use the demo surface in this order:
 
 1. **Local source-side proof**: `detect -> import -> publish -> verify -> attest`
 2. **Connected smoke proof**: `cub auth login` plus `./examples/demo/run-connected-smoke.sh`
-3. **Deep connected proof**: bridge ingest/query, promotion, and multi-story ConfigHub flows
+3. **Deep connected proof**: example wrappers, standard changeset-based flows, and bridge-only demos when needed
 4. **Runtime proof**: real WET->LIVE reconciliation or a real deployed app
 
 That ordering matters. The first run should answer "do I trust the source-side
@@ -161,7 +163,8 @@ cub auth login
 Deep connected flow shape:
 
 ```
-publish → verify → attest → bridge ingest → decision query
+publish → verify → attest → standard connected wrapper or changeset flow
+                         → (optional, deep) bridge ingest → decision query
 ```
 
 ### Connected smoke runner
@@ -189,7 +192,11 @@ The extended deep-proof lane also covers:
 - `flow-b-mr-to-git-pr-connected.sh`
 - evidence validation via `test/checks/check-flow-evidence.sh`
 
-### Bridge endpoint behavior
+These are advanced connected lanes. Some still depend on bridge-backed flows or
+changeset fallbacks because they are demonstrating deeper optional behavior,
+not the release-facing default connected path.
+
+### Advanced bridge endpoint behavior
 
 | Mode | Behavior |
 |------|----------|
@@ -383,7 +390,7 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 |--------|--------------------|
 | Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
 | In progress | The flagship examples still need contract-based proof for real-cluster outcome, two-audience onboarding, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` paths |
-| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#185`, `#187`, `#200`, `#202`, `#218`, `#226`, `#238`-`#242` |
+| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#185`, `#187`, `#200`, `#202`, `#218`, `#238`-`#242` |
 
 For the per-example truth behind those claims, use the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md). It is derived from the example catalog, connected runners, source-side tests, and live proof scripts.
 

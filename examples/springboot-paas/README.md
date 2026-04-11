@@ -21,7 +21,7 @@ The app is `inventory-api`, a Spring Boot 3.3.2 service (Java 21) deployed acros
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side provenance and ownership | Real | `./examples/springboot-paas/demo-local.sh` |
-| Connected governance path | Real | `./examples/springboot-paas/demo-connected.sh` |
+| Deep connected bridge path | Real | `./examples/springboot-paas/demo-connected.sh` |
 | Standalone live-cluster app proof | Real | `./bin/create-cluster && ./bin/build-image && ./bin/install-worker && ./verify-e2e.sh` |
 | Governed route proof (`ALLOW` + `BLOCKED`) | Real but client-side | `./examples/springboot-paas/demo-governed-routes.sh` |
 | Direct embedded ConfigHub payload mutation | Real but client-side | `./examples/springboot-paas/demo-embedded-config-mutation.sh` |
@@ -136,6 +136,11 @@ cub auth login
 ./confighub-setup.sh
 ./verify-e2e.sh
 ```
+
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. Use
+`./examples/springboot-paas/demo-connected.sh` when you specifically want the
+deeper bridge-backed walkthrough for this example.
 
 Fixture consistency checks and bundle-only proofs:
 
@@ -435,6 +440,10 @@ Customize these based on your actual ownership boundaries.
 cub auth login
 ./examples/springboot-paas/demo-connected.sh
 ```
+
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
 
 ## Next steps
 

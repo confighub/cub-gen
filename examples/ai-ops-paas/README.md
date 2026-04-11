@@ -15,7 +15,7 @@ fleet config (without registry and constraints), see [`c3agent`](../c3agent/).
 
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
-| Runnable local and connected platform walkthrough | Real | `./examples/ai-ops-paas/demo-local.sh` then `./examples/ai-ops-paas/demo-connected.sh` |
+| Runnable local walkthrough + deep connected bridge companion | Real | `./examples/ai-ops-paas/demo-local.sh` then `./examples/ai-ops-paas/demo-connected.sh` |
 | First-class source-chain coverage in the truth matrix | Not yet | this example is still a companion platform story, not a first-class verified fixture |
 | Standalone live fleet runtime proof | Not yet | current proof is platform contract + governance, not live runtime |
 
@@ -32,7 +32,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Local platform walkthrough
 ./examples/ai-ops-paas/demo-local.sh
 
-# Connected governance path
+# Deep connected bridge path
 cub auth login
 ./examples/ai-ops-paas/demo-connected.sh
 ```
@@ -282,7 +282,9 @@ cub auth login
 ./examples/ai-ops-paas/demo-connected.sh
 ```
 
-That is the current first-run connected path for this example.
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
 
 If you specifically need the deeper bridge API path, use:
 

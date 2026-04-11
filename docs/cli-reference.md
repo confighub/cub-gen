@@ -128,8 +128,9 @@ cub-gen verify-attestation --in <attestation.json> --bundle <bundle.json>
 ## Bridge flow (advanced ConfigHub API path)
 
 These are the deeper connected commands. For the repo's default connected
-first run, use `./examples/demo/run-connected-smoke.sh` or an example's
-`demo-connected.sh` wrapper first.
+first run, use `./examples/demo/run-connected-smoke.sh` first. Use bridge
+commands only for deeper bridge-backed walkthroughs or bridge-only capability
+gaps.
 
 ### `bridge ingest`
 
@@ -432,7 +433,17 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./cub-gen verify-attestation --in attestation.json --bundle bundle.json
 ```
 
-### Bridge flow (ConfigHub API path)
+### Bridge flow (advanced bridge-only ConfigHub API path)
+
+Most users should start with the standard connected environment check:
+
+```bash
+cub auth login
+./examples/demo/run-connected-smoke.sh
+```
+
+Use the commands below only when you explicitly need the deeper bridge-backed
+connected path.
 
 ```bash
 # 1) Build bundle and attestation artifacts

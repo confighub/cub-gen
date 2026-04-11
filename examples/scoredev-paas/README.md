@@ -16,7 +16,7 @@ inverse-edit guidance.
 |-------|--------|---------------------|
 | Source-side Score provenance | Real | `./examples/scoredev-paas/demo-local.sh` |
 | Local governed Score contract proof | Real | `./examples/scoredev-paas/demo-governed-workload.sh` |
-| Connected governance path | Real | `./examples/scoredev-paas/demo-connected.sh` |
+| Deep connected bridge path | Real | `./examples/scoredev-paas/demo-connected.sh` |
 | Standalone Score live app proof | Not yet | still open work in [#178](https://github.com/confighub/cub-gen/issues/178) |
 
 This README is intentionally honest: today the strongest Score proof in this
@@ -41,7 +41,7 @@ Both paths lead to the same outcome: governed Score workloads with field-origin 
 |---|---|---|
 | Local source-side proof | `./examples/scoredev-paas/demo-local.sh` | `score.yaml` field origin, inverse edit pointers, and rendered targets |
 | Local governed contract proof | `./examples/scoredev-paas/demo-governed-workload.sh` | app-owned image change returns `ALLOW`, unapproved resource type returns `ESCALATE` |
-| Connected governance proof | `./examples/scoredev-paas/demo-connected.sh` | change ID, bundle digest, attestation, and connected decision/query output |
+| Deep connected bridge proof | `./examples/scoredev-paas/demo-connected.sh` | change ID, bundle digest, attestation, and connected decision/query output |
 | Runtime companion today | [`springboot-paas`](../springboot-paas/) or [`live-reconcile`](../live-reconcile/) | current standalone live app proof elsewhere in the repo while Score runtime proof is being finished |
 
 ## 1. Who this is for
@@ -330,7 +330,9 @@ cub auth login
 ./examples/scoredev-paas/demo-connected.sh
 ```
 
-That is the current first-run connected path for this example.
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
 
 If you specifically need the deeper bridge API path, use:
 

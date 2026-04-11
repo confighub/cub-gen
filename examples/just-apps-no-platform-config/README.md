@@ -14,7 +14,7 @@ just Kubernetes workloads.
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side provider-config provenance | Real | `./examples/just-apps-no-platform-config/demo-local.sh` |
-| Connected governance path | Real | `./examples/just-apps-no-platform-config/demo-connected.sh` |
+| Deep connected bridge path | Real | `./examples/just-apps-no-platform-config/demo-connected.sh` |
 | Empty-platform governance baseline | Real | this example intentionally keeps `platform/` empty and still produces provenance |
 | Standalone provider runtime proof | Not yet | this repo proves governed config flow more than a specific live provider deployment |
 
@@ -35,7 +35,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Local app-only governance walkthrough
 ./examples/just-apps-no-platform-config/demo-local.sh
 
-# Connected governance path
+# Deep connected bridge path
 cub auth login
 ./examples/just-apps-no-platform-config/demo-connected.sh
 ```
@@ -274,7 +274,9 @@ cub auth login
 ./examples/just-apps-no-platform-config/demo-connected.sh
 ```
 
-That is the current first-run connected path for this example.
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
 
 If you specifically need the deeper bridge API path, use:
 

@@ -54,7 +54,7 @@ Run all current platform examples (10 fixtures):
 Each run shows:
 
 1. Create path (`discover` &rarr; `import` &rarr; `publish` &rarr; `verify` &rarr; `attest`)
-2. Decision/promotion path (`bridge decision` + `bridge promote`)
+2. Decision/promotion path (standard ConfigHub flow where available, bridge-only path where needed)
 3. Update path (source config mutation + re-run chain)
 4. Visibility surfaces:
    - OCI (bundle digest + output URIs)

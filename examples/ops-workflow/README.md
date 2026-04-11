@@ -15,7 +15,7 @@ ALLOW decision.
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side workflow provenance | Real | `./examples/ops-workflow/demo-local.sh` |
-| Connected governance path | Real | `./examples/ops-workflow/demo-connected.sh` |
+| Deep connected bridge path | Real | `./examples/ops-workflow/demo-connected.sh` |
 | AI/workflow governance story | Partial | strong workflow governance story today; `swamp-automation` is still the stronger AI-first workflow example |
 | Standalone live workflow run or runtime artifact | Not yet | current example proves governed workflow config more than a real executed workflow result |
 
@@ -32,7 +32,7 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Local source-side path
 ./examples/ops-workflow/demo-local.sh
 
-# Connected governance path
+# Deep connected bridge path
 cub auth login
 ./examples/ops-workflow/demo-connected.sh
 ```
@@ -308,7 +308,9 @@ cub auth login
 ./examples/ops-workflow/demo-connected.sh
 ```
 
-That is the current first-run connected path for this example.
+Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
+standard ConfigHub-connected environment. This wrapper is the deeper
+bridge-backed walkthrough for this example.
 
 If you specifically need the deeper bridge API path, use:
 

@@ -69,8 +69,9 @@ Connected mode instructions for users who already have ConfigHub:
 
 ```bash
 cub auth login
-./cub-gen publish --space <space> ./examples/<name> > /tmp/bundle.json
-./cub-gen bridge ingest --in /tmp/bundle.json ...
+./examples/demo/run-connected-smoke.sh
+# If this example also has a deeper bridge-backed walkthrough,
+# document it separately and label it bridge-only / advanced.
 ```
 
 ### 5. Run it from the platform tool (tool-first path)
