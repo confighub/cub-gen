@@ -273,6 +273,9 @@
         "#173",
         "#178",
         "#183"
+      ],
+      "notes": [
+        "Score now has example-owned local governed proof via ./examples/scoredev-paas/demo-governed-workload.sh for ALLOW versus ESCALATE, even though standalone live-cluster proof is still open."
       ]
     },
     {

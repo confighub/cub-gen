@@ -56,6 +56,8 @@ func run(args []string) error {
 		return runGitOps(args[1:])
 	case "bridge":
 		return runBridge(args[1:])
+	case "score":
+		return runScore(args[1:])
 	case "springboot":
 		return runSpringBoot(args[1:])
 	default:

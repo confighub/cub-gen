@@ -7,6 +7,10 @@ cd "$ROOT_DIR"
 echo "[start-score] step 1: keep score.yaml as the app-team contract and trace it to runtime fields"
 ./examples/demo/module-2-score-field-map.sh
 
+echo
+echo "[start-score] step 2: prove app-owned workload changes stay allowed and new resource types escalate"
+./examples/scoredev-paas/demo-governed-workload.sh
+
 cat <<'EOF'
 
 [start-score] next steps
@@ -16,6 +20,7 @@ cat <<'EOF'
 
   what to inspect:
     - local output: score.yaml field origin + inverse edit map
+    - governed output: ALLOW for safe image change, ESCALATE for unapproved resource type
     - connected output: change_id, bundle digest, and decision/query evidence
 
   runtime proof today:

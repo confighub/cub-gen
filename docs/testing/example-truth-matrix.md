@@ -104,6 +104,7 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Connected smoke lane: --
 - Real live: --
 - AI-first: --
+- Notes: Score now has example-owned local governed proof via ./examples/scoredev-paas/demo-governed-workload.sh for ALLOW versus ESCALATE, even though standalone live-cluster proof is still open.
 
 ### `springboot-paas`
 

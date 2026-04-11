@@ -154,6 +154,8 @@ func Collect(root string) (Matrix, error) {
 				"./examples/demo/e2e-connected-governed-reconcile-helm.sh",
 			}
 			row.Notes = append(row.Notes, "Runtime harness for WET->LIVE proof; source-side generator proof lives in paired examples.")
+		case "scoredev-paas":
+			row.Notes = append(row.Notes, "Score now has example-owned local governed proof via ./examples/scoredev-paas/demo-governed-workload.sh for ALLOW versus ESCALATE, even though standalone live-cluster proof is still open.")
 		}
 
 		if _, ok := aiExplicit[slug]; ok {
