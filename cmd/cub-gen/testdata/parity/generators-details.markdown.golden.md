@@ -204,11 +204,16 @@ Total: 8
 | Role | Exact basenames | Prefixes | Extensions |
 | --- | --- | --- | --- |
 | `chart` | chart.yaml | - | - |
+| `application-set` | applicationset.yaml, applicationset.yml | - | - |
+| `cluster-inventory` | - | - | .yaml, .yml, .json |
+| `managed-service-catalog` | - | - | .yaml, .yml, .json |
+| `customer-service-catalog` | - | - | .yaml, .yml, .json |
 | `values` | - | values | .yaml, .yml |
 
 ### Role Owners
 | Role | Owner |
 | --- | --- |
+| `customer-service-catalog` | `app-team` |
 | `values` | `app-team` |
 
 ### Inverse Patch Templates

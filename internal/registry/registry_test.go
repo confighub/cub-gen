@@ -116,6 +116,10 @@ func TestRegistryInputRoleAndOwnerClassification(t *testing.T) {
 	}{
 		{name: "helm-chart", kind: model.GeneratorHelm, path: "Chart.yaml", expectedRole: "chart", expectedOwner: "platform-engineer"},
 		{name: "helm-values", kind: model.GeneratorHelm, path: "values-prod.yaml", expectedRole: "values", expectedOwner: "app-team"},
+		{name: "helm-applicationset", kind: model.GeneratorHelm, path: "gitops/argo/applicationset.yaml", expectedRole: "application-set", expectedOwner: "platform-engineer"},
+		{name: "helm-cluster-inventory", kind: model.GeneratorHelm, path: "platform/clusters/prod-eu.yaml", expectedRole: "cluster-inventory", expectedOwner: "platform-engineer"},
+		{name: "helm-managed-catalog", kind: model.GeneratorHelm, path: "platform/catalogs/managed-service-catalog/payments-api.yaml", expectedRole: "managed-service-catalog", expectedOwner: "platform-engineer"},
+		{name: "helm-customer-catalog", kind: model.GeneratorHelm, path: "platform/catalogs/customer-service-catalog/payments-api-prod.yaml", expectedRole: "customer-service-catalog", expectedOwner: "app-team"},
 		{name: "score-spec", kind: model.GeneratorScore, path: "score.yaml", expectedRole: "score-spec", expectedOwner: "app-team"},
 		{name: "spring-build", kind: model.GeneratorSpringBoot, path: "pom.xml", expectedRole: "build-config", expectedOwner: "platform-engineer"},
 		{name: "spring-profile", kind: model.GeneratorSpringBoot, path: "application-prod.yml", expectedRole: "app-config-profile", expectedOwner: "app-team"},

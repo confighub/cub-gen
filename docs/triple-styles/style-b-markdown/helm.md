@@ -8,7 +8,11 @@
 flowchart LR
   subgraph DRY["DRY Inputs"]
     d1["chart: chart.yaml<br/>owner: platform-engineer"]
-    d2["values: values*.yaml | values*.yml<br/>owner: app-team"]
+    d2["application-set: applicationset.yaml, applicationset.yml<br/>owner: platform-engineer"]
+    d3["cluster-inventory: *.yaml | *.yml | *.json<br/>owner: platform-engineer"]
+    d4["managed-service-catalog: *.yaml | *.yml | *.json<br/>owner: platform-engineer"]
+    d5["customer-service-catalog: *.yaml | *.yml | *.json<br/>owner: app-team"]
+    d6["values: values*.yaml | values*.yml<br/>owner: app-team"]
   end
   gen["helm (helm-paas)<br/>capabilities: render-manifests, values-overrides, inverse-values-patch"]
   subgraph WET["WET Targets"]
@@ -18,6 +22,10 @@ flowchart LR
   end
   d1 --> gen
   d2 --> gen
+  d3 --> gen
+  d4 --> gen
+  d5 --> gen
+  d6 --> gen
   gen --> w1
   gen --> w2
   gen --> w3
@@ -33,12 +41,17 @@ flowchart LR
 | Role | Exact basenames | Prefixes | Extensions |
 | --- | --- | --- | --- |
 | `chart` | chart.yaml | - | - |
+| `application-set` | applicationset.yaml, applicationset.yml | - | - |
+| `cluster-inventory` | - | - | .yaml, .yml, .json |
+| `managed-service-catalog` | - | - | .yaml, .yml, .json |
+| `customer-service-catalog` | - | - | .yaml, .yml, .json |
 | `values` | - | values | .yaml, .yml |
 
 ### Role owners
 
 | Role | Owner |
 | --- | --- |
+| `customer-service-catalog` | `app-team` |
 | `values` | `app-team` |
 
 ### Role schema refs

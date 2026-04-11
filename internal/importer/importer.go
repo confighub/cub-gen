@@ -16,6 +16,7 @@ import (
 	"github.com/confighub/cub-gen/internal/detect"
 	"github.com/confighub/cub-gen/internal/model"
 	"github.com/confighub/cub-gen/internal/registry"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -170,6 +171,7 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 		RenderedLineage:     renderedLineageForGenerator(detection, g),
 		FieldOriginMap:      fieldOriginsForGenerator(detection, g),
 		InverseEditPointers: inversePointersForGenerator(detection, g),
+		HelmLayeredAnalysis: helmLayeredAnalysisForGenerator(detection, g),
 		OpsWorkflow:         opsWorkflowAnalysisForGenerator(detection, g),
 		SwampWorkflow:       swampWorkflowAnalysisForGenerator(detection, g),
 		RenderedAt:          renderedAt,
@@ -1410,6 +1412,333 @@ func firstDistinctPath(paths []string, primary string) string {
 		}
 	}
 	return ""
+}
+
+type helmApplicationSetDoc struct {
+	Path       string
+	Selector   map[string]string
+	ValueFiles []string
+}
+
+type helmClusterInventoryDoc struct {
+	Path   string
+	Name   string
+	Labels map[string]string
+}
+
+type helmManagedCatalogDoc struct {
+	Path             string
+	RequiredSecurity string
+}
+
+type helmCustomerCatalogDoc struct {
+	Path             string
+	ValuesFile       string
+	OverrideSecurity string
+	Enabled          *bool
+}
+
+func helmLayeredAnalysisForGenerator(detection model.DetectionResult, g model.GeneratorDetection) *model.HelmLayeredAnalysis {
+	if g.Kind != model.GeneratorHelm {
+		return nil
+	}
+
+	appsetPath := firstInputPathForRole(g.Kind, g.Inputs, "application-set")
+	clusterPaths := inputPathsForRole(g.Kind, g.Inputs, "cluster-inventory")
+	managedCatalogPaths := inputPathsForRole(g.Kind, g.Inputs, "managed-service-catalog")
+	customerCatalogPaths := inputPathsForRole(g.Kind, g.Inputs, "customer-service-catalog")
+
+	if appsetPath == "" && len(clusterPaths) == 0 && len(managedCatalogPaths) == 0 && len(customerCatalogPaths) == 0 {
+		return nil
+	}
+
+	helmPaths := helmProvenancePathsForGenerator(g)
+	analysis := &model.HelmLayeredAnalysis{
+		ApplicationSetPath:    appsetPath,
+		ClusterInventoryPaths: append([]string(nil), clusterPaths...),
+		ManagedCatalogPaths:   append([]string(nil), managedCatalogPaths...),
+		CustomerCatalogPaths:  append([]string(nil), customerCatalogPaths...),
+		SelectedValueFiles:    append([]string(nil), helmPaths.ValuesPaths...),
+	}
+
+	if appsetPath != "" {
+		appsetDoc, err := parseHelmApplicationSetFile(detection.Repo, appsetPath)
+		if err == nil {
+			analysis.ClusterSelector = selectorString(appsetDoc.Selector)
+			if len(appsetDoc.ValueFiles) > 0 {
+				analysis.SelectedValueFiles = append([]string(nil), appsetDoc.ValueFiles...)
+			}
+			switch {
+			case len(appsetDoc.Selector) == 0:
+				analysis.GenerationDecisionState = "unresolved"
+				analysis.GenerationDecisionReason = "ApplicationSet input is present, but cub-gen could not find a cluster matchLabels selector to attribute yet."
+			case len(clusterPaths) == 0:
+				analysis.GenerationDecisionState = "unresolved"
+				analysis.GenerationDecisionReason = "ApplicationSet selector is present, but no cluster inventory inputs were observed to prove which clusters match it."
+			default:
+				matched := matchedHelmClusterInventories(detection.Repo, clusterPaths, appsetDoc.Selector)
+				if len(matched) == 0 {
+					analysis.GenerationDecisionState = "unresolved"
+					analysis.GenerationDecisionReason = fmt.Sprintf("ApplicationSet selector %s is present, but none of the observed cluster inventory inputs match it.", selectorString(appsetDoc.Selector))
+				} else {
+					analysis.MatchedClusters = matched
+					analysis.GenerationDecisionState = "attributed"
+					analysis.GenerationDecisionReason = fmt.Sprintf("ApplicationSet selector %s matches cluster inventory %s and selects value files %s.", selectorString(appsetDoc.Selector), strings.Join(matched, ", "), strings.Join(analysis.SelectedValueFiles, ", "))
+				}
+			}
+		} else {
+			analysis.GenerationDecisionState = "unresolved"
+			analysis.GenerationDecisionReason = fmt.Sprintf("ApplicationSet input %s was observed, but cub-gen could not parse it deterministically yet.", appsetPath)
+		}
+	}
+
+	managedDocs := parseHelmManagedCatalogs(detection.Repo, managedCatalogPaths)
+	customerDocs := parseHelmCustomerCatalogs(detection.Repo, customerCatalogPaths)
+	requiredControl, requiredPath := firstRequiredHelmSecurityControl(managedDocs)
+	selectedOverlay := helmPaths.OverlayValuesPath
+	customerOverride := matchingCustomerCatalog(customerDocs, selectedOverlay)
+	if requiredControl != "" {
+		analysis.SecurityControl = requiredControl
+		analysis.SecurityControlPath = requiredPath
+		if customerOverride.Path != "" {
+			analysis.SecurityOverridePath = customerOverride.Path
+		}
+		switch {
+		case customerOverride.Enabled != nil && !*customerOverride.Enabled:
+			analysis.SecurityDecisionState = "blocked"
+			analysis.SecurityDecisionReason = fmt.Sprintf("Customer service catalog %s weakens the platform-required %s control from %s.", customerOverride.Path, requiredControl, requiredPath)
+		case customerOverride.Enabled != nil:
+			analysis.SecurityDecisionState = "allow"
+			analysis.SecurityDecisionReason = fmt.Sprintf("Customer service catalog %s keeps the platform-required %s control enabled.", customerOverride.Path, requiredControl)
+		default:
+			analysis.SecurityDecisionState = "allow"
+			analysis.SecurityDecisionReason = fmt.Sprintf("No customer override weakens the platform-required %s control from %s.", requiredControl, requiredPath)
+		}
+	} else if len(managedCatalogPaths) > 0 || len(customerCatalogPaths) > 0 {
+		analysis.SecurityDecisionState = "unresolved"
+		analysis.SecurityDecisionReason = "Layered service catalog inputs were observed, but cub-gen could not classify a supported security control from them yet."
+	}
+
+	return analysis
+}
+
+func parseHelmApplicationSetFile(repo, path string) (helmApplicationSetDoc, error) {
+	type applicationSet struct {
+		Spec struct {
+			Generators []struct {
+				Clusters struct {
+					Selector struct {
+						MatchLabels map[string]string `yaml:"matchLabels"`
+					} `yaml:"selector"`
+				} `yaml:"clusters"`
+			} `yaml:"generators"`
+			Template struct {
+				Spec struct {
+					Source struct {
+						Helm struct {
+							ValueFiles []string `yaml:"valueFiles"`
+						} `yaml:"helm"`
+					} `yaml:"source"`
+				} `yaml:"spec"`
+			} `yaml:"template"`
+		} `yaml:"spec"`
+	}
+
+	content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+	if err != nil {
+		return helmApplicationSetDoc{}, err
+	}
+
+	var doc applicationSet
+	if err := yaml.Unmarshal(content, &doc); err != nil {
+		return helmApplicationSetDoc{}, err
+	}
+
+	out := helmApplicationSetDoc{Path: filepath.ToSlash(path)}
+	for _, generator := range doc.Spec.Generators {
+		if len(generator.Clusters.Selector.MatchLabels) == 0 {
+			continue
+		}
+		out.Selector = map[string]string{}
+		for k, v := range generator.Clusters.Selector.MatchLabels {
+			out.Selector[k] = v
+		}
+		break
+	}
+	out.ValueFiles = uniqueStringsInOrder(doc.Spec.Template.Spec.Source.Helm.ValueFiles)
+	return out, nil
+}
+
+func matchedHelmClusterInventories(repo string, paths []string, selector map[string]string) []string {
+	matched := make([]string, 0, len(paths))
+	for _, path := range paths {
+		doc, err := parseHelmClusterInventoryFile(repo, path)
+		if err != nil || doc.Name == "" {
+			continue
+		}
+		if clusterLabelsMatch(doc.Labels, selector) {
+			matched = append(matched, doc.Name)
+		}
+	}
+	return uniqueSortedStrings(matched)
+}
+
+func parseHelmClusterInventoryFile(repo, path string) (helmClusterInventoryDoc, error) {
+	type clusterInventory struct {
+		Metadata struct {
+			Name   string            `yaml:"name"`
+			Labels map[string]string `yaml:"labels"`
+		} `yaml:"metadata"`
+	}
+
+	content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+	if err != nil {
+		return helmClusterInventoryDoc{}, err
+	}
+
+	var doc clusterInventory
+	if err := yaml.Unmarshal(content, &doc); err != nil {
+		return helmClusterInventoryDoc{}, err
+	}
+	return helmClusterInventoryDoc{
+		Path:   filepath.ToSlash(path),
+		Name:   strings.TrimSpace(doc.Metadata.Name),
+		Labels: doc.Metadata.Labels,
+	}, nil
+}
+
+func parseHelmManagedCatalogs(repo string, paths []string) []helmManagedCatalogDoc {
+	type managedCatalog struct {
+		Spec struct {
+			SecurityControls struct {
+				OAuth2Proxy struct {
+					Required bool `yaml:"required"`
+				} `yaml:"oauth2Proxy"`
+			} `yaml:"securityControls"`
+		} `yaml:"spec"`
+	}
+
+	out := make([]helmManagedCatalogDoc, 0, len(paths))
+	for _, path := range paths {
+		content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+		if err != nil {
+			continue
+		}
+		var doc managedCatalog
+		if err := yaml.Unmarshal(content, &doc); err != nil {
+			continue
+		}
+		entry := helmManagedCatalogDoc{Path: filepath.ToSlash(path)}
+		if doc.Spec.SecurityControls.OAuth2Proxy.Required {
+			entry.RequiredSecurity = "oauth2Proxy"
+		}
+		out = append(out, entry)
+	}
+	return out
+}
+
+func parseHelmCustomerCatalogs(repo string, paths []string) []helmCustomerCatalogDoc {
+	type customerCatalog struct {
+		Spec struct {
+			Overlay struct {
+				ValuesFile string `yaml:"valuesFile"`
+			} `yaml:"overlay"`
+			SecurityOverrides struct {
+				OAuth2Proxy struct {
+					Enabled *bool `yaml:"enabled"`
+				} `yaml:"oauth2Proxy"`
+			} `yaml:"securityOverrides"`
+		} `yaml:"spec"`
+	}
+
+	out := make([]helmCustomerCatalogDoc, 0, len(paths))
+	for _, path := range paths {
+		content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+		if err != nil {
+			continue
+		}
+		var doc customerCatalog
+		if err := yaml.Unmarshal(content, &doc); err != nil {
+			continue
+		}
+		entry := helmCustomerCatalogDoc{
+			Path:       filepath.ToSlash(path),
+			ValuesFile: strings.TrimSpace(doc.Spec.Overlay.ValuesFile),
+			Enabled:    doc.Spec.SecurityOverrides.OAuth2Proxy.Enabled,
+		}
+		if doc.Spec.SecurityOverrides.OAuth2Proxy.Enabled != nil {
+			entry.OverrideSecurity = "oauth2Proxy"
+		}
+		out = append(out, entry)
+	}
+	return out
+}
+
+func firstRequiredHelmSecurityControl(docs []helmManagedCatalogDoc) (string, string) {
+	for _, doc := range docs {
+		if strings.TrimSpace(doc.RequiredSecurity) == "" {
+			continue
+		}
+		return doc.RequiredSecurity, doc.Path
+	}
+	return "", ""
+}
+
+func matchingCustomerCatalog(docs []helmCustomerCatalogDoc, selectedOverlay string) helmCustomerCatalogDoc {
+	for _, doc := range docs {
+		if selectedOverlay != "" && doc.ValuesFile == selectedOverlay {
+			return doc
+		}
+	}
+	if len(docs) > 0 {
+		return docs[0]
+	}
+	return helmCustomerCatalogDoc{}
+}
+
+func clusterLabelsMatch(labels, selector map[string]string) bool {
+	if len(selector) == 0 {
+		return false
+	}
+	for key, expected := range selector {
+		if labels[key] != expected {
+			return false
+		}
+	}
+	return true
+}
+
+func selectorString(selector map[string]string) string {
+	if len(selector) == 0 {
+		return ""
+	}
+	keys := make([]string, 0, len(selector))
+	for key := range selector {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, key := range keys {
+		parts = append(parts, key+"="+selector[key])
+	}
+	return strings.Join(parts, ", ")
+}
+
+func uniqueStringsInOrder(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		out = append(out, value)
+	}
+	return out
 }
 
 func renderedLineageForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.RenderedObjectLineage {

@@ -16,18 +16,18 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 
 | Example | Generator fixture | Source chain verified | Connected mode | Connected smoke lane | Real live proof | AI-first surface | Tracking issues |
 |---|---|---|---|---|---|---|---|
-| `ai-ops-paas` | no | no | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `backstage-idp` | yes | yes | yes | no | `none` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `c3agent` | yes | yes | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183), [#216](https://github.com/confighub/cub-gen/issues/216) |
-| `confighub-actions` | no | no | yes | no | `none` | `partial` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `helm-paas` | yes | yes | yes | yes | `paired-harness` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#177](https://github.com/confighub/cub-gen/issues/177), [#183](https://github.com/confighub/cub-gen/issues/183), [#187](https://github.com/confighub/cub-gen/issues/187) |
-| `just-apps-no-platform-config` | yes | yes | yes | no | `none` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `live-reconcile` | no | no | yes | no | `standalone` | `none` | [#173](https://github.com/confighub/cub-gen/issues/173), [#181](https://github.com/confighub/cub-gen/issues/181), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `ops-workflow` | yes | yes | yes | no | `none` | `partial` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `scoredev-paas` | yes | yes | yes | no | `standalone` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `springboot-paas` | yes | yes | yes | yes | `standalone` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#179](https://github.com/confighub/cub-gen/issues/179), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `swamp-automation` | yes | yes | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183) |
-| `swamp-project` | no | no | yes | no | `none` | `explicit` | [#173](https://github.com/confighub/cub-gen/issues/173), [#180](https://github.com/confighub/cub-gen/issues/180), [#183](https://github.com/confighub/cub-gen/issues/183) |
+| `ai-ops-paas` | no | no | yes | no | `none` | `explicit` |  |
+| `backstage-idp` | yes | yes | yes | no | `none` | `none` |  |
+| `c3agent` | yes | yes | yes | no | `none` | `explicit` | [#216](https://github.com/confighub/cub-gen/issues/216) |
+| `confighub-actions` | no | no | yes | no | `none` | `partial` |  |
+| `helm-paas` | yes | yes | yes | yes | `paired-harness` | `explicit` | [#238](https://github.com/confighub/cub-gen/issues/238), [#239](https://github.com/confighub/cub-gen/issues/239), [#240](https://github.com/confighub/cub-gen/issues/240), [#241](https://github.com/confighub/cub-gen/issues/241), [#242](https://github.com/confighub/cub-gen/issues/242) |
+| `just-apps-no-platform-config` | yes | yes | yes | no | `none` | `none` |  |
+| `live-reconcile` | no | no | yes | no | `standalone` | `none` |  |
+| `ops-workflow` | yes | yes | yes | no | `none` | `partial` |  |
+| `scoredev-paas` | yes | yes | yes | no | `standalone` | `explicit` |  |
+| `springboot-paas` | yes | yes | yes | yes | `standalone` | `explicit` |  |
+| `swamp-automation` | yes | yes | yes | no | `none` | `explicit` |  |
+| `swamp-project` | no | no | yes | no | `none` | `explicit` |  |
 
 ## Proof References
 

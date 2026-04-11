@@ -13,6 +13,25 @@ contract:
     - role: "chart"
       exact_basenames:
         - "chart.yaml"
+    - role: "application-set"
+      exact_basenames:
+        - "applicationset.yaml"
+        - "applicationset.yml"
+    - role: "cluster-inventory"
+      extensions:
+        - ".yaml"
+        - ".yml"
+        - ".json"
+    - role: "managed-service-catalog"
+      extensions:
+        - ".yaml"
+        - ".yml"
+        - ".json"
+    - role: "customer-service-catalog"
+      extensions:
+        - ".yaml"
+        - ".yml"
+        - ".json"
     - role: "values"
       prefixes:
         - "values"
@@ -20,6 +39,7 @@ contract:
         - ".yaml"
         - ".yml"
   role_owners:
+    customer-service-catalog: "app-team"
     values: "app-team"
   role_schema_refs:
     chart: "https://json.schemastore.org/chart"

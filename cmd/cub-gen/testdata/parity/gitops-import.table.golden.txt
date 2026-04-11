@@ -9,7 +9,7 @@ Generated contracts: 1
 Generated provenance records: 1
 Generated inverse transform plans: 1
 Generator Kind	Profile	Capabilities	Dry Inputs	Wet Targets	Inverse Patches	Review Required
-helm	helm-paas	render-manifests,values-overrides,inverse-values-patch	3	3	1	0
+helm	helm-paas	render-manifests,values-overrides,inverse-values-patch	8	3	1	0
 Review required patches: 0
 Patch owner	Count
 app-team	1

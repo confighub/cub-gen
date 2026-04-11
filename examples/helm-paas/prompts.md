@@ -50,6 +50,26 @@ Run the local governed ownership proof for ./examples/helm-paas.
 Do not run ConfigHub or live cluster steps in this prompt.
 ```
 
+## Layered Kubara-like proof prompt
+
+```text
+Run the layered Helm proof for ./examples/helm-paas.
+
+1. Use:
+   ./examples/helm-paas/demo-layered-trace.sh
+2. Capture the artifact directory from the script output.
+3. Summarize:
+   - the cluster selector that cub-gen attributed
+   - which cluster inventory matched it
+   - which values overlay was selected
+   - why the customer security weakening was classified as blocked
+4. Show me the most important evidence from:
+   - import-allow.json
+   - import-block.json
+
+Do not run ConfigHub or live cluster steps in this prompt.
+```
+
 ## Connected plus live prompt
 
 ```text

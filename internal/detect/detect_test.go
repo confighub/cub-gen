@@ -143,6 +143,32 @@ func TestScanRepoSwampIncludesNestedWorkflowInputs(t *testing.T) {
 	}
 }
 
+func TestScanRepoHelmIncludesLayeredAuxiliaryInputs(t *testing.T) {
+	t.Parallel()
+
+	repo := filepath.Join("..", "..", "examples", "helm-paas")
+	result, err := ScanRepo(repo, "main")
+	if err != nil {
+		t.Fatalf("ScanRepo returned error: %v", err)
+	}
+	if len(result.Generators) != 1 {
+		t.Fatalf("expected 1 generator, got %d", len(result.Generators))
+	}
+
+	inputs := result.Generators[0].Inputs
+	for _, expected := range []string{
+		"gitops/argo/applicationset.yaml",
+		"platform/clusters/prod-eu.yaml",
+		"platform/clusters/stage-eu.yaml",
+		"platform/catalogs/managed-service-catalog/payments-api.yaml",
+		"platform/catalogs/customer-service-catalog/payments-api-prod.yaml",
+	} {
+		if !contains(inputs, expected) {
+			t.Fatalf("expected helm inputs to contain %q; got %v", expected, inputs)
+		}
+	}
+}
+
 func TestScanRepoC3AgentStructuralDetection(t *testing.T) {
 	t.Parallel()
 

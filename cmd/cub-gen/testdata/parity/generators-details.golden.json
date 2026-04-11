@@ -428,6 +428,37 @@
             "role": "chart"
           },
           {
+            "exact_basenames": [
+              "applicationset.yaml",
+              "applicationset.yml"
+            ],
+            "role": "application-set"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml",
+              ".json"
+            ],
+            "role": "cluster-inventory"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml",
+              ".json"
+            ],
+            "role": "managed-service-catalog"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml",
+              ".json"
+            ],
+            "role": "customer-service-catalog"
+          },
+          {
             "extensions": [
               ".yaml",
               ".yml"
@@ -486,6 +517,7 @@
           }
         ],
         "role_owners": {
+          "customer-service-catalog": "app-team",
           "values": "app-team"
         },
         "wet_targets": [

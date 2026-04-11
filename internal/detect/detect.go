@@ -124,6 +124,7 @@ func detectHelm(repo string) ([]model.GeneratorDetection, error) {
 			}
 			inputs = append(inputs, filepath.ToSlash(rel))
 		}
+		inputs = append(inputs, existingHelmAuxiliaryInputs(repo, root)...)
 		sort.Strings(inputs)
 
 		name := filepath.Base(root)
@@ -144,6 +145,34 @@ func detectHelm(repo string) ([]model.GeneratorDetection, error) {
 		return nil, fmt.Errorf("detect helm: %w", err)
 	}
 	return mapValuesSorted(detected), nil
+}
+
+func existingHelmAuxiliaryInputs(repo, root string) []string {
+	candidates := make([]string, 0, 12)
+	globs := []string{
+		filepath.Join(root, "gitops", "argo", "applicationset.yaml"),
+		filepath.Join(root, "gitops", "argo", "applicationset.yml"),
+		filepath.Join(root, "platform", "clusters", "*.yaml"),
+		filepath.Join(root, "platform", "clusters", "*.yml"),
+		filepath.Join(root, "platform", "clusters", "*.json"),
+		filepath.Join(root, "platform", "catalogs", "managed-service-catalog", "*.yaml"),
+		filepath.Join(root, "platform", "catalogs", "managed-service-catalog", "*.yml"),
+		filepath.Join(root, "platform", "catalogs", "managed-service-catalog", "*.json"),
+		filepath.Join(root, "platform", "catalogs", "customer-service-catalog", "*.yaml"),
+		filepath.Join(root, "platform", "catalogs", "customer-service-catalog", "*.yml"),
+		filepath.Join(root, "platform", "catalogs", "customer-service-catalog", "*.json"),
+	}
+	for _, pattern := range globs {
+		matches, _ := filepath.Glob(pattern)
+		for _, match := range matches {
+			rel, err := filepath.Rel(repo, match)
+			if err != nil {
+				continue
+			}
+			candidates = append(candidates, filepath.ToSlash(rel))
+		}
+	}
+	return uniqueSortedStrings(candidates)
 }
 
 func detectScore(repo string) ([]model.GeneratorDetection, error) {
@@ -812,4 +841,21 @@ func unique(v []string) []string {
 
 func profileForKind(kind model.GeneratorKind) string {
 	return registry.Profile(kind)
+}
+
+func uniqueSortedStrings(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		out = append(out, value)
+	}
+	sort.Strings(out)
+	return out
 }

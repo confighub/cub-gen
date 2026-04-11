@@ -40,7 +40,7 @@ The flagship examples also now publish an explicit AI-first bundle:
 
 | If you already run... | Start here | What actually runs | What you can inspect next |
 |---|---|---|---|
-| Helm plus Argo/Flux | `./examples/demo/start-platform-first.sh` | local lifecycle for `helm-paas`, then the example-owned governed-change proof and live wrapper | values ownership now, local ALLOW/BLOCK proof next, connected + live proof after |
+| Helm plus Argo/Flux | `./examples/demo/start-platform-first.sh` | local lifecycle for `helm-paas`, then the example-owned governed-change proof, layered trace proof, and live wrapper | values ownership now, layered selector-to-overlay proof next, connected + live proof after |
 | Spring Boot app repos | `./examples/demo/start-app-first.sh` | local lifecycle for `springboot-paas`, then the example-owned embedded payload mutation proof | app-vs-platform config ownership now, direct embedded apply-here proof next, standalone live app proof after |
 | Score.dev workloads | `./examples/demo/start-score-first.sh` | Score field trace, inverse edit map, governed workload-contract proof, and standalone runtime proof | `score.yaml` to runtime-field mapping now, local ALLOW/ESCALATE proof next, live `checkout-api` proof after |
 | Reconciler/runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | real Flux and Argo reconciliation on kind | pods, rollout, and drift correction |
@@ -107,6 +107,7 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 |--------|---------|---------------------|
 | `start-platform-first.sh` | [`helm-paas`](../helm-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated platform-first starter path |
 | `../helm-paas/demo-governed-change.sh` | [`helm-paas`](../helm-paas/) | App-team ALLOW path vs platform-contract BLOCK path with the real PR ownership gate |
+| `../helm-paas/demo-layered-trace.sh` | [`helm-paas`](../helm-paas/) | Cluster labels -> ApplicationSet selector -> values overlay proof plus blocked customer security weakening |
 | `start-app-first.sh` | [`springboot-paas`](../springboot-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated app-first starter path |
 | `../springboot-paas/demo-governed-routes.sh` | [`springboot-paas`](../springboot-paas/) | App-owned field ALLOW versus platform-owned field BLOCKED with `springboot validate-mutation` |
 | `../springboot-paas/demo-embedded-config-mutation.sh` | [`springboot-paas`](../springboot-paas/) | Direct embedded `application.yaml` mutation in the ConfigHub payload plus blocked datasource proof |
@@ -397,8 +398,8 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 | Status | What is true today |
 |--------|--------------------|
 | Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
-| In progress | The flagship examples still need contract-based proof for real-cluster outcome, two-audience onboarding, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` paths |
-| Actively tracked | `#173`, `#177`, `#180`, `#187`, `#238`-`#242` |
+| In progress | The flagship proof bar is now met; follow-on depth is concentrated in richer Helm provenance and generation-chain features rather than basic example trust |
+| Actively tracked | `#238`-`#242` |
 
 For the per-example truth behind those claims, use the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md). It is derived from the example catalog, connected runners, source-side tests, and live proof scripts.
 

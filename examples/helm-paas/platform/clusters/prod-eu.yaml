@@ -1,0 +1,8 @@
+apiVersion: cubgen.confighub.dev/v1alpha1
+kind: ClusterInventory
+metadata:
+  name: prod-eu
+  labels:
+    env: prod
+    region: eu
+    platform-tier: managed

@@ -357,22 +357,15 @@ func commandRefs(refs ProofRefs) []string {
 }
 
 func trackingIssuesForExample(slug, aiSurface string) []string {
-	issues := []string{"#173", "#183"}
+	issues := []string{}
 	switch slug {
 	case "helm-paas":
-		issues = append(issues, "#177", "#187")
-	case "springboot-paas":
-		issues = append(issues, "#179")
-	case "ops-workflow", "swamp-automation":
-		issues = append(issues, "#180")
-	case "backstage-idp", "just-apps-no-platform-config", "confighub-actions", "c3agent", "ai-ops-paas", "live-reconcile":
-		issues = append(issues, "#181")
-	case "swamp-project":
-		issues = append(issues, "#180")
+		issues = append(issues, "#238", "#239", "#240", "#241", "#242")
 	}
 	if slug == "c3agent" {
 		issues = append(issues, "#216")
 	}
+	_ = aiSurface
 	return uniqueStrings(issues)
 }
 

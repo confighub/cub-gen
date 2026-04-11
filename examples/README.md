@@ -124,7 +124,7 @@ Start with the example that matches how your team already thinks:
 | If you are... | Start here | First value you should see |
 |---|---|---|
 | Spring Boot platform or app lead | [`springboot-paas`](./springboot-paas/) | "Which Spring property changed, who owns it, and what file do I edit?" |
-| Helm/Flux/Argo platform team (umbrella charts, overlays) | [`helm-paas`](./helm-paas/) | Ownership + field trace map without chart archaeology |
+| Helm/Flux/Argo platform team (umbrella charts, overlays) | [`helm-paas`](./helm-paas/) | Ownership + field trace map, layered selector-to-overlay proof, and live runtime follow-through |
 | Score.dev platform team | [`scoredev-paas`](./scoredev-paas/) | Visibility from `score.yaml` intent to rendered runtime fields |
 | Ops/SRE workflow owner | [`ops-workflow`](./ops-workflow/) | Governed schedule/action changes with explicit ALLOW/BLOCK outcomes |
 | AI workflow / Swamp-style team | [`swamp-automation`](./swamp-automation/) | Structural workflow-change classification and policy-ready evidence |
@@ -293,7 +293,7 @@ Now includes Helm + Spring Boot registry-backed platform examples too.
 
 | Example | You use... | cub-gen shows you... |
 |---------|-----------|---------------------|
-| [**helm-paas**](helm-paas/) | Helm charts + values overlays | Chart contract tracing, values ownership, ALLOW/BLOCK governance |
+| [**helm-paas**](helm-paas/) | Helm charts + values overlays | Chart contract tracing, layered selector-to-overlay provenance, and ALLOW/BLOCK governance |
 | [**scoredev-paas**](scoredev-paas/) | Score.dev workload specs | DRY intent with field-origin mapping |
 | [**springboot-paas**](springboot-paas/) | Spring Boot + `application.yaml` | App/platform ownership boundaries |
 

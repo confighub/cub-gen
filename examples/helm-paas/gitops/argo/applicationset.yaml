@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: payments-api
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            env: prod
+            region: eu
+  template:
+    metadata:
+      name: "{{name}}-payments-api"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/confighub/cub-gen.git
+        targetRevision: HEAD
+        path: examples/helm-paas
+        helm:
+          valueFiles:
+            - values.yaml
+            - values-prod.yaml
+      destination:
+        server: "{{server}}"
+        namespace: apps
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true

@@ -13,6 +13,9 @@ cat <<'EOF'
   governed ownership proof from the same example:
     ./examples/helm-paas/demo-governed-change.sh
 
+  layered kubara-like trace from the same example:
+    ./examples/helm-paas/demo-layered-trace.sh
+
   connected governance only:
     cub auth login
     ./examples/helm-paas/demo-connected.sh

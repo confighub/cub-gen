@@ -226,6 +226,83 @@
         }
       }
     },
+    "helm_layered_analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "application_set_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cluster_inventory_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "managed_catalog_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "customer_catalog_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cluster_selector": {
+          "type": "string",
+          "minLength": 1
+        },
+        "matched_clusters": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "selected_value_files": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "generation_decision_state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generation_decision_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "security_control": {
+          "type": "string",
+          "minLength": 1
+        },
+        "security_control_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "security_override_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "security_decision_state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "security_decision_reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "ops_workflow_analysis": {
       "type": "object",
       "additionalProperties": false,
