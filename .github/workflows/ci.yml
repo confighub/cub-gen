@@ -29,6 +29,20 @@ jobs:
       - name: Run local CI suite
         run: make ci-local
 
+  cli-parity:
+    name: CLI Parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Run CLI parity contracts
+        run: make test-contracts
+
   connected:
     name: ConfigHub Smoke
     needs: local
