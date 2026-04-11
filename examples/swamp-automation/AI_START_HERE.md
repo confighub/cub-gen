@@ -24,6 +24,7 @@ authoring surface is prompt/context plus a workflow spec.
 | `go build -o ./cub-gen ./cmd/cub-gen` | local source | `./cub-gen` binary | local binary only |
 | `gitops import --json` | `workflow-deploy.yaml`, `.swamp.yaml`, `platform/registry.yaml`, `platform/swamp-constraints.yaml` | stdout JSON only | no |
 | `prompt-as-dry-local.sh` | workflow files + AI-only guardrails | `.tmp/app-ai-change-run/<repo>-<timestamp>/...` | no repo/backend/live mutation |
+| `demo-governed-structure.sh` | scratch clone + workflow files + Swamp constraints | `.tmp/swamp-governed-structure/<run>/...` | scratch clone only |
 | `demo-local.sh` | example repo | temporary lifecycle simulation artifacts | no live/backend mutation |
 | `run-connected-smoke.sh` | repo + ConfigHub auth/context | `.tmp/connected-smoke/<run>/...` | backend evidence only |
 | `prompt-as-dry-connected.sh` | workflow files + ConfigHub auth/context | temporary connected lifecycle artifacts unless `OUTPUT_DIR` is set | backend evidence only |
@@ -70,19 +71,22 @@ That path still avoids repo, backend, and live mutation; it writes only local
    `./cub-gen gitops import --space platform --json ./examples/swamp-automation`
 2. AI-safe local loop:
    `./examples/demo/prompt-as-dry-local.sh ./examples/swamp-automation`
-3. Local structural walkthrough:
+3. Local governed ALLOW/BLOCK proof:
+   `./examples/swamp-automation/demo-governed-structure.sh`
+4. Local structural walkthrough:
    `./examples/swamp-automation/demo-local.sh`
-4. Connected environment check:
+5. Connected environment check:
    `cub auth login && ./examples/demo/run-connected-smoke.sh`
-5. AI-safe connected loop:
+6. AI-safe connected loop:
    `cub auth login && ./examples/demo/prompt-as-dry-connected.sh ./examples/swamp-automation`
-6. Deep connected example walkthrough:
+7. Deep connected example walkthrough:
    `cub auth login && ./examples/swamp-automation/demo-connected.sh`
 
 ## What to verify after each major step
 
 - Repo-only provenance: the import JSON includes workflow provenance and inverse-edit hints.
 - AI-safe local loop: `.tmp/app-ai-change-run/.../mutation-card.json` exists and verification is true.
+- Local governed proof: `.tmp/swamp-governed-structure/.../allow-summary.json` reports `ALLOW` and `block-summary.json` reports `BLOCK`.
 - Local structural walkthrough: the create/update lifecycle completes with valid attestation outputs.
 - Connected smoke: ConfigHub auth/context is valid and the smoke summaries include a non-empty `change_id`.
 - AI-safe connected loop: the same prompt-as-DRY path reaches a connected decision state.

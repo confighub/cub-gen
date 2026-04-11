@@ -66,8 +66,8 @@ when you want to inspect what is actually running after reconciliation.
 | **Spring app/platform team** | `module-3-spring-ownership.sh` | App-vs-platform ownership boundaries |
 | **Backstage catalog admin** | [`backstage-idp`](../backstage-idp/) demo | Owner/lifecycle governance |
 | **AI fleet operator** | `ai-work-platform/scenario-1-c3agent.sh` | 30 DRY lines → 11 governed WET targets |
-| **Swamp/workflow maintainer** | `ai-work-platform/scenario-2-swamp.sh` | Structural workflow-change classification |
-| **Ops/SRE workflow owner** | `ai-work-platform/scenario-4-operations.sh` | Governed workflow mutation path |
+| **Swamp/workflow maintainer** | `ai-work-platform/scenario-2-swamp.sh` | Structural workflow-change classification with explicit ALLOW/BLOCK proof |
+| **Ops/SRE workflow owner** | `ai-work-platform/scenario-4-operations.sh` | Governed workflow mutation path with explicit ALLOW/BLOCK proof |
 | **Platform control-plane operator** | `ai-work-platform/scenario-3-confighub-actions.sh` | Recursive governance |
 | **Reconciler reliability owner** | `e2e-live-reconcile-flux.sh` | Real create/update/drift correction |
 | **App team (no platform layer)** | `module-5-no-config-platform.sh` | Provider config governance |
@@ -124,9 +124,10 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 | Script | Example | What it demonstrates |
 |--------|---------|---------------------|
 | `ai-work-platform/scenario-1-c3agent.sh` | [`c3agent`](../c3agent/) + [`ai-ops-paas`](../ai-ops-paas/) | c3agent 11-target coverage |
-| `ai-work-platform/scenario-2-swamp.sh` | [`swamp-automation`](../swamp-automation/) | Swamp workflow/model governance |
+| `ai-work-platform/scenario-2-swamp.sh` | [`swamp-automation`](../swamp-automation/) | Swamp workflow/model governance with example-owned local ALLOW/BLOCK proof |
 | `ai-work-platform/scenario-3-confighub-actions.sh` | [`confighub-actions`](../confighub-actions/) | Recursive governance |
-| `ai-work-platform/scenario-4-operations.sh` | [`ops-workflow`](../ops-workflow/) | Operations workflow governance |
+| `ai-work-platform/scenario-4-operations.sh` | [`ops-workflow`](../ops-workflow/) | Operations workflow governance with example-owned local ALLOW/BLOCK proof |
+| `../swamp-automation/demo-governed-structure.sh` | [`swamp-automation`](../swamp-automation/) | Approved model-method ALLOW versus unapproved model plus missing `validate` BLOCK |
 | `../ops-workflow/demo-governed-policy.sh` | [`ops-workflow`](../ops-workflow/) | Example-owned local ALLOW/BLOCK workflow policy proof |
 | `ai-work-platform/run-all.sh` | All above | Run all AI platform scenarios |
 
@@ -137,13 +138,11 @@ If your platform is workflow-heavy, start here before app-manifest demos:
 ```bash
 # Swamp workflow graph governance (models/methods/required steps)
 ./examples/demo/ai-work-platform/scenario-2-swamp.sh
-./cub-gen gitops import --space platform --json ./examples/swamp-automation ./examples/swamp-automation \
-  | jq '.provenance[0].swamp_workflow_analysis'
+./examples/swamp-automation/demo-governed-structure.sh
 
 # Ops workflow governance (actions/schedules/approval gates)
 ./examples/demo/ai-work-platform/scenario-4-operations.sh
-./cub-gen gitops import --space platform --json ./examples/ops-workflow ./examples/ops-workflow \
-  | jq '.provenance[0].ops_workflow_analysis'
+./examples/ops-workflow/demo-governed-policy.sh
 ```
 
 ## 6. Connected mode (ConfigHub)
@@ -398,7 +397,7 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 |--------|--------------------|
 | Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
 | In progress | The flagship examples still need contract-based proof for real-cluster outcome, two-audience onboarding, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` paths |
-| Actively tracked | `#173`, `#177`, `#180`, `#187`, `#238`-`#242` |
+| Actively tracked | `#173`, `#177`, `#187`, `#238`-`#242` |
 
 For the per-example truth behind those claims, use the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md). It is derived from the example catalog, connected runners, source-side tests, and live proof scripts.
 
