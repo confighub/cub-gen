@@ -198,6 +198,26 @@ Connected mode requires a ConfigHub base URL and (usually) authentication via
 `cub auth login`. If the user does not have ConfigHub set up, all the
 source-side and provenance work still works in local mode.
 
+## Variants and overlays
+
+Current status: partial support.
+
+- A single `gitops import` / `publish` invocation works on one repo path pair.
+- If the repo already contains generator-native overlay files, `cub-gen` can include them in provenance and dry input reporting.
+- For example, Spring Boot can emit both base and overlay field-origin entries for `server.port`, while `change explain` points to the profile-specific edit path:
+
+```bash
+./cub-gen gitops import --space my-space --json ./examples/springboot-paas ./examples/springboot-paas \
+  | jq '.provenance[0].field_origin_map[] | select(.dry_path=="server.port")'
+
+./cub-gen change explain --space my-space \
+  --wet-path "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort" \
+  ./examples/springboot-paas ./examples/springboot-paas
+```
+
+- There is no current CLI for repeated `--values`, `--overlay`, `--variant`, or globbed fan-out that emits one bundle per environment in a single command.
+- If the user asks for per-environment bundle fan-out, describe it as a current product gap instead of inventing a flag.
+
 ## JSON-first for automation
 
 Most cub-gen commands support `--json` and `--pretty` flags. Prefer JSON

@@ -682,7 +682,7 @@ func runDetect(args []string) error {
 	return writeJSON(os.Stdout, result, *pretty)
 }
 
-// runLegacyImport retains the original prototype import command.
+// runLegacyImport retains the original source-repo import command.
 func runLegacyImport(args []string) error {
 	fs := flag.NewFlagSet("import", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
@@ -722,6 +722,9 @@ func runLegacyImport(args []string) error {
 func runPublish(args []string) error {
 	fs := flag.NewFlagSet("publish", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
+	fs.Usage = func() {
+		printPublishUsage(fs.Output())
+	}
 	in := fs.String("in", "-", "ImportFlow JSON input path, or '-' for stdin")
 	out := fs.String("out", "-", "Bundle JSON output path, or '-' for stdout")
 	space := fs.String("space", "default", "ConfigHub space label (direct mode)")
@@ -1940,60 +1943,122 @@ func writeJSON(out io.Writer, v any, pretty bool) error {
 	return enc.Encode(v)
 }
 
+type helpSection struct {
+	Title string
+	Lines []string
+}
+
+func printCommandHelp(out io.Writer, title string, description []string, sections ...helpSection) {
+	fmt.Fprintln(out, title)
+	if len(description) > 0 {
+		fmt.Fprintln(out)
+		for _, line := range description {
+			fmt.Fprintln(out, line)
+		}
+	}
+	for _, section := range sections {
+		if len(section.Lines) == 0 {
+			continue
+		}
+		fmt.Fprintln(out)
+		if section.Title != "" {
+			fmt.Fprintf(out, "%s:\n", section.Title)
+		}
+		for _, line := range section.Lines {
+			fmt.Fprintln(out, line)
+		}
+	}
+}
+
 func printUsage(out io.Writer) {
-	fmt.Fprintln(out, "cub-gen: source-side provenance and governed-change companion for GitOps")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Maps DRY source files (values.yaml, score.yaml, application.yaml, etc.)")
-	fmt.Fprintln(out, "to WET rendered manifests, recording field-level provenance and inverse-edit hints.")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "POPULAR COMMANDS")
-	fmt.Fprintln(out, "  detect            Detect generators in a repo")
-	fmt.Fprintln(out, "  generators        List supported generators (Helm, Score, Spring Boot, ...)")
-	fmt.Fprintln(out, "  gitops discover   Discover renderable artifacts in a repo")
-	fmt.Fprintln(out, "  gitops import     Import + render to a target")
-	fmt.Fprintln(out, "  publish           Build a provenance bundle for a target")
-	fmt.Fprintln(out, "  verify            Verify a provenance bundle")
-	fmt.Fprintln(out, "  attest            Sign a provenance bundle")
-	fmt.Fprintln(out, "  change preview    Preview a change with provenance and inverse-edit hints")
-	fmt.Fprintln(out, "  change run        Run a change in local or connected mode")
-	fmt.Fprintln(out, "  change explain    Explain field origin and where to edit DRY source")
-	fmt.Fprintln(out, "  bridge            Connected ingest/decision/promote workflows")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "QUICK START")
-	fmt.Fprintln(out, "  cub-gen generators --markdown --details")
-	fmt.Fprintln(out, "  cub-gen gitops discover --space my-space ./examples/helm-paas")
-	fmt.Fprintln(out, "  cub-gen gitops import --space my-space ./examples/helm-paas ./examples/helm-paas")
-	fmt.Fprintln(out, "  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas")
-	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
-	fmt.Fprintln(out, "  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "TIPS")
-	fmt.Fprintln(out, "  • Add --json or --pretty for machine-readable output")
-	fmt.Fprintln(out, "  • Pipe publish | verify | attest for an end-to-end provenance chain")
-	fmt.Fprintln(out, "  • Use 'cub-gen <command> --help' for full flag detail")
-	fmt.Fprintln(out, "  • For per-generator recipes, see docs/cli-reference.md")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Note: gitops commands are local-only and mirror 'cub gitops' command shape.")
-	fmt.Fprintln(out, "      For cluster-side import, use 'cub gitops' from the ConfigHub CLI.")
+	printCommandHelp(
+		out,
+		"cub-gen: source-side provenance and governed-change companion for GitOps",
+		[]string{
+			"Maps DRY source files (values.yaml, score.yaml, application.yaml, etc.)",
+			"to WET rendered manifests, recording field-level provenance and inverse-edit hints.",
+		},
+		helpSection{
+			Title: "POPULAR COMMANDS",
+			Lines: []string{
+				"  detect            Detect generators in a repo",
+				"  generators        List supported generators (Helm, Score, Spring Boot, ...)",
+				"  gitops discover   Discover renderable artifacts in a repo",
+				"  gitops import     Import + render to a target",
+				"  publish           Build a provenance bundle for a target",
+				"  verify            Verify a provenance bundle",
+				"  attest            Sign a provenance bundle",
+				"  change preview    Preview a change with provenance and inverse-edit hints",
+				"  change run        Run a change in local or connected mode",
+				"  change explain    Explain field origin and where to edit DRY source",
+				"  bridge            Connected ingest/decision/promote workflows",
+			},
+		},
+		helpSection{
+			Title: "QUICK START",
+			Lines: []string{
+				"  cub-gen generators --markdown --details",
+				"  cub-gen gitops discover --space my-space ./examples/helm-paas",
+				"  cub-gen gitops import --space my-space ./examples/helm-paas ./examples/helm-paas",
+				"  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas",
+				"  cub-gen change preview --space my-space ./examples/scoredev-paas ./examples/scoredev-paas",
+				"  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas",
+			},
+		},
+		helpSection{
+			Title: "TIPS",
+			Lines: []string{
+				"  - Add --json or --pretty for machine-readable output",
+				"  - Pipe publish | verify | attest for an end-to-end provenance chain",
+				"  - Use 'cub-gen <command> --help' for full flag detail",
+				"  - For per-generator recipes, see docs/cli-reference.md",
+			},
+		},
+		helpSection{
+			Lines: []string{
+				"Note: gitops commands are local-only and mirror 'cub gitops' command shape.",
+				"      For cluster-side import, use 'cub gitops' from the ConfigHub CLI.",
+			},
+		},
+	)
 }
 
 func printChangeUsage(out io.Writer) {
-	fmt.Fprintln(out, "cub-gen change: developer-facing change workflow commands")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Usage:")
-	fmt.Fprintln(out, "  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
-	fmt.Fprintln(out, "  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>")
-	fmt.Fprintln(out, "  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-slug> <render-target-slug>")
-	fmt.Fprintln(out, "  cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]")
-	fmt.Fprintln(out, "  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Examples:")
-	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/helm-paas ./examples/helm-paas")
-	fmt.Fprintln(out, "  cub-gen change preview --space my-space ./examples/swamp-automation ./examples/swamp-automation")
-	fmt.Fprintln(out, "  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas")
-	fmt.Fprintln(out, "  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas")
-	fmt.Fprintln(out, "  cub-gen change explain --change-id chg_123 --bundle bundle.json --wet-path \"Deployment/spec/template/spec/containers[name=main]/image\"")
-	fmt.Fprintln(out, "  cub-gen change api serve --listen 127.0.0.1:8787 --space my-space")
+	printCommandHelp(
+		out,
+		"cub-gen change: developer-facing change workflow commands",
+		[]string{
+			"Preview, run, and explain governed source-side changes without deploying to a cluster.",
+		},
+		helpSection{
+			Title: "Usage",
+			Lines: []string{
+				"  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>",
+				"  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-slug> <render-target-slug>",
+				"  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-slug> <render-target-slug>",
+				"  cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]",
+				"  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]",
+			},
+		},
+		helpSection{
+			Title: "Examples",
+			Lines: []string{
+				"  cub-gen change preview --space my-space ./examples/helm-paas ./examples/helm-paas",
+				"  cub-gen change run --mode local --space my-space ./examples/scoredev-paas ./examples/scoredev-paas",
+				"  cub-gen change explain --space my-space --wet-path \"Deployment/spec/template/spec/containers[0]/ports[0]/containerPort\" ./examples/springboot-paas ./examples/springboot-paas",
+				"  cub-gen change explain --change-id chg_123 --bundle bundle.json --wet-path \"Deployment/spec/template/spec/containers[0]/image\"",
+				"  cub-gen change api serve --listen 127.0.0.1:8787 --space my-space",
+			},
+		},
+		helpSection{
+			Title: "Tips",
+			Lines: []string{
+				"  - Start with 'change preview' before 'change run'",
+				"  - 'change run --mode connected' talks to ConfigHub for a decision; it does not deploy",
+				"  - In most local examples, <render-target-slug> is the same repo path",
+			},
+		},
+	)
 }
 
 func printGitOpsUsage(out io.Writer) {
@@ -2001,27 +2066,74 @@ func printGitOpsUsage(out io.Writer) {
 	kindEq := renderKindEqualsClause(resourceKinds)
 	kindIn := quoteKindsWithDelimiter(resourceKinds, ",")
 
-	fmt.Fprintln(out, "cub-gen gitops: local parity commands for cub gitops pattern")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Usage:")
-	fmt.Fprintln(out, "  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--json] <target-slug>")
-	fmt.Fprintln(out, "  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--wait] [--json] <target-slug> <render-target-slug>")
-	fmt.Fprintln(out, "  cub-gen gitops cleanup [--space SPACE] [--json] <target-slug>")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Supported where-resource clauses:")
-	fmt.Fprintf(out, "  %s\n", kindEq)
-	fmt.Fprintf(out, "  kind IN (%s)\n", kindIn)
-	fmt.Fprintln(out, "  name = 'checkout-api' | resource_name LIKE '<contains-api>' | root LIKE '<contains-prod>'")
-	fmt.Fprintln(out, "  combine clauses with AND")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Examples:")
-	fmt.Fprintln(out, "  cub-gen gitops discover --space my-space ./examples/scoredev-paas")
-	fmt.Fprintln(out, "  cub-gen gitops discover --where-resource \"kind IN ('HelmRelease') AND resource_name LIKE '<contains-payments>'\" ./examples/helm-paas")
-	fmt.Fprintln(out, "  cub-gen gitops import --space my-space ./examples/springboot-paas ./examples/springboot-paas")
-	fmt.Fprintln(out, "  cub-gen gitops cleanup --space my-space ./examples/springboot-paas")
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Tip: <target-slug> is a local repo path in this local-first CLI.")
-	fmt.Fprintln(out, "     In most examples, <render-target-slug> is the same repo path.")
+	printCommandHelp(
+		out,
+		"cub-gen gitops: local parity commands for cub gitops pattern",
+		nil,
+		helpSection{
+			Title: "Usage",
+			Lines: []string{
+				"  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--json] <target-slug>",
+				"  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--wait] [--json] <target-slug> <render-target-slug>",
+				"  cub-gen gitops cleanup [--space SPACE] [--json] <target-slug>",
+			},
+		},
+		helpSection{
+			Title: "Supported where-resource clauses",
+			Lines: []string{
+				fmt.Sprintf("  %s", kindEq),
+				fmt.Sprintf("  kind IN (%s)", kindIn),
+				"  name = 'checkout-api' | resource_name LIKE '<contains-api>' | root LIKE '<contains-prod>'",
+				"  combine clauses with AND",
+			},
+		},
+		helpSection{
+			Title: "Examples",
+			Lines: []string{
+				"  cub-gen gitops discover --space my-space ./examples/scoredev-paas",
+				"  cub-gen gitops discover --where-resource \"kind IN ('HelmRelease') AND resource_name LIKE '<contains-payments>'\" ./examples/helm-paas",
+				"  cub-gen gitops import --space my-space ./examples/springboot-paas ./examples/springboot-paas",
+				"  cub-gen gitops cleanup --space my-space ./examples/springboot-paas",
+			},
+		},
+		helpSection{
+			Lines: []string{
+				"Tip: <target-slug> is a local repo path in this local-first CLI.",
+				"     In most examples, <render-target-slug> is the same repo path.",
+			},
+		},
+	)
+}
+
+func printPublishUsage(out io.Writer) {
+	printCommandHelp(
+		out,
+		"cub-gen publish: build a provenance bundle from import output or a repo path",
+		[]string{
+			"Use pipe mode when you already have gitops import JSON, or direct mode to import + bundle in one step.",
+		},
+		helpSection{
+			Title: "Usage",
+			Lines: []string{
+				"  cub-gen publish [--in FILE|-] [--out FILE|-] [--pretty]",
+				"  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-slug> <render-target-slug>",
+			},
+		},
+		helpSection{
+			Title: "Examples",
+			Lines: []string{
+				"  cub-gen gitops import --space my-space ./examples/helm-paas ./examples/helm-paas | cub-gen publish --in - --out -",
+				"  cub-gen publish --space my-space ./examples/helm-paas ./examples/helm-paas > bundle.json",
+			},
+		},
+		helpSection{
+			Title: "Tips",
+			Lines: []string{
+				"  - Direct mode is local-first; <render-target-slug> is usually the same repo path",
+				"  - Pipe to 'cub-gen verify' and 'cub-gen attest' for release evidence",
+			},
+		},
+	)
 }
 
 func quoteKindsWithDelimiter(kinds []string, delimiter string) string {

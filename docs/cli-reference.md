@@ -4,12 +4,21 @@ All commands are deterministic: same input produces same output.
 
 ## Core flow
 
+## Path model
+
+`cub-gen` keeps the `target` / `render-target` names for parity with `cub gitops`,
+but in this local-first CLI they are usually local repo paths.
+
+- `<target-path>`: the repo path to inspect and classify
+- `<render-target-path>`: the local render target path; in most examples it is the same repo path
+- For cluster-side import against a real render target, use `cub gitops`, not `cub-gen`
+
 ### `gitops discover`
 
 Scan a repo path and classify generator roots.
 
 ```
-cub-gen gitops discover --space <space> [--json] [--where-resource <expr>] <target-slug>
+cub-gen gitops discover --space <space> [--json] [--where-resource <expr>] <target-path>
 ```
 
 | Flag | Description |
@@ -23,7 +32,7 @@ cub-gen gitops discover --space <space> [--json] [--where-resource <expr>] <targ
 Import DRY/WET classification with provenance and inverse-edit guidance.
 
 ```
-cub-gen gitops import --space <space> [--json] [--wait] <target-slug> <render-target-slug>
+cub-gen gitops import --space <space> [--json] [--wait] <target-path> <render-target-path>
 ```
 
 | Flag | Description |
@@ -31,6 +40,11 @@ cub-gen gitops import --space <space> [--json] [--wait] <target-slug> <render-ta
 | `--space` | Space label (must match discover) |
 | `--json` | Emit JSON output with full provenance |
 | `--wait` | Accepted for CLI compatibility (no-op in local mode) |
+
+Arguments:
+
+- `<target-path>`: local repo path to discover and import
+- `<render-target-path>`: local render target path; usually the same repo path in examples
 
 Output includes: `generator_profile`, `dry_inputs`, `wet_manifest_targets`, `provenance` (field-origin map, inverse-edit pointers).
 
@@ -55,7 +69,7 @@ Generate a ConfigHub-ready change bundle from import output.
 cub-gen gitops import ... | cub-gen publish --in - --out -
 
 # Direct mode (import + bundle in one step)
-cub-gen publish --space <space> <target-slug> <render-target-slug>
+cub-gen publish --space <space> <target-path> <render-target-path>
 ```
 
 Output includes `digest_algorithm` (sha256) and `bundle_digest` for verification.
@@ -178,6 +192,40 @@ Command contracts are **frozen** at `v0.2-preview-parity-locked` (2026-03-06). S
 | `matched` | Behavior intentionally mirrored from `cub gitops` |
 | `partial` | Same contract shape, simplified implementation |
 | `deferred` | Intentionally not implemented yet |
+
+---
+
+## Variants and overlays
+
+Current status: partial support.
+
+What works today:
+
+- One `gitops import` / `publish` invocation works on one repo path pair.
+- Supported generators can pick up overlay files that already live in that repo, such as Helm `values-prod.yaml`, Spring `application-dev.yaml`, and generator-specific overlay files.
+- Provenance records include those generator inputs in `dry_inputs`, `values_paths`, and `field_origin_map` when the generator emits separate overlay transforms.
+- `change explain` can point to overlay-specific edit locations. For Spring Boot, the current edit hint routes `server.port` changes to `application-dev.yaml` for environment overrides while keeping `application.yaml` as the base.
+
+What does not work today:
+
+- No repeated `--values`, `--overlay`, or `--variant` flag surface
+- No glob-based fan-out
+- No single command that emits one provenance bundle per environment or tenant
+- No generic Kustomize overlay workflow beyond the generator-specific support already implemented
+
+Reality-check example:
+
+```bash
+./cub-gen gitops import --space platform --json ./examples/springboot-paas ./examples/springboot-paas \
+  | jq '.provenance[0].field_origin_map[] | select(.dry_path=="server.port")'
+
+./cub-gen change explain --space platform \
+  --wet-path "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort" \
+  ./examples/springboot-paas ./examples/springboot-paas
+```
+
+Use this section as the answer for "can cub-gen render N explicit variants from one generator in one command?":
+not yet. Today it can understand supported overlay files already present in a repo, but it does not fan out one invocation into N per-environment bundles.
 
 ---
 

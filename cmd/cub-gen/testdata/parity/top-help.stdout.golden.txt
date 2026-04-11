@@ -3,7 +3,7 @@ cub-gen: source-side provenance and governed-change companion for GitOps
 Maps DRY source files (values.yaml, score.yaml, application.yaml, etc.)
 to WET rendered manifests, recording field-level provenance and inverse-edit hints.
 
-POPULAR COMMANDS
+POPULAR COMMANDS:
   detect            Detect generators in a repo
   generators        List supported generators (Helm, Score, Spring Boot, ...)
   gitops discover   Discover renderable artifacts in a repo
@@ -16,7 +16,7 @@ POPULAR COMMANDS
   change explain    Explain field origin and where to edit DRY source
   bridge            Connected ingest/decision/promote workflows
 
-QUICK START
+QUICK START:
   cub-gen generators --markdown --details
   cub-gen gitops discover --space my-space ./examples/helm-paas
   cub-gen gitops import --space my-space ./examples/helm-paas ./examples/helm-paas
@@ -24,11 +24,11 @@ QUICK START
   cub-gen change preview --space my-space ./examples/scoredev-paas ./examples/scoredev-paas
   cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas ./examples/scoredev-paas
 
-TIPS
-  • Add --json or --pretty for machine-readable output
-  • Pipe publish | verify | attest for an end-to-end provenance chain
-  • Use 'cub-gen <command> --help' for full flag detail
-  • For per-generator recipes, see docs/cli-reference.md
+TIPS:
+  - Add --json or --pretty for machine-readable output
+  - Pipe publish | verify | attest for an end-to-end provenance chain
+  - Use 'cub-gen <command> --help' for full flag detail
+  - For per-generator recipes, see docs/cli-reference.md
 
 Note: gitops commands are local-only and mirror 'cub gitops' command shape.
       For cluster-side import, use 'cub gitops' from the ConfigHub CLI.

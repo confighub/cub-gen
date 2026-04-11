@@ -87,7 +87,7 @@ type ImportFlowResult struct {
 }
 
 // targetRef is a locally-resolved target identifier.
-// In this prototype, target slugs can be direct repo paths or alias names.
+// In the local-first CLI, target slugs can be direct repo paths or alias names.
 type targetRef struct {
 	Slug      string
 	Path      string

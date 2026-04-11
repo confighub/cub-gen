@@ -7,7 +7,7 @@ If your AI host supports repo-local skills, load [skills/cub-gen/SKILL.md](skill
 If you are starting work in this repo, read files in this order:
 
 1. `AI-README-FIRST.md`
-2. `AI-HANDOVER.md`
+2. `HANDOVER.md`
 3. `CLAUDE.md`
 4. `docs/cli-reference.md`
 5. `docs/contracts/change-cli-v1.md`
