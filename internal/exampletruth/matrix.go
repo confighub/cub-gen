@@ -132,10 +132,11 @@ func Collect(root string) (Matrix, error) {
 		case "helm-paas":
 			row.RealLiveProof = RealLivePairedHarness
 			row.ProofRefs.RealLive = []string{
+				"./examples/helm-paas/demo-runtime.sh",
 				"./examples/demo/e2e-connected-governed-reconcile-helm.sh",
 				"./examples/live-reconcile/demo-local.sh",
 			}
-			row.Notes = append(row.Notes, "Real LIVE proof is paired through the live-reconcile harness, not standalone in helm-paas.")
+			row.Notes = append(row.Notes, "Real LIVE proof is exposed through an example-owned helm-paas wrapper, but still uses the shared live-reconcile harness under the hood.")
 		case "springboot-paas":
 			row.RealLiveProof = RealLiveStandalone
 			row.ProofRefs.RealLive = []string{

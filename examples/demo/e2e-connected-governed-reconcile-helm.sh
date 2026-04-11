@@ -19,6 +19,9 @@ REPO_URL="${REPO_URL:-https://github.com/confighub/cub-gen}"
 REPO_BRANCH="${REPO_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 FIXTURE_PATH_V1="${FIXTURE_PATH_V1:-./examples/live-reconcile/helm-paas/manifests-v1}"
 FIXTURE_PATH_V2="${FIXTURE_PATH_V2:-./examples/live-reconcile/helm-paas/manifests-v2}"
+SOURCE_NAME="${SOURCE_NAME:-cub-gen-live-helm}"
+KUSTOM_NAME="${KUSTOM_NAME:-cub-gen-live-helm}"
+APP_NAME="${APP_NAME:-cub-gen-live-helm}"
 
 case "$RECONCILER" in
   flux|argo|both) ;;
@@ -94,8 +97,8 @@ if [ "$RECONCILER" = "flux" ] || [ "$RECONCILER" = "both" ]; then
     PATH_V2="$FIXTURE_PATH_V2" \
     TARGET_NS="$TARGET_NS" \
     DEPLOYMENT_NAME="$DEPLOYMENT_NAME" \
-    SOURCE_NAME="cub-gen-live-helm" \
-    KUSTOM_NAME="cub-gen-live-helm" \
+    SOURCE_NAME="$SOURCE_NAME" \
+    KUSTOM_NAME="$KUSTOM_NAME" \
     ./examples/demo/e2e-live-reconcile-flux.sh | tee "$OUT_DIR/flux.log"; then
     flux_ok=true
   fi
@@ -109,7 +112,7 @@ if [ "$RECONCILER" = "argo" ] || [ "$RECONCILER" = "both" ]; then
     PATH_V2="${FIXTURE_PATH_V2#./}" \
     TARGET_NS="$TARGET_NS" \
     DEPLOYMENT_NAME="$DEPLOYMENT_NAME" \
-    APP_NAME="cub-gen-live-helm" \
+    APP_NAME="$APP_NAME" \
     ./examples/demo/e2e-live-reconcile-argo.sh | tee "$OUT_DIR/argo.log"; then
     argo_ok=true
   fi

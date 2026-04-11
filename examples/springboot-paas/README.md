@@ -23,7 +23,7 @@ The app is `inventory-api`, a Spring Boot 3.3.2 service (Java 21) deployed acros
 | Source-side provenance and ownership | Real | `./examples/springboot-paas/demo-local.sh` |
 | Connected governance path | Real | `./examples/springboot-paas/demo-connected.sh` |
 | Standalone live-cluster app proof | Real | `./bin/create-cluster && ./bin/build-image && ./bin/install-worker && ./verify-e2e.sh` |
-| Block/escalate boundary | Real but client-side | `cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml spring.datasource.url` |
+| Governed route proof (`ALLOW` + `BLOCKED`) | Real but client-side | `./examples/springboot-paas/demo-governed-routes.sh` |
 
 The strongest caveat is enforcement depth, not demo truth. The ownership
 boundary is real and documented, but server-side rejection in ConfigHub is not
@@ -118,6 +118,9 @@ example to learn from spring-platform. They complement each other.
 go build -o ./cub-gen ./cmd/cub-gen
 ./examples/springboot-paas/demo-local.sh
 
+# Governed route proof
+./examples/springboot-paas/demo-governed-routes.sh
+
 # Connected ConfigHub path
 cub auth login
 ./examples/springboot-paas/demo-connected.sh
@@ -192,7 +195,19 @@ This is the **block/escalate** path. The field `spring.datasource.*` is platform
 
 ### Enforcement via validate-mutation
 
-Use `cub-gen springboot validate-mutation` to enforce field routes:
+Use `cub-gen springboot validate-mutation` to enforce field routes directly, or
+run the example-owned wrapper first:
+
+```bash
+./examples/springboot-paas/demo-governed-routes.sh
+```
+
+That wrapper proves both sides of the route boundary:
+
+- `feature.inventory.reservationMode` returns `ALLOWED`
+- `spring.datasource.url` returns `BLOCKED`
+
+If you want the raw commands underneath it:
 
 ```bash
 # Allowed: app-owned field

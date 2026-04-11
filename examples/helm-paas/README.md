@@ -11,17 +11,21 @@ The first question it should answer is:
 
 "Which values file or chart layer actually controls the field I am looking at?"
 
-This example is the source-side half of that story. For the runtime proof half,
-pair it with [`live-reconcile`](../live-reconcile/).
+This example now owns three flagship proof paths:
+
+1. source-side provenance,
+2. governed ownership proof for allowed vs blocked edits,
+3. connected + live Helm proof through an example-owned runtime wrapper.
 
 ## What this proves today
 
 | Slice | Status | How to prove it now |
 |-------|--------|---------------------|
 | Source-side Helm provenance | Real | `./examples/helm-paas/demo-local.sh` |
+| Governed ALLOW + BLOCK ownership proof | Real | `./examples/helm-paas/demo-governed-change.sh` |
 | Connected governance path | Real | `./examples/helm-paas/demo-connected.sh` |
-| Runtime WET->LIVE proof | Paired | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
-| Standalone live Helm proof in this example | Not yet | pair `helm-paas` with `live-reconcile` today |
+| Connected + live Helm proof from this example | Real | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` |
+| Runtime WET->LIVE harness beneath the wrapper | Paired | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
 
 Known gaps still open:
 
@@ -33,8 +37,8 @@ Known gaps still open:
 
 | If you are... | First command | Then do this | What you can inspect |
 |---|---|---|---|
-| Existing Helm plus Argo/Flux user | `./examples/helm-paas/demo-local.sh` | `cub auth login && ./examples/helm-paas/demo-connected.sh` | values ownership, rendered targets, then connected evidence |
-| Existing ConfigHub user adding Helm governance | `cub auth login && ./examples/helm-paas/demo-connected.sh` | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | change/bundle/decision output, then Argo+Flux runtime proof |
+| Existing Helm plus Argo/Flux user | `./examples/helm-paas/demo-local.sh` | `cub auth login && RECONCILER=argo ./examples/helm-paas/demo-runtime.sh` | values ownership, rendered targets, connected evidence, and a live Argo deployment |
+| Existing ConfigHub user adding Helm governance | `cub auth login && ./examples/helm-paas/demo-connected.sh` | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` | change/bundle/decision output, then Argo+Flux runtime proof |
 | Existing Argo-first operator starting from a running app | ConfigHub GitOps import + [`cub-scout`](https://github.com/confighub/cub-scout) first | come back to `./examples/helm-paas/demo-local.sh` for source provenance | live app first, source trace second |
 
 That sequence gives you:
@@ -49,8 +53,9 @@ That sequence gives you:
 | Step | Command | Inspectable result |
 |---|---|---|
 | Local source-side proof | `./examples/helm-paas/demo-local.sh` | field origin, inverse-edit guidance, dry inputs, and rendered targets |
+| Local governed ownership proof | `./examples/helm-paas/demo-governed-change.sh` | one app-team change that passes and one platform-contract change that fails the DRY ownership gate |
 | Connected governance proof | `./examples/helm-paas/demo-connected.sh` | change ID, bundle digest, attestation, and backend decision/query output |
-| Runtime proof | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | live Deployment rollout, pods, and drift correction for Flux and Argo |
+| Connected + live proof | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` | live Deployment rollout, pods, services, and reconciler status for Flux and Argo |
 
 ## 1. Who this is for
 
@@ -77,8 +82,9 @@ Argo is not an afterthought in this example. The repo includes both:
 - `gitops/argo/application.yaml`
 - `gitops/flux/helmrelease.yaml`
 
-The current runtime proof is paired through [`live-reconcile`](../live-reconcile/)
-so you can inspect both reconcilers from the same flagship Helm story.
+The current runtime proof is exposed through `./examples/helm-paas/demo-runtime.sh`,
+which uses the shared [`live-reconcile`](../live-reconcile/) harness under the
+hood so you can inspect both reconcilers from the same flagship Helm story.
 
 ## 3. Why ConfigHub + cub-gen helps here
 
@@ -201,12 +207,16 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Local source-side path
 ./examples/helm-paas/demo-local.sh
 
+# Local governed change path
+./examples/helm-paas/demo-governed-change.sh
+
 # Connected ConfigHub path
 cub auth login
 ./examples/helm-paas/demo-connected.sh
 
-# Runtime proof paired through the reconciler harness
-RECONCILER=both ./examples/live-reconcile/demo-local.sh
+# Connected + live proof from the example itself
+RECONCILER=argo ./examples/helm-paas/demo-runtime.sh
+RECONCILER=both ./examples/helm-paas/demo-runtime.sh
 ```
 
 If you want the raw commands underneath the wrappers:
@@ -348,7 +358,7 @@ WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payme
 ## Next steps
 
 - **Runtime proof companion**: [`live-reconcile`](../live-reconcile/) — prove
-  the same governed path survives real Flux/Argo reconciliation
+  the same governed path survives real Flux/Argo reconciliation under the hood
 - **Cluster-side inspection companion**: [`cub-scout`](https://github.com/confighub/cub-scout)
   — inspect the reconciled runtime side after delivery
 - **Spring Boot version**: [`springboot-paas`](../springboot-paas/) — same
@@ -380,6 +390,28 @@ cub auth login
 
 That is the current first-run connected path for this example and the same
 surface used by the connected smoke lane.
+
+If you want the connected path that also deploys and proves the live result:
+
+```bash
+cub auth login
+RECONCILER=argo ./examples/helm-paas/demo-runtime.sh
+RECONCILER=both ./examples/helm-paas/demo-runtime.sh
+```
+
+That example-owned wrapper runs the connected governed lifecycle first, then
+shows live Deployment, Pod, Service, and reconciler status for Argo or Flux.
+
+If you want the local governed edit proof before the connected path, run:
+
+```bash
+./examples/helm-paas/demo-governed-change.sh
+```
+
+That wrapper clones the repo into `.tmp`, proves an app-team `values.yaml`
+change passes the ownership gate, then proves an app-team edit to
+`templates/deployment.yaml` is rejected as a platform-owned runtime contract
+change.
 
 If you specifically need the deeper bridge API path, use:
 
@@ -458,4 +490,8 @@ From repo root:
 # Connected (requires ConfigHub auth)
 cub auth login
 ./examples/helm-paas/demo-connected.sh
+
+# Connected + live proof
+cub auth login
+RECONCILER=both ./examples/helm-paas/demo-runtime.sh
 ```

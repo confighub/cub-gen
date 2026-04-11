@@ -68,9 +68,9 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Source chain: `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v`
 - Connected mode: `./examples/helm-paas/demo-connected.sh`
 - Connected smoke lane: `make ci-connected`, `./examples/demo/run-connected-smoke.sh`
-- Real live: `./examples/demo/e2e-connected-governed-reconcile-helm.sh`, `./examples/live-reconcile/demo-local.sh`
+- Real live: `./examples/helm-paas/demo-runtime.sh`, `./examples/demo/e2e-connected-governed-reconcile-helm.sh`, `./examples/live-reconcile/demo-local.sh`
 - AI-first: --
-- Notes: Real LIVE proof is paired through the live-reconcile harness, not standalone in helm-paas.
+- Notes: Real LIVE proof is exposed through an example-owned helm-paas wrapper, but still uses the shared live-reconcile harness under the hood.
 
 ### `just-apps-no-platform-config`
 

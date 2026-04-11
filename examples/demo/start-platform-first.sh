@@ -10,12 +10,17 @@ echo "[start-platform] step 1: source-side provenance and governance"
 cat <<'EOF'
 
 [start-platform] next steps
-  connected governance:
+  governed ownership proof from the same example:
+    ./examples/helm-paas/demo-governed-change.sh
+
+  connected governance only:
     cub auth login
     ./examples/helm-paas/demo-connected.sh
 
-  runtime proof:
-    RECONCILER=both ./examples/live-reconcile/demo-local.sh
+  connected + live proof in the helm flagship:
+    cub auth login
+    RECONCILER=argo ./examples/helm-paas/demo-runtime.sh
+    RECONCILER=both ./examples/helm-paas/demo-runtime.sh
 
   cluster-side inspection:
     use cub-scout against the reconciled workload after the runtime proof
