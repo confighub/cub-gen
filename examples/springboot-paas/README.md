@@ -24,6 +24,7 @@ The app is `inventory-api`, a Spring Boot 3.3.2 service (Java 21) deployed acros
 | Connected governance path | Real | `./examples/springboot-paas/demo-connected.sh` |
 | Standalone live-cluster app proof | Real | `./bin/create-cluster && ./bin/build-image && ./bin/install-worker && ./verify-e2e.sh` |
 | Governed route proof (`ALLOW` + `BLOCKED`) | Real but client-side | `./examples/springboot-paas/demo-governed-routes.sh` |
+| Direct embedded ConfigHub payload mutation | Real but client-side | `./examples/springboot-paas/demo-embedded-config-mutation.sh` |
 
 The strongest caveat is enforcement depth, not demo truth. The ownership
 boundary is real and documented, but server-side rejection in ConfigHub is not
@@ -121,6 +122,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Governed route proof
 ./examples/springboot-paas/demo-governed-routes.sh
 
+# Direct embedded payload mutation proof
+./examples/springboot-paas/demo-embedded-config-mutation.sh
+
 # Connected ConfigHub path
 cub auth login
 ./examples/springboot-paas/demo-connected.sh
@@ -154,14 +158,20 @@ Before changing anything, see how inputs become outputs:
 
 ## Handle request #1: flip the feature flag
 
-This is the **apply-here** path. The field `feature.inventory.reservationMode` is app-owned — mutate it directly in ConfigHub.
+This is the **apply-here** path. The field `feature.inventory.reservationMode`
+is app-owned, and this example now mutates it directly inside the embedded
+`application.yaml` payload instead of routing through an env-var workaround.
 
 ```bash
-./confighub-setup.sh                  # create dev/stage/prod spaces + units
+# Example-owned direct payload proof
+./examples/springboot-paas/demo-embedded-config-mutation.sh
 
-cub function do --space inventory-api-prod --unit inventory-api \
-  --change-desc "release-day: reservation mode strict → optimistic" \
-  set-env inventory-api "FEATURE_INVENTORY_RESERVATIONMODE=optimistic"
+# Raw command underneath the wrapper
+./cub-gen springboot set-embedded-config \
+  --routes ./operational/field-routes.yaml \
+  --file ./confighub/inventory-api-prod.yaml \
+  --configmap inventory-api-config \
+  feature.inventory.reservationMode optimistic
 ```
 
 Verify it worked:
@@ -207,6 +217,20 @@ That wrapper proves both sides of the route boundary:
 - `feature.inventory.reservationMode` returns `ALLOWED`
 - `spring.datasource.url` returns `BLOCKED`
 
+For the stronger direct payload path, use:
+
+```bash
+./examples/springboot-paas/demo-embedded-config-mutation.sh
+```
+
+That wrapper proves:
+
+- `feature.inventory.reservationMode` is patched directly inside
+  `ConfigMap.data["application.yaml"]`
+- `confighub-compare.sh` shows the prod value diverging as expected
+- `confighub-refresh-preview.sh prod` returns `PRESERVE`
+- `spring.datasource.url` is still blocked when you try the same direct path
+
 If you want the raw commands underneath it:
 
 ```bash
@@ -222,6 +246,19 @@ cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml \
 ```
 
 This command reads `field-routes.yaml` and rejects mutations to fields with `defaultAction: generator-owned` (platform-owned) or `defaultAction: lift-upstream` (requires source change).
+
+Direct embedded payload edits use the companion command:
+
+```bash
+cub-gen springboot set-embedded-config \
+  --routes ./operational/field-routes.yaml \
+  --file ./confighub/inventory-api-prod.yaml \
+  --configmap inventory-api-config \
+  feature.inventory.reservationMode optimistic
+```
+
+It edits `ConfigMap.data["application.yaml"]` in-place, after validating the
+field route when `--routes` is provided.
 
 **What is now enforced:**
 - Field routes are read from `operational/field-routes.yaml`

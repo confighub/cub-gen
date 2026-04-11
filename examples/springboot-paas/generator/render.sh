@@ -211,13 +211,16 @@ Why Mutable:
   re-rendering.
 
 Example mutation:
-  cub function do --space inventory-api-prod --unit inventory-api \
-    set-env inventory-api FEATURE_INVENTORY_RESERVATIONMODE=optimistic
+  cub-gen springboot set-embedded-config \
+    --routes ./operational/field-routes.yaml \
+    --file ./confighub/inventory-api-prod.yaml \
+    --configmap inventory-api-config \
+    feature.inventory.reservationMode optimistic
 
 What happens:
-  1. Change is stored in ConfigHub with audit trail
+  1. The embedded ConfigMap payload is patched directly at the app-owned field
   2. Field survives future generator refreshes (PRESERVE policy)
-  3. Apply delivers the change to targets
+  3. The same route still blocks platform-owned embedded fields
 EOF
       ;;
     spring.cache.*|spring.cache.type)

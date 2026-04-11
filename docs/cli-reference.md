@@ -212,6 +212,28 @@ Typical example path:
   feature.inventory.reservationMode
 ```
 
+### `springboot set-embedded-config`
+
+Set a field directly inside `ConfigMap.data["application.yaml"]` for a Spring
+ConfigHub payload or rendered ConfigMap file.
+
+```bash
+cub-gen springboot set-embedded-config --file <payload.yaml> [--configmap <name>] [--config-key application.yaml] [--routes <field-routes.yaml>] <field-path> <value>
+```
+
+Typical example path:
+
+```bash
+./cub-gen springboot set-embedded-config \
+  --routes ./examples/springboot-paas/operational/field-routes.yaml \
+  --file ./examples/springboot-paas/confighub/inventory-api-prod.yaml \
+  --configmap inventory-api-config \
+  feature.inventory.reservationMode optimistic
+```
+
+Use `--routes` when you want the command to enforce the same app-owned versus
+platform-owned boundary as `validate-mutation` before writing the file.
+
 ### `springboot init`
 
 Bootstrap the Spring example's operational route files for a repo.

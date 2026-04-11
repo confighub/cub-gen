@@ -43,6 +43,7 @@ required_files=(
   "$ROOT_DIR/confighub-verify.sh"
   "$ROOT_DIR/confighub-compare.sh"
   "$ROOT_DIR/confighub-refresh-preview.sh"
+  "$ROOT_DIR/demo-embedded-config-mutation.sh"
   "$ROOT_DIR/generator/render.sh"
   "$ROOT_DIR/verify-e2e.sh"
   "$ROOT_DIR/bin/create-cluster"
