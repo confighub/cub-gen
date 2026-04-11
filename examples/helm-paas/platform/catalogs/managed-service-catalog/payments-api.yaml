@@ -1,0 +1,11 @@
+apiVersion: cubgen.confighub.dev/v1alpha1
+kind: ManagedServiceCatalog
+metadata:
+  name: payments-api
+spec:
+  securityControls:
+    oauth2Proxy:
+      required: true
+  ownership:
+    chart: platform-engineer
+    applicationSet: platform-engineer

@@ -1,0 +1,10 @@
+apiVersion: cubgen.confighub.dev/v1alpha1
+kind: CustomerServiceCatalog
+metadata:
+  name: payments-api-prod
+spec:
+  overlay:
+    valuesFile: values-prod.yaml
+  securityOverrides:
+    oauth2Proxy:
+      enabled: true

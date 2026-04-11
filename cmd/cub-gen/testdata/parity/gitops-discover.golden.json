@@ -6,6 +6,11 @@
       "id": "gen_635643e45fbf3410",
       "inputs": [
         "Chart.yaml",
+        "gitops/argo/applicationset.yaml",
+        "platform/catalogs/customer-service-catalog/payments-api-prod.yaml",
+        "platform/catalogs/managed-service-catalog/payments-api.yaml",
+        "platform/clusters/prod-eu.yaml",
+        "platform/clusters/stage-eu.yaml",
         "values-prod.yaml",
         "values.yaml"
       ],
@@ -26,6 +31,11 @@
       "generator_profile": "helm-paas",
       "inputs": [
         "Chart.yaml",
+        "gitops/argo/applicationset.yaml",
+        "platform/catalogs/customer-service-catalog/payments-api-prod.yaml",
+        "platform/catalogs/managed-service-catalog/payments-api.yaml",
+        "platform/clusters/prod-eu.yaml",
+        "platform/clusters/stage-eu.yaml",
         "values-prod.yaml",
         "values.yaml"
       ],

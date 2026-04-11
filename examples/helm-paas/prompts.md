@@ -23,6 +23,7 @@ Start in read-only mode.
    - main DRY inputs
    - one rendered target
    - one inverse edit hint with owner and confidence
+   - whether `values-prod.yaml` or `values.yaml` is the winning source for the rendered image tag
 4. Tell me exactly what the command read and what it did not mutate.
 
 Do not run connected or live commands yet.
@@ -45,6 +46,26 @@ Run the local governed ownership proof for ./examples/helm-paas.
    - allow-explain.json
    - allow-report.json
    - block-report.json
+
+Do not run ConfigHub or live cluster steps in this prompt.
+```
+
+## Layered Kubara-like proof prompt
+
+```text
+Run the layered Helm proof for ./examples/helm-paas.
+
+1. Use:
+   ./examples/helm-paas/demo-layered-trace.sh
+2. Capture the artifact directory from the script output.
+3. Summarize:
+   - the cluster selector that cub-gen attributed
+   - which cluster inventory matched it
+   - which values overlay was selected
+   - why the customer security weakening was classified as blocked
+4. Show me the most important evidence from:
+   - import-allow.json
+   - import-block.json
 
 Do not run ConfigHub or live cluster steps in this prompt.
 ```

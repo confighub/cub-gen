@@ -11,6 +11,7 @@ import (
 type InputRoleRule struct {
 	Role           string
 	ExactBasenames []string
+	PathPrefixes   []string
 	Prefixes       []string
 	Extensions     []string
 }
@@ -90,7 +91,8 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"image_tag": "Container image tag maps cleanly to helm values.",
 		},
 		InverseEditHints: map[string]string{
-			"image_tag": "Edit chart values file and keep chart template unchanged.",
+			"image_tag_base":    "Edit values.image.tag in {{base_values_path}}.",
+			"image_tag_overlay": "Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults.",
 		},
 		InversePatchTemplates: map[string]InversePatchTemplate{
 			"image_tag": {EditableBy: "app-team", Confidence: 0.86, RequiresReview: false},
@@ -99,21 +101,30 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"image_tag": {Owner: "app-team", Confidence: 0.86},
 		},
 		FieldOriginConfidences: map[string]float64{
-			"image_tag": 0.86,
+			"image_tag_base":    0.86,
+			"image_tag_overlay": 0.90,
 		},
 		RenderedLineageTemplates: []RenderedLineageTemplate{
 			{Kind: "HelmRelease", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "chart_path", SourceDryPathTemplate: "Chart.yaml"},
 			{Kind: "Deployment", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "values_paths", SourcePathHintFallback: "chart_path", SourcePathHintMulti: true, SourceDryPathTemplate: "values.image.tag"},
 			{Kind: "Service", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "values_paths", SourcePathHintFallback: "chart_path", SourcePathHintMulti: true, SourceDryPathTemplate: "values.service.port"},
 		},
-		FieldOriginTransform: "helm-template",
+		FieldOriginTransform:        "helm-template",
+		FieldOriginOverlayTransform: "helm-values-overlay",
 		InputRoleRules: []InputRoleRule{
 			{Role: "chart", ExactBasenames: []string{"chart.yaml"}},
+			{Role: "application-set", ExactBasenames: []string{"applicationset.yaml", "applicationset.yml"}},
+			{Role: "cluster-inventory", PathPrefixes: []string{"platform/clusters/"}, Extensions: []string{".yaml", ".yml", ".json"}},
+			{Role: "managed-service-catalog", PathPrefixes: []string{"platform/catalogs/managed-service-catalog/"}, Extensions: []string{".yaml", ".yml", ".json"}},
+			{Role: "customer-service-catalog", PathPrefixes: []string{"platform/catalogs/customer-service-catalog/"}, Extensions: []string{".yaml", ".yml", ".json"}},
 			{Role: "values", Prefixes: []string{"values"}, Extensions: []string{".yaml", ".yml"}},
 		},
 		DefaultInputRole: "helm-input",
-		RoleOwners:       map[string]string{"values": "app-team"},
-		DefaultOwner:     "platform-engineer",
+		RoleOwners: map[string]string{
+			"values":                   "app-team",
+			"customer-service-catalog": "app-team",
+		},
+		DefaultOwner: "platform-engineer",
 		WetTargets: []WetTargetTemplate{
 			{Kind: "HelmRelease", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps"},
 			{Kind: "Deployment", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "values.image.tag"},
@@ -722,10 +733,11 @@ func InputRole(kind model.GeneratorKind, inputPath string) string {
 	if !ok {
 		return "input"
 	}
+	path := filepath.ToSlash(strings.ToLower(strings.TrimSpace(inputPath)))
 	base := strings.ToLower(filepath.Base(inputPath))
 	ext := strings.ToLower(filepath.Ext(base))
 	for _, rule := range spec.InputRoleRules {
-		if matchesInputRule(rule, base, ext) {
+		if matchesInputRule(rule, path, base, ext) {
 			return rule.Role
 		}
 	}
@@ -791,7 +803,22 @@ func RenderedLineageTemplates(kind model.GeneratorKind) []RenderedLineageTemplat
 	return copyRenderedLineageTemplates(spec.RenderedLineageTemplates)
 }
 
-func matchesInputRule(rule InputRoleRule, base, ext string) bool {
+func matchesInputRule(rule InputRoleRule, path, base, ext string) bool {
+	for _, prefix := range rule.PathPrefixes {
+		normalized := filepath.ToSlash(strings.ToLower(strings.TrimSpace(prefix)))
+		if normalized == "" || !strings.HasPrefix(path, normalized) {
+			continue
+		}
+		if len(rule.Extensions) == 0 {
+			return true
+		}
+		for _, allowed := range rule.Extensions {
+			if ext == strings.ToLower(allowed) {
+				return true
+			}
+		}
+	}
+
 	for _, exact := range rule.ExactBasenames {
 		if base == strings.ToLower(exact) {
 			return true
@@ -820,6 +847,7 @@ func copyInputRoleRules(in []InputRoleRule) []InputRoleRule {
 		out = append(out, InputRoleRule{
 			Role:           rule.Role,
 			ExactBasenames: append([]string(nil), rule.ExactBasenames...),
+			PathPrefixes:   append([]string(nil), rule.PathPrefixes...),
 			Prefixes:       append([]string(nil), rule.Prefixes...),
 			Extensions:     append([]string(nil), rule.Extensions...),
 		})

@@ -409,8 +409,10 @@
         "default_input_role": "helm-input",
         "default_owner": "platform-engineer",
         "field_origin_confidences": {
-          "image_tag": 0.86
+          "image_tag_base": 0.86,
+          "image_tag_overlay": 0.9
         },
+        "field_origin_overlay_transform": "helm-values-overlay",
         "field_origin_transform": "helm-template",
         "hint_defaults": {
           "chart_path": "Chart.yaml",
@@ -426,6 +428,37 @@
             "role": "chart"
           },
           {
+            "exact_basenames": [
+              "applicationset.yaml",
+              "applicationset.yml"
+            ],
+            "role": "application-set"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml",
+              ".json"
+            ],
+            "role": "cluster-inventory"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml",
+              ".json"
+            ],
+            "role": "managed-service-catalog"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml",
+              ".json"
+            ],
+            "role": "customer-service-catalog"
+          },
+          {
             "extensions": [
               ".yaml",
               ".yml"
@@ -437,7 +470,8 @@
           }
         ],
         "inverse_edit_hints": {
-          "image_tag": "Edit chart values file and keep chart template unchanged."
+          "image_tag_base": "Edit values.image.tag in {{base_values_path}}.",
+          "image_tag_overlay": "Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults."
         },
         "inverse_patch_reasons": {
           "image_tag": "Container image tag maps cleanly to helm values."
@@ -483,6 +517,7 @@
           }
         ],
         "role_owners": {
+          "customer-service-catalog": "app-team",
           "values": "app-team"
         },
         "wet_targets": [

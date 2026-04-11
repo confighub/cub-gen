@@ -16,6 +16,7 @@ import (
 	"github.com/confighub/cub-gen/internal/detect"
 	"github.com/confighub/cub-gen/internal/model"
 	"github.com/confighub/cub-gen/internal/registry"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -148,7 +149,7 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 	outputURI := fmt.Sprintf("oci://example.local/%s/%s:latest", space, sanitizeName(g.Name))
 	outputDigest := digestFor(strings.Join([]string{changeID, g.ID, outputURI}, "|"))
 	inputDigest := digestFor(strings.Join(g.Inputs, "|"))
-	helmPaths := helmProvenancePathsForGenerator(g)
+	helmPaths := helmProvenancePathsForGenerator(detection.Repo, g)
 
 	return model.ProvenanceRecord{
 		SchemaVersion:    provenanceSchema,
@@ -170,6 +171,7 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 		RenderedLineage:     renderedLineageForGenerator(detection, g),
 		FieldOriginMap:      fieldOriginsForGenerator(detection, g),
 		InverseEditPointers: inversePointersForGenerator(detection, g),
+		HelmLayeredAnalysis: helmLayeredAnalysisForGenerator(detection, g),
 		OpsWorkflow:         opsWorkflowAnalysisForGenerator(detection, g),
 		SwampWorkflow:       swampWorkflowAnalysisForGenerator(detection, g),
 		RenderedAt:          renderedAt,
@@ -519,16 +521,27 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 func fieldOriginsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.FieldOrigin {
 	switch g.Kind {
 	case model.GeneratorHelm:
-		hints := helmProvenancePathsForGenerator(g)
-		return []model.FieldOrigin{
-			{
+		hints := helmProvenancePathsForGenerator(detection.Repo, g)
+		imageTagPaths := helmImageTagSourcePaths(detection.Repo, hints)
+		origins := make([]model.FieldOrigin, 0, len(imageTagPaths))
+		for idx, sourcePath := range imageTagPaths {
+			transform := registry.FieldOriginTransform(g.Kind)
+			confidenceKey := "image_tag_base"
+			confidenceFallback := 0.86
+			if idx > 0 || sourcePath != hints.PrimaryValuesPath {
+				transform = registry.FieldOriginOverlayTransform(g.Kind)
+				confidenceKey = "image_tag_overlay"
+				confidenceFallback = 0.90
+			}
+			origins = append(origins, model.FieldOrigin{
 				DryPath:    "values.image.tag",
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
-				SourcePath: hints.PrimaryValuesPath,
-				Transform:  registry.FieldOriginTransform(g.Kind),
-				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image_tag", 0.86),
-			},
+				SourcePath: sourcePath,
+				Transform:  transform,
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, confidenceKey, confidenceFallback),
+			})
 		}
+		return origins
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		return []model.FieldOrigin{
@@ -813,15 +826,33 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 func inversePointersForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.InverseEditPointer {
 	switch g.Kind {
 	case model.GeneratorHelm:
+		hints := helmProvenancePathsForGenerator(detection.Repo, g)
+		imageTagPaths := helmImageTagSourcePaths(detection.Repo, hints)
 		policy := registry.InversePointerTemplateFor(g.Kind, "image_tag", registry.InversePointerTemplate{
 			Owner: "app-team", Confidence: 0.86,
 		})
+		preferredImageTagPath := hints.PrimaryValuesPath
+		if hints.OverlayValuesPath != "" {
+			preferredImageTagPath = hints.OverlayValuesPath
+		} else if len(imageTagPaths) > 0 {
+			preferredImageTagPath = imageTagPaths[0]
+		}
+		vars := map[string]string{
+			"base_values_path":    hints.PrimaryValuesPath,
+			"overlay_values_path": preferredImageTagPath,
+		}
+		hintKey := "image_tag_base"
+		hintFallback := "Edit values.image.tag in {{base_values_path}}."
+		if preferredImageTagPath != "" && preferredImageTagPath != hints.PrimaryValuesPath {
+			hintKey = "image_tag_overlay"
+			hintFallback = "Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults."
+		}
 		return []model.InverseEditPointer{
 			{
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
 				DryPath:    "values.image.tag",
 				Owner:      policy.Owner,
-				EditHint:   registry.InverseEditHint(g.Kind, "image_tag", "Edit chart values file and keep chart template unchanged."),
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, hintKey, hintFallback), vars),
 				Confidence: policy.Confidence,
 			},
 		}
@@ -1310,9 +1341,10 @@ type helmProvenancePaths struct {
 	ChartPath         string
 	ValuesPaths       []string
 	PrimaryValuesPath string
+	OverlayValuesPath string
 }
 
-func helmProvenancePathsForGenerator(g model.GeneratorDetection) helmProvenancePaths {
+func helmProvenancePathsForGenerator(repoPath string, g model.GeneratorDetection) helmProvenancePaths {
 	if g.Kind != model.GeneratorHelm {
 		return helmProvenancePaths{}
 	}
@@ -1332,20 +1364,32 @@ func helmProvenancePathsForGenerator(g model.GeneratorDetection) helmProvenanceP
 
 	chartPath := firstInputPathForRole(g.Kind, g.Inputs, chartRole)
 	valuesPaths := inputPathsForRole(g.Kind, g.Inputs, valuesRole)
-	if len(valuesPaths) == 0 && chartPath != "" {
-		valuesPaths = []string{chartPath}
-	}
 
-	primaryValuesPath := primaryValuesBase
-	if selected := selectPreferredPathByBase(valuesPaths, primaryValuesBase); selected != "" {
-		primaryValuesPath = selected
-	}
+	primaryValuesPath := selectPrimaryHelmValuesPath(valuesPaths, primaryValuesBase)
+	imageTagPaths := helmImageTagSourcePaths(repoPath, helmProvenancePaths{
+		ChartPath:         chartPath,
+		ValuesPaths:       valuesPaths,
+		PrimaryValuesPath: primaryValuesPath,
+	})
+	overlayValuesPath := firstDistinctPath(imageTagPaths, primaryValuesPath)
 
 	return helmProvenancePaths{
 		ChartPath:         chartPath,
 		ValuesPaths:       valuesPaths,
 		PrimaryValuesPath: primaryValuesPath,
+		OverlayValuesPath: overlayValuesPath,
 	}
+}
+
+func selectPrimaryHelmValuesPath(valuesPaths []string, primaryValuesBase string) string {
+	primaryValuesPath := primaryValuesBase
+	if selected := selectPreferredPathByBase(valuesPaths, primaryValuesBase); selected != "" {
+		return selected
+	}
+	if len(valuesPaths) > 0 {
+		return valuesPaths[0]
+	}
+	return primaryValuesPath
 }
 
 func firstInputPathForRole(kind model.GeneratorKind, inputs []string, role string) string {
@@ -1355,6 +1399,83 @@ func firstInputPathForRole(kind model.GeneratorKind, inputs []string, role strin
 		}
 	}
 	return ""
+}
+
+func helmImageTagSourcePaths(repoPath string, hints helmProvenancePaths) []string {
+	imageTagPaths := make([]string, 0, len(hints.ValuesPaths))
+	for _, path := range hints.ValuesPaths {
+		if helmValuesPathDefinesImageTag(repoPath, path) {
+			imageTagPaths = append(imageTagPaths, path)
+		}
+	}
+	if len(imageTagPaths) == 0 {
+		if strings.TrimSpace(hints.PrimaryValuesPath) == "" {
+			return nil
+		}
+		return []string{hints.PrimaryValuesPath}
+	}
+
+	ordered := make([]string, 0, len(imageTagPaths))
+	if stringSliceContains(imageTagPaths, hints.PrimaryValuesPath) {
+		ordered = append(ordered, hints.PrimaryValuesPath)
+	}
+	for _, path := range imageTagPaths {
+		if path == hints.PrimaryValuesPath {
+			continue
+		}
+		ordered = append(ordered, path)
+	}
+	return ordered
+}
+
+func stringSliceContains(items []string, want string) bool {
+	for _, item := range items {
+		if item == want {
+			return true
+		}
+	}
+	return false
+}
+
+func helmValuesPathDefinesImageTag(repoPath, relPath string) bool {
+	if strings.TrimSpace(repoPath) == "" || strings.TrimSpace(relPath) == "" {
+		return false
+	}
+	content, err := os.ReadFile(filepath.Join(repoPath, relPath))
+	if err != nil {
+		return false
+	}
+
+	var doc yaml.Node
+	if err := yaml.Unmarshal(content, &doc); err != nil {
+		return false
+	}
+	return yamlPathExists(&doc, []string{"image", "tag"})
+}
+
+func yamlPathExists(node *yaml.Node, path []string) bool {
+	if node == nil {
+		return false
+	}
+	if node.Kind == yaml.DocumentNode && len(node.Content) > 0 {
+		return yamlPathExists(node.Content[0], path)
+	}
+	if len(path) == 0 {
+		return true
+	}
+	if node.Kind != yaml.MappingNode {
+		if node.Kind == yaml.AliasNode {
+			return yamlPathExists(node.Alias, path)
+		}
+		return false
+	}
+	for i := 0; i+1 < len(node.Content); i += 2 {
+		if node.Content[i].Value != path[0] {
+			continue
+		}
+		return yamlPathExists(node.Content[i+1], path[1:])
+	}
+	return false
 }
 
 func inputPathsForRole(kind model.GeneratorKind, inputs []string, role string) []string {
@@ -1375,6 +1496,342 @@ func selectPreferredPathByBase(paths []string, preferredBase string) string {
 		}
 	}
 	return ""
+}
+
+func firstDistinctPath(paths []string, primary string) string {
+	for _, p := range paths {
+		if p != primary {
+			return p
+		}
+	}
+	return ""
+}
+
+type helmApplicationSetDoc struct {
+	Path       string
+	Selector   map[string]string
+	ValueFiles []string
+}
+
+type helmClusterInventoryDoc struct {
+	Path   string
+	Name   string
+	Labels map[string]string
+}
+
+type helmManagedCatalogDoc struct {
+	Path             string
+	RequiredSecurity string
+}
+
+type helmCustomerCatalogDoc struct {
+	Path             string
+	ValuesFile       string
+	OverrideSecurity string
+	Enabled          *bool
+}
+
+func helmLayeredAnalysisForGenerator(detection model.DetectionResult, g model.GeneratorDetection) *model.HelmLayeredAnalysis {
+	if g.Kind != model.GeneratorHelm {
+		return nil
+	}
+
+	appsetPath := firstInputPathForRole(g.Kind, g.Inputs, "application-set")
+	clusterPaths := inputPathsForRole(g.Kind, g.Inputs, "cluster-inventory")
+	managedCatalogPaths := inputPathsForRole(g.Kind, g.Inputs, "managed-service-catalog")
+	customerCatalogPaths := inputPathsForRole(g.Kind, g.Inputs, "customer-service-catalog")
+
+	if appsetPath == "" && len(clusterPaths) == 0 && len(managedCatalogPaths) == 0 && len(customerCatalogPaths) == 0 {
+		return nil
+	}
+
+	helmPaths := helmProvenancePathsForGenerator(detection.Repo, g)
+	analysis := &model.HelmLayeredAnalysis{
+		ApplicationSetPath:    appsetPath,
+		ClusterInventoryPaths: append([]string(nil), clusterPaths...),
+		ManagedCatalogPaths:   append([]string(nil), managedCatalogPaths...),
+		CustomerCatalogPaths:  append([]string(nil), customerCatalogPaths...),
+		SelectedValueFiles:    append([]string(nil), helmPaths.ValuesPaths...),
+	}
+
+	if appsetPath != "" {
+		appsetDoc, err := parseHelmApplicationSetFile(detection.Repo, appsetPath)
+		if err == nil {
+			analysis.ClusterSelector = selectorString(appsetDoc.Selector)
+			if len(appsetDoc.ValueFiles) > 0 {
+				analysis.SelectedValueFiles = append([]string(nil), appsetDoc.ValueFiles...)
+			}
+			switch {
+			case len(appsetDoc.Selector) == 0:
+				analysis.GenerationDecisionState = "unresolved"
+				analysis.GenerationDecisionReason = "ApplicationSet input is present, but cub-gen could not find a cluster matchLabels selector to attribute yet."
+			case len(clusterPaths) == 0:
+				analysis.GenerationDecisionState = "unresolved"
+				analysis.GenerationDecisionReason = "ApplicationSet selector is present, but no cluster inventory inputs were observed to prove which clusters match it."
+			default:
+				matched := matchedHelmClusterInventories(detection.Repo, clusterPaths, appsetDoc.Selector)
+				if len(matched) == 0 {
+					analysis.GenerationDecisionState = "unresolved"
+					analysis.GenerationDecisionReason = fmt.Sprintf("ApplicationSet selector %s is present, but none of the observed cluster inventory inputs match it.", selectorString(appsetDoc.Selector))
+				} else {
+					analysis.MatchedClusters = matched
+					analysis.GenerationDecisionState = "attributed"
+					analysis.GenerationDecisionReason = fmt.Sprintf("ApplicationSet selector %s matches cluster inventory %s and selects value files %s.", selectorString(appsetDoc.Selector), strings.Join(matched, ", "), strings.Join(analysis.SelectedValueFiles, ", "))
+				}
+			}
+		} else {
+			analysis.GenerationDecisionState = "unresolved"
+			analysis.GenerationDecisionReason = fmt.Sprintf("ApplicationSet input %s was observed, but cub-gen could not parse it deterministically yet.", appsetPath)
+		}
+	}
+
+	managedDocs := parseHelmManagedCatalogs(detection.Repo, managedCatalogPaths)
+	customerDocs := parseHelmCustomerCatalogs(detection.Repo, customerCatalogPaths)
+	requiredControl, requiredPath := firstRequiredHelmSecurityControl(managedDocs)
+	selectedOverlay := helmPaths.OverlayValuesPath
+	customerOverride := matchingCustomerCatalog(customerDocs, selectedOverlay)
+	if requiredControl != "" {
+		analysis.SecurityControl = requiredControl
+		analysis.SecurityControlPath = requiredPath
+		if customerOverride.Path != "" {
+			analysis.SecurityOverridePath = customerOverride.Path
+		}
+		switch {
+		case customerOverride.Enabled != nil && !*customerOverride.Enabled:
+			analysis.SecurityDecisionState = "blocked"
+			analysis.SecurityDecisionReason = fmt.Sprintf("Customer service catalog %s weakens the platform-required %s control from %s.", customerOverride.Path, requiredControl, requiredPath)
+		case customerOverride.Enabled != nil:
+			analysis.SecurityDecisionState = "allow"
+			analysis.SecurityDecisionReason = fmt.Sprintf("Customer service catalog %s keeps the platform-required %s control enabled.", customerOverride.Path, requiredControl)
+		default:
+			analysis.SecurityDecisionState = "allow"
+			analysis.SecurityDecisionReason = fmt.Sprintf("No customer override weakens the platform-required %s control from %s.", requiredControl, requiredPath)
+		}
+	} else if len(managedCatalogPaths) > 0 || len(customerCatalogPaths) > 0 {
+		analysis.SecurityDecisionState = "unresolved"
+		analysis.SecurityDecisionReason = "Layered service catalog inputs were observed, but cub-gen could not classify a supported security control from them yet."
+	}
+
+	return analysis
+}
+
+func parseHelmApplicationSetFile(repo, path string) (helmApplicationSetDoc, error) {
+	type applicationSet struct {
+		Spec struct {
+			Generators []struct {
+				Clusters struct {
+					Selector struct {
+						MatchLabels map[string]string `yaml:"matchLabels"`
+					} `yaml:"selector"`
+				} `yaml:"clusters"`
+			} `yaml:"generators"`
+			Template struct {
+				Spec struct {
+					Source struct {
+						Helm struct {
+							ValueFiles []string `yaml:"valueFiles"`
+						} `yaml:"helm"`
+					} `yaml:"source"`
+				} `yaml:"spec"`
+			} `yaml:"template"`
+		} `yaml:"spec"`
+	}
+
+	content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+	if err != nil {
+		return helmApplicationSetDoc{}, err
+	}
+
+	var doc applicationSet
+	if err := yaml.Unmarshal(content, &doc); err != nil {
+		return helmApplicationSetDoc{}, err
+	}
+
+	out := helmApplicationSetDoc{Path: filepath.ToSlash(path)}
+	for _, generator := range doc.Spec.Generators {
+		if len(generator.Clusters.Selector.MatchLabels) == 0 {
+			continue
+		}
+		out.Selector = map[string]string{}
+		for k, v := range generator.Clusters.Selector.MatchLabels {
+			out.Selector[k] = v
+		}
+		break
+	}
+	out.ValueFiles = uniqueStringsInOrder(doc.Spec.Template.Spec.Source.Helm.ValueFiles)
+	return out, nil
+}
+
+func matchedHelmClusterInventories(repo string, paths []string, selector map[string]string) []string {
+	matched := make([]string, 0, len(paths))
+	for _, path := range paths {
+		doc, err := parseHelmClusterInventoryFile(repo, path)
+		if err != nil || doc.Name == "" {
+			continue
+		}
+		if clusterLabelsMatch(doc.Labels, selector) {
+			matched = append(matched, doc.Name)
+		}
+	}
+	return uniqueSortedStrings(matched)
+}
+
+func parseHelmClusterInventoryFile(repo, path string) (helmClusterInventoryDoc, error) {
+	type clusterInventory struct {
+		Metadata struct {
+			Name   string            `yaml:"name"`
+			Labels map[string]string `yaml:"labels"`
+		} `yaml:"metadata"`
+	}
+
+	content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+	if err != nil {
+		return helmClusterInventoryDoc{}, err
+	}
+
+	var doc clusterInventory
+	if err := yaml.Unmarshal(content, &doc); err != nil {
+		return helmClusterInventoryDoc{}, err
+	}
+	return helmClusterInventoryDoc{
+		Path:   filepath.ToSlash(path),
+		Name:   strings.TrimSpace(doc.Metadata.Name),
+		Labels: doc.Metadata.Labels,
+	}, nil
+}
+
+func parseHelmManagedCatalogs(repo string, paths []string) []helmManagedCatalogDoc {
+	type managedCatalog struct {
+		Spec struct {
+			SecurityControls struct {
+				OAuth2Proxy struct {
+					Required bool `yaml:"required"`
+				} `yaml:"oauth2Proxy"`
+			} `yaml:"securityControls"`
+		} `yaml:"spec"`
+	}
+
+	out := make([]helmManagedCatalogDoc, 0, len(paths))
+	for _, path := range paths {
+		content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+		if err != nil {
+			continue
+		}
+		var doc managedCatalog
+		if err := yaml.Unmarshal(content, &doc); err != nil {
+			continue
+		}
+		entry := helmManagedCatalogDoc{Path: filepath.ToSlash(path)}
+		if doc.Spec.SecurityControls.OAuth2Proxy.Required {
+			entry.RequiredSecurity = "oauth2Proxy"
+		}
+		out = append(out, entry)
+	}
+	return out
+}
+
+func parseHelmCustomerCatalogs(repo string, paths []string) []helmCustomerCatalogDoc {
+	type customerCatalog struct {
+		Spec struct {
+			Overlay struct {
+				ValuesFile string `yaml:"valuesFile"`
+			} `yaml:"overlay"`
+			SecurityOverrides struct {
+				OAuth2Proxy struct {
+					Enabled *bool `yaml:"enabled"`
+				} `yaml:"oauth2Proxy"`
+			} `yaml:"securityOverrides"`
+		} `yaml:"spec"`
+	}
+
+	out := make([]helmCustomerCatalogDoc, 0, len(paths))
+	for _, path := range paths {
+		content, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(path)))
+		if err != nil {
+			continue
+		}
+		var doc customerCatalog
+		if err := yaml.Unmarshal(content, &doc); err != nil {
+			continue
+		}
+		entry := helmCustomerCatalogDoc{
+			Path:       filepath.ToSlash(path),
+			ValuesFile: strings.TrimSpace(doc.Spec.Overlay.ValuesFile),
+			Enabled:    doc.Spec.SecurityOverrides.OAuth2Proxy.Enabled,
+		}
+		if doc.Spec.SecurityOverrides.OAuth2Proxy.Enabled != nil {
+			entry.OverrideSecurity = "oauth2Proxy"
+		}
+		out = append(out, entry)
+	}
+	return out
+}
+
+func firstRequiredHelmSecurityControl(docs []helmManagedCatalogDoc) (string, string) {
+	for _, doc := range docs {
+		if strings.TrimSpace(doc.RequiredSecurity) == "" {
+			continue
+		}
+		return doc.RequiredSecurity, doc.Path
+	}
+	return "", ""
+}
+
+func matchingCustomerCatalog(docs []helmCustomerCatalogDoc, selectedOverlay string) helmCustomerCatalogDoc {
+	for _, doc := range docs {
+		if selectedOverlay != "" && doc.ValuesFile == selectedOverlay {
+			return doc
+		}
+	}
+	if len(docs) > 0 {
+		return docs[0]
+	}
+	return helmCustomerCatalogDoc{}
+}
+
+func clusterLabelsMatch(labels, selector map[string]string) bool {
+	if len(selector) == 0 {
+		return false
+	}
+	for key, expected := range selector {
+		if labels[key] != expected {
+			return false
+		}
+	}
+	return true
+}
+
+func selectorString(selector map[string]string) string {
+	if len(selector) == 0 {
+		return ""
+	}
+	keys := make([]string, 0, len(selector))
+	for key := range selector {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, key := range keys {
+		parts = append(parts, key+"="+selector[key])
+	}
+	return strings.Join(parts, ", ")
+}
+
+func uniqueStringsInOrder(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		out = append(out, value)
+	}
+	return out
 }
 
 func renderedLineageForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.RenderedObjectLineage {
@@ -1454,7 +1911,7 @@ func lineageTemplateContext(detection model.DetectionResult, g model.GeneratorDe
 
 	switch g.Kind {
 	case model.GeneratorHelm:
-		helmPaths := helmProvenancePathsForGenerator(g)
+		helmPaths := helmProvenancePathsForGenerator(detection.Repo, g)
 		singleHints["chart_path"] = helmPaths.ChartPath
 		singleHints["primary_values_path"] = helmPaths.PrimaryValuesPath
 		multiHints["values_paths"] = helmPaths.ValuesPaths

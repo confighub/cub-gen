@@ -21,6 +21,7 @@ inspect_with:
   - jq '.discovered[0].generator_profile'
   - jq '.dry_inputs | length'
   - jq '.wet_manifest_targets | length'
+  - jq '.provenance[0].field_origin_map'
   - jq '.provenance[0].inverse_edit_pointers[0]'
 ```
 
@@ -48,6 +49,29 @@ inspect_with:
   - jq '.explanation.owner, .explanation.dry_path' allow-explain.json
   - jq '{status, changed_files, failures}' allow-report.json
   - jq '{status, changed_files, failures}' block-report.json
+```
+
+## Layered Kubara-like proof
+
+```yaml
+id: helm_layered_trace
+command: ./examples/helm-paas/demo-layered-trace.sh
+mutates:
+  repo: scratch_clone_only
+  backend: false
+  live: false
+expects:
+  stdout_contains:
+    - "[helm-layered] success"
+  files_exist:
+    - ".tmp/helm-paas-layered-trace/<run>/import-allow.json"
+    - ".tmp/helm-paas-layered-trace/<run>/import-block.json"
+  evidence:
+    generation_path: "cluster labels -> ApplicationSet selector -> values overlay is attributed"
+    security_block: "customer service catalog weakening is classified as blocked"
+inspect_with:
+  - jq '.provenance[0].helm_layered_analysis' import-allow.json
+  - jq '.provenance[0].helm_layered_analysis' import-block.json
 ```
 
 ## Connected smoke preflight

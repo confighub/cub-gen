@@ -20,11 +20,7 @@
           "examples/README.md#ai--automation-patterns"
         ]
       },
-      "tracking_issues": [
-        "#173",
-        "#181",
-        "#183"
-      ]
+      "tracking_issues": []
     },
     {
       "example": "backstage-idp",
@@ -47,11 +43,7 @@
           "./examples/backstage-idp/demo-connected.sh"
         ]
       },
-      "tracking_issues": [
-        "#173",
-        "#181",
-        "#183"
-      ]
+      "tracking_issues": []
     },
     {
       "example": "c3agent",
@@ -78,9 +70,6 @@
         ]
       },
       "tracking_issues": [
-        "#173",
-        "#181",
-        "#183",
         "#216"
       ]
     },
@@ -103,11 +92,7 @@
           "examples/demo/README.md#ai-work-platform-track"
         ]
       },
-      "tracking_issues": [
-        "#173",
-        "#181",
-        "#183"
-      ]
+      "tracking_issues": []
     },
     {
       "example": "helm-paas",
@@ -150,10 +135,11 @@
         ]
       },
       "tracking_issues": [
-        "#173",
-        "#177",
-        "#183",
-        "#187"
+        "#238",
+        "#239",
+        "#240",
+        "#241",
+        "#242"
       ],
       "notes": [
         "Real LIVE proof is exposed through an example-owned helm-paas wrapper, but still uses the shared live-reconcile harness under the hood."
@@ -180,11 +166,7 @@
           "./examples/just-apps-no-platform-config/demo-connected.sh"
         ]
       },
-      "tracking_issues": [
-        "#173",
-        "#181",
-        "#183"
-      ]
+      "tracking_issues": []
     },
     {
       "example": "live-reconcile",
@@ -210,11 +192,7 @@
           "./examples/demo/e2e-connected-governed-reconcile-helm.sh"
         ]
       },
-      "tracking_issues": [
-        "#173",
-        "#181",
-        "#183"
-      ],
+      "tracking_issues": [],
       "notes": [
         "Runtime harness for WET-\u003eLIVE proof; source-side generator proof lives in paired examples."
       ]
@@ -243,11 +221,7 @@
           "examples/demo/README.md#ai-work-platform-track"
         ]
       },
-      "tracking_issues": [
-        "#173",
-        "#180",
-        "#183"
-      ]
+      "tracking_issues": []
     },
     {
       "example": "scoredev-paas",
@@ -285,10 +259,7 @@
           "./examples/scoredev-paas/contracts.md"
         ]
       },
-      "tracking_issues": [
-        "#173",
-        "#183"
-      ],
+      "tracking_issues": [],
       "notes": [
         "Standalone real-cluster proof: merged score.yaml + score-prod.yaml rendered into a live checkout-api deployment on kind."
       ]
@@ -335,11 +306,7 @@
           "./examples/springboot-paas/contracts.md"
         ]
       },
-      "tracking_issues": [
-        "#173",
-        "#179",
-        "#183"
-      ],
+      "tracking_issues": [],
       "notes": [
         "Standalone real-cluster proof: Kind cluster + ConfigHub worker + inventory-api HTTP verification."
       ]
@@ -370,11 +337,7 @@
           "./examples/swamp-automation/contracts.md"
         ]
       },
-      "tracking_issues": [
-        "#173",
-        "#180",
-        "#183"
-      ]
+      "tracking_issues": []
     },
     {
       "example": "swamp-project",
@@ -395,11 +358,7 @@
           "examples/README.md#ai--automation-patterns"
         ]
       },
-      "tracking_issues": [
-        "#173",
-        "#180",
-        "#183"
-      ]
+      "tracking_issues": []
     }
   ],
   "summary": {

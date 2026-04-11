@@ -11,11 +11,12 @@ The first question it should answer is:
 
 "Which values file or chart layer actually controls the field I am looking at?"
 
-This example now owns three flagship proof paths:
+This example now owns four flagship proof paths:
 
 1. source-side provenance,
 2. governed ownership proof for allowed vs blocked edits,
-3. connected + live Helm proof through an example-owned runtime wrapper.
+3. layered ApplicationSet plus cluster-selector plus overlay proof,
+4. connected + live Helm proof through an example-owned runtime wrapper.
 
 ## What this proves today
 
@@ -23,6 +24,7 @@ This example now owns three flagship proof paths:
 |-------|--------|---------------------|
 | Source-side Helm provenance | Real | `./examples/helm-paas/demo-local.sh` |
 | Governed ALLOW + BLOCK ownership proof | Real | `./examples/helm-paas/demo-governed-change.sh` |
+| Layered ApplicationSet + overlay + security proof | Real | `./examples/helm-paas/demo-layered-trace.sh` |
 | Deep connected bridge path | Real | `./examples/helm-paas/demo-connected.sh` |
 | Connected + live Helm proof from this example | Real | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` |
 | Runtime WET->LIVE harness beneath the wrapper | Paired | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` |
@@ -63,6 +65,7 @@ That sequence gives you:
 |---|---|---|
 | Local source-side proof | `./examples/helm-paas/demo-local.sh` | field origin, inverse-edit guidance, dry inputs, and rendered targets |
 | Local governed ownership proof | `./examples/helm-paas/demo-governed-change.sh` | one app-team change that passes and one platform-contract change that fails the DRY ownership gate |
+| Local layered Kubara-like proof | `./examples/helm-paas/demo-layered-trace.sh` | cluster labels, ApplicationSet selector, values overlay selection, and one blocked customer security weakening |
 | Deep connected bridge proof | `./examples/helm-paas/demo-connected.sh` | change ID, bundle digest, attestation, and backend decision/query output |
 | Connected + live proof | `RECONCILER=both ./examples/helm-paas/demo-runtime.sh` | live Deployment rollout, pods, services, and reconciler status for Flux and Argo |
 
@@ -219,6 +222,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 # Local governed change path
 ./examples/helm-paas/demo-governed-change.sh
 
+# Local layered Kubara-like trace path
+./examples/helm-paas/demo-layered-trace.sh
+
 # Connected ConfigHub path
 cub auth login
 ./examples/helm-paas/demo-connected.sh
@@ -333,19 +339,22 @@ alongside `values*.yaml` files. On import, it:
 1. **Classifies inputs** — `Chart.yaml` (role: chart), `values.yaml` (role:
    values-base), `values-prod.yaml` (role: values-overlay)
 2. **Maps field origins** — traces `image.tag` through the Helm template
-   structure to the Deployment spec (confidence: 0.86)
+   structure to the Deployment spec, keeping both the base values source
+   (`values.yaml`, confidence: 0.86) and the winning prod overlay
+   (`values-prod.yaml`, confidence: 0.90)
 3. **Computes ownership** — values files are app-team editable; chart templates
    and platform policies are platform-owned
-4. **Emits inverse-edit guidance** — "to change `image.tag`, edit `values.yaml`
-   line 5; to change resource structure, edit `templates/deployment.yaml`
-   (platform review required)"
+4. **Emits inverse-edit guidance** — "to change the prod `image.tag`, edit
+   `values-prod.yaml`; use `values.yaml` for defaults; to change resource
+   structure, edit `templates/deployment.yaml` (platform review required)"
 
 A concrete field trace:
 
 ```
-DRY:  values.yaml → image.tag = "v1.0.0"
-      ↓ helm-template transform (confidence: 0.86)
-WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payments-api:v1.0.0"
+DRY:  values.yaml      → image.tag = "v1.0.0"
+      values-prod.yaml → image.tag = "v1.0.3"
+      ↓ helm-template + helm-values-overlay
+WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payments-api:v1.0.3"
 ```
 
 ## Key files
@@ -468,6 +477,16 @@ The key question: "Why does this cluster have this addon enabled?"
 
 Answer: Trace from cluster labels through overlay selection to the deployed field.
 
+Today that proof is runnable from this example:
+
+```bash
+./examples/helm-paas/demo-layered-trace.sh
+
+# Or inspect the raw layered analysis directly
+./cub-gen gitops import --space platform --json ./examples/helm-paas \
+  | jq '.provenance[0].helm_layered_analysis'
+```
+
 If this is the section where you start thinking "where is my framework or
 generator?", use [Custom Generator Onboarding](../../docs/workflows/custom-generator-onboarding.md)
 for the user-facing extension path and Kubara-like layered requirements.
@@ -500,6 +519,7 @@ From repo root:
 ```bash
 # Local/offline
 ./examples/helm-paas/demo-local.sh
+./examples/helm-paas/demo-layered-trace.sh
 
 # Connected (requires ConfigHub auth)
 cub auth login

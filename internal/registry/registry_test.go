@@ -116,6 +116,10 @@ func TestRegistryInputRoleAndOwnerClassification(t *testing.T) {
 	}{
 		{name: "helm-chart", kind: model.GeneratorHelm, path: "Chart.yaml", expectedRole: "chart", expectedOwner: "platform-engineer"},
 		{name: "helm-values", kind: model.GeneratorHelm, path: "values-prod.yaml", expectedRole: "values", expectedOwner: "app-team"},
+		{name: "helm-applicationset", kind: model.GeneratorHelm, path: "gitops/argo/applicationset.yaml", expectedRole: "application-set", expectedOwner: "platform-engineer"},
+		{name: "helm-cluster-inventory", kind: model.GeneratorHelm, path: "platform/clusters/prod-eu.yaml", expectedRole: "cluster-inventory", expectedOwner: "platform-engineer"},
+		{name: "helm-managed-catalog", kind: model.GeneratorHelm, path: "platform/catalogs/managed-service-catalog/payments-api.yaml", expectedRole: "managed-service-catalog", expectedOwner: "platform-engineer"},
+		{name: "helm-customer-catalog", kind: model.GeneratorHelm, path: "platform/catalogs/customer-service-catalog/payments-api-prod.yaml", expectedRole: "customer-service-catalog", expectedOwner: "app-team"},
 		{name: "score-spec", kind: model.GeneratorScore, path: "score.yaml", expectedRole: "score-spec", expectedOwner: "app-team"},
 		{name: "spring-build", kind: model.GeneratorSpringBoot, path: "pom.xml", expectedRole: "build-config", expectedOwner: "platform-engineer"},
 		{name: "spring-profile", kind: model.GeneratorSpringBoot, path: "application-prod.yml", expectedRole: "app-config-profile", expectedOwner: "app-team"},
@@ -249,8 +253,8 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := FieldOriginOverlayTransform(model.GeneratorSpringBoot); got != "spring-profile-overlay" {
 		t.Fatalf("expected spring overlay field origin transform, got %q", got)
 	}
-	if got := FieldOriginOverlayTransform(model.GeneratorHelm); got != "helm-template" {
-		t.Fatalf("expected helm overlay transform to fall back to base transform, got %q", got)
+	if got := FieldOriginOverlayTransform(model.GeneratorHelm); got != "helm-values-overlay" {
+		t.Fatalf("expected helm overlay field origin transform helm-values-overlay, got %q", got)
 	}
 	if got := InversePatchReason(model.GeneratorBackstage, "identity", "fallback"); got != "Backstage component identity is sourced from {{catalog_path}}." {
 		t.Fatalf("expected backstage inverse patch reason template, got %q", got)
@@ -261,6 +265,9 @@ func TestRegistryHintDefaults(t *testing.T) {
 	if got := FieldOriginConfidenceFor(model.GeneratorOpsFlow, "schedule_overlay", 0.0); got != 0.80 {
 		t.Fatalf("expected ops schedule overlay field origin confidence 0.80, got %v", got)
 	}
+	if got := FieldOriginConfidenceFor(model.GeneratorHelm, "image_tag_overlay", 0.0); got != 0.90 {
+		t.Fatalf("expected helm image_tag_overlay field origin confidence 0.90, got %v", got)
+	}
 	if got := InversePatchTemplateFor(model.GeneratorOpsFlow, "schedule", InversePatchTemplate{}); got.EditableBy != "platform-engineer" || got.Confidence != 0.84 || !got.RequiresReview {
 		t.Fatalf("expected ops schedule inverse patch template, got %+v", got)
 	}
@@ -269,6 +276,9 @@ func TestRegistryHintDefaults(t *testing.T) {
 	}
 	if got := InverseEditHint(model.GeneratorScore, "env_var", "fallback"); got != "Edit {{variable_name}} under containers.{{container_name}}.variables in {{source_path}}." {
 		t.Fatalf("expected score env_var inverse edit hint template, got %q", got)
+	}
+	if got := InverseEditHint(model.GeneratorHelm, "image_tag_overlay", "fallback"); got != "Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults." {
+		t.Fatalf("expected helm image_tag_overlay inverse edit hint template, got %q", got)
 	}
 	if got := InverseEditHint(model.GeneratorSpringBoot, "server_port_overlay", "fallback"); got != "Edit server.port in {{profile_config_path}} for environment overrides; use {{base_config_path}} for the default." {
 		t.Fatalf("expected spring server_port_overlay inverse edit hint template, got %q", got)

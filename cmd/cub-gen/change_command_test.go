@@ -192,6 +192,61 @@ func TestChangeExplainJSON(t *testing.T) {
 	}
 }
 
+func TestChangeHelmOverlayRecommendation(t *testing.T) {
+	setupAliases(t)
+
+	previewOut, stderr, err := runWithCapturedIO([]string{
+		"change", "preview",
+		"--space", "platform",
+		"helm",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("change preview returned error: %v\nstderr=%s", err, stderr)
+	}
+
+	var preview map[string]any
+	if err := json.Unmarshal([]byte(previewOut), &preview); err != nil {
+		t.Fatalf("unmarshal change preview output: %v\noutput=%s", err, previewOut)
+	}
+	recommendation, ok := preview["edit_recommendation"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected edit_recommendation object, got %T", preview["edit_recommendation"])
+	}
+	editHint, ok := recommendation["edit_hint"].(string)
+	if !ok {
+		t.Fatalf("expected edit hint string, got %T", recommendation["edit_hint"])
+	}
+	if !strings.Contains(editHint, "values-prod.yaml") || !strings.Contains(editHint, "values.yaml") {
+		t.Fatalf("expected Helm edit hint to mention overlay and base values files, got %q", editHint)
+	}
+
+	explainOut, explainErr, err := runWithCapturedIO([]string{
+		"change", "explain",
+		"--space", "platform",
+		"helm",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("change explain returned error: %v\nstderr=%s", err, explainErr)
+	}
+
+	var explain map[string]any
+	if err := json.Unmarshal([]byte(explainOut), &explain); err != nil {
+		t.Fatalf("unmarshal change explain output: %v\noutput=%s", err, explainOut)
+	}
+	explanation, ok := explain["explanation"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected explanation object, got %T", explain["explanation"])
+	}
+	if got, ok := explanation["source_path"].(string); !ok || got != "values-prod.yaml" {
+		t.Fatalf("expected source_path=values-prod.yaml, got %v", explanation["source_path"])
+	}
+	if got, ok := explanation["source_transform"].(string); !ok || got != "helm-values-overlay" {
+		t.Fatalf("expected source_transform=helm-values-overlay, got %v", explanation["source_transform"])
+	}
+}
+
 func TestChangeExplainWetPathFilter(t *testing.T) {
 	setupAliases(t)
 

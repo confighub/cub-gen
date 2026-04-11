@@ -16,6 +16,10 @@ permissions:
 
 jobs:
   gate:
+    # Keep the legacy check names stable for branch protection while the
+    # workflow itself runs in repo-maintainer mode. Audience-specific owner
+    # proofs stay covered by the example-owned demo wrappers.
+    name: gate (${{ matrix.slug }}, ${{ matrix.repo_path }}, ${{ matrix.check_label }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -23,10 +27,12 @@ jobs:
         include:
           - slug: helm
             repo_path: ./examples/helm-paas
-            actor_role: app-team
+            check_label: app-team
+            actor_role: any
           - slug: springboot
             repo_path: ./examples/springboot-paas
-            actor_role: app-team
+            check_label: app-team
+            actor_role: any
 
     steps:
       - uses: actions/checkout@v5

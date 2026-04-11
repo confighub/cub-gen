@@ -95,6 +95,23 @@ type FieldOrigin struct {
 	Confidence float64 `json:"confidence"`
 }
 
+type HelmLayeredAnalysis struct {
+	ApplicationSetPath       string   `json:"application_set_path,omitempty"`
+	ClusterInventoryPaths    []string `json:"cluster_inventory_paths,omitempty"`
+	ManagedCatalogPaths      []string `json:"managed_catalog_paths,omitempty"`
+	CustomerCatalogPaths     []string `json:"customer_catalog_paths,omitempty"`
+	ClusterSelector          string   `json:"cluster_selector,omitempty"`
+	MatchedClusters          []string `json:"matched_clusters,omitempty"`
+	SelectedValueFiles       []string `json:"selected_value_files,omitempty"`
+	GenerationDecisionState  string   `json:"generation_decision_state,omitempty"`
+	GenerationDecisionReason string   `json:"generation_decision_reason,omitempty"`
+	SecurityControl          string   `json:"security_control,omitempty"`
+	SecurityControlPath      string   `json:"security_control_path,omitempty"`
+	SecurityOverridePath     string   `json:"security_override_path,omitempty"`
+	SecurityDecisionState    string   `json:"security_decision_state,omitempty"`
+	SecurityDecisionReason   string   `json:"security_decision_reason,omitempty"`
+}
+
 type InverseEditPointer struct {
 	WetPath    string  `json:"wet_path"`
 	DryPath    string  `json:"dry_path"`
@@ -165,6 +182,7 @@ type ProvenanceRecord struct {
 	RenderedLineage     []RenderedObjectLineage `json:"rendered_object_lineage,omitempty"`
 	FieldOriginMap      []FieldOrigin           `json:"field_origin_map"`
 	InverseEditPointers []InverseEditPointer    `json:"inverse_edit_pointers"`
+	HelmLayeredAnalysis *HelmLayeredAnalysis    `json:"helm_layered_analysis,omitempty"`
 	OpsWorkflow         *OpsWorkflowAnalysis    `json:"ops_workflow_analysis,omitempty"`
 	SwampWorkflow       *SwampWorkflowAnalysis  `json:"swamp_workflow_analysis,omitempty"`
 	RenderedAt          string                  `json:"rendered_at"`

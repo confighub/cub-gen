@@ -283,6 +283,36 @@ func TestImportRepoHelmDryWetContract(t *testing.T) {
 	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "values.yaml") {
 		t.Fatalf("expected Helm field origin values.image.tag to resolve source_path values.yaml, got %+v", prov.FieldOriginMap)
 	}
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "values-prod.yaml") {
+		t.Fatalf("expected Helm field origin values.image.tag to resolve source_path values-prod.yaml, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "values-prod.yaml") {
+		t.Fatalf("expected Helm inverse pointer to prefer values-prod.yaml overlay, got %+v", prov.InverseEditPointers)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "values.yaml") {
+		t.Fatalf("expected Helm inverse pointer to mention values.yaml defaults, got %+v", prov.InverseEditPointers)
+	}
+	if prov.HelmLayeredAnalysis == nil {
+		t.Fatalf("expected helm layered analysis, got nil")
+	}
+	if prov.HelmLayeredAnalysis.ApplicationSetPath != "gitops/argo/applicationset.yaml" {
+		t.Fatalf("expected application set path gitops/argo/applicationset.yaml, got %+v", prov.HelmLayeredAnalysis)
+	}
+	if prov.HelmLayeredAnalysis.GenerationDecisionState != "attributed" {
+		t.Fatalf("expected attributed generation decision, got %+v", prov.HelmLayeredAnalysis)
+	}
+	if prov.HelmLayeredAnalysis.ClusterSelector != "env=prod, region=eu" {
+		t.Fatalf("expected cluster selector env=prod, region=eu, got %+v", prov.HelmLayeredAnalysis)
+	}
+	if !containsString(prov.HelmLayeredAnalysis.MatchedClusters, "prod-eu") {
+		t.Fatalf("expected matched cluster prod-eu, got %+v", prov.HelmLayeredAnalysis)
+	}
+	if !containsString(prov.HelmLayeredAnalysis.SelectedValueFiles, "values-prod.yaml") {
+		t.Fatalf("expected selected value files to include values-prod.yaml, got %+v", prov.HelmLayeredAnalysis)
+	}
+	if prov.HelmLayeredAnalysis.SecurityDecisionState != "allow" {
+		t.Fatalf("expected allow security decision, got %+v", prov.HelmLayeredAnalysis)
+	}
 
 	if !dryInputHasRolePath(result.DryInputs, "chart", "Chart.yaml") {
 		t.Fatalf("expected chart dry input, got %+v", result.DryInputs)
@@ -292,6 +322,18 @@ func TestImportRepoHelmDryWetContract(t *testing.T) {
 	}
 	if !dryInputHasRolePath(result.DryInputs, "values", "values-prod.yaml") {
 		t.Fatalf("expected values-prod.yaml dry input, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "application-set", "platform-engineer", "gitops/argo/applicationset.yaml") {
+		t.Fatalf("expected applicationset dry input owned by platform-engineer, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "cluster-inventory", "platform-engineer", "platform/clusters/prod-eu.yaml") {
+		t.Fatalf("expected prod-eu cluster inventory dry input owned by platform-engineer, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "managed-service-catalog", "platform-engineer", "platform/catalogs/managed-service-catalog/payments-api.yaml") {
+		t.Fatalf("expected managed service catalog dry input owned by platform-engineer, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "customer-service-catalog", "app-team", "platform/catalogs/customer-service-catalog/payments-api-prod.yaml") {
+		t.Fatalf("expected customer service catalog dry input owned by app-team, got %+v", result.DryInputs)
 	}
 	if !dryInputHasRoleOwnerPath(result.DryInputs, "chart", "platform-engineer", "Chart.yaml") {
 		t.Fatalf("expected chart owner to be platform-engineer, got %+v", result.DryInputs)
@@ -308,6 +350,157 @@ func TestImportRepoHelmDryWetContract(t *testing.T) {
 	}
 	if !wetTargetHasKindOwner(result.WetManifestTargets, "HelmRelease", "platform-runtime") {
 		t.Fatalf("expected HelmRelease owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+}
+
+func TestImportRepoHelmLayeredAnalysisGracefulDegradation(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: layered-demo\nversion: 0.1.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values.yaml"), "image:\n  tag: v1.0.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values-prod.yaml"), "image:\n  tag: v1.0.1\n")
+	mustWriteFile(t, filepath.Join(repo, "gitops", "argo", "applicationset.yaml"), `apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            env: prod
+  template:
+    spec:
+      source:
+        helm:
+          valueFiles:
+            - values.yaml
+            - values-prod.yaml
+`)
+
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	if len(result.Provenance) != 1 || result.Provenance[0].HelmLayeredAnalysis == nil {
+		t.Fatalf("expected helm layered analysis, got %+v", result.Provenance)
+	}
+	got := result.Provenance[0].HelmLayeredAnalysis
+	if got.GenerationDecisionState != "unresolved" {
+		t.Fatalf("expected unresolved generation decision, got %+v", got)
+	}
+	if !strings.Contains(got.GenerationDecisionReason, "no cluster inventory inputs") {
+		t.Fatalf("expected explicit graceful degradation reason, got %+v", got)
+	}
+}
+
+func TestImportRepoHelmLayeredSecurityBlock(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: layered-demo\nversion: 0.1.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values.yaml"), "image:\n  tag: v1.0.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values-prod.yaml"), "image:\n  tag: v1.0.1\n")
+	mustWriteFile(t, filepath.Join(repo, "gitops", "argo", "applicationset.yaml"), `apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            env: prod
+            region: eu
+  template:
+    spec:
+      source:
+        helm:
+          valueFiles:
+            - values.yaml
+            - values-prod.yaml
+`)
+	mustWriteFile(t, filepath.Join(repo, "platform", "clusters", "prod-eu.yaml"), `apiVersion: cubgen.confighub.dev/v1alpha1
+kind: ClusterInventory
+metadata:
+  name: prod-eu
+  labels:
+    env: prod
+    region: eu
+`)
+	mustWriteFile(t, filepath.Join(repo, "platform", "catalogs", "managed-service-catalog", "payments-api.yaml"), `apiVersion: cubgen.confighub.dev/v1alpha1
+kind: ManagedServiceCatalog
+spec:
+  securityControls:
+    oauth2Proxy:
+      required: true
+`)
+	mustWriteFile(t, filepath.Join(repo, "platform", "catalogs", "customer-service-catalog", "payments-api-prod.yaml"), `apiVersion: cubgen.confighub.dev/v1alpha1
+kind: CustomerServiceCatalog
+spec:
+  overlay:
+    valuesFile: values-prod.yaml
+  securityOverrides:
+    oauth2Proxy:
+      enabled: false
+`)
+
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	got := result.Provenance[0].HelmLayeredAnalysis
+	if got == nil {
+		t.Fatalf("expected helm layered analysis, got nil")
+	}
+	if got.SecurityDecisionState != "blocked" {
+		t.Fatalf("expected blocked security decision, got %+v", got)
+	}
+	if !strings.Contains(got.SecurityDecisionReason, "oauth2Proxy") {
+		t.Fatalf("expected security reason to mention oauth2Proxy, got %+v", got)
+	}
+}
+
+func TestImportRepoHelmOverlayOriginRequiresActualOverride(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: layered-demo\nversion: 0.1.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values.yaml"), "image:\n  tag: v1.0.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values-prod.yaml"), "replicaCount: 2\n")
+
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+
+	prov := result.Provenance[0]
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "values.yaml") {
+		t.Fatalf("expected Helm field origin values.image.tag to resolve source_path values.yaml, got %+v", prov.FieldOriginMap)
+	}
+	if fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "values-prod.yaml") {
+		t.Fatalf("expected values-prod.yaml to be ignored when it does not override values.image.tag, got %+v", prov.FieldOriginMap)
+	}
+	if inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "values-prod.yaml") {
+		t.Fatalf("expected Helm inverse pointer not to prefer values-prod.yaml when it does not override values.image.tag, got %+v", prov.InverseEditPointers)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "values.yaml") {
+		t.Fatalf("expected Helm inverse pointer to keep values.yaml guidance, got %+v", prov.InverseEditPointers)
+	}
+}
+
+func TestImportRepoHelmWithoutValuesDoesNotPointToChartYaml(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: no-values\nversion: 0.1.0\n")
+
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+
+	prov := result.Provenance[0]
+	if fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "Chart.yaml") {
+		t.Fatalf("expected Chart.yaml not to be treated as a values source, got %+v", prov.FieldOriginMap)
+	}
+	if inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "Chart.yaml") {
+		t.Fatalf("expected Chart.yaml not to appear in Helm inverse edit guidance, got %+v", prov.InverseEditPointers)
 	}
 }
 
@@ -881,4 +1074,14 @@ func wetTargetHasKindOwner(v []model.WetManifestTarget, kind, owner string) bool
 		}
 	}
 	return false
+}
+
+func mustWriteFile(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatalf("mkdir %s: %v", filepath.Dir(path), err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write %s: %v", path, err)
+	}
 }

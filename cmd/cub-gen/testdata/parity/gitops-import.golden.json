@@ -23,6 +23,31 @@
           "name": "input_03",
           "required": true,
           "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+        },
+        {
+          "name": "input_04",
+          "required": true,
+          "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+        },
+        {
+          "name": "input_05",
+          "required": true,
+          "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+        },
+        {
+          "name": "input_06",
+          "required": true,
+          "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+        },
+        {
+          "name": "input_07",
+          "required": true,
+          "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+        },
+        {
+          "name": "input_08",
+          "required": true,
+          "schema_ref": "https://json-schema.org/draft/2020-12/schema"
         }
       ],
       "kind": "helm",
@@ -45,6 +70,11 @@
       "generator_profile": "helm-paas",
       "inputs": [
         "Chart.yaml",
+        "gitops/argo/applicationset.yaml",
+        "platform/catalogs/customer-service-catalog/payments-api-prod.yaml",
+        "platform/catalogs/managed-service-catalog/payments-api.yaml",
+        "platform/clusters/prod-eu.yaml",
+        "platform/clusters/stage-eu.yaml",
         "values-prod.yaml",
         "values.yaml"
       ],
@@ -59,10 +89,50 @@
     {
       "generator_id": "gen_635643e45fbf3410",
       "owner": "platform-engineer",
+      "path": "gitops/argo/applicationset.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "application-set"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "owner": "platform-engineer",
       "path": "Chart.yaml",
       "profile": "helm-paas",
       "required": true,
       "role": "chart"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "owner": "platform-engineer",
+      "path": "platform/clusters/prod-eu.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "cluster-inventory"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "owner": "platform-engineer",
+      "path": "platform/clusters/stage-eu.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "cluster-inventory"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "owner": "app-team",
+      "path": "platform/catalogs/customer-service-catalog/payments-api-prod.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "customer-service-catalog"
+    },
+    {
+      "generator_id": "gen_635643e45fbf3410",
+      "owner": "platform-engineer",
+      "path": "platform/catalogs/managed-service-catalog/payments-api.yaml",
+      "profile": "helm-paas",
+      "required": true,
+      "role": "managed-service-catalog"
     },
     {
       "generator_id": "gen_635643e45fbf3410",
@@ -139,17 +209,52 @@
           "source_path": "values.yaml",
           "transform": "helm-template",
           "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "values.image.tag",
+          "source_path": "values-prod.yaml",
+          "transform": "helm-values-overlay",
+          "wet_path": "Deployment/spec/template/spec/containers[0]/image"
         }
       ],
       "generator_id": "gen_635643e45fbf3410",
       "generator_name": "helm-paas",
       "generator_profile": "helm-paas",
-      "input_digest": "sha256:0ceaab864fc2c01e0d45011864aa2f8bbe3e1f9a6f2a4bc81b1d4d667dbd6ba9",
+      "helm_layered_analysis": {
+        "application_set_path": "gitops/argo/applicationset.yaml",
+        "cluster_inventory_paths": [
+          "platform/clusters/prod-eu.yaml",
+          "platform/clusters/stage-eu.yaml"
+        ],
+        "cluster_selector": "env=prod, region=eu",
+        "customer_catalog_paths": [
+          "platform/catalogs/customer-service-catalog/payments-api-prod.yaml"
+        ],
+        "generation_decision_reason": "ApplicationSet selector env=prod, region=eu matches cluster inventory prod-eu and selects value files values.yaml, values-prod.yaml.",
+        "generation_decision_state": "attributed",
+        "managed_catalog_paths": [
+          "platform/catalogs/managed-service-catalog/payments-api.yaml"
+        ],
+        "matched_clusters": [
+          "prod-eu"
+        ],
+        "security_control": "oauth2Proxy",
+        "security_control_path": "platform/catalogs/managed-service-catalog/payments-api.yaml",
+        "security_decision_reason": "Customer service catalog platform/catalogs/customer-service-catalog/payments-api-prod.yaml keeps the platform-required oauth2Proxy control enabled.",
+        "security_decision_state": "allow",
+        "security_override_path": "platform/catalogs/customer-service-catalog/payments-api-prod.yaml",
+        "selected_value_files": [
+          "values.yaml",
+          "values-prod.yaml"
+        ]
+      },
+      "input_digest": "sha256:0600eadf0bf5449e8eeea4285a8d8cc115ca2ab9df9983a0af6e9fe55b06285d",
       "inverse_edit_pointers": [
         {
           "confidence": 0.86,
           "dry_path": "values.image.tag",
-          "edit_hint": "Edit chart values file and keep chart template unchanged.",
+          "edit_hint": "Edit values.image.tag in values-prod.yaml for environment-specific overrides; use values.yaml for defaults.",
           "owner": "app-team",
           "wet_path": "Deployment/spec/template/spec/containers[0]/image"
         }
@@ -204,6 +309,36 @@
       "sources": [
         {
           "path": "Chart.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "gitops/argo/applicationset.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "platform/catalogs/customer-service-catalog/payments-api-prod.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "platform/catalogs/managed-service-catalog/payments-api.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "platform/clusters/prod-eu.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "platform/clusters/stage-eu.yaml",
           "revision": "HEAD",
           "role": "generator-input",
           "uri": "\u003csource_uri\u003e"
