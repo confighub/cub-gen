@@ -21,10 +21,10 @@ const (
 )
 
 const (
-	schemaVersion       = "cub.confighub.io/example-truth-matrix/v1"
-	sourceChainCommand  = "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
-	connectedCITarget   = "make ci-connected"
-	lifecycleGateScript = "./examples/demo/run-all-connected-lifecycles.sh"
+	schemaVersion        = "cub.confighub.io/example-truth-matrix/v1"
+	sourceChainCommand   = "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+	connectedCITarget    = "make ci-connected"
+	connectedSmokeScript = "./examples/demo/run-connected-smoke.sh"
 )
 
 var exampleLinkPattern = regexp.MustCompile(`\]\((?:\./|\.\./)?([a-z0-9-]+)/\)`)
@@ -79,12 +79,7 @@ func Collect(root string) (Matrix, error) {
 		fixtures[filepath.Base(fixture.RepoSuffix)] = fixture
 	}
 
-	lifecycleReleaseGate, err := parseConnectedLifecycleExamples(filepath.Join(root, "examples", "demo", "run-all-connected-lifecycles.sh"))
-	if err != nil {
-		return Matrix{}, err
-	}
-
-	ciConnectedDeps, err := makeTargetDependencies(filepath.Join(root, "Makefile"), "ci-connected")
+	connectedSmokeExamples, err := parseExampleArray(filepath.Join(root, "examples", "demo", "run-connected-smoke.sh"))
 	if err != nil {
 		return Matrix{}, err
 	}
@@ -128,18 +123,9 @@ func Collect(root string) (Matrix, error) {
 			row.ProofRefs.ConnectedMode = []string{fmt.Sprintf("./examples/%s/demo-connected.sh", slug)}
 		}
 
-		if _, ok := lifecycleReleaseGate[slug]; ok {
+		if _, ok := connectedSmokeExamples[slug]; ok {
 			row.ConnectedReleaseGated = true
-			row.ProofRefs.ConnectedReleaseGate = []string{connectedCITarget, lifecycleGateScript}
-		}
-		if slug == "live-reconcile" && hasAll(ciConnectedDeps, "test-live-reconcile-flux", "test-live-reconcile-argo") {
-			row.ConnectedReleaseGated = true
-			row.ProofRefs.ConnectedReleaseGate = []string{
-				connectedCITarget,
-				"./examples/demo/e2e-live-reconcile-flux.sh",
-				"./examples/demo/e2e-live-reconcile-argo.sh",
-				"./test/checks/check-story-evidence.sh",
-			}
+			row.ProofRefs.ConnectedReleaseGate = []string{connectedCITarget, connectedSmokeScript}
 		}
 
 		switch slug {
@@ -217,10 +203,10 @@ func featuredExampleSlugs(root string) ([]string, error) {
 	return slugs, nil
 }
 
-func parseConnectedLifecycleExamples(path string) (map[string]struct{}, error) {
+func parseExampleArray(path string) (map[string]struct{}, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("open connected lifecycle runner: %w", err)
+		return nil, fmt.Errorf("open example runner: %w", err)
 	}
 	defer file.Close()
 
@@ -242,7 +228,7 @@ func parseConnectedLifecycleExamples(path string) (map[string]struct{}, error) {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("scan connected lifecycle runner: %w", err)
+		return nil, fmt.Errorf("scan example runner: %w", err)
 	}
 	return nil, fmt.Errorf("examples array not found in %s", path)
 }

@@ -27,7 +27,7 @@ If the task changes a frozen contract surface, run the additional checklist:
 | Parity/Golden | For CLI behavior | `go test ./cmd/cub-gen -run '^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand)' -count=1 -v` | stable command contract |
 | Example proof | For user-visible changes | `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v` | docs/example matches behavior |
 | Readiness truth | For example/readiness claims | `./test/checks/check-example-truth-matrix.sh` | generated truth matrix matches current repo state |
-| Connected acceptance scope | For release-gate changes | `./test/checks/check-connected-release-gate.sh` | connected release gate still covers claimed flagship proof lanes |
+| Connected acceptance scope | For release-gate changes | `./test/checks/check-connected-release-gate.sh` | connected smoke lane still matches the claimed flagship proof lanes |
 | Flow evidence | For Flow A / Flow B changes | `./test/checks/check-flow-evidence.sh` | connected PR/MR flow artifacts are present and valid |
 
 ## Completion rule

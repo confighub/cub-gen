@@ -50,9 +50,9 @@ This repo inherits cub-scout quality discipline with scope adjusted for `cub-gen
 - Automated path-mode bridge smoke (`publish -> verify -> attest -> verify-attestation`) for Helm/Score/Spring/Backstage/No Config Platform/Ops in `cmd/cub-gen/examples_bridge_smoke_test.go`.
 - Publish/verify/attest command tests include Helm/Score/Spring/Backstage/No Config Platform/Ops bundle flows.
 - Verify-attestation command tests include Helm/Score/Spring/Backstage/No Config Platform/Ops attestation flows (with and without linked bundle checks).
-- Generated example readiness truth matrix in [`docs/testing/example-truth-matrix.md`](example-truth-matrix.md), derived from repo structure, source-side tests, connected runners, and live-proof scripts.
+- Generated example readiness truth matrix in [`docs/testing/example-truth-matrix.md`](example-truth-matrix.md), derived from repo structure, source-side tests, the connected smoke lane, and live-proof scripts.
 - Matrix freshness gate in `test/checks/check-example-truth-matrix.sh`.
-- Connected acceptance coverage gate in `test/checks/check-connected-release-gate.sh`.
+- Connected smoke coverage gate in `test/checks/check-connected-release-gate.sh`.
 - Flow A / Flow B proof gate in `test/checks/check-flow-evidence.sh`.
 
 ## Derived readiness truth
@@ -66,7 +66,7 @@ Use it when answering:
 
 - how many examples are first-class generator fixtures,
 - how many are proven through the full source-side `cub-gen` chain,
-- how many are actually in the connected release gate,
+- how many are actually in the connected smoke lane,
 - which examples have paired or standalone real live proof,
 - which examples are explicitly AI-first.
 
@@ -98,6 +98,6 @@ make update-goldens
 
 ## Story 10 fixture
 
-This line exists as a Story 10 signed-commit fixture for ci-connected (app PR).
+This line exists as a Story 10 signed-commit fixture for ci-connected-deep (app PR).
 
-This line exists as a Story 10 signed-commit fixture for ci-connected (promotion PR).
+This line exists as a Story 10 signed-commit fixture for ci-connected-deep (promotion PR).

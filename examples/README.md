@@ -80,7 +80,7 @@ Use the generated [Example Truth Matrix](../docs/testing/example-truth-matrix.md
 
 - which examples are first-class generator fixtures,
 - which ones are CI-proven through the full source-side `cub-gen` chain,
-- which ones are in the connected release gate,
+- which ones are in the connected smoke lane,
 - which ones have real WET->LIVE proof today,
 - which ones are explicitly AI-first versus only adjacent.
 

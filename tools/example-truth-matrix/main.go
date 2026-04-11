@@ -43,13 +43,13 @@ func renderMarkdown(matrix exampletruth.Matrix) string {
 	var b strings.Builder
 
 	b.WriteString("# Example Truth Matrix\n\n")
-	b.WriteString("Generated from repo structure, source-side tests, connected runners, and live-proof harness scripts. Do not edit by hand; regenerate with `go run ./tools/example-truth-matrix --format markdown`.\n\n")
+	b.WriteString("Generated from repo structure, source-side tests, the connected smoke lane, and live-proof harness scripts. Do not edit by hand; regenerate with `go run ./tools/example-truth-matrix --format markdown`.\n\n")
 	b.WriteString("## Summary\n\n")
 	fmt.Fprintf(&b, "- Featured examples: `%d`\n", matrix.Summary.FeaturedExamples)
 	fmt.Fprintf(&b, "- Generator fixtures: `%d`\n", matrix.Summary.GeneratorFixtures)
 	fmt.Fprintf(&b, "- Source-chain verified: `%d`\n", matrix.Summary.SourceChainVerified)
 	fmt.Fprintf(&b, "- Connected mode present: `%d`\n", matrix.Summary.ConnectedModePresent)
-	fmt.Fprintf(&b, "- Connected release gated: `%d`\n", matrix.Summary.ConnectedReleaseGated)
+	fmt.Fprintf(&b, "- Connected smoke gated: `%d`\n", matrix.Summary.ConnectedReleaseGated)
 	fmt.Fprintf(&b, "- Real live proof: `none=%d`, `paired-harness=%d`, `standalone=%d`\n",
 		matrix.Summary.RealLiveProof[exampletruth.RealLiveNone],
 		matrix.Summary.RealLiveProof[exampletruth.RealLivePairedHarness],
@@ -62,7 +62,7 @@ func renderMarkdown(matrix exampletruth.Matrix) string {
 	)
 
 	b.WriteString("## Matrix\n\n")
-	b.WriteString("| Example | Generator fixture | Source chain verified | Connected mode | Connected release gate | Real live proof | AI-first surface | Tracking issues |\n")
+	b.WriteString("| Example | Generator fixture | Source chain verified | Connected mode | Connected smoke lane | Real live proof | AI-first surface | Tracking issues |\n")
 	b.WriteString("|---|---|---|---|---|---|---|---|\n")
 	for _, row := range matrix.Rows {
 		fmt.Fprintf(
@@ -84,7 +84,7 @@ func renderMarkdown(matrix exampletruth.Matrix) string {
 		fmt.Fprintf(&b, "### `%s`\n\n", row.Example)
 		writeRefs(&b, "Source chain", row.ProofRefs.SourceChain)
 		writeRefs(&b, "Connected mode", row.ProofRefs.ConnectedMode)
-		writeRefs(&b, "Connected release gate", row.ProofRefs.ConnectedReleaseGate)
+		writeRefs(&b, "Connected smoke lane", row.ProofRefs.ConnectedReleaseGate)
 		writeRefs(&b, "Real live", row.ProofRefs.RealLive)
 		writeRefs(&b, "AI-first", row.ProofRefs.AIFirst)
 		if len(row.Notes) > 0 {

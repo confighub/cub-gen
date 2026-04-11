@@ -197,7 +197,7 @@ Both prove create, update, and drift-correction on a real cluster.
 | Status | What is true today |
 |---|---|
 | Latest shipped | `v0.2-preview.1` was released on 2026-03-06 |
-| Strong now | Dual-mode example entrypoints exist across the main catalog; connected story scripts exist for stories 1-13; Flux and Argo live reconciler proofs run on real clusters |
+| Strong now | Dual-mode example entrypoints exist across the main catalog; a smaller ConfigHub smoke lane covers the flagship examples; Flux and Argo live reconciler proofs run on real clusters |
 | In progress | Flagship examples are still being hardened against the universal example contract: real-cluster outcome, two-audience path, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` proof |
 | Current release target | `v0.2-preview.2` focuses on all featured examples working well, CLI/docs trust, and a credible connected release signal |
 | Current plan | See [docs/releases/v0.2-preview.2-plan.md](docs/releases/v0.2-preview.2-plan.md) |
@@ -206,7 +206,7 @@ Both prove create, update, and drift-correction on a real cluster.
 | Release gate | `#218`, `#226`, `#227` |
 | Actively tracked | `#173`, `#177`, `#178`, `#180`, `#182`, `#185`, `#187`, `#200`, `#202`, `#207`, `#208`, `#218`, `#226`, `#227`, `#232`, `#233`, `#234`, `#237`-`#242` |
 
-For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, connected runners, and real live-proof harnesses.
+For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, the connected smoke lane, and real live-proof harnesses.
 
 We have runnable paths for the full PRD story surface, but we are not treating every
 story as fully acceptance-complete until the flagship examples and release gates
@@ -216,7 +216,8 @@ prove the new standard end to end.
 
 ```bash
 make ci                # build + all tests (local)
-make ci-connected      # connected mode tests (requires cub auth login)
+make ci-connected      # connected smoke against a real ConfigHub space
+make ci-connected-deep # optional extended connected proof lane
 go test ./...          # unit + golden + parity tests
 ```
 

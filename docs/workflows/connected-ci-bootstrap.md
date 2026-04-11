@@ -1,54 +1,77 @@
 # Connected CI Bootstrap
 
-Use this checklist to get the first green `CI Connected` run and keep it reliable.
+Use this checklist to get the first green ConfigHub smoke run and keep the
+deeper connected lane understandable.
 
-## 1) Configure required secrets/vars
+## 1) Configure required secrets for `make ci-connected`
 
-The connected workflow enforces Story 10 proof inputs and strict no-fallback policy.
+The release-facing connected lane is now a smaller ConfigHub smoke test.
 
 Required secrets:
 
 - `CONFIGHUB_BASE_URL`
 - `CONFIGHUB_SPACE`
 - `CONFIGHUB_TOKEN`
-- `GH_TOKEN` (or set `GITHUB_TOKEN` with equivalent repo-read scope)
 
-Required repository variables (or secrets):
+What it proves:
 
-- `APP_PR_REPO` (for example: `confighub/cub-gen`)
+- ConfigHub credentials and space resolution work,
+- `cub-gen` can run the source-side evidence pipeline for flagship examples,
+- the repo has a real connected environment available for smoke qualification.
+
+## 2) Optional inputs for `make ci-connected-deep`
+
+The deep lane keeps the older connected stories, flow proofs, and live
+reconcile checks available outside the release smoke path.
+
+Additional secret:
+
+- `GH_TOKEN` (or `github.token`) for release downloads and repo reads
+
+Additional repository variables (or secrets):
+
+- `APP_PR_REPO`
 - `APP_PR_NUMBER`
 - `PROMOTION_PR_REPO`
 - `PROMOTION_PR_NUMBER`
 
 Notes:
 
-- `APP_PR_*` and `PROMOTION_PR_*` must point to real PRs whose commits are signed/verified and whose target branches enforce protection.
-- For private repos, ensure `GH_TOKEN` can read PR, commit verification metadata, and branch protection settings.
+- `APP_PR_*` and `PROMOTION_PR_*` must point to real PRs whose commits are
+  signed/verified and whose target branches enforce protection.
+- The deep lane still depends on the bridge endpoint shape or explicit fallback
+  mode.
 
-## 2) Trigger and verify
+## 3) Trigger and verify
 
-Run the `CI` workflow from GitHub Actions (push/PR/workflow_dispatch). The `connected` job runs only when ConfigHub secrets are present.
+Run the `CI` workflow from GitHub Actions (push/PR/workflow_dispatch). The
+`ConfigHub Smoke` job runs only when the three ConfigHub secrets are present.
 
-Expected strict behavior:
+Expected smoke behavior:
 
-- `CONNECTED_FALLBACK_MODE=off`
-- `ALLOW_FALLBACK_INGEST=0`
-- `ALLOW_STORY_10_SKIP=0`
+- real ConfigHub auth preflight,
+- `helm-paas` and `springboot-paas` smoke coverage,
+- no bridge-endpoint dependency.
 
-If any required Story 10 input is missing, `CI Connected` fails at the preflight step.
+Run the deep lane manually in a trusted environment with:
 
-## 3) Branch protection recommendation
+```bash
+make ci-connected-deep
+```
+
+## 4) Branch protection recommendation
 
 Set required checks on your protected branch:
 
 1. `CI Local`
-2. `CI Connected` (for internal PR lanes where secrets are available)
+2. `ConfigHub Smoke` (for internal PR lanes where secrets are available)
 
-For external fork PRs (where secrets are unavailable), use a maintainer rerun policy or a separate trusted promotion lane.
+For external fork PRs (where secrets are unavailable), use a maintainer rerun
+policy or a separate trusted promotion lane.
 
-## 4) Troubleshooting lane (non-release)
+## 5) Troubleshooting lane (non-release)
 
-Use only for diagnostics, never for release qualification:
+Use only for deep-lane diagnostics, never for release qualification:
 
 ```bash
 make ci-connected-troubleshoot
@@ -60,7 +83,7 @@ This explicitly enables:
 - `ALLOW_FALLBACK_INGEST=1`
 - `ALLOW_STORY_10_SKIP=1`
 
-## 5) PR DRY ownership gate (WET edit blocker)
+## 6) PR DRY ownership gate (WET edit blocker)
 
 Use the dedicated workflow:
 
@@ -72,7 +95,8 @@ What it does:
   - `examples/helm-paas`
   - `examples/springboot-paas`
 - Compares PR-changed YAML/JSON files to recognized DRY inputs.
-- Blocks merge if a PR edits non-DRY/WET paths (or wrong-owner DRY paths when actor role is enforced).
+- Blocks merge if a PR edits non-DRY/WET paths (or wrong-owner DRY paths when
+  actor role is enforced).
 - Posts an actionable PR comment with:
   - `wet_path`
   - suggested `dry_path`

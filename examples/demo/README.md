@@ -140,13 +140,14 @@ publish → verify → attest → bridge ingest → decision query
 ### Connected runners
 
 ```bash
+./examples/demo/run-connected-smoke.sh
 ./examples/demo/run-all-connected-lifecycles.sh
 ./examples/demo/run-all-connected-entrypoints.sh
 ./examples/demo/run-phase-3-connected-stories.sh
 ./examples/demo/run-phase-4-connected-stories.sh
 ```
 
-Connected CI also release-gates:
+The extended deep-proof lane also covers:
 
 - `flow-a-git-pr-to-mr-connected.sh`
 - `flow-b-mr-to-git-pr-connected.sh`
@@ -161,8 +162,9 @@ Connected CI also release-gates:
 | Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`) | Always use backend fallback (troubleshooting) |
 
 CI behavior:
-- `make ci-connected` enforces strict mode (`CONNECTED_FALLBACK_MODE=off`)
-- `make ci-connected-troubleshoot` is the only fallback-enabled lane
+- `make ci-connected` runs the smaller ConfigHub smoke lane and does not touch bridge endpoints
+- `make ci-connected-deep` runs the broader connected stories, flows, and live reconciler proofs
+- `make ci-connected-troubleshoot` is the only fallback-enabled deep lane
 
 See also: [connected-ci-bootstrap.md](../../docs/workflows/connected-ci-bootstrap.md)
 

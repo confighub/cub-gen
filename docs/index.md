@@ -128,7 +128,7 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
 -   **Check what is really proven**
 
-    Use the derived example matrix to see which examples are source-chain verified, connected-release-gated, AI-first, or backed by real live proof.
+    Use the derived example matrix to see which examples are source-chain verified, in the connected smoke lane, AI-first, or backed by real live proof.
 
     [Example Truth Matrix](testing/example-truth-matrix.md)
 
