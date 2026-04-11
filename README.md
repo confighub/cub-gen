@@ -40,6 +40,14 @@ assistants:
 - [springboot-paas](examples/springboot-paas/) -> [AI_START_HERE](examples/springboot-paas/AI_START_HERE.md), [prompts](examples/springboot-paas/prompts.md), [contracts](examples/springboot-paas/contracts.md)
 - [swamp-automation](examples/swamp-automation/) -> [AI_START_HERE](examples/swamp-automation/AI_START_HERE.md), [prompts](examples/swamp-automation/prompts.md), [contracts](examples/swamp-automation/contracts.md)
 
+Use [AI Example Hygiene Checklist](docs/workflows/ai-example-hygiene-checklist.md)
+for the current repo bar on safe AI-assisted example design, and
+[Prompt as DRY](docs/workflows/prompt-as-dry.md) for the worked governance
+story behind those bundles.
+
+If your platform has its own generator and you are thinking "where is mine?",
+start with [Custom Generator Onboarding](docs/workflows/custom-generator-onboarding.md).
+
 ## What it looks like
 
 ```bash
@@ -192,6 +200,9 @@ Docs currently live in this repo:
 - [Examples](examples/README.md) — complete runnable scenarios for every generator
 - [Platform](docs/platform.md) — how cub-gen connects to ConfigHub
 - [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md) — stack-specific entry paths
+- [AI Example Hygiene Checklist](docs/workflows/ai-example-hygiene-checklist.md) — the current repo bar for safe AI-assisted example design
+- [Prompt as DRY](docs/workflows/prompt-as-dry.md) — worked AI-assisted governance story
+- [Custom Generator Onboarding](docs/workflows/custom-generator-onboarding.md) — how to add support for your own platform framework
 - [Change CLI contract](docs/contracts/change-cli-v1.md) — change preview/run/explain specification
 - [Operation registry for real apps](docs/workflows/operation-registry-real-apps.md) — registry-backed platform governance
 
@@ -214,10 +225,10 @@ Both prove create, update, and drift-correction on a real cluster.
 | Current release target | `v0.2-preview.2` focuses on all featured examples working well, CLI/docs trust, and a credible connected release signal |
 | Current plan | See [docs/releases/v0.2-preview.2-plan.md](docs/releases/v0.2-preview.2-plan.md) |
 | Current ship checklist | See [docs/releases/v0.2-preview.2-ship-checklist.md](docs/releases/v0.2-preview.2-ship-checklist.md) |
-| Example quality | `#177`, `#178`, `#180`, `#185`, `#187`, `#200` |
+| Example quality | `#177`, `#178`, `#180`, `#187` |
 | CLI/docs follow-on | `#238`, `#239`, `#240`, `#241`, `#242` |
 | Release gate | `#218` |
-| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#185`, `#187`, `#200`, `#218`, `#238`-`#242` |
+| Actively tracked | `#173`, `#177`, `#178`, `#180`, `#187`, `#218`, `#238`-`#242` |
 
 For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, the connected smoke lane, and real live-proof harnesses.
 

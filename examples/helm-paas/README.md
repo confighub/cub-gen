@@ -468,6 +468,10 @@ The key question: "Why does this cluster have this addon enabled?"
 
 Answer: Trace from cluster labels through overlay selection to the deployed field.
 
+If this is the section where you start thinking "where is my framework or
+generator?", use [Custom Generator Onboarding](../../docs/workflows/custom-generator-onboarding.md)
+for the user-facing extension path and Kubara-like layered requirements.
+
 ```bash
 # Show rendered lineage
 ./cub-gen gitops import --space platform --json ./examples/helm-paas \
