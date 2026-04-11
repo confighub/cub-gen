@@ -398,7 +398,7 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 |--------|--------------------|
 | Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
 | In progress | The flagship examples still need contract-based proof for real-cluster outcome, two-audience onboarding, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` paths |
-| Actively tracked | `#173`, `#177`, `#180`, `#187`, `#218`, `#238`-`#242` |
+| Actively tracked | `#173`, `#177`, `#180`, `#187`, `#238`-`#242` |
 
 For the per-example truth behind those claims, use the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md). It is derived from the example catalog, connected runners, source-side tests, and live proof scripts.
 
