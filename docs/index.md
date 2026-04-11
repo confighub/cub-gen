@@ -130,6 +130,13 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
     [Confidence Scores](workflows/confidence-scores.md)
 
+-   **Run AI-Safe Examples**
+
+    See the repo's bar for AI/workflow example quality and the canonical
+    prompt-as-DRY safety model.
+
+    [AI Example Hygiene Checklist](workflows/ai-example-hygiene-checklist.md) · [Prompt as DRY](workflows/prompt-as-dry.md)
+
 -   **Check what is really proven**
 
     Use the derived example matrix to see which examples are source-chain verified, in the connected smoke lane, AI-first, or backed by real live proof.

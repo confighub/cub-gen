@@ -24,6 +24,11 @@ full-platform companion to [`c3agent`](../c3agent/), not as the strongest
 source-side proof by itself. Start with `c3agent` first if you want the
 cleanest AI fleet proof, then come here for the registry + constraints layer.
 
+For the repo-wide AI example bar behind this example, use the
+[AI Example Hygiene Checklist](../../docs/workflows/ai-example-hygiene-checklist.md).
+For the non-deterministic companion model, see
+[Prompt as DRY](../../docs/workflows/prompt-as-dry.md).
+
 ## Fastest path to believe it
 
 ```bash
@@ -85,6 +90,8 @@ surface for platform owners.
   render self-service forms
 - **30 lines → 11 targets**: minimal DRY input produces a complete governed
   Kubernetes footprint
+- **Verification + attestation loop**: AI fleet changes still go through the
+  same publish/verify/attest boundary before any connected decision state
 
 ## How AI Ops maps to DRY / WET / LIVE
 

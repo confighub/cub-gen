@@ -315,7 +315,9 @@ For AI and workflow examples, the DRY/WET model extends to prompts and context:
 This means human-authored changes and AI-assisted changes can run through the same
 governed ConfigHub MR path. The mutation ledger is what makes this auditable.
 
-See the [AI lane workflow](../docs/workflows/prompt-as-dry.md) for details.
+See the [AI Example Hygiene Checklist](../docs/workflows/ai-example-hygiene-checklist.md)
+for the repo-wide quality bar, and the [AI lane workflow](../docs/workflows/prompt-as-dry.md)
+for the canonical prompt-as-DRY path.
 
 ## Operations patterns
 

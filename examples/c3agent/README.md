@@ -39,6 +39,11 @@ This is the strongest compact AI fleet example in the repo today. Use
 [`ai-ops-paas`](../ai-ops-paas/) when you need the broader registry/constraint
 platform story, but start here when you want the cleaner source-side proof.
 
+For the repo-wide AI example bar behind this example, use the
+[AI Example Hygiene Checklist](../../docs/workflows/ai-example-hygiene-checklist.md).
+For the non-deterministic companion model, see
+[Prompt as DRY](../../docs/workflows/prompt-as-dry.md).
+
 ## 1. Who this is for
 
 | If you are... | Start here |
@@ -85,6 +90,8 @@ traceability, and safe escalation paths.
 - **Budget visibility**: aggregate budget tracking across all agent fleets
 - **Credential audit**: "which fleets reference prod credentials?" — cross-repo
   query
+- **Verification + attestation loop**: the same publish/verify/attest path used
+  for app changes remains the safety boundary for AI fleet changes too
 
 ## How C3 Agent maps to DRY / WET / LIVE
 
