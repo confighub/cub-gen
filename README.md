@@ -177,6 +177,7 @@ Docs currently live in this repo:
 - [CLI Reference](docs/cli-reference.md) — all commands, flags, and generator recipes
 - [Demo Guide](docs/demo-guide.md) — runnable demo scripts and scenarios
 - [Current release plan](docs/releases/v0.2-preview.2-plan.md) — must-ship and post-release work for the next preview
+- [Current ship checklist](docs/releases/v0.2-preview.2-ship-checklist.md) — what is already landed on `main`, what still blocks the tag, and what can wait
 - [Examples](examples/README.md) — complete runnable scenarios for every generator
 - [Platform](docs/platform.md) — how cub-gen connects to ConfigHub
 - [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md) — stack-specific entry paths
@@ -201,6 +202,7 @@ Both prove create, update, and drift-correction on a real cluster.
 | In progress | Flagship examples are still being hardened against the universal example contract: real-cluster outcome, two-audience path, visible ConfigHub value, and governed `ALLOW` plus `ESCALATE`/`BLOCK` proof |
 | Current release target | `v0.2-preview.2` focuses on all featured examples working well, CLI/docs trust, and a credible connected release signal |
 | Current plan | See [docs/releases/v0.2-preview.2-plan.md](docs/releases/v0.2-preview.2-plan.md) |
+| Current ship checklist | See [docs/releases/v0.2-preview.2-ship-checklist.md](docs/releases/v0.2-preview.2-ship-checklist.md) |
 | Example quality | `#177`, `#178`, `#180`, `#182`, `#185`, `#187`, `#200`, `#202`, `#207`, `#208` |
 | CLI/docs | `#232`, `#233`, `#234`, `#237`, `#238`, `#239`, `#240`, `#241`, `#242` |
 | Release gate | `#218`, `#226`, `#227` |
