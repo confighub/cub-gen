@@ -1365,12 +1365,7 @@ func helmProvenancePathsForGenerator(repoPath string, g model.GeneratorDetection
 	chartPath := firstInputPathForRole(g.Kind, g.Inputs, chartRole)
 	valuesPaths := inputPathsForRole(g.Kind, g.Inputs, valuesRole)
 
-	primaryValuesPath := primaryValuesBase
-	if selected := selectPreferredPathByBase(valuesPaths, primaryValuesBase); selected != "" {
-		primaryValuesPath = selected
-	} else if len(valuesPaths) > 0 {
-		primaryValuesPath = valuesPaths[0]
-	}
+	primaryValuesPath := selectPrimaryHelmValuesPath(valuesPaths, primaryValuesBase)
 	imageTagPaths := helmImageTagSourcePaths(repoPath, helmProvenancePaths{
 		ChartPath:         chartPath,
 		ValuesPaths:       valuesPaths,
@@ -1384,6 +1379,17 @@ func helmProvenancePathsForGenerator(repoPath string, g model.GeneratorDetection
 		PrimaryValuesPath: primaryValuesPath,
 		OverlayValuesPath: overlayValuesPath,
 	}
+}
+
+func selectPrimaryHelmValuesPath(valuesPaths []string, primaryValuesBase string) string {
+	primaryValuesPath := primaryValuesBase
+	if selected := selectPreferredPathByBase(valuesPaths, primaryValuesBase); selected != "" {
+		return selected
+	}
+	if len(valuesPaths) > 0 {
+		return valuesPaths[0]
+	}
+	return primaryValuesPath
 }
 
 func firstInputPathForRole(kind model.GeneratorKind, inputs []string, role string) string {
