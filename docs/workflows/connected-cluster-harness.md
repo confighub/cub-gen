@@ -178,6 +178,6 @@ kubectl --context kind-cub-gen-connected logs -n flux-system deployment/kustomiz
 
 ## Related documentation
 
-- [Connected preflight](../examples/demo/lib/connected-preflight.sh) — ConfigHub auth validation
-- [Live reconcile Flux](../examples/demo/e2e-live-reconcile-flux.sh) — Flux e2e proof
-- [Live reconcile Argo](../examples/demo/e2e-live-reconcile-argo.sh) — Argo e2e proof
+- [Connected preflight](https://github.com/confighub/cub-gen/blob/main/examples/demo/lib/connected-preflight.sh) — ConfigHub auth validation
+- [Live reconcile Flux](https://github.com/confighub/cub-gen/blob/main/examples/demo/e2e-live-reconcile-flux.sh) — Flux e2e proof
+- [Live reconcile Argo](https://github.com/confighub/cub-gen/blob/main/examples/demo/e2e-live-reconcile-argo.sh) — Argo e2e proof

@@ -17,7 +17,7 @@ examples where the first operator may be an AI assistant using the CLI.
 - Make it obvious what the example reads, writes, and does not write.
 - Show one concrete `ALLOW` path and one concrete `ESCALATE` or `BLOCK` path.
 - Tell the operator what to inspect after each major step.
-- Point back to the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md) when proof level matters.
+- Point back to the generated [Example Truth Matrix](../testing/example-truth-matrix.md) when proof level matters.
 
 ## Extra requirements for AI-authored or non-deterministic flows
 
@@ -42,4 +42,4 @@ examples where the first operator may be an AI assistant using the CLI.
 
 - [Prompt as DRY](prompt-as-dry.md)
 - [AI-only guardrails](ai-only-guardrails.md)
-- [Example Truth Matrix](../../docs/testing/example-truth-matrix.md)
+- [Example Truth Matrix](../testing/example-truth-matrix.md)
