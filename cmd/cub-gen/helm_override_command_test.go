@@ -337,6 +337,61 @@ spec:
 	}
 }
 
+func TestChangeExplainHelmExternalOriginWarning(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: external-demo\nversion: 0.1.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values.yaml"), "image:\n  repository: ghcr.io/example/external-demo\n  tag: ref+vault://kv/data/external-demo#image-tag\n")
+	mustWriteFile(t, filepath.Join(repo, "templates", "deployment.yaml"), `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-demo
+spec:
+  template:
+    spec:
+      containers:
+        - name: external-demo
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+`)
+
+	out, stderr, err := runWithCapturedIO([]string{
+		"change", "explain",
+		"--space", "platform",
+		repo,
+	})
+	if err != nil {
+		t.Fatalf("change explain returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal change explain output: %v\noutput=%s", err, out)
+	}
+	explanation, ok := got["explanation"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected explanation object, got %T", got["explanation"])
+	}
+	if explanation["origin_type"] != "external" {
+		t.Fatalf("expected origin_type=external, got %v", explanation["origin_type"])
+	}
+	if explanation["source_transform"] != "helm-external" {
+		t.Fatalf("expected source_transform=helm-external, got %v", explanation["source_transform"])
+	}
+	if explanation["source_path"] != "values.yaml" {
+		t.Fatalf("expected source_path values.yaml, got %v", explanation["source_path"])
+	}
+	warning, _ := explanation["warning"].(string)
+	if !strings.Contains(warning, "sourced externally") {
+		t.Fatalf("expected external warning, got %q", warning)
+	}
+	editHint, _ := explanation["edit_hint"].(string)
+	if !strings.Contains(editHint, "external reference") {
+		t.Fatalf("expected external edit hint, got %q", editHint)
+	}
+}
+
 func mustWriteFile(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {

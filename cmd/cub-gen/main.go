@@ -26,6 +26,7 @@ import (
 )
 
 const helmCLIOverrideTransform = "helm-cli-override"
+const helmExternalTransform = "helm-external"
 const helmBuiltinTransform = "helm-builtin"
 const helmHelperTransform = "helm-helper"
 const helmNonDeterministicTransform = "helm-nondeterministic"
@@ -1154,6 +1155,56 @@ type changeDiffResult struct {
 	Diffs  []changeDiffEntry  `json:"diffs"`
 }
 
+type changeRevisionDiffInput struct {
+	TargetSlug       string                  `json:"target_slug"`
+	TargetPath       string                  `json:"target_path,omitempty"`
+	RenderTargetSlug string                  `json:"render_target_slug"`
+	RenderTargetPath string                  `json:"render_target_path,omitempty"`
+	Space            string                  `json:"space"`
+	FromRef          string                  `json:"from_ref"`
+	ToRef            string                  `json:"to_ref"`
+	WhereResource    string                  `json:"where_resource,omitempty"`
+	HelmCLIOverrides []model.HelmCLIOverride `json:"helm_cli_overrides,omitempty"`
+}
+
+type changeRevisionDiffQuery struct {
+	FromRef       string `json:"from_ref"`
+	ToRef         string `json:"to_ref"`
+	DryPathFilter string `json:"dry_path_filter,omitempty"`
+	WetPathFilter string `json:"wet_path_filter,omitempty"`
+	OwnerFilter   string `json:"owner_filter,omitempty"`
+	MatchCount    int    `json:"match_count"`
+}
+
+type changeRevisionDiffCause struct {
+	Owner                 string                `json:"owner,omitempty"`
+	EditHint              string                `json:"edit_hint,omitempty"`
+	Confidence            float64               `json:"confidence,omitempty"`
+	BeforeDryPath         string                `json:"before_dry_path,omitempty"`
+	AfterDryPath          string                `json:"after_dry_path,omitempty"`
+	BeforeSourcePath      string                `json:"before_source_path,omitempty"`
+	AfterSourcePath       string                `json:"after_source_path,omitempty"`
+	BeforeSourceTransform string                `json:"before_source_transform,omitempty"`
+	AfterSourceTransform  string                `json:"after_source_transform,omitempty"`
+	BeforeOriginType      string                `json:"before_origin_type,omitempty"`
+	AfterOriginType       string                `json:"after_origin_type,omitempty"`
+	Hops                  []changeProvenanceHop `json:"hops,omitempty"`
+	Warning               string                `json:"warning,omitempty"`
+}
+
+type changeRevisionDiffEntry struct {
+	Cause  changeRevisionDiffCause `json:"cause"`
+	Effect changeDiffEntry         `json:"effect"`
+}
+
+type changeRevisionDiffResult struct {
+	Input   changeRevisionDiffInput   `json:"input"`
+	Query   changeRevisionDiffQuery   `json:"query"`
+	Before  changeDiffSnapshot        `json:"before"`
+	After   changeDiffSnapshot        `json:"after"`
+	Changes []changeRevisionDiffEntry `json:"changes"`
+}
+
 type changeExplainQuery struct {
 	WetPathFilter string `json:"wet_path_filter,omitempty"`
 	DryPathFilter string `json:"dry_path_filter,omitempty"`
@@ -1199,6 +1250,8 @@ func runChange(args []string) error {
 		return runChangeRun(args[1:])
 	case "diff":
 		return runChangeDiff(args[1:])
+	case "revision-diff":
+		return runChangeRevisionDiff(args[1:])
 	case "impact":
 		return runChangeImpact(args[1:])
 	case "explain":
@@ -1394,6 +1447,67 @@ func runChangeDiff(args []string) error {
 	return writeJSON(f, result, *pretty)
 }
 
+func runChangeRevisionDiff(args []string) error {
+	fs := flag.NewFlagSet("change revision-diff", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	space := fs.String("space", "default", "ConfigHub space label")
+	fromRef := fs.String("from", "", "Git ref to treat as the before/source revision")
+	toRef := fs.String("to", "", "Git ref to treat as the after/target revision")
+	whereResource := fs.String("where-resource", "", "Additional resource filter expression")
+	dryFilter := fs.String("dry-path", "", "Filter by DRY path")
+	wetFilter := fs.String("wet-path", "", "Filter by WET path")
+	ownerFilter := fs.String("owner", "", "Filter by owner")
+	out := fs.String("out", "-", "Output file path, or '-' for stdout")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	overrideFlags := addHelmCLIOverrideFlags(fs)
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	helmCLIOverrides, err := overrideFlags.parse()
+	if err != nil {
+		return err
+	}
+	if strings.TrimSpace(*fromRef) == "" || strings.TrimSpace(*toRef) == "" {
+		return errors.New("change revision-diff requires --from and --to")
+	}
+
+	targetSlug, renderTargetSlug, err := resolveTargetPairArgs(fs, "usage: cub-gen change revision-diff --from REF --to REF [flags] <target-path> [<render-target-path>]")
+	if err != nil {
+		return err
+	}
+
+	result, err := buildChangeRevisionDiffResult(
+		targetSlug,
+		renderTargetSlug,
+		*space,
+		*fromRef,
+		*toRef,
+		*whereResource,
+		helmCLIOverrides,
+		*dryFilter,
+		*wetFilter,
+		*ownerFilter,
+	)
+	if err != nil {
+		return err
+	}
+
+	if *out == "-" {
+		return writeJSON(os.Stdout, result, *pretty)
+	}
+	f, err := os.Create(*out)
+	if err != nil {
+		return fmt.Errorf("create output file: %w", err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	return writeJSON(f, result, *pretty)
+}
+
 type gitRefMaterialization struct {
 	TargetPath       string
 	RenderTargetPath string
@@ -1505,6 +1619,61 @@ func buildChangeDiffResult(
 			DiscoveredResource: len(afterImported.Discovered),
 		},
 		Diffs: diffs,
+	}, nil
+}
+
+func buildChangeRevisionDiffResult(
+	targetSlug, renderTargetSlug, space, fromRef, toRef, whereResource string,
+	helmCLIOverrides []model.HelmCLIOverride,
+	dryFilter, wetFilter, ownerFilter string,
+) (changeRevisionDiffResult, error) {
+	diff, err := buildChangeDiffResult(
+		targetSlug,
+		renderTargetSlug,
+		space,
+		fromRef,
+		toRef,
+		whereResource,
+		helmCLIOverrides,
+		dryFilter,
+		wetFilter,
+		ownerFilter,
+	)
+	if err != nil {
+		return changeRevisionDiffResult{}, err
+	}
+
+	changes := make([]changeRevisionDiffEntry, 0, len(diff.Diffs))
+	for _, entry := range diff.Diffs {
+		changes = append(changes, changeRevisionDiffEntry{
+			Cause:  revisionDiffCause(entry),
+			Effect: entry,
+		})
+	}
+
+	return changeRevisionDiffResult{
+		Input: changeRevisionDiffInput{
+			TargetSlug:       diff.Input.TargetSlug,
+			TargetPath:       diff.Input.TargetPath,
+			RenderTargetSlug: diff.Input.RenderTargetSlug,
+			RenderTargetPath: diff.Input.RenderTargetPath,
+			Space:            diff.Input.Space,
+			FromRef:          fromRef,
+			ToRef:            toRef,
+			WhereResource:    diff.Input.WhereResource,
+			HelmCLIOverrides: append([]model.HelmCLIOverride(nil), diff.Input.HelmCLIOverrides...),
+		},
+		Query: changeRevisionDiffQuery{
+			FromRef:       fromRef,
+			ToRef:         toRef,
+			DryPathFilter: diff.Query.DryPathFilter,
+			WetPathFilter: diff.Query.WetPathFilter,
+			OwnerFilter:   diff.Query.OwnerFilter,
+			MatchCount:    len(changes),
+		},
+		Before:  diff.Before,
+		After:   diff.After,
+		Changes: changes,
 	}, nil
 }
 
@@ -1856,6 +2025,45 @@ func collectChangeDiffEntries(
 	return out
 }
 
+func revisionDiffCause(entry changeDiffEntry) changeRevisionDiffCause {
+	owner := strings.TrimSpace(entry.After.Owner)
+	if owner == "" {
+		owner = strings.TrimSpace(entry.Before.Owner)
+	}
+	editHint := strings.TrimSpace(entry.After.EditHint)
+	if editHint == "" {
+		editHint = strings.TrimSpace(entry.Before.EditHint)
+	}
+	confidence := entry.After.Confidence
+	if confidence == 0 {
+		confidence = entry.Before.Confidence
+	}
+	hops := entry.After.Hops
+	if len(hops) == 0 {
+		hops = entry.Before.Hops
+	}
+	warning := strings.TrimSpace(entry.After.Warning)
+	if warning == "" {
+		warning = strings.TrimSpace(entry.Before.Warning)
+	}
+
+	return changeRevisionDiffCause{
+		Owner:                 owner,
+		EditHint:              editHint,
+		Confidence:            confidence,
+		BeforeDryPath:         entry.Before.DryPath,
+		AfterDryPath:          entry.After.DryPath,
+		BeforeSourcePath:      entry.Before.SourcePath,
+		AfterSourcePath:       entry.After.SourcePath,
+		BeforeSourceTransform: entry.Before.SourceTransform,
+		AfterSourceTransform:  entry.After.SourceTransform,
+		BeforeOriginType:      entry.Before.OriginType,
+		AfterOriginType:       entry.After.OriginType,
+		Hops:                  hops,
+		Warning:               warning,
+	}
+}
+
 func changeDiffStateFromProvenance(provenance []model.ProvenanceRecord, wetPath string, value any) changeDiffFieldState {
 	best := changeDiffFieldState{Exists: true, Value: value, WetPath: wetPath}
 	bestConfidence := -1.0
@@ -1890,8 +2098,14 @@ func changeDiffStateFromProvenance(provenance []model.ProvenanceRecord, wetPath 
 		switch origin.Transform {
 		case helmCLIOverrideTransform:
 			candidate.Warning = overrideAwareWarning()
+		case helmExternalTransform:
+			candidate.Warning = externalAwareWarning(origin.SourcePath)
 		case helmBuiltinTransform:
 			candidate.Warning = builtinAwareWarning(origin.SourcePath)
+		case helmHelperTransform:
+			candidate.Warning = helperAwareWarning()
+		case helmNonDeterministicTransform:
+			candidate.Warning = nonDeterministicAwareWarning(origin.SourcePath)
 		case helmDefaultTransform:
 			candidate.Warning = defaultAwareWarning()
 		}
@@ -2335,6 +2549,13 @@ func pickInverseSuggestion(
 					candidate.Confidence = sourceConfidence
 				}
 			}
+			if sourceTransform == helmExternalTransform {
+				candidate.EditHint = externalAwareEditHint(sourcePath, pointer.EditHint)
+				candidate.Warning = externalAwareWarning(sourcePath)
+				if sourceConfidence > candidate.Confidence {
+					candidate.Confidence = sourceConfidence
+				}
+			}
 			if sourceTransform == helmBuiltinTransform {
 				candidate.Warning = builtinAwareWarning(sourcePath)
 				if sourceConfidence > candidate.Confidence {
@@ -2410,6 +2631,9 @@ func collectImpactSuggestions(
 				entry.Owner = "release-automation"
 				entry.EditHint = overrideAwareEditHint(origin.SourcePath, entry.EditHint)
 				entry.Warning = overrideAwareWarning()
+			case helmExternalTransform:
+				entry.EditHint = externalAwareEditHint(origin.SourcePath, entry.EditHint)
+				entry.Warning = externalAwareWarning(origin.SourcePath)
 			case helmBuiltinTransform:
 				entry.Warning = builtinAwareWarning(origin.SourcePath)
 			case helmHelperTransform:
@@ -2567,6 +2791,8 @@ func applyFieldOriginToPointer(pointer model.InverseEditPointer, origin model.Fi
 	case helmCLIOverrideTransform:
 		pointer.Owner = "release-automation"
 		pointer.EditHint = overrideAwareEditHint(origin.SourcePath, pointer.EditHint)
+	case helmExternalTransform:
+		pointer.EditHint = externalAwareEditHint(origin.SourcePath, pointer.EditHint)
 	case helmBuiltinTransform, helmHelperTransform, helmNonDeterministicTransform, helmDefaultTransform:
 		// Keep the generator-produced edit hint, but let the higher-confidence
 		// provenance source win when the hint already points at the right layer.
@@ -2588,6 +2814,20 @@ func overrideAwareEditHint(sourcePath, fallback string) string {
 
 func overrideAwareWarning() string {
 	return "This field was overridden by the Helm CLI invocation for this run, so editing values files alone will not change the rendered output."
+}
+
+func externalAwareEditHint(sourcePath, fallback string) string {
+	if strings.TrimSpace(sourcePath) == "" {
+		return fallback
+	}
+	return fmt.Sprintf("This field is declared as an external reference in %s. Update that external source or change the reference in %s before editing local values.", sourcePath, sourcePath)
+}
+
+func externalAwareWarning(sourcePath string) string {
+	if strings.TrimSpace(sourcePath) == "" {
+		return "This field is sourced externally, so provenance ends at that external system instead of a repo-owned value."
+	}
+	return fmt.Sprintf("This field is sourced externally via %s, so provenance ends at that external system instead of a repo-owned value.", sourcePath)
 }
 
 func builtinAwareWarning(sourcePath string) string {
@@ -2619,6 +2859,8 @@ func defaultAwareWarning() string {
 func explainOriginType(sourcePath, sourceTransform string) string {
 	switch {
 	case sourceTransform == helmCLIOverrideTransform:
+		return "external"
+	case sourceTransform == helmExternalTransform:
 		return "external"
 	case sourceTransform == helmBuiltinTransform:
 		return "builtin"
@@ -2818,6 +3060,8 @@ func runGitOpsCleanup(args []string) error {
 }
 
 func printDiscoverTable(result gitopsflow.DiscoverResult) {
+	printGeneratorChainSummaries(result.ChainSummaries)
+
 	kindCapabilities := map[string]string{}
 	for _, kind := range registry.Kinds() {
 		spec, ok := registry.Spec(kind)
@@ -2865,6 +3109,8 @@ func printDiscoverTable(result gitopsflow.DiscoverResult) {
 }
 
 func printImportTable(result gitopsflow.ImportFlowResult) {
+	printGeneratorChainSummaries(result.ChainSummaries)
+
 	fmt.Printf("Discovered %d GitOps resources, creating renderer units...\n", len(result.Discovered))
 	printImportDiscoveredTable(result)
 	fmt.Printf("Created renderer units: %d\n", len(result.DryUnits))
@@ -2876,6 +3122,18 @@ func printImportTable(result gitopsflow.ImportFlowResult) {
 	fmt.Printf("Generated inverse transform plans: %d\n", len(result.InversePlans))
 	printImportTripleSummary(result)
 	fmt.Println("GitOps import complete")
+}
+
+func printGeneratorChainSummaries(summaries []model.GeneratorChainSummary) {
+	if len(summaries) == 0 {
+		return
+	}
+	fmt.Println("Generator chains")
+	fmt.Println("ID\tDisplay\tStages\tMappings")
+	for _, summary := range summaries {
+		fmt.Printf("%s\t%s\t%d\t%d\n", summary.ID, summary.Display, summary.StageCount, summary.MappingCount)
+	}
+	fmt.Println()
 }
 
 func printImportDiscoveredTable(result gitopsflow.ImportFlowResult) {
@@ -3205,6 +3463,7 @@ func printChangeUsage(out io.Writer) {
 			"Use these commands after you know the repo path and want to answer:",
 			"  - what will change?",
 			"  - what changed between two rendered refs?",
+			"  - what changed between two release revisions, and which DRY edits caused it?",
 			"  - which rendered fields does this DRY path affect?",
 			"  - where should I edit DRY source?",
 			"  - should I ask ConfigHub for a decision?",
@@ -3215,6 +3474,7 @@ func printChangeUsage(out io.Writer) {
 				"  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> [<render-target-path>]",
 				"  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> [<render-target-path>]",
 				"  cub-gen change diff --before-ref REF --after-ref REF [--space SPACE] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--dry-path PATH] [--wet-path PATH] [--owner OWNER] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]",
+				"  cub-gen change revision-diff --from REF --to REF [--space SPACE] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--dry-path PATH] [--wet-path PATH] [--owner OWNER] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]",
 				"  cub-gen change impact [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--dry-path PATH] [--wet-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-path> [<render-target-path>]",
 				"  cub-gen change impact --change-id ID --bundle FILE [--dry-path PATH] [--wet-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]",
 				"  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-path> [<render-target-path>]",
@@ -3227,6 +3487,7 @@ func printChangeUsage(out io.Writer) {
 			Lines: []string{
 				"  cub-gen change preview --space my-space ./examples/helm-paas",
 				"  cub-gen change diff --before-ref main --after-ref HEAD ./examples/helm-paas",
+				"  cub-gen change revision-diff --from v0.2-preview.1 --to v0.2-preview.2 ./examples/helm-paas",
 				"  cub-gen change impact --space my-space --dry-path values.image.tag ./examples/helm-paas",
 				"  cub-gen change explain --space my-space --set image.tag=v1.2.4 ./examples/helm-paas",
 				"  cub-gen change run --mode local --space my-space ./examples/scoredev-paas",
@@ -3240,6 +3501,7 @@ func printChangeUsage(out io.Writer) {
 			Lines: []string{
 				"  - Start with 'change explain' if you already know the rendered field you care about",
 				"  - Use 'change diff' when you want a field-level before/after render comparison between two git refs",
+				"  - Use 'change revision-diff' when you want release-note style DRY->WET pairs between two refs",
 				"  - Use 'change impact' when you know the DRY path and want the downstream blast radius",
 				"  - Start with 'change preview' before 'change run'",
 				"  - Helm CLI overrides win over values-prod.yaml, values.yaml, and chart defaults",

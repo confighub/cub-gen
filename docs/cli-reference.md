@@ -12,6 +12,7 @@ not cluster/runtime ones.
 |---|---|
 | What does this repo render, and where did it come from? | `gitops import` |
 | What changed between two rendered git refs? | `change diff` |
+| What changed between two release refs, and which DRY edits caused it? | `change revision-diff` |
 | Which DRY file/path should I edit for a rendered field? | `change explain` |
 | Which rendered fields would this DRY path affect? | `change impact` |
 | What evidence bundle and safe next step should I prepare? | `change preview` |
@@ -48,6 +49,10 @@ cub-gen gitops discover --space <space> [--json] [--where-resource <expr>] <targ
 | `--space` | Space label for discover state partitioning |
 | `--json` | Emit JSON output (default: table) |
 | `--where-resource` | Filter resources (`kind`, `name`, `root`, `id`, `LIKE`, `IN`, `AND`) |
+
+If a repo declares a generator chain, `gitops discover` now reports that chain
+directly as a compact pipeline summary such as `score -> helm`, instead of
+making you infer it from separate stage detections.
 
 ### `gitops import`
 
@@ -126,6 +131,21 @@ Current scope:
 - it expects `<target-path>` to live in a git repo
 - it renders each side with the Helm value files `cub-gen` already selected for import/provenance
 - output includes `before.value`, `after.value`, and before/after provenance metadata for each changed field
+
+### `change revision-diff`
+
+Compare two git refs and pair each rendered field change with the DRY edit route
+that produced it.
+
+```
+cub-gen change revision-diff --from <ref> --to <ref> [--space <space>] [--where-resource <expr>] [--dry-path <path>] [--wet-path <path>] [--owner <owner>] <target-path> [<render-target-path>]
+```
+
+Current scope:
+
+- today this reuses the Helm-first field-level diff engine
+- output groups each changed rendered field under a `cause` block with before/after DRY paths, source paths, origin types, edit hint, and warning metadata
+- use this when you want release-note style "what DRY edit caused what deployed-field change?" output instead of just a raw before/after render diff
 
 ### `verify`
 
@@ -340,9 +360,10 @@ What works today:
 - One `gitops import` / `publish` invocation works on one repo path pair.
 - Supported generators can pick up overlay files that already live in that repo, such as Helm `values-prod.yaml`, Spring `application-dev.yaml`, and generator-specific overlay files.
 - Helm flows also capture invocation-time `--set`, `--set-string`, and `--set-file` overrides and rank them above values files in provenance and `change explain`.
-- Helm `change explain` also calls out when a field is currently coming from `.Chart.AppVersion`, `.Files.Get`, a helper chain, `lookup`/other render-time logic, or an unresolved chart-default path instead of an observed values file.
+- Helm `change explain` also calls out when a field is currently coming from `.Chart.AppVersion`, `.Files.Get`, a helper chain, `lookup`/other render-time logic, an external ref declared in values, or an unresolved chart-default path instead of an observed values file.
 - Provenance records include those generator inputs in `dry_inputs`, `values_paths`, and `field_origin_map` when the generator emits separate overlay transforms.
 - When a repo declares a generator chain, `change explain` includes `hops[]` so you can see the upstream DRY stage and the downstream generator stage together instead of stopping at the last transform boundary.
+- `gitops discover` and `gitops import` also surface declared generator chains directly in table output so the Score -> Helm style pipeline is obvious on first run.
 - `change explain` can point to overlay-specific edit locations. For Spring Boot, the current edit hint routes `server.port` changes to `application-dev.yaml` for environment overrides while keeping `application.yaml` as the base.
 
 What does not work today:

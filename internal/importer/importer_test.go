@@ -718,6 +718,32 @@ spec:
 	}
 }
 
+func TestImportRepoHelmExternalOriginUsesExternalTransform(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: external-demo\nversion: 0.1.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values.yaml"), "image:\n  repository: ghcr.io/example/external-demo\n  tag: ref+vault://kv/data/external-demo#image-tag\n")
+
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+
+	prov := result.Provenance[0]
+	imageOrigin, ok := fieldOriginByWetPath(prov.FieldOriginMap, "Deployment/spec/template/spec/containers[0]/image")
+	if !ok {
+		t.Fatalf("expected image origin, got %+v", prov.FieldOriginMap)
+	}
+	if imageOrigin.Transform != helmExternalTransform {
+		t.Fatalf("expected helm-external transform, got %+v", imageOrigin)
+	}
+	if imageOrigin.SourcePath != "values.yaml" {
+		t.Fatalf("expected external source path values.yaml, got %+v", imageOrigin)
+	}
+}
+
 func TestImportRepoSpringBootDryWetContract(t *testing.T) {
 	repo := filepath.Join("..", "..", "examples", "springboot-paas")
 	result, err := ImportRepo(repo, "main", "platform")

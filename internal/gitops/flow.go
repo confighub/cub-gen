@@ -51,42 +51,45 @@ type DiscoveredResource struct {
 
 // DiscoverResult is the local discover-unit state used by import and cleanup.
 type DiscoverResult struct {
-	Space            string                     `json:"space"`
-	TargetSlug       string                     `json:"target_slug"`
-	TargetPath       string                     `json:"target_path"`
-	Ref              string                     `json:"ref"`
-	WhereResource    string                     `json:"where_resource,omitempty"`
-	DiscoverUnitSlug string                     `json:"discover_unit_slug"`
-	DiscoverFile     string                     `json:"discover_file"`
-	DiscoveredAt     string                     `json:"discovered_at"`
-	Resources        []DiscoveredResource       `json:"resources"`
-	Detections       []model.GeneratorDetection `json:"detections"`
-	Chains           []model.GeneratorChain     `json:"chains,omitempty"`
+	Space            string                        `json:"space"`
+	TargetSlug       string                        `json:"target_slug"`
+	TargetPath       string                        `json:"target_path"`
+	Ref              string                        `json:"ref"`
+	WhereResource    string                        `json:"where_resource,omitempty"`
+	DiscoverUnitSlug string                        `json:"discover_unit_slug"`
+	DiscoverFile     string                        `json:"discover_file"`
+	DiscoveredAt     string                        `json:"discovered_at"`
+	Resources        []DiscoveredResource          `json:"resources"`
+	Detections       []model.GeneratorDetection    `json:"detections"`
+	Chains           []model.GeneratorChain        `json:"chains,omitempty"`
+	ChainSummaries   []model.GeneratorChainSummary `json:"chain_summaries,omitempty"`
 }
 
 // ImportFlowResult models the staged import output in the same conceptual shape
 // as cub gitops import: discover -> dry units -> rendered wet units + links.
 type ImportFlowResult struct {
-	Space              string                       `json:"space"`
-	TargetSlug         string                       `json:"target_slug"`
-	TargetPath         string                       `json:"target_path"`
-	RenderTargetSlug   string                       `json:"render_target_slug"`
-	RenderTargetPath   string                       `json:"render_target_path,omitempty"`
-	Ref                string                       `json:"ref"`
-	WhereResource      string                       `json:"where_resource,omitempty"`
-	HelmCLIOverrides   []model.HelmCLIOverride      `json:"helm_cli_overrides,omitempty"`
-	DiscoverUnitSlug   string                       `json:"discover_unit_slug"`
-	ImportedAt         string                       `json:"imported_at"`
-	Discovered         []DiscoveredResource         `json:"discovered"`
-	DryUnits           []model.UnitRef              `json:"dry_units"`
-	WetUnits           []model.UnitRef              `json:"wet_units"`
-	GeneratorUnits     []model.UnitRef              `json:"generator_units"`
-	Links              []model.UnitLink             `json:"links"`
-	Contracts          []model.GeneratorContract    `json:"contracts"`
-	Provenance         []model.ProvenanceRecord     `json:"provenance"`
-	InversePlans       []model.InverseTransformPlan `json:"inverse_transform_plans"`
-	DryInputs          []model.DryInputRef          `json:"dry_inputs"`
-	WetManifestTargets []model.WetManifestTarget    `json:"wet_manifest_targets"`
+	Space              string                        `json:"space"`
+	TargetSlug         string                        `json:"target_slug"`
+	TargetPath         string                        `json:"target_path"`
+	RenderTargetSlug   string                        `json:"render_target_slug"`
+	RenderTargetPath   string                        `json:"render_target_path,omitempty"`
+	Ref                string                        `json:"ref"`
+	WhereResource      string                        `json:"where_resource,omitempty"`
+	HelmCLIOverrides   []model.HelmCLIOverride       `json:"helm_cli_overrides,omitempty"`
+	DiscoverUnitSlug   string                        `json:"discover_unit_slug"`
+	ImportedAt         string                        `json:"imported_at"`
+	Discovered         []DiscoveredResource          `json:"discovered"`
+	Chains             []model.GeneratorChain        `json:"chains,omitempty"`
+	ChainSummaries     []model.GeneratorChainSummary `json:"chain_summaries,omitempty"`
+	DryUnits           []model.UnitRef               `json:"dry_units"`
+	WetUnits           []model.UnitRef               `json:"wet_units"`
+	GeneratorUnits     []model.UnitRef               `json:"generator_units"`
+	Links              []model.UnitLink              `json:"links"`
+	Contracts          []model.GeneratorContract     `json:"contracts"`
+	Provenance         []model.ProvenanceRecord      `json:"provenance"`
+	InversePlans       []model.InverseTransformPlan  `json:"inverse_transform_plans"`
+	DryInputs          []model.DryInputRef           `json:"dry_inputs"`
+	WetManifestTargets []model.WetManifestTarget     `json:"wet_manifest_targets"`
 }
 
 // CleanupResult reports the resolved target identity and discover state path
@@ -169,6 +172,7 @@ func Discover(targetPath, ref, space, whereResource string) (DiscoverResult, err
 		Resources:        resources,
 		Detections:       filtered,
 		Chains:           filteredChains,
+		ChainSummaries:   detect.SummarizeGeneratorChains(filteredChains),
 	}
 
 	if err := persistDiscoverResult(result); err != nil {
@@ -212,6 +216,8 @@ func ImportWithOptions(targetPath, renderTargetSlug, ref, space, whereResource s
 			DiscoverUnitSlug: discovered.DiscoverUnitSlug,
 			ImportedAt:       time.Now().UTC().Format(time.RFC3339),
 			Discovered:       discovered.Resources,
+			Chains:           discovered.Chains,
+			ChainSummaries:   discovered.ChainSummaries,
 		}, nil
 	}
 	requiredProviders := requiredProvidersForDiscovered(discovered.Resources)
@@ -244,6 +250,8 @@ func ImportWithOptions(targetPath, renderTargetSlug, ref, space, whereResource s
 		DiscoverUnitSlug:   discovered.DiscoverUnitSlug,
 		ImportedAt:         time.Now().UTC().Format(time.RFC3339),
 		Discovered:         discovered.Resources,
+		Chains:             discovered.Chains,
+		ChainSummaries:     discovered.ChainSummaries,
 		DryUnits:           dryUnits,
 		WetUnits:           wetUnits,
 		GeneratorUnits:     generatorUnits,

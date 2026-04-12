@@ -9,7 +9,7 @@ Goal: one stable interface for terminal users, CI jobs, and agent tool-calls.
 
 ## Design principles
 
-1. One `change_id` lifecycle across preview, run, explain, and impact.
+1. One `change_id` lifecycle across preview, run, explain, impact, diff, and revision-diff.
 2. Same JSON shape across local and connected execution.
 3. No shell parsing of multiple intermediate files required.
 4. Additive over existing `discover/import/publish/verify/attest` pipeline.
@@ -148,6 +148,30 @@ Expected output fields (`ChangeImpactResult`):
 - `query.{dry_path_filter,wet_path_filter,owner_filter,match_count}`
 - `impacts[].{owner,wet_path,dry_path,edit_hint,confidence,source_path,source_transform,origin_type,generator_name,generator_profile}`
 
+### 6) `cub-gen change revision-diff`
+
+Purpose:
+- Show the DRY-to-WET change pairs between two source revisions of the same repo path.
+
+Supported invocation mode:
+
+- `cub-gen change revision-diff --from <ref> --to <ref> [filters] <target-path> [<render-target-path>]`
+
+Filters:
+
+- `--dry-path <path>` (optional)
+- `--wet-path <path>` (optional)
+- `--owner <owner>` (optional)
+
+Expected output fields (`ChangeRevisionDiffResult`):
+
+- `input.{target_path,render_target_path,target_slug,render_target_slug,space,from_ref,to_ref}`
+- `query.{from_ref,to_ref,dry_path_filter,wet_path_filter,owner_filter,match_count}`
+- `before.change.{change_id,bundle_digest,attestation_digest}`
+- `after.change.{change_id,bundle_digest,attestation_digest}`
+- `changes[].cause.{before_dry_path,after_dry_path,before_source_path,after_source_path,before_source_transform,after_source_transform,before_origin_type,after_origin_type,owner,edit_hint,confidence,warning,hops[]}`
+- `changes[].effect.{manifest,wet_path,before,after}`
+
 ## Exit code contract
 
 - `0`: success (`ALLOW` or successful local run)
@@ -166,6 +190,7 @@ Native subcommands are implemented for:
 - `change preview`
 - `change run (local|connected)`
 - `change diff`
+- `change revision-diff`
 - `change explain`
 - `change impact`
 

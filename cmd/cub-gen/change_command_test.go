@@ -609,6 +609,40 @@ func TestChangeDiffJSON(t *testing.T) {
 	}
 }
 
+func TestChangeRevisionDiffJSON(t *testing.T) {
+	repo := t.TempDir()
+	fromRef := seedGitHelmRepo(t, repo, "v1.0.0")
+	toRef := updateGitHelmRepoValue(t, repo, "v1.0.1")
+
+	result, err := buildChangeRevisionDiffResult(repo, repo, "platform", fromRef, toRef, "", nil, "", "", "")
+	if err != nil {
+		t.Fatalf("buildChangeRevisionDiffResult returned error: %v", err)
+	}
+	if result.Query.FromRef != fromRef {
+		t.Fatalf("expected from_ref=%s, got %v", fromRef, result.Query.FromRef)
+	}
+	if result.Query.ToRef != toRef {
+		t.Fatalf("expected to_ref=%s, got %v", toRef, result.Query.ToRef)
+	}
+	if len(result.Changes) == 0 {
+		t.Fatalf("expected non-empty revision diff changes")
+	}
+
+	first := result.Changes[0]
+	if first.Cause.AfterDryPath != "values.image.tag" {
+		t.Fatalf("expected after dry path values.image.tag, got %+v", first.Cause)
+	}
+	if first.Effect.WetPath != "Deployment/spec/template/spec/containers[0]/image" {
+		t.Fatalf("expected image wet path, got %+v", first.Effect)
+	}
+	if first.Effect.Before.Value != "ghcr.io/example/diff-demo:v1.0.0" {
+		t.Fatalf("unexpected before effect value: %v", first.Effect.Before.Value)
+	}
+	if first.Effect.After.Value != "ghcr.io/example/diff-demo:v1.0.1" {
+		t.Fatalf("unexpected after effect value: %v", first.Effect.After.Value)
+	}
+}
+
 func TestChangeCommandErrorModes(t *testing.T) {
 	tests := []struct {
 		name string
@@ -639,6 +673,11 @@ func TestChangeCommandErrorModes(t *testing.T) {
 			name: "diff-missing-targets",
 			args: []string{"change", "diff", "--before-ref", "main", "--after-ref", "HEAD"},
 			sub:  "usage: cub-gen change diff",
+		},
+		{
+			name: "revision-diff-missing-targets",
+			args: []string{"change", "revision-diff", "--from", "main", "--to", "HEAD"},
+			sub:  "usage: cub-gen change revision-diff",
 		},
 		{
 			name: "explain-missing-targets",

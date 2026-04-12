@@ -101,12 +101,43 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 	}
 
 	return model.DetectionResult{
-		Repo:       absRepo,
-		Ref:        ref,
-		DetectedAt: time.Now().UTC().Format(time.RFC3339),
-		Generators: all,
-		Chains:     chains,
+		Repo:           absRepo,
+		Ref:            ref,
+		DetectedAt:     time.Now().UTC().Format(time.RFC3339),
+		Generators:     all,
+		Chains:         chains,
+		ChainSummaries: SummarizeGeneratorChains(chains),
 	}, nil
+}
+
+// SummarizeGeneratorChains converts low-level chain metadata into a compact
+// display shape that is easier to surface in CLI output.
+func SummarizeGeneratorChains(chains []model.GeneratorChain) []model.GeneratorChainSummary {
+	if len(chains) == 0 {
+		return nil
+	}
+
+	summaries := make([]model.GeneratorChainSummary, 0, len(chains))
+	for _, chain := range chains {
+		stages := make([]string, 0, len(chain.Stages))
+		for _, stage := range chain.Stages {
+			label := strings.TrimSpace(string(stage.Kind))
+			if label == "" {
+				continue
+			}
+			stages = append(stages, label)
+		}
+		display := strings.Join(stages, " -> ")
+		summaries = append(summaries, model.GeneratorChainSummary{
+			ID:           chain.ID,
+			Name:         chain.Name,
+			Display:      display,
+			StageCount:   len(chain.Stages),
+			Stages:       stages,
+			MappingCount: len(chain.Mappings),
+		})
+	}
+	return summaries
 }
 
 type rawGeneratorChainFile struct {
