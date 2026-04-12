@@ -340,7 +340,7 @@ What works today:
 - One `gitops import` / `publish` invocation works on one repo path pair.
 - Supported generators can pick up overlay files that already live in that repo, such as Helm `values-prod.yaml`, Spring `application-dev.yaml`, and generator-specific overlay files.
 - Helm flows also capture invocation-time `--set`, `--set-string`, and `--set-file` overrides and rank them above values files in provenance and `change explain`.
-- Helm `change explain` also calls out when a field is currently coming from `.Chart.AppVersion` or an unresolved chart-default path instead of an observed values file.
+- Helm `change explain` also calls out when a field is currently coming from `.Chart.AppVersion`, `.Files.Get`, a helper chain, `lookup`/other render-time logic, or an unresolved chart-default path instead of an observed values file.
 - Provenance records include those generator inputs in `dry_inputs`, `values_paths`, and `field_origin_map` when the generator emits separate overlay transforms.
 - When a repo declares a generator chain, `change explain` includes `hops[]` so you can see the upstream DRY stage and the downstream generator stage together instead of stopping at the last transform boundary.
 - `change explain` can point to overlay-specific edit locations. For Spring Boot, the current edit hint routes `server.port` changes to `application-dev.yaml` for environment overrides while keeping `application.yaml` as the base.
