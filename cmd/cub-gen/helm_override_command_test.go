@@ -228,6 +228,115 @@ spec:
 	}
 }
 
+func TestChangeExplainHelmHelperOriginWarning(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: helper-demo\nversion: 0.1.0\n")
+	mustWriteFile(t, filepath.Join(repo, "values.yaml"), "image:\n  repository: ghcr.io/example/helper-demo\n  tag: v1.2.3\n")
+	mustWriteFile(t, filepath.Join(repo, "templates", "_helpers.tpl"), `{{- define "helper-demo.imageTag" -}}
+{{ .Values.image.tag }}
+{{- end -}}
+`)
+	mustWriteFile(t, filepath.Join(repo, "templates", "deployment.yaml"), `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helper-demo
+spec:
+  template:
+    spec:
+      containers:
+        - name: helper-demo
+          image: "{{ .Values.image.repository }}:{{ include "helper-demo.imageTag" . }}"
+`)
+
+	out, stderr, err := runWithCapturedIO([]string{
+		"change", "explain",
+		"--space", "platform",
+		repo,
+	})
+	if err != nil {
+		t.Fatalf("change explain returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal change explain output: %v\noutput=%s", err, out)
+	}
+	explanation, ok := got["explanation"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected explanation object, got %T", got["explanation"])
+	}
+	if explanation["origin_type"] != "helper" {
+		t.Fatalf("expected origin_type=helper, got %v", explanation["origin_type"])
+	}
+	if explanation["source_transform"] != "helm-helper" {
+		t.Fatalf("expected source_transform=helm-helper, got %v", explanation["source_transform"])
+	}
+	if explanation["source_path"] != "values.yaml" {
+		t.Fatalf("expected helper chain to resolve back to values.yaml, got %v", explanation["source_path"])
+	}
+	warning, _ := explanation["warning"].(string)
+	if !strings.Contains(warning, "helper chain") {
+		t.Fatalf("expected helper warning, got %q", warning)
+	}
+}
+
+func TestChangeExplainHelmNonDeterministicOriginWarning(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: nondeterministic-demo\nversion: 0.1.0\n")
+	mustWriteFile(t, filepath.Join(repo, "templates", "deployment.yaml"), `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nondeterministic-demo
+spec:
+  template:
+    spec:
+      containers:
+        - name: nondeterministic-demo
+          image: "{{ lookup "v1" "ConfigMap" "default" "release-info" }}"
+`)
+
+	out, stderr, err := runWithCapturedIO([]string{
+		"change", "explain",
+		"--space", "platform",
+		repo,
+	})
+	if err != nil {
+		t.Fatalf("change explain returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal change explain output: %v\noutput=%s", err, out)
+	}
+	explanation, ok := got["explanation"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected explanation object, got %T", got["explanation"])
+	}
+	if explanation["origin_type"] != "non-deterministic" {
+		t.Fatalf("expected origin_type=non-deterministic, got %v", explanation["origin_type"])
+	}
+	if explanation["source_transform"] != "helm-nondeterministic" {
+		t.Fatalf("expected source_transform=helm-nondeterministic, got %v", explanation["source_transform"])
+	}
+	if explanation["source_path"] != "<helm-nondeterministic>:lookup" {
+		t.Fatalf("expected non-deterministic synthetic source, got %v", explanation["source_path"])
+	}
+	warning, _ := explanation["warning"].(string)
+	if !strings.Contains(warning, "render-time lookup logic") {
+		t.Fatalf("expected non-deterministic warning, got %q", warning)
+	}
+	editHint, _ := explanation["edit_hint"].(string)
+	if !strings.Contains(editHint, "render-time logic") {
+		t.Fatalf("expected non-deterministic edit hint, got %q", editHint)
+	}
+}
+
 func mustWriteFile(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {

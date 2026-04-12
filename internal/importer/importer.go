@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -22,13 +23,20 @@ import (
 )
 
 const (
-	generatorContractSchema  = "cub.confighub.io/generator-contract/v1"
-	provenanceSchema         = "cub.confighub.io/provenance/v1"
-	inversePlanSchema        = "cub.confighub.io/inverse-transform-plan/v1"
-	helmCLIOverrideTransform = "helm-cli-override"
-	helmBuiltinTransform     = "helm-builtin"
-	helmDefaultTransform     = "helm-default"
-	generatorChainTransform  = "generator-chain"
+	generatorContractSchema       = "cub.confighub.io/generator-contract/v1"
+	provenanceSchema              = "cub.confighub.io/provenance/v1"
+	inversePlanSchema             = "cub.confighub.io/inverse-transform-plan/v1"
+	helmCLIOverrideTransform      = "helm-cli-override"
+	helmBuiltinTransform          = "helm-builtin"
+	helmHelperTransform           = "helm-helper"
+	helmNonDeterministicTransform = "helm-nondeterministic"
+	helmDefaultTransform          = "helm-default"
+	generatorChainTransform       = "generator-chain"
+)
+
+var (
+	helmHelperDefineRe = regexp.MustCompile(`(?s)\{\{[- ]*define\s+"([^"]+)"[- ]*\}\}(.*?)\{\{[- ]*end[- ]*\}\}`)
+	helmHelperRefRe    = regexp.MustCompile(`(?:include|template)\s+"([^"]+)"`)
 )
 
 // ImportRepo detects generators in a repository and produces the initial
@@ -721,10 +729,15 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 	case model.GeneratorHelm:
 		hints := helmProvenancePathsForGenerator(detection.Repo, g)
 		imageTagSources := helmImageTagSources(detection.Repo, hints)
+		helperChain := helmImageTagUsesHelperChain(detection.Repo)
 		overrideOrigins := helmCLIOverrideFieldOrigins(g, helmCLIOverrides)
 		origins := make([]model.FieldOrigin, 0, len(overrideOrigins)+len(imageTagSources)+1)
 		origins = append(origins, overrideOrigins...)
 		if len(imageTagSources) == 0 {
+			if nondeterministicOrigin, ok := helmImageTagNonDeterministicOrigin(detection.Repo); ok {
+				origins = append(origins, nondeterministicOrigin)
+				return origins
+			}
 			if builtinOrigin, ok := helmImageTagBuiltinOrigin(detection.Repo, hints); ok {
 				origins = append(origins, builtinOrigin)
 				return origins
@@ -744,6 +757,11 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 			if strings.HasPrefix(source.Path, "charts/") {
 				confidenceKey = "image_tag_subchart"
 				confidenceFallback = 0.74
+			}
+			if helperChain {
+				transform = helmHelperTransform
+				confidenceKey = ""
+				confidenceFallback = 1.0
 			}
 			origins = append(origins, model.FieldOrigin{
 				DryPath:     "values.image.tag",
@@ -1066,6 +1084,17 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			Owner: "app-team", Confidence: 0.86,
 		})
 		if len(imageTagSources) == 0 {
+			if nondeterministicOrigin, ok := helmImageTagNonDeterministicOrigin(detection.Repo); ok {
+				return []model.InverseEditPointer{
+					{
+						WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+						DryPath:    "values.image.tag",
+						Owner:      "platform-engineer",
+						EditHint:   "This field currently comes from Helm render-time logic like lookup/now/randAlphaNum/uuidv4. Edit the chart template or helper chain instead of values.yaml.",
+						Confidence: nondeterministicOrigin.Confidence,
+					},
+				}
+			}
 			if _, ok := helmImageTagBuiltinOrigin(detection.Repo, hints); ok {
 				return []model.InverseEditPointer{
 					{
@@ -1874,6 +1903,15 @@ func helmImageTagBuiltinOrigin(repoPath string, hints helmProvenancePaths) (mode
 	if strings.TrimSpace(repoPath) == "" {
 		return model.FieldOrigin{}, false
 	}
+	if fileRef := helmTemplatesUseFilesGetForImageTag(repoPath); fileRef != "" {
+		return model.FieldOrigin{
+			DryPath:    "values.image.tag",
+			WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+			SourcePath: fmt.Sprintf("<helm-builtin>:.Files.Get(%s)", fileRef),
+			Transform:  helmBuiltinTransform,
+			Confidence: 1.0,
+		}, true
+	}
 	if !helmTemplatesUseChartAppVersionFallback(repoPath) {
 		return model.FieldOrigin{}, false
 	}
@@ -1887,6 +1925,20 @@ func helmImageTagBuiltinOrigin(repoPath string, hints helmProvenancePaths) (mode
 		}, true
 	}
 	return model.FieldOrigin{}, false
+}
+
+func helmImageTagNonDeterministicOrigin(repoPath string) (model.FieldOrigin, bool) {
+	fn := helmTemplatesUseNonDeterministicImageTagSource(repoPath)
+	if fn == "" {
+		return model.FieldOrigin{}, false
+	}
+	return model.FieldOrigin{
+		DryPath:    "values.image.tag",
+		WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+		SourcePath: "<helm-nondeterministic>:" + fn,
+		Transform:  helmNonDeterministicTransform,
+		Confidence: 1.0,
+	}, true
 }
 
 func helmImageTagDefaultOrigin() model.FieldOrigin {
@@ -1925,6 +1977,171 @@ func helmTemplatesUseChartAppVersionFallback(repoPath string) bool {
 				found = true
 				return filepath.SkipAll
 			}
+		}
+		return nil
+	})
+	return found
+}
+
+func helmImageTagUsesHelperChain(repoPath string) bool {
+	helpers := helmHelperDefinitions(repoPath)
+	if len(helpers) == 0 {
+		return false
+	}
+	for _, ref := range helmReferencedHelpers(repoPath) {
+		if helmHelperUsesImageTag(helpers, ref, map[string]struct{}{}) {
+			return true
+		}
+	}
+	return false
+}
+
+func helmHelperDefinitions(repoPath string) map[string]string {
+	templatesDir := filepath.Join(repoPath, "templates")
+	info, err := os.Stat(templatesDir)
+	if err != nil || !info.IsDir() {
+		return nil
+	}
+	out := map[string]string{}
+	_ = filepath.Walk(templatesDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info == nil || info.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) != ".tpl" {
+			return nil
+		}
+		content, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		for _, match := range helmHelperDefineRe.FindAllStringSubmatch(string(content), -1) {
+			if len(match) < 3 {
+				continue
+			}
+			out[match[1]] = match[2]
+		}
+		return nil
+	})
+	return out
+}
+
+func helmReferencedHelpers(repoPath string) []string {
+	templatesDir := filepath.Join(repoPath, "templates")
+	info, err := os.Stat(templatesDir)
+	if err != nil || !info.IsDir() {
+		return nil
+	}
+	refs := map[string]struct{}{}
+	_ = filepath.Walk(templatesDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info == nil || info.IsDir() {
+			return nil
+		}
+		content, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		for _, match := range helmHelperRefRe.FindAllStringSubmatch(string(content), -1) {
+			if len(match) < 2 {
+				continue
+			}
+			refs[match[1]] = struct{}{}
+		}
+		return nil
+	})
+	out := make([]string, 0, len(refs))
+	for ref := range refs {
+		out = append(out, ref)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func helmHelperUsesImageTag(helpers map[string]string, helper string, seen map[string]struct{}) bool {
+	if _, ok := seen[helper]; ok {
+		return false
+	}
+	body, ok := helpers[helper]
+	if !ok {
+		return false
+	}
+	seen[helper] = struct{}{}
+	if strings.Contains(body, ".Values.image.tag") {
+		return true
+	}
+	for _, match := range helmHelperRefRe.FindAllStringSubmatch(body, -1) {
+		if len(match) < 2 {
+			continue
+		}
+		if helmHelperUsesImageTag(helpers, match[1], seen) {
+			return true
+		}
+	}
+	return false
+}
+
+func helmTemplatesUseFilesGetForImageTag(repoPath string) string {
+	return helmImageTagTemplateFunctionArg(repoPath, ".Files.Get")
+}
+
+func helmTemplatesUseNonDeterministicImageTagSource(repoPath string) string {
+	for _, fn := range []string{"lookup", "now", "randAlphaNum", "uuidv4"} {
+		if helmImageTagTemplateMentions(repoPath, fn) {
+			return fn
+		}
+	}
+	return ""
+}
+
+func helmImageTagTemplateFunctionArg(repoPath, fn string) string {
+	templatesDir := filepath.Join(repoPath, "templates")
+	info, err := os.Stat(templatesDir)
+	if err != nil || !info.IsDir() {
+		return ""
+	}
+
+	pattern := regexp.MustCompile(regexp.QuoteMeta(fn) + `\s+"([^"]+)"`)
+	ref := ""
+	_ = filepath.Walk(templatesDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info == nil || info.IsDir() {
+			return nil
+		}
+		content, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		text := string(content)
+		if !strings.Contains(text, "image") || !strings.Contains(text, fn) {
+			return nil
+		}
+		match := pattern.FindStringSubmatch(text)
+		if len(match) < 2 {
+			return nil
+		}
+		ref = match[1]
+		return filepath.SkipAll
+	})
+	return ref
+}
+
+func helmImageTagTemplateMentions(repoPath, token string) bool {
+	templatesDir := filepath.Join(repoPath, "templates")
+	info, err := os.Stat(templatesDir)
+	if err != nil || !info.IsDir() {
+		return false
+	}
+	found := false
+	_ = filepath.Walk(templatesDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info == nil || info.IsDir() {
+			return nil
+		}
+		content, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		text := string(content)
+		if strings.Contains(text, "image") && strings.Contains(text, token) {
+			found = true
+			return filepath.SkipAll
 		}
 		return nil
 	})

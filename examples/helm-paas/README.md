@@ -33,7 +33,7 @@ Known gaps still open:
 
 - umbrella/subchart/alias/conditional chart support is still open work ([#238](https://github.com/confighub/cub-gen/issues/238))
 - one-command multi-variant fan-out is not exposed yet ([#237](https://github.com/confighub/cub-gen/issues/237))
-- helper chains, `lookup`, and external value-source provenance honesty are still partial ([#239](https://github.com/confighub/cub-gen/issues/239))
+- external value-source provenance honesty is still partial ([#239](https://github.com/confighub/cub-gen/issues/239)); helper-chain and `lookup` origins now surface as explicit warnings instead of pretending they came from a normal values file
 
 ## AI-first bundle
 

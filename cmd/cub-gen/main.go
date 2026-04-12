@@ -27,6 +27,8 @@ import (
 
 const helmCLIOverrideTransform = "helm-cli-override"
 const helmBuiltinTransform = "helm-builtin"
+const helmHelperTransform = "helm-helper"
+const helmNonDeterministicTransform = "helm-nondeterministic"
 const helmDefaultTransform = "helm-default"
 
 func main() {
@@ -2339,6 +2341,18 @@ func pickInverseSuggestion(
 					candidate.Confidence = sourceConfidence
 				}
 			}
+			if sourceTransform == helmHelperTransform {
+				candidate.Warning = helperAwareWarning()
+				if sourceConfidence > candidate.Confidence {
+					candidate.Confidence = sourceConfidence
+				}
+			}
+			if sourceTransform == helmNonDeterministicTransform {
+				candidate.Warning = nonDeterministicAwareWarning(sourcePath)
+				if sourceConfidence > candidate.Confidence {
+					candidate.Confidence = sourceConfidence
+				}
+			}
 			if sourceTransform == helmDefaultTransform {
 				candidate.Warning = defaultAwareWarning()
 				if sourceConfidence > candidate.Confidence {
@@ -2398,6 +2412,10 @@ func collectImpactSuggestions(
 				entry.Warning = overrideAwareWarning()
 			case helmBuiltinTransform:
 				entry.Warning = builtinAwareWarning(origin.SourcePath)
+			case helmHelperTransform:
+				entry.Warning = helperAwareWarning()
+			case helmNonDeterministicTransform:
+				entry.Warning = nonDeterministicAwareWarning(origin.SourcePath)
 			case helmDefaultTransform:
 				entry.Warning = defaultAwareWarning()
 			}
@@ -2549,7 +2567,7 @@ func applyFieldOriginToPointer(pointer model.InverseEditPointer, origin model.Fi
 	case helmCLIOverrideTransform:
 		pointer.Owner = "release-automation"
 		pointer.EditHint = overrideAwareEditHint(origin.SourcePath, pointer.EditHint)
-	case helmBuiltinTransform, helmDefaultTransform:
+	case helmBuiltinTransform, helmHelperTransform, helmNonDeterministicTransform, helmDefaultTransform:
 		// Keep the generator-produced edit hint, but let the higher-confidence
 		// provenance source win when the hint already points at the right layer.
 	default:
@@ -2576,7 +2594,22 @@ func builtinAwareWarning(sourcePath string) string {
 	if sourcePath == "<helm-builtin>:.Chart.AppVersion" {
 		return "This field currently comes from the Helm built-in .Chart.AppVersion path, not from an observed values file."
 	}
+	if strings.HasPrefix(sourcePath, "<helm-builtin>:.Files.Get(") {
+		return "This field currently comes from Helm built-in .Files.Get chart-file input, not from an observed values file."
+	}
 	return "This field currently comes from a Helm built-in source, not from an observed values file."
+}
+
+func helperAwareWarning() string {
+	return "This field is routed through a Helm helper chain before it reaches the rendered manifest, so cub-gen traced the helper back to the underlying values source."
+}
+
+func nonDeterministicAwareWarning(sourcePath string) string {
+	fn := strings.TrimPrefix(sourcePath, "<helm-nondeterministic>:")
+	if strings.TrimSpace(fn) == "" || fn == sourcePath {
+		return "This field currently comes from Helm render-time logic, so provenance ends at render time instead of a stable DRY file."
+	}
+	return fmt.Sprintf("This field currently comes from Helm render-time %s logic, so provenance ends at render time instead of a stable DRY file.", fn)
 }
 
 func defaultAwareWarning() string {
@@ -2589,6 +2622,10 @@ func explainOriginType(sourcePath, sourceTransform string) string {
 		return "external"
 	case sourceTransform == helmBuiltinTransform:
 		return "builtin"
+	case sourceTransform == helmHelperTransform:
+		return "helper"
+	case sourceTransform == helmNonDeterministicTransform:
+		return "non-deterministic"
 	case sourceTransform == helmDefaultTransform:
 		return "default"
 	case strings.TrimSpace(sourcePath) != "":
