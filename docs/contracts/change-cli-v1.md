@@ -91,7 +91,7 @@ Expected output fields (`ChangeExplainResult`):
 - `input.{target_path,render_target_path,target_slug,render_target_slug}`
 - `change.{change_id,bundle_digest,attestation_digest}`
 - `query.{wet_path_filter,dry_path_filter,owner_filter,match_count}`
-- `explanation.{owner,wet_path,dry_path,edit_hint,confidence,source_path,source_transform,generator_name,generator_profile}`
+- `explanation.{owner,wet_path,dry_path,edit_hint,confidence,source_path,source_transform,generator_name,generator_profile,hops[]}`
 
 ### 4) `cub-gen change diff`
 
@@ -119,6 +119,7 @@ Expected output fields (`ChangeDiffResult`):
 Current implementation note:
 
 - the first shipped slice is Helm-first and compares rendered field values plus before/after provenance
+- when a repo declares a generator chain, provenance can also carry `hops[]` to show the upstream and downstream stages involved in the explanation
 
 ### 5) `cub-gen change impact`
 

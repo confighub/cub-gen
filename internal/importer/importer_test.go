@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/confighub/cub-gen/internal/applicationset"
+	"github.com/confighub/cub-gen/internal/detect"
 	"github.com/confighub/cub-gen/internal/model"
 )
 
@@ -1153,6 +1154,58 @@ service:
 	}
 }
 
+func TestImportDetectionAppliesGeneratorChainMappings(t *testing.T) {
+	repo := filepath.Join("..", "..", "examples", "incubator", "score-helm-chain")
+	detection, err := detect.ScanRepo(repo, "main")
+	if err != nil {
+		t.Fatalf("ScanRepo returned error: %v", err)
+	}
+
+	result, err := ImportDetection(detection, "platform")
+	if err != nil {
+		t.Fatalf("ImportDetection returned error: %v", err)
+	}
+
+	var helmProv *model.ProvenanceRecord
+	for i := range result.Provenance {
+		if result.Provenance[i].GeneratorProfile == "helm-paas" {
+			helmProv = &result.Provenance[i]
+			break
+		}
+	}
+	if helmProv == nil {
+		t.Fatalf("expected helm provenance record, got %+v", result.Provenance)
+	}
+
+	imageOrigin, ok := fieldOriginByWetPath(helmProv.FieldOriginMap, "Deployment/spec/template/spec/containers[0]/image")
+	if !ok {
+		t.Fatalf("expected image origin, got %+v", helmProv.FieldOriginMap)
+	}
+	if imageOrigin.DryPath != "containers.api.image" {
+		t.Fatalf("expected chained dry path containers.api.image, got %+v", imageOrigin)
+	}
+	if imageOrigin.SourcePath != "score.yaml" {
+		t.Fatalf("expected chained source path score.yaml, got %+v", imageOrigin)
+	}
+	if len(imageOrigin.Hops) != 2 {
+		t.Fatalf("expected 2 provenance hops, got %+v", imageOrigin.Hops)
+	}
+	if imageOrigin.Hops[0].GeneratorKind != string(model.GeneratorScore) || imageOrigin.Hops[1].GeneratorKind != string(model.GeneratorHelm) {
+		t.Fatalf("unexpected hop order: %+v", imageOrigin.Hops)
+	}
+
+	imagePointer, ok := inversePointerByWetPath(helmProv.InverseEditPointers, "Deployment/spec/template/spec/containers[0]/image")
+	if !ok {
+		t.Fatalf("expected inverse pointer, got %+v", helmProv.InverseEditPointers)
+	}
+	if imagePointer.DryPath != "containers.api.image" {
+		t.Fatalf("expected chained pointer dry path, got %+v", imagePointer)
+	}
+	if !strings.Contains(imagePointer.EditHint, "score.yaml") {
+		t.Fatalf("expected chained edit hint to mention score.yaml, got %q", imagePointer.EditHint)
+	}
+}
+
 func TestImportDetectionFailsOnInvalidContractTriple(t *testing.T) {
 	repo := t.TempDir()
 	detection := model.DetectionResult{
@@ -1215,6 +1268,24 @@ func inversePointerHasDryPath(v []model.InverseEditPointer, dryPath string) bool
 		}
 	}
 	return false
+}
+
+func fieldOriginByWetPath(v []model.FieldOrigin, wetPath string) (model.FieldOrigin, bool) {
+	for _, item := range v {
+		if item.WetPath == wetPath {
+			return item, true
+		}
+	}
+	return model.FieldOrigin{}, false
+}
+
+func inversePointerByWetPath(v []model.InverseEditPointer, wetPath string) (model.InverseEditPointer, bool) {
+	for _, item := range v {
+		if item.WetPath == wetPath {
+			return item, true
+		}
+	}
+	return model.InverseEditPointer{}, false
 }
 
 func inversePointerHintContains(v []model.InverseEditPointer, dryPath, needle string) bool {

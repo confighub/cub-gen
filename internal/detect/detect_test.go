@@ -247,6 +247,42 @@ func TestScanRepoApplicationSetStandalone(t *testing.T) {
 	}
 }
 
+func TestScanRepoGeneratorChains(t *testing.T) {
+	t.Parallel()
+
+	repo := filepath.Join("..", "..", "examples", "incubator", "score-helm-chain")
+	result, err := ScanRepo(repo, "main")
+	if err != nil {
+		t.Fatalf("ScanRepo returned error: %v", err)
+	}
+	if len(result.Generators) != 2 {
+		t.Fatalf("expected 2 generators, got %d", len(result.Generators))
+	}
+	if len(result.Chains) != 1 {
+		t.Fatalf("expected 1 generator chain, got %d", len(result.Chains))
+	}
+
+	chain := result.Chains[0]
+	if chain.ID != "score-to-helm" {
+		t.Fatalf("expected chain ID score-to-helm, got %q", chain.ID)
+	}
+	if len(chain.Stages) != 2 {
+		t.Fatalf("expected 2 chain stages, got %d", len(chain.Stages))
+	}
+	if chain.Stages[0].Kind != model.GeneratorScore || chain.Stages[0].Root != "" {
+		t.Fatalf("unexpected upstream stage: %+v", chain.Stages[0])
+	}
+	if chain.Stages[1].Kind != model.GeneratorHelm || chain.Stages[1].Root != "chart" {
+		t.Fatalf("unexpected downstream stage: %+v", chain.Stages[1])
+	}
+	if len(chain.Mappings) != 2 {
+		t.Fatalf("expected 2 chain mappings, got %d", len(chain.Mappings))
+	}
+	if chain.Mappings[0].UpstreamDryPath != "containers.api.image" {
+		t.Fatalf("expected image mapping upstream dry path, got %+v", chain.Mappings[0])
+	}
+}
+
 func TestScanRepoC3AgentStructuralDetection(t *testing.T) {
 	t.Parallel()
 

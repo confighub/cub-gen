@@ -61,6 +61,7 @@ type DiscoverResult struct {
 	DiscoveredAt     string                     `json:"discovered_at"`
 	Resources        []DiscoveredResource       `json:"resources"`
 	Detections       []model.GeneratorDetection `json:"detections"`
+	Chains           []model.GeneratorChain     `json:"chains,omitempty"`
 }
 
 // ImportFlowResult models the staged import output in the same conceptual shape
@@ -150,6 +151,7 @@ func Discover(targetPath, ref, space, whereResource string) (DiscoverResult, err
 	if err != nil {
 		return DiscoverResult{}, err
 	}
+	filteredChains := filterChains(detection.Chains, filtered)
 	resources := toDiscoveredResources(filtered)
 
 	discoverSlug := discoverUnitSlug(resolved.Slug, space, resolved.Path)
@@ -166,6 +168,7 @@ func Discover(targetPath, ref, space, whereResource string) (DiscoverResult, err
 		DiscoveredAt:     time.Now().UTC().Format(time.RFC3339),
 		Resources:        resources,
 		Detections:       filtered,
+		Chains:           filteredChains,
 	}
 
 	if err := persistDiscoverResult(result); err != nil {
@@ -221,6 +224,7 @@ func ImportWithOptions(targetPath, renderTargetSlug, ref, space, whereResource s
 		Ref:        discovered.Ref,
 		DetectedAt: discovered.DiscoveredAt,
 		Generators: discovered.Detections,
+		Chains:     discovered.Chains,
 	}, discovered.Space, opts)
 	if err != nil {
 		return ImportFlowResult{}, err
@@ -700,6 +704,39 @@ func filterDetections(in []model.GeneratorDetection, where string) ([]model.Gene
 		}
 	}
 	return out, nil
+}
+
+func filterChains(in []model.GeneratorChain, detections []model.GeneratorDetection) []model.GeneratorChain {
+	if len(in) == 0 {
+		return nil
+	}
+	allowed := make(map[string]struct{}, len(detections))
+	for _, detection := range detections {
+		if strings.TrimSpace(detection.ID) == "" {
+			continue
+		}
+		allowed[detection.ID] = struct{}{}
+	}
+	out := make([]model.GeneratorChain, 0, len(in))
+	for _, chain := range in {
+		include := true
+		for _, stage := range chain.Stages {
+			if strings.TrimSpace(stage.DetectionID) == "" {
+				continue
+			}
+			if _, ok := allowed[stage.DetectionID]; !ok {
+				include = false
+				break
+			}
+		}
+		if include {
+			out = append(out, chain)
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 func matchesAllClauses(g model.GeneratorDetection, clauses []string) (bool, error) {

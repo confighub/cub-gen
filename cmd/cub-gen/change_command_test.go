@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/confighub/cub-gen/internal/model"
 )
 
 func TestChangePreviewJSON(t *testing.T) {
@@ -190,6 +192,59 @@ func TestChangeExplainJSON(t *testing.T) {
 	}
 	if dryPath, ok := explanation["dry_path"].(string); !ok || strings.TrimSpace(dryPath) == "" {
 		t.Fatalf("expected non-empty dry_path, got %v", explanation["dry_path"])
+	}
+}
+
+func TestPickInverseSuggestionIncludesGeneratorChainHops(t *testing.T) {
+	provenance := []model.ProvenanceRecord{{
+		GeneratorName:    "checkout-api",
+		GeneratorProfile: "helm-paas",
+		FieldOriginMap: []model.FieldOrigin{{
+			DryPath:    "containers.api.image",
+			WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+			SourcePath: "score.yaml",
+			Transform:  "score-to-helm",
+			Confidence: 0.80,
+			Hops: []model.FieldOriginHop{
+				{
+					GeneratorKind:    "score",
+					GeneratorProfile: "scoredev-paas",
+					DryPath:          "containers.api.image",
+					SourcePath:       "score.yaml",
+					Transform:        "score-to-helm",
+					Confidence:       0.94,
+				},
+				{
+					GeneratorKind:    "helm",
+					GeneratorProfile: "helm-paas",
+					DryPath:          "values.image.tag",
+					SourcePath:       "chart/values.yaml",
+					Transform:        "helm-values",
+					Confidence:       0.86,
+				},
+			},
+		}},
+		InverseEditPointers: []model.InverseEditPointer{{
+			WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+			DryPath:    "containers.api.image",
+			Owner:      "app-team",
+			EditHint:   "Edit containers.api.image in score.yaml.",
+			Confidence: 0.80,
+		}},
+	}}
+
+	suggestion, matchCount, ok := pickInverseSuggestion(provenance, "Deployment/spec/template/spec/containers[0]/image", "", "")
+	if !ok {
+		t.Fatal("expected inverse suggestion")
+	}
+	if matchCount != 1 {
+		t.Fatalf("expected 1 match, got %d", matchCount)
+	}
+	if len(suggestion.Hops) != 2 {
+		t.Fatalf("expected 2 provenance hops, got %+v", suggestion.Hops)
+	}
+	if suggestion.Hops[0].GeneratorKind != "score" || suggestion.Hops[1].GeneratorKind != "helm" {
+		t.Fatalf("unexpected hop order: %+v", suggestion.Hops)
 	}
 }
 
