@@ -38,14 +38,14 @@ flowchart LR
 
 ### Input role rules
 
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `chart` | chart.yaml | - | - |
-| `application-set` | applicationset.yaml, applicationset.yml | - | - |
-| `cluster-inventory` | - | - | .yaml, .yml, .json |
-| `managed-service-catalog` | - | - | .yaml, .yml, .json |
-| `customer-service-catalog` | - | - | .yaml, .yml, .json |
-| `values` | - | values | .yaml, .yml |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `chart` | chart.yaml | - | - | - |
+| `application-set` | applicationset.yaml, applicationset.yml | - | - | - |
+| `cluster-inventory` | - | platform/clusters/ | - | .yaml, .yml, .json |
+| `managed-service-catalog` | - | platform/catalogs/managed-service-catalog/ | - | .yaml, .yml, .json |
+| `customer-service-catalog` | - | platform/catalogs/customer-service-catalog/ | - | .yaml, .yml, .json |
+| `values` | - | - | values | .yaml, .yml |
 
 ### Role owners
 

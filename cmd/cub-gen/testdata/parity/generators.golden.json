@@ -1,6 +1,18 @@
 {
-  "count": 8,
+  "count": 9,
   "families": [
+    {
+      "capabilities": [
+        "observed-expansion",
+        "authoritative-list-expansion",
+        "authoritative-clusters-expansion",
+        "graceful-degradation"
+      ],
+      "kind": "applicationset",
+      "profile": "applicationset",
+      "resource_kind": "ApplicationSet",
+      "resource_type": "argoproj.io/v1alpha1/ApplicationSet"
+    },
     {
       "capabilities": [
         "catalog-metadata",

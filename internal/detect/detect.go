@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/confighub/cub-gen/internal/applicationset"
 	"github.com/confighub/cub-gen/internal/model"
 	"github.com/confighub/cub-gen/internal/registry"
 )
@@ -76,6 +77,13 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 	all = append(all, opsDetections...)
 	all = append(all, c3agentDetections...)
 	all = append(all, swampDetections...)
+	if len(all) == 0 {
+		applicationSetDetections, err := detectApplicationSet(absRepo)
+		if err != nil {
+			return model.DetectionResult{}, err
+		}
+		all = append(all, applicationSetDetections...)
+	}
 	sort.Slice(all, func(i, j int) bool {
 		if all[i].Kind != all[j].Kind {
 			return all[i].Kind < all[j].Kind
@@ -161,6 +169,90 @@ func existingHelmAuxiliaryInputs(repo, root string) []string {
 		filepath.Join(root, "platform", "catalogs", "customer-service-catalog", "*.yaml"),
 		filepath.Join(root, "platform", "catalogs", "customer-service-catalog", "*.yml"),
 		filepath.Join(root, "platform", "catalogs", "customer-service-catalog", "*.json"),
+	}
+	for _, pattern := range globs {
+		matches, _ := filepath.Glob(pattern)
+		for _, match := range matches {
+			rel, err := filepath.Rel(repo, match)
+			if err != nil {
+				continue
+			}
+			candidates = append(candidates, filepath.ToSlash(rel))
+		}
+	}
+	return uniqueSortedStrings(candidates)
+}
+
+func detectApplicationSet(repo string) ([]model.GeneratorDetection, error) {
+	detected := make(map[string]model.GeneratorDetection)
+	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() && shouldSkipDir(d.Name()) {
+			return filepath.SkipDir
+		}
+		if d.IsDir() {
+			return nil
+		}
+		name := strings.ToLower(d.Name())
+		if name != "applicationset.yaml" && name != "applicationset.yml" {
+			return nil
+		}
+
+		relPath, err := filepath.Rel(repo, path)
+		if err != nil {
+			return err
+		}
+		relPath = filepath.ToSlash(relPath)
+		if !applicationset.IsApplicationSetFile(repo, relPath) {
+			return nil
+		}
+
+		doc, err := applicationset.ParseFile(repo, relPath)
+		if err != nil {
+			return nil
+		}
+		root := filepath.ToSlash(filepath.Dir(relPath))
+		if root == "." {
+			root = ""
+		}
+
+		inputs := []string{doc.Path}
+		inputs = append(inputs, existingApplicationSetAuxiliaryInputs(repo)...)
+		inputs = uniqueSortedStrings(inputs)
+
+		id := shortID("applicationset:" + relPath)
+		key := "applicationset:" + relPath
+		detected[key] = model.GeneratorDetection{
+			ID:         "gen_" + id,
+			Kind:       model.GeneratorApplicationSet,
+			Profile:    profileForKind(model.GeneratorApplicationSet),
+			Name:       doc.Name,
+			Root:       root,
+			Inputs:     inputs,
+			Confidence: 0.95,
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("detect applicationset: %w", err)
+	}
+	return mapValuesSorted(detected), nil
+}
+
+func existingApplicationSetAuxiliaryInputs(repo string) []string {
+	candidates := make([]string, 0, 8)
+	globs := []string{
+		filepath.Join(repo, "clusters", "*.yaml"),
+		filepath.Join(repo, "clusters", "*.yml"),
+		filepath.Join(repo, "clusters", "*.json"),
+		filepath.Join(repo, "inventory", "clusters", "*.yaml"),
+		filepath.Join(repo, "inventory", "clusters", "*.yml"),
+		filepath.Join(repo, "inventory", "clusters", "*.json"),
+		filepath.Join(repo, "platform", "clusters", "*.yaml"),
+		filepath.Join(repo, "platform", "clusters", "*.yml"),
+		filepath.Join(repo, "platform", "clusters", "*.json"),
 	}
 	for _, pattern := range globs {
 		matches, _ := filepath.Glob(pattern)

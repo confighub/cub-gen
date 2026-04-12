@@ -28,10 +28,10 @@ flowchart LR
 
 ### Input role rules
 
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `provider-config-base` | no-config-platform.yaml, no-config-platform.yml, no-config-platform.json | - | - |
-| `provider-config-overlay` | - | no-config-platform- | .yaml, .yml, .json |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `provider-config-base` | no-config-platform.yaml, no-config-platform.yml, no-config-platform.json | - | - | - |
+| `provider-config-overlay` | - | - | no-config-platform- | .yaml, .yml, .json |
 
 ### Role owners
 

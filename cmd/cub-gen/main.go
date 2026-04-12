@@ -106,6 +106,7 @@ type inversePointerTemplateRecord struct {
 type inputRoleRuleRecord struct {
 	Role           string   `json:"role"`
 	ExactBasenames []string `json:"exact_basenames,omitempty"`
+	PathPrefixes   []string `json:"path_prefixes,omitempty"`
 	Prefixes       []string `json:"prefixes,omitempty"`
 	Extensions     []string `json:"extensions,omitempty"`
 }
@@ -234,12 +235,13 @@ func writeGeneratorsMarkdown(out io.Writer, records []generatorFamilyRecord, det
 		if len(policies.InputRoleRules) > 0 {
 			fmt.Fprintln(out)
 			fmt.Fprintln(out, "### Input Role Rules")
-			fmt.Fprintln(out, "| Role | Exact basenames | Prefixes | Extensions |")
-			fmt.Fprintln(out, "| --- | --- | --- | --- |")
+			fmt.Fprintln(out, "| Role | Exact basenames | Path prefixes | Prefixes | Extensions |")
+			fmt.Fprintln(out, "| --- | --- | --- | --- | --- |")
 			for _, rule := range policies.InputRoleRules {
-				fmt.Fprintf(out, "| `%s` | %s | %s | %s |\n",
+				fmt.Fprintf(out, "| `%s` | %s | %s | %s | %s |\n",
 					markdownCell(rule.Role),
 					markdownCell(strings.Join(rule.ExactBasenames, ", ")),
+					markdownCell(strings.Join(rule.PathPrefixes, ", ")),
 					markdownCell(strings.Join(rule.Prefixes, ", ")),
 					markdownCell(strings.Join(rule.Extensions, ", ")),
 				)
@@ -488,6 +490,7 @@ func generatorPolicyRecord(spec registry.FamilySpec) *generatorFamilyPolicyRecor
 		policies.InputRoleRules = append(policies.InputRoleRules, inputRoleRuleRecord{
 			Role:           rule.Role,
 			ExactBasenames: append([]string(nil), rule.ExactBasenames...),
+			PathPrefixes:   append([]string(nil), rule.PathPrefixes...),
 			Prefixes:       append([]string(nil), rule.Prefixes...),
 			Extensions:     append([]string(nil), rule.Extensions...),
 		})

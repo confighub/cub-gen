@@ -63,6 +63,7 @@ DRY→WET is a one-way deterministic transform. There is no automatic LIVE→DRY
 | Generator | Profile | DRY source | Status |
 |-----------|---------|------------|--------|
 | Helm | `helm-paas` | `Chart.yaml` + `values.yaml` | Stable |
+| ApplicationSet | `applicationset` | `applicationset.yaml` + pinned inventory | v0.2 preview |
 | Score.dev | `scoredev-paas` | `score.yaml` | Stable |
 | Spring Boot | `springboot-paas` | `application.yaml` | Stable |
 | Backstage IDP | `backstage-idp` | `catalog-info.yaml` | v0.2 preview |
@@ -193,16 +194,16 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
 ## Current status
 
-**Latest shipped:** `v0.2-preview.1` (2026-03-06)
+**Latest shipped:** `v0.2-preview.2` (2026-04-11)
 
-**Current target:** `v0.2-preview.2`
+**Current target:** post-preview backlog and productization follow-ups
 
 - repo-first CLI and contract coverage remain green,
-- current release work is focused on full example-catalog quality,
-- CLI/help/docs must match clean-checkout behavior,
-- flagship Helm, Score, Spring, and Swamp examples now carry explicit
+- the shipped preview now includes a first-class standalone `applicationset`
+  generator family,
+- flagship Helm, Score, Spring, and Swamp examples carry explicit
   `AI_START_HERE.md`, `prompts.md`, and `contracts.md` bundles,
-- connected release status must be backed by a credible lane the team actually runs.
+- connected release status is backed by the repo's `ConfigHub Smoke` lane.
 
 See the [v0.2-preview.2 Release Plan](releases/v0.2-preview.2-plan.md) for the
 current must-ship and post-release split, and the
@@ -212,6 +213,6 @@ what is already landed on `main` versus what still blocks the tag. The current
 the final tag write-up can be tightened from the eventual green `main`.
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
-- Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 8 generators
+- Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 9 generators
 - Generator catalog (`generators`) with filtering, details, and markdown output
 - Local-first: works standalone, connects to [ConfigHub](platform.md) for governed execution

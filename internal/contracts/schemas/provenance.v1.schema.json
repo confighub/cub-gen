@@ -303,6 +303,99 @@
         }
       }
     },
+    "application_set_analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "application_set_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generator_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unsupported_generator_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cluster_inventory_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "matched_clusters": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "list_element_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "mode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generated_applications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "generator_type": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "inventory_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "cluster": {
+                "type": "string",
+                "minLength": 1
+              },
+              "list_element": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_path": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
     "ops_workflow_analysis": {
       "type": "object",
       "additionalProperties": false,

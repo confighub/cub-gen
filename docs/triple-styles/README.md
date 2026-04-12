@@ -10,6 +10,7 @@ Canonical runtime source remains Go registry specs in `internal/registry/registr
 
 | Kind | Style A | Style B | Style C |
 | --- | --- | --- | --- |
+| `applicationset` | [yaml](style-a-yaml/applicationset.yaml) | [markdown](style-b-markdown/applicationset.md) | [pair](style-c-yaml-plus-docs/applicationset/) |
 | `backstage` | [yaml](style-a-yaml/backstage.yaml) | [markdown](style-b-markdown/backstage.md) | [pair](style-c-yaml-plus-docs/backstage/) |
 | `c3agent` | [yaml](style-a-yaml/c3agent.yaml) | [markdown](style-b-markdown/c3agent.md) | [pair](style-c-yaml-plus-docs/c3agent/) |
 | `helm` | [yaml](style-a-yaml/helm.yaml) | [markdown](style-b-markdown/helm.md) | [pair](style-c-yaml-plus-docs/helm/) |

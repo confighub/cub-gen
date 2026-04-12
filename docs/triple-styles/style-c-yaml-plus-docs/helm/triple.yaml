@@ -18,16 +18,22 @@ contract:
         - "applicationset.yaml"
         - "applicationset.yml"
     - role: "cluster-inventory"
+      path_prefixes:
+        - "platform/clusters/"
       extensions:
         - ".yaml"
         - ".yml"
         - ".json"
     - role: "managed-service-catalog"
+      path_prefixes:
+        - "platform/catalogs/managed-service-catalog/"
       extensions:
         - ".yaml"
         - ".yml"
         - ".json"
     - role: "customer-service-catalog"
+      path_prefixes:
+        - "platform/catalogs/customer-service-catalog/"
       extensions:
         - ".yaml"
         - ".yml"

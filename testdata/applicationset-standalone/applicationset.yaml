@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-apps
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            env: prod
+            region: eu
+  template:
+    metadata:
+      name: "{{name}}-inventory"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/confighub/cub-gen.git
+        targetRevision: HEAD
+        path: examples/springboot-paas
+      destination:
+        server: "{{server}}"
+        namespace: apps

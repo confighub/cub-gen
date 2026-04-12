@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/confighub/cub-gen/internal/applicationset"
 	"github.com/confighub/cub-gen/internal/model"
 )
 
@@ -350,6 +351,89 @@ func TestImportRepoHelmDryWetContract(t *testing.T) {
 	}
 	if !wetTargetHasKindOwner(result.WetManifestTargets, "HelmRelease", "platform-runtime") {
 		t.Fatalf("expected HelmRelease owner to be platform-runtime, got %+v", result.WetManifestTargets)
+	}
+}
+
+func TestImportRepoApplicationSetDryWetContract(t *testing.T) {
+	repo := filepath.Join("..", "..", "testdata", "applicationset-standalone")
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+	prov := result.Provenance[0]
+	if prov.ApplicationSet == nil {
+		t.Fatalf("expected applicationset analysis, got nil")
+	}
+	if prov.ApplicationSet.Mode != applicationset.ModeAuthoritative {
+		t.Fatalf("expected authoritative mode, got %+v", prov.ApplicationSet)
+	}
+	if !containsString(prov.ApplicationSet.MatchedClusters, "prod-eu") {
+		t.Fatalf("expected matched cluster prod-eu, got %+v", prov.ApplicationSet)
+	}
+	if len(prov.ApplicationSet.GeneratedApplications) != 1 {
+		t.Fatalf("expected one generated application, got %+v", prov.ApplicationSet.GeneratedApplications)
+	}
+	if prov.ApplicationSet.GeneratedApplications[0].Name != "prod-eu-inventory" {
+		t.Fatalf("expected generated application prod-eu-inventory, got %+v", prov.ApplicationSet.GeneratedApplications)
+	}
+	if !renderedLineageHasKind(prov.RenderedLineage, "ApplicationSet") || !renderedLineageHasKind(prov.RenderedLineage, "Application") {
+		t.Fatalf("expected rendered lineage to include ApplicationSet and Application, got %+v", prov.RenderedLineage)
+	}
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "spec.template.metadata.name", "applicationset.yaml") {
+		t.Fatalf("expected template name field origin to resolve to applicationset.yaml, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "spec.template.metadata.name", "applicationset.yaml") {
+		t.Fatalf("expected inverse pointer to route back to applicationset.yaml, got %+v", prov.InverseEditPointers)
+	}
+
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "application-set", "platform-engineer", "applicationset.yaml") {
+		t.Fatalf("expected applicationset dry input, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "cluster-inventory", "platform-engineer", "clusters/prod-eu.yaml") {
+		t.Fatalf("expected cluster inventory dry input, got %+v", result.DryInputs)
+	}
+	if !wetTargetHasKind(result.WetManifestTargets, "ApplicationSet") || !wetTargetHasKind(result.WetManifestTargets, "Application") {
+		t.Fatalf("expected ApplicationSet/Application wet targets, got %+v", result.WetManifestTargets)
+	}
+}
+
+func TestImportRepoApplicationSetGracefulDegradationWithoutClusterInventory(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "applicationset.yaml"), `apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-apps
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            env: prod
+  template:
+    metadata:
+      name: "{{name}}-inventory"
+    spec:
+      source:
+        path: apps/inventory
+`)
+
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	if len(result.Provenance) != 1 || result.Provenance[0].ApplicationSet == nil {
+		t.Fatalf("expected applicationset analysis, got %+v", result.Provenance)
+	}
+	got := result.Provenance[0].ApplicationSet
+	if got.Mode != applicationset.ModeAuthoritativeExpansionUnavailable {
+		t.Fatalf("expected authoritative-expansion-unavailable, got %+v", got)
+	}
+	if !strings.Contains(got.ModeReason, "no pinned cluster inventory inputs") {
+		t.Fatalf("expected explicit degraded reason, got %+v", got)
 	}
 }
 

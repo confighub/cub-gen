@@ -1,9 +1,10 @@
 # Generator Families
 
-Total: 8
+Total: 9
 
 | Kind | Profile | Resource Kind | Resource Type | Capabilities |
 | --- | --- | --- | --- | --- |
+| `applicationset` | `applicationset` | `ApplicationSet` | `argoproj.io/v1alpha1/ApplicationSet` | observed-expansion, authoritative-list-expansion, authoritative-clusters-expansion, graceful-degradation |
 | `backstage` | `backstage-idp` | `Component` | `backstage.io/v1alpha1/Component` | catalog-metadata, render-manifests, inverse-catalog-patch |
 | `c3agent` | `c3agent` | `ConfigMap` | `v1/ConfigMap` | fleet-config, agent-orchestration, inverse-fleet-config-patch |
 | `helm` | `helm-paas` | `HelmRelease` | `helm.toolkit.fluxcd.io/v2/HelmRelease` | render-manifests, values-overrides, inverse-values-patch |
@@ -12,6 +13,72 @@ Total: 8
 | `score` | `scoredev-paas` | `Application` | `argoproj.io/v1alpha1/Application` | render-manifests, workload-spec, inverse-score-patch |
 | `springboot` | `springboot-paas` | `Kustomization` | `kustomize.toolkit.fluxcd.io/v1/Kustomization` | render-app-config, profile-overrides, inverse-app-config-patch |
 | `swamp` | `swamp` | `Workflow` | `swamp.dev/v1/Workflow` | workflow-automation, model-orchestration, inverse-workflow-patch |
+
+## `applicationset`
+
+- Profile: `applicationset`
+- Resource: `ApplicationSet` (`argoproj.io/v1alpha1/ApplicationSet`)
+- Capabilities: observed-expansion, authoritative-list-expansion, authoritative-clusters-expansion, graceful-degradation
+- Default input role: `applicationset-input`
+- Default owner: `platform-engineer`
+- Field-origin transform: `applicationset-template`
+
+### Input Role Rules
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `application-set` | applicationset.yaml, applicationset.yml | - | - | - |
+| `cluster-inventory` | - | clusters/, inventory/clusters/, platform/clusters/ | - | .yaml, .yml, .json |
+
+### Role Owners
+| Role | Owner |
+| --- | --- |
+| `application-set` | `platform-engineer` |
+| `cluster-inventory` | `platform-engineer` |
+
+### Inverse Patch Templates
+| Key | Editable by | Confidence | Requires review |
+| --- | --- | --- | --- |
+| `child_name` | `platform-engineer` | 0.89 | `false` |
+| `source_path` | `platform-engineer` | 0.86 | `true` |
+
+### Inverse Pointer Templates
+| Key | Owner | Confidence |
+| --- | --- | --- |
+| `child_name` | `platform-engineer` | 0.89 |
+| `source_path` | `platform-engineer` | 0.86 |
+
+### Field Origin Confidences
+| Key | Confidence |
+| --- | --- |
+| `child_name` | 0.89 |
+| `source_path` | 0.86 |
+
+### Hint Defaults
+| Key | Value |
+| --- | --- |
+| `application_set_path` | `applicationset.yaml` |
+
+### Inverse Patch Reasons
+| Key | Reason |
+| --- | --- |
+| `child_name` | Child Application identity is generated from the parent ApplicationSet template. |
+| `source_path` | Child Application source path is generated from the parent ApplicationSet template. |
+
+### Inverse Edit Hints
+| Key | Hint |
+| --- | --- |
+| `child_name` | Edit spec.template.metadata.name in {{application_set_path}}. |
+| `source_path` | Edit spec.template.spec.source.path in {{application_set_path}}. |
+
+### WET Targets
+| Kind | Name template | Owner | Namespace | Source DRY path template |
+| --- | --- | --- | --- | --- |
+| `ApplicationSet` | `{{name}}` | `platform-runtime` | `argocd` | `-` |
+
+### Rendered Lineage Templates
+| Kind | Name template | Namespace | Source path hint | Hint fallback | Multi hint | Source DRY path template | Optional |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `ApplicationSet` | `{{name}}` | `argocd` | `application_set_path` | `-` | `false` | `spec` | `false` |
 
 ## `backstage`
 
@@ -23,10 +90,10 @@ Total: 8
 - Field-origin transform: `backstage-component-to-application`
 
 ### Input Role Rules
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `catalog-spec` | catalog-info.yaml, catalog-info.yml | - | - |
-| `app-config` | app-config.yaml, app-config.yml | - | - |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `catalog-spec` | catalog-info.yaml, catalog-info.yml | - | - | - |
+| `app-config` | app-config.yaml, app-config.yml | - | - | - |
 
 ### Role Owners
 | Role | Owner |
@@ -91,10 +158,10 @@ Total: 8
 - Field-origin overlay transform: `c3agent-overlay-merge`
 
 ### Input Role Rules
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `fleet-config-base` | c3agent.yaml, c3agent.yml, c3agent.json | - | - |
-| `fleet-config-overlay` | - | c3agent- | .yaml, .yml, .json |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `fleet-config-base` | c3agent.yaml, c3agent.yml, c3agent.json | - | - | - |
+| `fleet-config-overlay` | - | - | c3agent- | .yaml, .yml, .json |
 
 ### Inverse Patch Templates
 | Key | Editable by | Confidence | Requires review |
@@ -201,14 +268,14 @@ Total: 8
 - Field-origin overlay transform: `helm-values-overlay`
 
 ### Input Role Rules
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `chart` | chart.yaml | - | - |
-| `application-set` | applicationset.yaml, applicationset.yml | - | - |
-| `cluster-inventory` | - | - | .yaml, .yml, .json |
-| `managed-service-catalog` | - | - | .yaml, .yml, .json |
-| `customer-service-catalog` | - | - | .yaml, .yml, .json |
-| `values` | - | values | .yaml, .yml |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `chart` | chart.yaml | - | - | - |
+| `application-set` | applicationset.yaml, applicationset.yml | - | - | - |
+| `cluster-inventory` | - | platform/clusters/ | - | .yaml, .yml, .json |
+| `managed-service-catalog` | - | platform/catalogs/managed-service-catalog/ | - | .yaml, .yml, .json |
+| `customer-service-catalog` | - | platform/catalogs/customer-service-catalog/ | - | .yaml, .yml, .json |
+| `values` | - | - | values | .yaml, .yml |
 
 ### Role Owners
 | Role | Owner |
@@ -276,10 +343,10 @@ Total: 8
 - Field-origin overlay transform: `no-config-platform-overlay-merge`
 
 ### Input Role Rules
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `provider-config-base` | no-config-platform.yaml, no-config-platform.yml, no-config-platform.json | - | - |
-| `provider-config-overlay` | - | no-config-platform- | .yaml, .yml, .json |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `provider-config-base` | no-config-platform.yaml, no-config-platform.yml, no-config-platform.json | - | - | - |
+| `provider-config-overlay` | - | - | no-config-platform- | .yaml, .yml, .json |
 
 ### Inverse Patch Templates
 | Key | Editable by | Confidence | Requires review |
@@ -342,10 +409,10 @@ Total: 8
 - Field-origin overlay transform: `ops-workflow-overlay-merge`
 
 ### Input Role Rules
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `operations-base` | operations.yaml, operations.yml, workflow.yaml, workflow.yml | - | - |
-| `operations-overlay` | - | operations-, workflow- | .yaml, .yml |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `operations-base` | operations.yaml, operations.yml, workflow.yaml, workflow.yml | - | - | - |
+| `operations-overlay` | - | - | operations-, workflow- | .yaml, .yml |
 
 ### Inverse Patch Templates
 | Key | Editable by | Confidence | Requires review |
@@ -407,9 +474,9 @@ Total: 8
 - Field-origin transform: `score-to-k8s`
 
 ### Input Role Rules
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `score-spec` | score.yaml, score.yml | - | - |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `score-spec` | score.yaml, score.yml | - | - | - |
 
 ### Inverse Patch Templates
 | Key | Editable by | Confidence | Requires review |
@@ -475,11 +542,11 @@ Total: 8
 - Field-origin overlay transform: `spring-profile-overlay`
 
 ### Input Role Rules
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `build-config` | pom.xml, build.gradle, build.gradle.kts | - | - |
-| `app-config-base` | application.yaml, application.yml | - | - |
-| `app-config-profile` | - | application- | .yaml, .yml |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `build-config` | pom.xml, build.gradle, build.gradle.kts | - | - | - |
+| `app-config-base` | application.yaml, application.yml | - | - | - |
+| `app-config-profile` | - | - | application- | .yaml, .yml |
 
 ### Role Owners
 | Role | Owner |
@@ -556,10 +623,10 @@ Total: 8
 - Field-origin overlay transform: `swamp-overlay-merge`
 
 ### Input Role Rules
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `swamp-config-base` | .swamp.yaml, .swamp.yml | - | - |
-| `swamp-workflow` | - | workflow- | .yaml, .yml |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `swamp-config-base` | .swamp.yaml, .swamp.yml | - | - | - |
+| `swamp-workflow` | - | - | workflow- | .yaml, .yml |
 
 ### Inverse Patch Templates
 | Key | Editable by | Confidence | Requires review |

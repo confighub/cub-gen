@@ -72,6 +72,57 @@ type FamilySpec struct {
 }
 
 var familySpecs = map[model.GeneratorKind]FamilySpec{
+	model.GeneratorApplicationSet: {
+		Kind:         model.GeneratorApplicationSet,
+		Profile:      "applicationset",
+		ResourceKind: "ApplicationSet",
+		ResourceType: "argoproj.io/v1alpha1/ApplicationSet",
+		Capabilities: []string{"observed-expansion", "authoritative-list-expansion", "authoritative-clusters-expansion", "graceful-degradation"},
+		RoleSchemaRefs: map[string]string{
+			"application-set":   "https://schema.confighub.dev/generators/applicationset-v1",
+			"cluster-inventory": "https://schema.confighub.dev/generators/cluster-inventory-v1",
+		},
+		HintDefaults: map[string]string{
+			"application_set_path": "applicationset.yaml",
+		},
+		InversePatchReasons: map[string]string{
+			"child_name":  "Child Application identity is generated from the parent ApplicationSet template.",
+			"source_path": "Child Application source path is generated from the parent ApplicationSet template.",
+		},
+		InverseEditHints: map[string]string{
+			"child_name":  "Edit spec.template.metadata.name in {{application_set_path}}.",
+			"source_path": "Edit spec.template.spec.source.path in {{application_set_path}}.",
+		},
+		InversePatchTemplates: map[string]InversePatchTemplate{
+			"child_name":  {EditableBy: "platform-engineer", Confidence: 0.89, RequiresReview: false},
+			"source_path": {EditableBy: "platform-engineer", Confidence: 0.86, RequiresReview: true},
+		},
+		InversePointerTemplates: map[string]InversePointerTemplate{
+			"child_name":  {Owner: "platform-engineer", Confidence: 0.89},
+			"source_path": {Owner: "platform-engineer", Confidence: 0.86},
+		},
+		FieldOriginConfidences: map[string]float64{
+			"child_name":  0.89,
+			"source_path": 0.86,
+		},
+		RenderedLineageTemplates: []RenderedLineageTemplate{
+			{Kind: "ApplicationSet", NameTemplate: "{{name}}", Namespace: "argocd", SourcePathHint: "application_set_path", SourceDryPathTemplate: "spec"},
+		},
+		FieldOriginTransform: "applicationset-template",
+		InputRoleRules: []InputRoleRule{
+			{Role: "application-set", ExactBasenames: []string{"applicationset.yaml", "applicationset.yml"}},
+			{Role: "cluster-inventory", PathPrefixes: []string{"clusters/", "inventory/clusters/", "platform/clusters/"}, Extensions: []string{".yaml", ".yml", ".json"}},
+		},
+		DefaultInputRole: "applicationset-input",
+		RoleOwners: map[string]string{
+			"application-set":   "platform-engineer",
+			"cluster-inventory": "platform-engineer",
+		},
+		DefaultOwner: "platform-engineer",
+		WetTargets: []WetTargetTemplate{
+			{Kind: "ApplicationSet", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "argocd"},
+		},
+	},
 	model.GeneratorHelm: {
 		Kind:         model.GeneratorHelm,
 		Profile:      "helm-paas",
