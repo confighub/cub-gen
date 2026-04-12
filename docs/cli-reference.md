@@ -11,6 +11,7 @@ not cluster/runtime ones.
 | If you want to know... | Start with |
 |---|---|
 | What does this repo render, and where did it come from? | `gitops import` |
+| What changed between two rendered git refs? | `change diff` |
 | Which DRY file/path should I edit for a rendered field? | `change explain` |
 | Which rendered fields would this DRY path affect? | `change impact` |
 | What evidence bundle and safe next step should I prepare? | `change preview` |
@@ -107,6 +108,24 @@ cub-gen publish --space <space> [--set KEY=VALUE] [--set-string KEY=VALUE] [--se
 ```
 
 Output includes `digest_algorithm` (sha256) and `bundle_digest` for verification.
+
+## Change Commands
+
+### `change diff`
+
+Render two git refs of the same Helm repo path and show which rendered fields
+changed, with before/after provenance attached to each changed field.
+
+```
+cub-gen change diff --before-ref <ref> --after-ref <ref> [--space <space>] [--where-resource <expr>] [--dry-path <path>] [--wet-path <path>] [--owner <owner>] <target-path> [<render-target-path>]
+```
+
+Current scope:
+
+- today this is a Helm-first command
+- it expects `<target-path>` to live in a git repo
+- it renders each side with the Helm value files `cub-gen` already selected for import/provenance
+- output includes `before.value`, `after.value`, and before/after provenance metadata for each changed field
 
 ### `verify`
 

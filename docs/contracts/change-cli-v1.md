@@ -93,7 +93,34 @@ Expected output fields (`ChangeExplainResult`):
 - `query.{wet_path_filter,dry_path_filter,owner_filter,match_count}`
 - `explanation.{owner,wet_path,dry_path,edit_hint,confidence,source_path,source_transform,generator_name,generator_profile}`
 
-### 4) `cub-gen change impact`
+### 4) `cub-gen change diff`
+
+Purpose:
+- Show a field-level render diff between two git refs of the same repo path.
+
+Supported invocation mode:
+
+- `cub-gen change diff --before-ref <ref> --after-ref <ref> [filters] <target-path> [<render-target-path>]`
+
+Filters:
+
+- `--dry-path <path>` (optional)
+- `--wet-path <path>` (optional)
+- `--owner <owner>` (optional)
+
+Expected output fields (`ChangeDiffResult`):
+
+- `input.{target_path,render_target_path,target_slug,render_target_slug,space,before_ref,after_ref}`
+- `query.{before_ref,after_ref,dry_path_filter,wet_path_filter,owner_filter,match_count}`
+- `before.change.{change_id,bundle_digest,attestation_digest}`
+- `after.change.{change_id,bundle_digest,attestation_digest}`
+- `diffs[].{manifest,wet_path,before,after}`
+
+Current implementation note:
+
+- the first shipped slice is Helm-first and compares rendered field values plus before/after provenance
+
+### 5) `cub-gen change impact`
 
 Purpose:
 - Show the downstream rendered fields affected by a DRY path.
@@ -137,6 +164,7 @@ Native subcommands are implemented for:
 
 - `change preview`
 - `change run (local|connected)`
+- `change diff`
 - `change explain`
 - `change impact`
 

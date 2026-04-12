@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -510,6 +511,49 @@ func TestChangeExplainByChangeIDMismatch(t *testing.T) {
 	}
 }
 
+func TestChangeDiffJSON(t *testing.T) {
+	repo := t.TempDir()
+	firstRef := seedGitHelmRepo(t, repo, "v1.0.0")
+	secondRef := updateGitHelmRepoValue(t, repo, "v1.0.1")
+
+	result, err := buildChangeDiffResult(repo, repo, "platform", firstRef, secondRef, "", nil, "", "", "")
+	if err != nil {
+		t.Fatalf("buildChangeDiffResult returned error: %v", err)
+	}
+
+	if result.Query.BeforeRef != firstRef {
+		t.Fatalf("expected before_ref=%s, got %v", firstRef, result.Query.BeforeRef)
+	}
+	if result.Query.AfterRef != secondRef {
+		t.Fatalf("expected after_ref=%s, got %v", secondRef, result.Query.AfterRef)
+	}
+
+	if len(result.Diffs) == 0 {
+		t.Fatalf("expected non-empty diffs")
+	}
+
+	var imageDiff *changeDiffEntry
+	for i := range result.Diffs {
+		entry := &result.Diffs[i]
+		if entry.WetPath == "Deployment/spec/template/spec/containers[0]/image" {
+			imageDiff = entry
+			break
+		}
+	}
+	if imageDiff == nil {
+		t.Fatalf("expected image diff entry, got %#v", result.Diffs)
+	}
+	if imageDiff.Before.Value != "ghcr.io/example/diff-demo:v1.0.0" {
+		t.Fatalf("unexpected before value: %v", imageDiff.Before.Value)
+	}
+	if imageDiff.After.Value != "ghcr.io/example/diff-demo:v1.0.1" {
+		t.Fatalf("unexpected after value: %v", imageDiff.After.Value)
+	}
+	if imageDiff.Before.SourcePath != "values.yaml" || imageDiff.After.SourcePath != "values.yaml" {
+		t.Fatalf("expected before/after source_path values.yaml, got before=%v after=%v", imageDiff.Before.SourcePath, imageDiff.After.SourcePath)
+	}
+}
+
 func TestChangeCommandErrorModes(t *testing.T) {
 	tests := []struct {
 		name string
@@ -535,6 +579,11 @@ func TestChangeCommandErrorModes(t *testing.T) {
 			name: "run-missing-targets",
 			args: []string{"change", "run"},
 			sub:  "usage: cub-gen change run",
+		},
+		{
+			name: "diff-missing-targets",
+			args: []string{"change", "diff", "--before-ref", "main", "--after-ref", "HEAD"},
+			sub:  "usage: cub-gen change diff",
 		},
 		{
 			name: "explain-missing-targets",
@@ -579,4 +628,56 @@ func TestChangeCommandErrorModes(t *testing.T) {
 			}
 		})
 	}
+}
+
+func seedGitHelmRepo(t *testing.T, repo, imageTag string) string {
+	t.Helper()
+	mustRun(t, repo, "git", "init")
+	mustRun(t, repo, "git", "config", "user.name", "Codex")
+	mustRun(t, repo, "git", "config", "user.email", "codex@example.com")
+	mustWriteGitFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: diff-demo\nversion: 0.1.0\n")
+	mustWriteGitFile(t, filepath.Join(repo, "values.yaml"), "image:\n  repository: ghcr.io/example/diff-demo\n  tag: "+imageTag+"\n")
+	mustWriteGitFile(t, filepath.Join(repo, "templates", "deployment.yaml"), `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: diff-demo
+spec:
+  template:
+    spec:
+      containers:
+        - name: diff-demo
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+`)
+	mustRun(t, repo, "git", "add", ".")
+	mustRun(t, repo, "git", "commit", "-m", "initial")
+	return strings.TrimSpace(mustRun(t, repo, "git", "rev-parse", "HEAD"))
+}
+
+func updateGitHelmRepoValue(t *testing.T, repo, imageTag string) string {
+	t.Helper()
+	mustWriteGitFile(t, filepath.Join(repo, "values.yaml"), "image:\n  repository: ghcr.io/example/diff-demo\n  tag: "+imageTag+"\n")
+	mustRun(t, repo, "git", "add", "values.yaml")
+	mustRun(t, repo, "git", "commit", "-m", "update tag")
+	return strings.TrimSpace(mustRun(t, repo, "git", "rev-parse", "HEAD"))
+}
+
+func mustWriteGitFile(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatalf("mkdir %s: %v", filepath.Dir(path), err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write %s: %v", path, err)
+	}
+}
+
+func mustRun(t *testing.T, dir, name string, args ...string) string {
+	t.Helper()
+	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("%s %s failed: %v\n%s", name, strings.Join(args, " "), err, string(out))
+	}
+	return string(out)
 }
