@@ -19,6 +19,8 @@ import (
 	"github.com/confighub/cub-gen/internal/registry"
 )
 
+const helmCLIOverrideTransform = "helm-cli-override"
+
 func main() {
 	if err := run(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
@@ -697,14 +699,21 @@ func runLegacyImport(args []string) error {
 	space := fs.String("space", "default", "Target ConfigHub space")
 	out := fs.String("out", "-", "Output file path, or '-' for stdout")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	overrideFlags := addHelmCLIOverrideFlags(fs)
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
 		}
 		return err
 	}
+	helmCLIOverrides, err := overrideFlags.parse()
+	if err != nil {
+		return err
+	}
 
-	result, err := importer.ImportRepo(*repo, *ref, *space)
+	result, err := importer.ImportRepoWithOptions(*repo, *ref, *space, importer.ImportOptions{
+		HelmCLIOverrides: helmCLIOverrides,
+	})
 	if err != nil {
 		return err
 	}
@@ -736,18 +745,25 @@ func runPublish(args []string) error {
 	ref := fs.String("ref", "HEAD", "Git ref label to include in output (direct mode)")
 	whereResource := fs.String("where-resource", "", "Additional resource filter expression (direct mode)")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	overrideFlags := addHelmCLIOverrideFlags(fs)
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
 		}
 		return err
 	}
+	helmCLIOverrides, err := overrideFlags.parse()
+	if err != nil {
+		return err
+	}
 
 	var imported gitopsflow.ImportFlowResult
 	switch fs.NArg() {
 	case 0:
+		if len(helmCLIOverrides) > 0 {
+			return errors.New("cannot combine Helm CLI override flags with --in pipe mode")
+		}
 		var inputBytes []byte
-		var err error
 		if *in == "-" {
 			inputBytes, err = io.ReadAll(os.Stdin)
 			if err != nil {
@@ -770,7 +786,9 @@ func runPublish(args []string) error {
 		if err != nil {
 			return err
 		}
-		imported, err = gitopsflow.Import(targetSlug, renderTargetSlug, *ref, *space, *whereResource)
+		imported, err = gitopsflow.ImportWithOptions(targetSlug, renderTargetSlug, *ref, *space, *whereResource, importer.ImportOptions{
+			HelmCLIOverrides: helmCLIOverrides,
+		})
 		if err != nil {
 			return err
 		}
@@ -972,13 +990,14 @@ func runVerifyAttestation(args []string) error {
 }
 
 type changePreviewInput struct {
-	TargetSlug       string `json:"target_slug"`
-	TargetPath       string `json:"target_path,omitempty"`
-	RenderTargetSlug string `json:"render_target_slug"`
-	RenderTargetPath string `json:"render_target_path,omitempty"`
-	Space            string `json:"space"`
-	Ref              string `json:"ref"`
-	WhereResource    string `json:"where_resource,omitempty"`
+	TargetSlug       string                  `json:"target_slug"`
+	TargetPath       string                  `json:"target_path,omitempty"`
+	RenderTargetSlug string                  `json:"render_target_slug"`
+	RenderTargetPath string                  `json:"render_target_path,omitempty"`
+	Space            string                  `json:"space"`
+	Ref              string                  `json:"ref"`
+	WhereResource    string                  `json:"where_resource,omitempty"`
+	HelmCLIOverrides []model.HelmCLIOverride `json:"helm_cli_overrides,omitempty"`
 }
 
 type changePreviewSummary struct {
@@ -1039,6 +1058,7 @@ type changeExplainSuggestion struct {
 	SourceTransform  string  `json:"source_transform,omitempty"`
 	GeneratorName    string  `json:"generator_name,omitempty"`
 	GeneratorProfile string  `json:"generator_profile,omitempty"`
+	Warning          string  `json:"warning,omitempty"`
 }
 
 type changeExplainResult struct {
@@ -1082,6 +1102,7 @@ func runChangePreview(args []string) error {
 	verifier := fs.String("verifier", "cub-gen", "Verifier identity label")
 	jsonOut := fs.Bool("json", true, "Output JSON")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	overrideFlags := addHelmCLIOverrideFlags(fs)
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -1089,6 +1110,10 @@ func runChangePreview(args []string) error {
 		return err
 	}
 	_ = jsonOut
+	helmCLIOverrides, err := overrideFlags.parse()
+	if err != nil {
+		return err
+	}
 
 	targetSlug, renderTargetSlug, err := resolveTargetPairArgs(fs, "usage: cub-gen change preview [flags] <target-path> [<render-target-path>]")
 	if err != nil {
@@ -1102,6 +1127,7 @@ func runChangePreview(args []string) error {
 		*ref,
 		*whereResource,
 		*verifier,
+		helmCLIOverrides,
 	)
 	if err != nil {
 		return err
@@ -1136,6 +1162,7 @@ func runChangeRun(args []string) error {
 	verifier := fs.String("verifier", "cub-gen", "Verifier identity label")
 	jsonOut := fs.Bool("json", true, "Output JSON")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	overrideFlags := addHelmCLIOverrideFlags(fs)
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -1143,6 +1170,10 @@ func runChangeRun(args []string) error {
 		return err
 	}
 	_ = jsonOut
+	helmCLIOverrides, err := overrideFlags.parse()
+	if err != nil {
+		return err
+	}
 
 	targetSlug, renderTargetSlug, err := resolveTargetPairArgs(fs, "usage: cub-gen change run [flags] <target-path> [<render-target-path>]")
 	if err != nil {
@@ -1163,6 +1194,7 @@ func runChangeRun(args []string) error {
 		IngestEndpoint:   *ingestEndpoint,
 		DecisionEndpoint: *decisionEndpoint,
 		Verifier:         *verifier,
+		HelmCLIOverrides: helmCLIOverrides,
 	})
 	if err != nil {
 		return err
@@ -1196,6 +1228,7 @@ func runChangeExplain(args []string) error {
 	out := fs.String("out", "-", "Output file path, or '-' for stdout")
 	jsonOut := fs.Bool("json", true, "Output JSON")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	overrideFlags := addHelmCLIOverrideFlags(fs)
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -1203,6 +1236,10 @@ func runChangeExplain(args []string) error {
 		return err
 	}
 	_ = jsonOut
+	helmCLIOverrides, err := overrideFlags.parse()
+	if err != nil {
+		return err
+	}
 
 	wetFilter := strings.TrimSpace(*wetPath)
 	dryFilter := strings.TrimSpace(*dryPath)
@@ -1213,10 +1250,12 @@ func runChangeExplain(args []string) error {
 		input      changePreviewInput
 		change     changePreviewSummary
 		provenance []model.ProvenanceRecord
-		err        error
 	)
 
 	if changeIDFilter != "" {
+		if len(helmCLIOverrides) > 0 {
+			return errors.New("change explain --change-id/--bundle cannot be combined with Helm CLI override flags")
+		}
 		if fs.NArg() != 0 {
 			return errors.New("usage: cub-gen change explain --change-id ID --bundle FILE [flags]")
 		}
@@ -1269,6 +1308,7 @@ func runChangeExplain(args []string) error {
 			*ref,
 			*whereResource,
 			"cub-gen",
+			helmCLIOverrides,
 		)
 		if err != nil {
 			return err
@@ -1311,8 +1351,11 @@ func runChangeExplain(args []string) error {
 
 func buildChangePreviewResult(
 	targetSlug, renderTargetSlug, space, ref, whereResource, verifier string,
+	helmCLIOverrides []model.HelmCLIOverride,
 ) (changePreviewResult, publish.ChangeBundle, gitopsflow.ImportFlowResult, error) {
-	imported, err := gitopsflow.Import(targetSlug, renderTargetSlug, ref, space, whereResource)
+	imported, err := gitopsflow.ImportWithOptions(targetSlug, renderTargetSlug, ref, space, whereResource, importer.ImportOptions{
+		HelmCLIOverrides: helmCLIOverrides,
+	})
 	if err != nil {
 		return changePreviewResult{}, publish.ChangeBundle{}, gitopsflow.ImportFlowResult{}, err
 	}
@@ -1347,6 +1390,7 @@ func buildChangePreviewResult(
 			Space:            imported.Space,
 			Ref:              imported.Ref,
 			WhereResource:    strings.TrimSpace(whereResource),
+			HelmCLIOverrides: append([]model.HelmCLIOverride(nil), imported.HelmCLIOverrides...),
 		},
 		Change: changePreviewSummary{
 			ChangeID:          bundle.ChangeID,
@@ -1373,16 +1417,23 @@ func buildChangePreviewResult(
 
 func bestInverseEditPointer(provenance []model.ProvenanceRecord) (model.InverseEditPointer, bool) {
 	best := model.InverseEditPointer{}
-	found := false
+	bestConfidence := -1.0
 	for _, record := range provenance {
 		for _, pointer := range record.InverseEditPointers {
-			if !found || pointer.Confidence > best.Confidence {
-				best = pointer
-				found = true
+			candidate := pointer
+			if source, ok := bestFieldOrigin(record.FieldOriginMap, pointer.WetPath, pointer.DryPath); ok {
+				candidate = applyFieldOriginToPointer(candidate, source)
+			}
+			if candidate.Confidence > bestConfidence {
+				best = candidate
+				bestConfidence = candidate.Confidence
 			}
 		}
 	}
-	return best, found
+	if bestConfidence < 0 {
+		return model.InverseEditPointer{}, false
+	}
+	return best, true
 }
 
 func pickInverseSuggestion(
@@ -1408,9 +1459,11 @@ func pickInverseSuggestion(
 
 			sourcePath := ""
 			sourceTransform := ""
+			sourceConfidence := 0.0
 			if source, ok := bestFieldOrigin(record.FieldOriginMap, pointer.WetPath, pointer.DryPath); ok {
 				sourcePath = source.SourcePath
 				sourceTransform = source.Transform
+				sourceConfidence = source.Confidence
 			}
 
 			candidate := changeExplainSuggestion{
@@ -1423,6 +1476,14 @@ func pickInverseSuggestion(
 				SourceTransform:  sourceTransform,
 				GeneratorName:    record.GeneratorName,
 				GeneratorProfile: record.GeneratorProfile,
+			}
+			if sourceTransform == helmCLIOverrideTransform {
+				candidate.Owner = "release-automation"
+				candidate.EditHint = overrideAwareEditHint(sourcePath, pointer.EditHint)
+				candidate.Warning = overrideAwareWarning()
+				if sourceConfidence > candidate.Confidence {
+					candidate.Confidence = sourceConfidence
+				}
 			}
 			if candidate.Confidence > bestConfidence {
 				best = candidate
@@ -1483,6 +1544,29 @@ func bestFieldOrigin(origins []model.FieldOrigin, wetPath, dryPath string) (mode
 		return model.FieldOrigin{}, false
 	}
 	return best, true
+}
+
+func applyFieldOriginToPointer(pointer model.InverseEditPointer, origin model.FieldOrigin) model.InverseEditPointer {
+	if origin.Transform != helmCLIOverrideTransform {
+		return pointer
+	}
+	pointer.Owner = "release-automation"
+	pointer.EditHint = overrideAwareEditHint(origin.SourcePath, pointer.EditHint)
+	if origin.Confidence > pointer.Confidence {
+		pointer.Confidence = origin.Confidence
+	}
+	return pointer
+}
+
+func overrideAwareEditHint(sourcePath, fallback string) string {
+	if strings.TrimSpace(sourcePath) == "" {
+		return fallback
+	}
+	return fmt.Sprintf("This render used %s. Edit that Helm CLI override or the CI/pipeline step that passes it before changing values files.", sourcePath)
+}
+
+func overrideAwareWarning() string {
+	return "This field was overridden by the Helm CLI invocation for this run, so editing values files alone will not change the rendered output."
 }
 
 func discoveredProfiles(discovered []gitopsflow.DiscoveredResource) []string {
@@ -1593,6 +1677,7 @@ func runGitOpsImport(args []string) error {
 	wait := fs.Bool("wait", false, "Accepted for parity with cub gitops import")
 	jsonOut := fs.Bool("json", false, "Output JSON")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	overrideFlags := addHelmCLIOverrideFlags(fs)
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -1600,13 +1685,19 @@ func runGitOpsImport(args []string) error {
 		return err
 	}
 	_ = wait
+	helmCLIOverrides, err := overrideFlags.parse()
+	if err != nil {
+		return err
+	}
 
 	targetSlug, renderTargetSlug, err := resolveTargetPairArgs(fs, "usage: cub-gen gitops import [flags] <target-path> [<render-target-path>]")
 	if err != nil {
 		return err
 	}
 
-	result, err := gitopsflow.Import(targetSlug, renderTargetSlug, *ref, *space, *whereResource)
+	result, err := gitopsflow.ImportWithOptions(targetSlug, renderTargetSlug, *ref, *space, *whereResource, importer.ImportOptions{
+		HelmCLIOverrides: helmCLIOverrides,
+	})
 	if err != nil {
 		return err
 	}
@@ -2052,9 +2143,9 @@ func printChangeUsage(out io.Writer) {
 		helpSection{
 			Title: "Usage",
 			Lines: []string{
-				"  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> [<render-target-path>]",
-				"  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> [<render-target-path>]",
-				"  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-path> [<render-target-path>]",
+				"  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> [<render-target-path>]",
+				"  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> [<render-target-path>]",
+				"  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-path> [<render-target-path>]",
 				"  cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]",
 				"  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]",
 			},
@@ -2063,6 +2154,7 @@ func printChangeUsage(out io.Writer) {
 			Title: "Examples",
 			Lines: []string{
 				"  cub-gen change preview --space my-space ./examples/helm-paas",
+				"  cub-gen change explain --space my-space --set image.tag=v1.2.4 ./examples/helm-paas",
 				"  cub-gen change run --mode local --space my-space ./examples/scoredev-paas",
 				"  cub-gen change explain --space my-space --wet-path \"Deployment/spec/template/spec/containers[0]/ports[0]/containerPort\" ./examples/springboot-paas",
 				"  cub-gen change explain --change-id chg_123 --bundle bundle.json --wet-path \"Deployment/spec/template/spec/containers[0]/image\"",
@@ -2074,6 +2166,7 @@ func printChangeUsage(out io.Writer) {
 			Lines: []string{
 				"  - Start with 'change explain' if you already know the rendered field you care about",
 				"  - Start with 'change preview' before 'change run'",
+				"  - Helm CLI overrides win over values-prod.yaml, values.yaml, and chart defaults",
 				"  - 'change run --mode connected' asks ConfigHub for a decision; it does not deploy",
 				"  - If omitted, <render-target-path> defaults to <target-path>",
 			},
@@ -2097,7 +2190,7 @@ func printGitOpsUsage(out io.Writer) {
 			Title: "Usage",
 			Lines: []string{
 				"  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--json] <target-path>",
-				"  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--wait] [--json] <target-path> [<render-target-path>]",
+				"  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--wait] [--json] <target-path> [<render-target-path>]",
 				"  cub-gen gitops cleanup [--space SPACE] [--json] <target-path>",
 			},
 		},
@@ -2116,6 +2209,7 @@ func printGitOpsUsage(out io.Writer) {
 				"  cub-gen gitops discover --space my-space ./examples/scoredev-paas",
 				"  cub-gen gitops discover --where-resource \"kind IN ('HelmRelease') AND resource_name LIKE '<contains-payments>'\" ./examples/helm-paas",
 				"  cub-gen gitops import --space my-space ./examples/springboot-paas",
+				"  cub-gen gitops import --space my-space --set image.tag=v1.2.4 ./examples/helm-paas",
 				"  cub-gen gitops cleanup --space my-space ./examples/springboot-paas",
 			},
 		},
@@ -2124,6 +2218,7 @@ func printGitOpsUsage(out io.Writer) {
 			Lines: []string{
 				"  - Start with 'gitops import' if you want provenance immediately",
 				"  - Use 'gitops discover' first when you want to filter or explore a repo",
+				"  - Helm CLI overrides win over values-prod.yaml, values.yaml, and chart defaults",
 				"  - If omitted, <render-target-path> defaults to <target-path>",
 				"  - For cluster-side import, use 'cub gitops' instead of 'cub-gen gitops'",
 			},
@@ -2142,13 +2237,14 @@ func printPublishUsage(out io.Writer) {
 			Title: "Usage",
 			Lines: []string{
 				"  cub-gen publish [--in FILE|-] [--out FILE|-] [--pretty]",
-				"  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]",
+				"  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]",
 			},
 		},
 		helpSection{
 			Title: "Examples",
 			Lines: []string{
 				"  cub-gen gitops import --space my-space ./examples/helm-paas | cub-gen publish --in - --out -",
+				"  cub-gen publish --space my-space --set image.tag=v1.2.4 ./examples/helm-paas > bundle.json",
 				"  cub-gen publish --space my-space ./examples/helm-paas > bundle.json",
 			},
 		},
@@ -2156,6 +2252,7 @@ func printPublishUsage(out io.Writer) {
 			Title: "Tips",
 			Lines: []string{
 				"  - If omitted, <render-target-path> defaults to <target-path>",
+				"  - Helm CLI overrides win over values-prod.yaml, values.yaml, and chart defaults",
 				"  - Pipe to 'cub-gen verify' and 'cub-gen attest' for release evidence",
 			},
 		},

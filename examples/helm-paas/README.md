@@ -33,7 +33,7 @@ Known gaps still open:
 
 - umbrella/subchart/alias/conditional chart support is still open work ([#238](https://github.com/confighub/cub-gen/issues/238))
 - one-command multi-variant fan-out is not exposed yet ([#237](https://github.com/confighub/cub-gen/issues/237))
-- CLI override capture for `--set` / `--set-file` is not modeled yet ([#242](https://github.com/confighub/cub-gen/issues/242))
+- helper/template/builtin provenance honesty is still partial ([#239](https://github.com/confighub/cub-gen/issues/239))
 
 ## AI-first bundle
 
@@ -120,7 +120,8 @@ source won, and what to edit next.
 ## What you get
 
 - **Field-origin tracing**: every deployed field maps back to `values.yaml`,
-  `values-prod.yaml`, or a chart template — with owner and confidence score
+  `values-prod.yaml`, a Helm CLI override, or a chart template — with owner and
+  confidence score
 - **Inverse-edit guidance**: "to change the image tag in production, edit
   `values-prod.yaml`, not the chart template"
 - **Governance decisions**: ALLOW, ESCALATE, or BLOCK changes based on who
@@ -146,9 +147,10 @@ source won, and what to edit next.
 `Chart.yaml` + `templates/` (platform team). These are the source of truth for
 intent.
 
-**WET** is what generators produce: rendered Kubernetes manifests with every field
-traced back to its DRY source. cub-gen doesn't run `helm template` — it reads
-your chart structure and classifies every field by origin and ownership.
+**WET** is what generators produce: rendered Kubernetes manifests with every
+field traced back to its DRY source. cub-gen classifies chart structure,
+values-file precedence, and invocation-time Helm overrides so you can see which
+layer actually won for a rendered field.
 
 **LIVE** is what's running in your cluster. Flux or ArgoCD reconciles WET to LIVE.
 cub-gen doesn't touch this layer — your existing reconciler stays in control.

@@ -73,6 +73,7 @@ type ImportFlowResult struct {
 	RenderTargetPath   string                       `json:"render_target_path,omitempty"`
 	Ref                string                       `json:"ref"`
 	WhereResource      string                       `json:"where_resource,omitempty"`
+	HelmCLIOverrides   []model.HelmCLIOverride      `json:"helm_cli_overrides,omitempty"`
 	DiscoverUnitSlug   string                       `json:"discover_unit_slug"`
 	ImportedAt         string                       `json:"imported_at"`
 	Discovered         []DiscoveredResource         `json:"discovered"`
@@ -176,6 +177,12 @@ func Discover(targetPath, ref, space, whereResource string) (DiscoverResult, err
 
 // Import runs discover and then creates local import artifacts from discovered resources.
 func Import(targetPath, renderTargetSlug, ref, space, whereResource string) (ImportFlowResult, error) {
+	return ImportWithOptions(targetPath, renderTargetSlug, ref, space, whereResource, importer.ImportOptions{})
+}
+
+// ImportWithOptions mirrors Import but accepts invocation-specific provenance
+// hints such as Helm CLI overrides.
+func ImportWithOptions(targetPath, renderTargetSlug, ref, space, whereResource string, opts importer.ImportOptions) (ImportFlowResult, error) {
 	renderTarget, err := resolveTarget(renderTargetSlug, targetModeRender)
 	if err != nil {
 		return ImportFlowResult{}, fmt.Errorf("resolve render target: %w", err)
@@ -198,6 +205,7 @@ func Import(targetPath, renderTargetSlug, ref, space, whereResource string) (Imp
 			RenderTargetPath: renderTarget.Path,
 			Ref:              discovered.Ref,
 			WhereResource:    discovered.WhereResource,
+			HelmCLIOverrides: append([]model.HelmCLIOverride(nil), opts.HelmCLIOverrides...),
 			DiscoverUnitSlug: discovered.DiscoverUnitSlug,
 			ImportedAt:       time.Now().UTC().Format(time.RFC3339),
 			Discovered:       discovered.Resources,
@@ -208,12 +216,12 @@ func Import(targetPath, renderTargetSlug, ref, space, whereResource string) (Imp
 		return ImportFlowResult{}, err
 	}
 
-	importResult, err := importer.ImportDetection(model.DetectionResult{
+	importResult, err := importer.ImportDetectionWithOptions(model.DetectionResult{
 		Repo:       discovered.TargetPath,
 		Ref:        discovered.Ref,
 		DetectedAt: discovered.DiscoveredAt,
 		Generators: discovered.Detections,
-	}, discovered.Space)
+	}, discovered.Space, opts)
 	if err != nil {
 		return ImportFlowResult{}, err
 	}
@@ -228,6 +236,7 @@ func Import(targetPath, renderTargetSlug, ref, space, whereResource string) (Imp
 		RenderTargetPath:   renderTarget.Path,
 		Ref:                discovered.Ref,
 		WhereResource:      discovered.WhereResource,
+		HelmCLIOverrides:   append([]model.HelmCLIOverride(nil), opts.HelmCLIOverrides...),
 		DiscoverUnitSlug:   discovered.DiscoverUnitSlug,
 		ImportedAt:         time.Now().UTC().Format(time.RFC3339),
 		Discovered:         discovered.Resources,

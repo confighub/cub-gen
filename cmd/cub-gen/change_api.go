@@ -14,6 +14,7 @@ import (
 	"sync"
 
 	bridgeflow "github.com/confighub/cub-gen/internal/bridge"
+	"github.com/confighub/cub-gen/internal/importer"
 	"github.com/confighub/cub-gen/internal/model"
 )
 
@@ -21,6 +22,7 @@ type changeRunOptions struct {
 	Space            string
 	Ref              string
 	WhereResource    string
+	HelmCLIOverrides []model.HelmCLIOverride
 	Mode             string
 	BaseURL          string
 	Token            string
@@ -46,6 +48,7 @@ func executeChangeRun(targetSlug, renderTargetSlug string, opts changeRunOptions
 		opts.Ref,
 		opts.WhereResource,
 		verifier,
+		opts.HelmCLIOverrides,
 	)
 	if err != nil {
 		return changeRunResult{}, nil, err
@@ -121,13 +124,16 @@ func executeChangeRun(targetSlug, renderTargetSlug string, opts changeRunOptions
 }
 
 type changeAPIInput struct {
-	TargetSlug       string `json:"target_slug"`
-	TargetPath       string `json:"target_path,omitempty"`
-	RenderTargetSlug string `json:"render_target_slug"`
-	RenderTargetPath string `json:"render_target_path,omitempty"`
-	Space            string `json:"space,omitempty"`
-	Ref              string `json:"ref,omitempty"`
-	WhereResource    string `json:"where_resource,omitempty"`
+	TargetSlug       string   `json:"target_slug"`
+	TargetPath       string   `json:"target_path,omitempty"`
+	RenderTargetSlug string   `json:"render_target_slug"`
+	RenderTargetPath string   `json:"render_target_path,omitempty"`
+	Space            string   `json:"space,omitempty"`
+	Ref              string   `json:"ref,omitempty"`
+	WhereResource    string   `json:"where_resource,omitempty"`
+	HelmSet          []string `json:"helm_set,omitempty"`
+	HelmSetString    []string `json:"helm_set_string,omitempty"`
+	HelmSetFile      []string `json:"helm_set_file,omitempty"`
 }
 
 type changeAPIConnected struct {
@@ -300,9 +306,14 @@ func (s *changeAPIServer) handlePostChanges(w http.ResponseWriter, r *http.Reque
 		ref = s.defaultRef
 	}
 	whereResource := strings.TrimSpace(req.Input.WhereResource)
+	helmCLIOverrides, err := importer.ParseHelmCLIOverrides(req.Input.HelmSet, req.Input.HelmSetString, req.Input.HelmSetFile)
+	if err != nil {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error(), map[string]any{"field": "input"})
+		return
+	}
 
 	if action == "preview" {
-		preview, _, imported, err := buildChangePreviewResult(targetSlug, renderTargetSlug, space, ref, whereResource, s.defaultVerifier)
+		preview, _, imported, err := buildChangePreviewResult(targetSlug, renderTargetSlug, space, ref, whereResource, s.defaultVerifier, helmCLIOverrides)
 		if err != nil {
 			writeAPIError(w, http.StatusUnprocessableEntity, "CHANGE_FAILED", err.Error(), nil)
 			return
@@ -336,6 +347,7 @@ func (s *changeAPIServer) handlePostChanges(w http.ResponseWriter, r *http.Reque
 		Space:            space,
 		Ref:              ref,
 		WhereResource:    whereResource,
+		HelmCLIOverrides: helmCLIOverrides,
 		Mode:             runMode,
 		BaseURL:          strings.TrimSpace(req.Connected.BaseURL),
 		Token:            strings.TrimSpace(req.Connected.Token),
@@ -532,5 +544,6 @@ func printChangeAPIUsage(out *os.File) {
 	fmt.Fprintln(out, "Request shape:")
 	fmt.Fprintln(out, "  input.target_path=<repo-path>")
 	fmt.Fprintln(out, "  input.render_target_path=<repo-path> (optional; defaults to target_path)")
+	fmt.Fprintln(out, "  input.helm_set[]=key=value | input.helm_set_string[]=key=value | input.helm_set_file[]=key=path (optional for Helm repos)")
 	fmt.Fprintln(out, "  legacy input.target_slug/render_target_slug still work for compatibility")
 }

@@ -52,7 +52,7 @@ cub-gen gitops discover --space <space> [--json] [--where-resource <expr>] <targ
 Import DRY/WET classification with provenance and inverse-edit guidance.
 
 ```
-cub-gen gitops import --space <space> [--json] [--wait] <target-path> [<render-target-path>]
+cub-gen gitops import --space <space> [--json] [--wait] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] <target-path> [<render-target-path>]
 ```
 
 | Flag | Description |
@@ -60,6 +60,7 @@ cub-gen gitops import --space <space> [--json] [--wait] <target-path> [<render-t
 | `--space` | Space label (must match discover) |
 | `--json` | Emit JSON output with full provenance |
 | `--wait` | Accepted for connected-shape compatibility; no-op in local mode |
+| `--set` / `--set-string` / `--set-file` | Helm-style invocation overrides captured in provenance when Helm is the active generator |
 
 Arguments:
 
@@ -89,7 +90,7 @@ Generate a ConfigHub-ready change bundle from import output.
 cub-gen gitops import ... | cub-gen publish --in - --out -
 
 # Direct mode (import + bundle in one step)
-cub-gen publish --space <space> <target-path> [<render-target-path>]
+cub-gen publish --space <space> [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] <target-path> [<render-target-path>]
 ```
 
 Output includes `digest_algorithm` (sha256) and `bundle_digest` for verification.
@@ -306,6 +307,7 @@ What works today:
 
 - One `gitops import` / `publish` invocation works on one repo path pair.
 - Supported generators can pick up overlay files that already live in that repo, such as Helm `values-prod.yaml`, Spring `application-dev.yaml`, and generator-specific overlay files.
+- Helm flows also capture invocation-time `--set`, `--set-string`, and `--set-file` overrides and rank them above values files in provenance and `change explain`.
 - Provenance records include those generator inputs in `dry_inputs`, `values_paths`, and `field_origin_map` when the generator emits separate overlay transforms.
 - `change explain` can point to overlay-specific edit locations. For Spring Boot, the current edit hint routes `server.port` changes to `application-dev.yaml` for environment overrides while keeping `application.yaml` as the base.
 
@@ -330,6 +332,13 @@ Reality-check example:
 Use this section as the answer for "can cub-gen render N explicit variants from one generator in one command?":
 not yet. Today it can understand supported overlay files already present in a repo, but it does not fan out one invocation into N per-environment bundles.
 
+Helm precedence today is:
+
+1. `--set` / `--set-string` / `--set-file`
+2. overlay files such as `values-prod.yaml`
+3. base `values.yaml`
+4. chart defaults
+
 ---
 
 ## Generator quickstart recipes
@@ -346,6 +355,8 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./cub-gen gitops discover --space platform ./examples/helm-paas
 ./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
+./cub-gen change explain --space platform --set image.tag=v1.2.4 \
+  ./examples/helm-paas
 ./cub-gen gitops cleanup --space platform ./examples/helm-paas
 ```
 
