@@ -217,6 +217,37 @@ func TestGitOpsParityGoldenDiscoverApplicationSet(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-applicationset.golden.json"), got)
 }
 
+func TestDetectReportsGeneratorChainSummary(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "examples", "incubator", "score-helm-chain"))
+	if err != nil {
+		t.Fatalf("resolve chain fixture: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{"detect", "--repo", repoPath})
+	if err != nil {
+		t.Fatalf("detect returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal detect output: %v\noutput=%s", err, out)
+	}
+	summaries, ok := got["chain_summaries"].([]any)
+	if !ok || len(summaries) != 1 {
+		t.Fatalf("expected one chain summary, got %T %+v", got["chain_summaries"], got["chain_summaries"])
+	}
+	summary, ok := summaries[0].(map[string]any)
+	if !ok {
+		t.Fatalf("expected chain summary object, got %T", summaries[0])
+	}
+	if summary["display"] != "score -> helm" {
+		t.Fatalf("expected display score -> helm, got %v", summary["display"])
+	}
+}
+
 func TestGitOpsParityGoldenImport(t *testing.T) {
 	setupAliases(t)
 
@@ -260,6 +291,42 @@ func TestGitOpsImportDefaultsRenderTargetToTarget(t *testing.T) {
 	}
 	if got["render_target_slug"] != "helm-paas" {
 		t.Fatalf("expected render_target_slug=helm-paas, got %v", got["render_target_slug"])
+	}
+}
+
+func TestGitOpsDiscoverPrintsGeneratorChains(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "examples", "incubator", "score-helm-chain"))
+	if err != nil {
+		t.Fatalf("resolve chain fixture: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", repoPath})
+	if err != nil {
+		t.Fatalf("gitops discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+	if !strings.Contains(out, "Generator chains") || !strings.Contains(out, "score -> helm") {
+		t.Fatalf("expected chain summary in discover output, got:\n%s", out)
+	}
+}
+
+func TestGitOpsImportPrintsGeneratorChains(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "examples", "incubator", "score-helm-chain"))
+	if err != nil {
+		t.Fatalf("resolve chain fixture: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", repoPath})
+	if err != nil {
+		t.Fatalf("gitops import returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+	if !strings.Contains(out, "Generator chains") || !strings.Contains(out, "score -> helm") {
+		t.Fatalf("expected chain summary in import output, got:\n%s", out)
 	}
 }
 

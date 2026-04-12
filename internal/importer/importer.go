@@ -27,6 +27,7 @@ const (
 	provenanceSchema              = "cub.confighub.io/provenance/v1"
 	inversePlanSchema             = "cub.confighub.io/inverse-transform-plan/v1"
 	helmCLIOverrideTransform      = "helm-cli-override"
+	helmExternalTransform         = "helm-external"
 	helmBuiltinTransform          = "helm-builtin"
 	helmHelperTransform           = "helm-helper"
 	helmNonDeterministicTransform = "helm-nondeterministic"
@@ -762,6 +763,9 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				transform = helmHelperTransform
 				confidenceKey = ""
 				confidenceFallback = 1.0
+			}
+			if source.External {
+				transform = helmExternalTransform
 			}
 			origins = append(origins, model.FieldOrigin{
 				DryPath:     "values.image.tag",
@@ -1732,8 +1736,9 @@ type helmProvenancePaths struct {
 }
 
 type helmValueSource struct {
-	Path  string
-	Layer string
+	Path     string
+	Layer    string
+	External bool
 }
 
 type helmDependencyDoc struct {
@@ -1845,8 +1850,9 @@ func helmImageTagSources(repoPath string, hints helmProvenancePaths) []helmValue
 	ordered := make([]helmValueSource, 0, len(imageTagPaths))
 	for _, path := range imageTagPaths {
 		ordered = append(ordered, helmValueSource{
-			Path:  path,
-			Layer: helmValuesSourceLayer(path, umbrella),
+			Path:     path,
+			Layer:    helmValuesSourceLayer(path, umbrella),
+			External: helmValuesPathImageTagIsExternal(repoPath, path),
 		})
 	}
 	return ordered
@@ -2176,42 +2182,87 @@ func stringSliceContains(items []string, want string) bool {
 }
 
 func helmValuesPathDefinesImageTag(repoPath, relPath string) bool {
-	if strings.TrimSpace(repoPath) == "" || strings.TrimSpace(relPath) == "" {
+	_, ok := helmValuesPathImageTagValue(repoPath, relPath)
+	return ok
+}
+
+func helmValuesPathImageTagIsExternal(repoPath, relPath string) bool {
+	value, ok := helmValuesPathImageTagValue(repoPath, relPath)
+	if !ok {
 		return false
+	}
+	return helmValueLooksExternal(value)
+}
+
+func helmValuesPathImageTagValue(repoPath, relPath string) (string, bool) {
+	if strings.TrimSpace(repoPath) == "" || strings.TrimSpace(relPath) == "" {
+		return "", false
 	}
 	content, err := os.ReadFile(filepath.Join(repoPath, relPath))
 	if err != nil {
-		return false
+		return "", false
 	}
 
 	var doc yaml.Node
 	if err := yaml.Unmarshal(content, &doc); err != nil {
-		return false
+		return "", false
 	}
-	return yamlPathExists(&doc, []string{"image", "tag"})
+	node := yamlPathNode(&doc, []string{"image", "tag"})
+	if node == nil {
+		return "", false
+	}
+	if node.Kind == yaml.AliasNode {
+		node = node.Alias
+	}
+	if node == nil {
+		return "", false
+	}
+	if node.Kind == yaml.ScalarNode {
+		return strings.TrimSpace(node.Value), true
+	}
+	return "", true
 }
 
-func yamlPathExists(node *yaml.Node, path []string) bool {
+func yamlPathNode(node *yaml.Node, path []string) *yaml.Node {
 	if node == nil {
-		return false
+		return nil
 	}
 	if node.Kind == yaml.DocumentNode && len(node.Content) > 0 {
-		return yamlPathExists(node.Content[0], path)
+		return yamlPathNode(node.Content[0], path)
 	}
 	if len(path) == 0 {
-		return true
+		return node
 	}
 	if node.Kind != yaml.MappingNode {
 		if node.Kind == yaml.AliasNode {
-			return yamlPathExists(node.Alias, path)
+			return yamlPathNode(node.Alias, path)
 		}
-		return false
+		return nil
 	}
 	for i := 0; i+1 < len(node.Content); i += 2 {
 		if node.Content[i].Value != path[0] {
 			continue
 		}
-		return yamlPathExists(node.Content[i+1], path[1:])
+		return yamlPathNode(node.Content[i+1], path[1:])
+	}
+	return nil
+}
+
+func helmValueLooksExternal(value string) bool {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return false
+	}
+	switch {
+	case strings.HasPrefix(value, "vault://"),
+		strings.HasPrefix(value, "ref+vault://"),
+		strings.HasPrefix(value, "secretref+"),
+		strings.HasPrefix(value, "aws-secretsmanager://"),
+		strings.HasPrefix(value, "ssm://"),
+		strings.HasPrefix(value, "azurekeyvault://"),
+		strings.HasPrefix(value, "gcpsecret://"),
+		strings.HasPrefix(value, "external://"):
+		return true
 	}
 	return false
 }

@@ -53,12 +53,22 @@ type GeneratorChain struct {
 	Mappings []GeneratorChainMapping `json:"mappings,omitempty"`
 }
 
+type GeneratorChainSummary struct {
+	ID           string   `json:"id"`
+	Name         string   `json:"name,omitempty"`
+	Display      string   `json:"display"`
+	StageCount   int      `json:"stage_count"`
+	Stages       []string `json:"stages,omitempty"`
+	MappingCount int      `json:"mapping_count"`
+}
+
 type DetectionResult struct {
-	Repo       string               `json:"repo"`
-	Ref        string               `json:"ref"`
-	DetectedAt string               `json:"detected_at"`
-	Generators []GeneratorDetection `json:"generators"`
-	Chains     []GeneratorChain     `json:"chains,omitempty"`
+	Repo           string                  `json:"repo"`
+	Ref            string                  `json:"ref"`
+	DetectedAt     string                  `json:"detected_at"`
+	Generators     []GeneratorDetection    `json:"generators"`
+	Chains         []GeneratorChain        `json:"chains,omitempty"`
+	ChainSummaries []GeneratorChainSummary `json:"chain_summaries,omitempty"`
 }
 
 type UnitRef struct {

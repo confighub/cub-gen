@@ -281,6 +281,12 @@ func TestScanRepoGeneratorChains(t *testing.T) {
 	if chain.Mappings[0].UpstreamDryPath != "containers.api.image" {
 		t.Fatalf("expected image mapping upstream dry path, got %+v", chain.Mappings[0])
 	}
+	if len(result.ChainSummaries) != 1 {
+		t.Fatalf("expected 1 chain summary, got %d", len(result.ChainSummaries))
+	}
+	if result.ChainSummaries[0].Display != "score -> helm" {
+		t.Fatalf("expected chain display score -> helm, got %+v", result.ChainSummaries[0])
+	}
 }
 
 func TestScanRepoC3AgentStructuralDetection(t *testing.T) {
