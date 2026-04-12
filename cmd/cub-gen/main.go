@@ -20,6 +20,8 @@ import (
 )
 
 const helmCLIOverrideTransform = "helm-cli-override"
+const helmBuiltinTransform = "helm-builtin"
+const helmDefaultTransform = "helm-default"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -1056,6 +1058,7 @@ type changeExplainSuggestion struct {
 	Confidence       float64 `json:"confidence"`
 	SourcePath       string  `json:"source_path,omitempty"`
 	SourceTransform  string  `json:"source_transform,omitempty"`
+	OriginType       string  `json:"origin_type,omitempty"`
 	GeneratorName    string  `json:"generator_name,omitempty"`
 	GeneratorProfile string  `json:"generator_profile,omitempty"`
 	Warning          string  `json:"warning,omitempty"`
@@ -1474,6 +1477,7 @@ func pickInverseSuggestion(
 				Confidence:       pointer.Confidence,
 				SourcePath:       sourcePath,
 				SourceTransform:  sourceTransform,
+				OriginType:       explainOriginType(sourcePath, sourceTransform),
 				GeneratorName:    record.GeneratorName,
 				GeneratorProfile: record.GeneratorProfile,
 			}
@@ -1481,6 +1485,18 @@ func pickInverseSuggestion(
 				candidate.Owner = "release-automation"
 				candidate.EditHint = overrideAwareEditHint(sourcePath, pointer.EditHint)
 				candidate.Warning = overrideAwareWarning()
+				if sourceConfidence > candidate.Confidence {
+					candidate.Confidence = sourceConfidence
+				}
+			}
+			if sourceTransform == helmBuiltinTransform {
+				candidate.Warning = builtinAwareWarning(sourcePath)
+				if sourceConfidence > candidate.Confidence {
+					candidate.Confidence = sourceConfidence
+				}
+			}
+			if sourceTransform == helmDefaultTransform {
+				candidate.Warning = defaultAwareWarning()
 				if sourceConfidence > candidate.Confidence {
 					candidate.Confidence = sourceConfidence
 				}
@@ -1547,11 +1563,16 @@ func bestFieldOrigin(origins []model.FieldOrigin, wetPath, dryPath string) (mode
 }
 
 func applyFieldOriginToPointer(pointer model.InverseEditPointer, origin model.FieldOrigin) model.InverseEditPointer {
-	if origin.Transform != helmCLIOverrideTransform {
+	switch origin.Transform {
+	case helmCLIOverrideTransform:
+		pointer.Owner = "release-automation"
+		pointer.EditHint = overrideAwareEditHint(origin.SourcePath, pointer.EditHint)
+	case helmBuiltinTransform, helmDefaultTransform:
+		// Keep the generator-produced edit hint, but let the higher-confidence
+		// provenance source win when the hint already points at the right layer.
+	default:
 		return pointer
 	}
-	pointer.Owner = "release-automation"
-	pointer.EditHint = overrideAwareEditHint(origin.SourcePath, pointer.EditHint)
 	if origin.Confidence > pointer.Confidence {
 		pointer.Confidence = origin.Confidence
 	}
@@ -1567,6 +1588,32 @@ func overrideAwareEditHint(sourcePath, fallback string) string {
 
 func overrideAwareWarning() string {
 	return "This field was overridden by the Helm CLI invocation for this run, so editing values files alone will not change the rendered output."
+}
+
+func builtinAwareWarning(sourcePath string) string {
+	if sourcePath == "<helm-builtin>:.Chart.AppVersion" {
+		return "This field currently comes from the Helm built-in .Chart.AppVersion path, not from an observed values file."
+	}
+	return "This field currently comes from a Helm built-in source, not from an observed values file."
+}
+
+func defaultAwareWarning() string {
+	return "This field is not set in the observed values files, so chart defaults or helper logic are likely supplying it."
+}
+
+func explainOriginType(sourcePath, sourceTransform string) string {
+	switch {
+	case sourceTransform == helmCLIOverrideTransform:
+		return "external"
+	case sourceTransform == helmBuiltinTransform:
+		return "builtin"
+	case sourceTransform == helmDefaultTransform:
+		return "default"
+	case strings.TrimSpace(sourcePath) != "":
+		return "dry-file"
+	default:
+		return ""
+	}
 }
 
 func discoveredProfiles(discovered []gitopsflow.DiscoveredResource) []string {
