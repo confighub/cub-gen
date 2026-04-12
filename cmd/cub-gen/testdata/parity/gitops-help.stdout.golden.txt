@@ -5,7 +5,7 @@ These commands read local repo paths. They do not import from a cluster or deplo
 
 Usage:
   cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--json] <target-path>
-  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--wait] [--json] <target-path> [<render-target-path>]
+  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--wait] [--json] <target-path> [<render-target-path>]
   cub-gen gitops cleanup [--space SPACE] [--json] <target-path>
 
 Supported where-resource clauses:
@@ -18,10 +18,12 @@ Examples:
   cub-gen gitops discover --space my-space ./examples/scoredev-paas
   cub-gen gitops discover --where-resource "kind IN ('HelmRelease') AND resource_name LIKE '<contains-payments>'" ./examples/helm-paas
   cub-gen gitops import --space my-space ./examples/springboot-paas
+  cub-gen gitops import --space my-space --set image.tag=v1.2.4 ./examples/helm-paas
   cub-gen gitops cleanup --space my-space ./examples/springboot-paas
 
 Tips:
   - Start with 'gitops import' if you want provenance immediately
   - Use 'gitops discover' first when you want to filter or explore a repo
+  - Helm CLI overrides win over values-prod.yaml, values.yaml, and chart defaults
   - If omitted, <render-target-path> defaults to <target-path>
   - For cluster-side import, use 'cub gitops' instead of 'cub-gen gitops'

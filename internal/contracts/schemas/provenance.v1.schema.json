@@ -120,6 +120,38 @@
         "minLength": 1
       }
     },
+    "helm_cli_overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "flag",
+          "key"
+        ],
+        "properties": {
+          "flag": {
+            "type": "string",
+            "enum": [
+              "set",
+              "set-string",
+              "set-file"
+            ]
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string"
+          },
+          "file_path": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
     "rendered_object_lineage": {
       "type": "array",
       "items": {

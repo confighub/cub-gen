@@ -4,12 +4,14 @@ Use pipe mode when you already have gitops import JSON, or direct mode to import
 
 Usage:
   cub-gen publish [--in FILE|-] [--out FILE|-] [--pretty]
-  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]
+  cub-gen publish [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]
 
 Examples:
   cub-gen gitops import --space my-space ./examples/helm-paas | cub-gen publish --in - --out -
+  cub-gen publish --space my-space --set image.tag=v1.2.4 ./examples/helm-paas > bundle.json
   cub-gen publish --space my-space ./examples/helm-paas > bundle.json
 
 Tips:
   - If omitted, <render-target-path> defaults to <target-path>
+  - Helm CLI overrides win over values-prod.yaml, values.yaml, and chart defaults
   - Pipe to 'cub-gen verify' and 'cub-gen attest' for release evidence

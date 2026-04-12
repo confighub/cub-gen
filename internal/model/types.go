@@ -96,6 +96,13 @@ type FieldOrigin struct {
 	Confidence float64 `json:"confidence"`
 }
 
+type HelmCLIOverride struct {
+	Flag     string `json:"flag"`
+	Key      string `json:"key"`
+	Value    string `json:"value,omitempty"`
+	FilePath string `json:"file_path,omitempty"`
+}
+
 type HelmLayeredAnalysis struct {
 	ApplicationSetPath       string   `json:"application_set_path,omitempty"`
 	ClusterInventoryPaths    []string `json:"cluster_inventory_paths,omitempty"`
@@ -202,6 +209,7 @@ type ProvenanceRecord struct {
 	Outputs             []OutputRef             `json:"outputs"`
 	ChartPath           string                  `json:"chart_path,omitempty"`
 	ValuesPaths         []string                `json:"values_paths,omitempty"`
+	HelmCLIOverrides    []HelmCLIOverride       `json:"helm_cli_overrides,omitempty"`
 	RenderedLineage     []RenderedObjectLineage `json:"rendered_object_lineage,omitempty"`
 	FieldOriginMap      []FieldOrigin           `json:"field_origin_map"`
 	InverseEditPointers []InverseEditPointer    `json:"inverse_edit_pointers"`

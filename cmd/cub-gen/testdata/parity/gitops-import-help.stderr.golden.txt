@@ -5,6 +5,12 @@ Usage of gitops import:
     	Pretty-print JSON output (default true)
   -ref string
     	Git ref label to include in output (default "HEAD")
+  -set value
+    	Helm-style override (key=value); repeat or comma-separate entries
+  -set-file value
+    	Helm-style file override (key=path); repeat or comma-separate entries
+  -set-string value
+    	Helm-style string override (key=value); repeat or comma-separate entries
   -space string
     	ConfigHub space label (default "default")
   -wait

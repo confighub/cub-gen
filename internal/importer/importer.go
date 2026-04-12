@@ -21,25 +21,38 @@ import (
 )
 
 const (
-	generatorContractSchema = "cub.confighub.io/generator-contract/v1"
-	provenanceSchema        = "cub.confighub.io/provenance/v1"
-	inversePlanSchema       = "cub.confighub.io/inverse-transform-plan/v1"
+	generatorContractSchema  = "cub.confighub.io/generator-contract/v1"
+	provenanceSchema         = "cub.confighub.io/provenance/v1"
+	inversePlanSchema        = "cub.confighub.io/inverse-transform-plan/v1"
+	helmCLIOverrideTransform = "helm-cli-override"
 )
 
 // ImportRepo detects generators in a repository and produces the initial
 // ConfigHub-oriented import artifacts (units, links, contracts, provenance, inverse plans).
 func ImportRepo(repoPath, ref, space string) (model.ImportResult, error) {
+	return ImportRepoWithOptions(repoPath, ref, space, ImportOptions{})
+}
+
+// ImportRepoWithOptions mirrors ImportRepo but accepts invocation-specific
+// provenance hints such as Helm CLI overrides.
+func ImportRepoWithOptions(repoPath, ref, space string, opts ImportOptions) (model.ImportResult, error) {
 	detection, err := detect.ScanRepo(repoPath, ref)
 	if err != nil {
 		return model.ImportResult{}, err
 	}
 
-	return ImportDetection(detection, space)
+	return ImportDetectionWithOptions(detection, space, opts)
 }
 
 // ImportDetection builds import artifacts from a precomputed detection result.
 // This allows a discover -> import flow that matches cub gitops command stages.
 func ImportDetection(detection model.DetectionResult, space string) (model.ImportResult, error) {
+	return ImportDetectionWithOptions(detection, space, ImportOptions{})
+}
+
+// ImportDetectionWithOptions builds import artifacts from a precomputed
+// detection result and invocation-specific provenance hints.
+func ImportDetectionWithOptions(detection model.DetectionResult, space string, opts ImportOptions) (model.ImportResult, error) {
 	if detection.Repo == "" {
 		return model.ImportResult{}, errors.New("detection repo is required")
 	}
@@ -47,7 +60,7 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 	if space == "" {
 		space = "default"
 	}
-	changeID := stableChangeID(detection, space)
+	changeID := stableChangeID(detection, space, opts)
 
 	units := make([]model.UnitRef, 0, len(detection.Generators)*3)
 	links := make([]model.UnitLink, 0, len(detection.Generators))
@@ -74,7 +87,7 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 		})
 
 		contract := buildContract(detection, g)
-		provenanceRecord := buildProvenance(changeID, space, detection, g, importedAt)
+		provenanceRecord := buildProvenance(changeID, space, detection, g, importedAt, opts)
 		inversePlan := buildInversePlan(changeID, dryUnitID, detection, g, importedAt)
 		if err := contracts.ValidateTriple(contract, provenanceRecord, inversePlan); err != nil {
 			return model.ImportResult{}, fmt.Errorf("validate contract triple for generator %q (%s): %w", g.ID, g.Kind, err)
@@ -84,6 +97,7 @@ func ImportDetection(detection model.DetectionResult, space string) (model.Impor
 		provenance = append(provenance, provenanceRecord)
 		inversePlans = append(inversePlans, inversePlan)
 		dryInputs = append(dryInputs, dryInputsForGenerator(g)...)
+		dryInputs = append(dryInputs, dryInputsForHelmCLIOverrides(g, opts.HelmCLIOverrides)...)
 		wetTargets = append(wetTargets, wetManifestTargetsForGenerator(detection, g)...)
 	}
 
@@ -136,7 +150,7 @@ func buildContract(detection model.DetectionResult, g model.GeneratorDetection) 
 	}
 }
 
-func buildProvenance(changeID, space string, detection model.DetectionResult, g model.GeneratorDetection, renderedAt string) model.ProvenanceRecord {
+func buildProvenance(changeID, space string, detection model.DetectionResult, g model.GeneratorDetection, renderedAt string, opts ImportOptions) model.ProvenanceRecord {
 	sources := make([]model.SourceRef, 0, len(g.Inputs))
 	for _, in := range g.Inputs {
 		sources = append(sources, model.SourceRef{
@@ -146,10 +160,13 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 			Path:     in,
 		})
 	}
+	sources = append(sources, helmCLIOverrideSourcesForGenerator(detection.Ref, g, opts.HelmCLIOverrides)...)
 
 	outputURI := fmt.Sprintf("oci://example.local/%s/%s:latest", space, sanitizeName(g.Name))
 	outputDigest := digestFor(strings.Join([]string{changeID, g.ID, outputURI}, "|"))
-	inputDigest := digestFor(strings.Join(g.Inputs, "|"))
+	inputDigestParts := append([]string{}, g.Inputs...)
+	inputDigestParts = append(inputDigestParts, HelmCLIOverrideDigestParts(helmCLIOverridesForGenerator(g, opts.HelmCLIOverrides))...)
+	inputDigest := digestFor(strings.Join(inputDigestParts, "|"))
 	helmPaths := helmProvenancePathsForGenerator(detection.Repo, g)
 
 	return model.ProvenanceRecord{
@@ -169,8 +186,9 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 		}},
 		ChartPath:           helmPaths.ChartPath,
 		ValuesPaths:         helmPaths.ValuesPaths,
+		HelmCLIOverrides:    helmCLIOverridesForGenerator(g, opts.HelmCLIOverrides),
 		RenderedLineage:     renderedLineageForGenerator(detection, g),
-		FieldOriginMap:      fieldOriginsForGenerator(detection, g),
+		FieldOriginMap:      fieldOriginsForGenerator(detection, g, opts.HelmCLIOverrides),
 		InverseEditPointers: inversePointersForGenerator(detection, g),
 		HelmLayeredAnalysis: helmLayeredAnalysisForGenerator(detection, g),
 		ApplicationSet:      applicationSetAnalysisForGenerator(detection, g),
@@ -194,11 +212,12 @@ func buildInversePlan(changeID, targetUnitID string, detection model.DetectionRe
 	}
 }
 
-func stableChangeID(detection model.DetectionResult, space string) string {
+func stableChangeID(detection model.DetectionResult, space string, opts ImportOptions) string {
 	parts := make([]string, 0, len(detection.Generators)+3)
 	parts = append(parts, "v1")
 	parts = append(parts, strings.TrimSpace(strings.ToLower(space)))
 	parts = append(parts, strings.TrimSpace(detection.Ref))
+	parts = append(parts, HelmCLIOverrideDigestParts(opts.HelmCLIOverrides)...)
 
 	entries := make([]string, 0, len(detection.Generators))
 	for _, g := range detection.Generators {
@@ -554,12 +573,14 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 	}
 }
 
-func fieldOriginsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.FieldOrigin {
+func fieldOriginsForGenerator(detection model.DetectionResult, g model.GeneratorDetection, helmCLIOverrides []model.HelmCLIOverride) []model.FieldOrigin {
 	switch g.Kind {
 	case model.GeneratorHelm:
 		hints := helmProvenancePathsForGenerator(detection.Repo, g)
 		imageTagPaths := helmImageTagSourcePaths(detection.Repo, hints)
-		origins := make([]model.FieldOrigin, 0, len(imageTagPaths))
+		overrideOrigins := helmCLIOverrideFieldOrigins(g, helmCLIOverrides)
+		origins := make([]model.FieldOrigin, 0, len(overrideOrigins)+len(imageTagPaths))
+		origins = append(origins, overrideOrigins...)
 		for idx, sourcePath := range imageTagPaths {
 			transform := registry.FieldOriginTransform(g.Kind)
 			confidenceKey := "image_tag_base"
@@ -1398,6 +1419,25 @@ func dryInputsForGenerator(g model.GeneratorDetection) []model.DryInputRef {
 	return out
 }
 
+func dryInputsForHelmCLIOverrides(g model.GeneratorDetection, overrides []model.HelmCLIOverride) []model.DryInputRef {
+	if g.Kind != model.GeneratorHelm || len(overrides) == 0 {
+		return nil
+	}
+
+	out := make([]model.DryInputRef, 0, len(overrides))
+	for _, override := range overrides {
+		out = append(out, model.DryInputRef{
+			GeneratorID: g.ID,
+			Profile:     g.Profile,
+			Role:        "cli-override",
+			Owner:       "release-automation",
+			Path:        HelmCLIOverrideDisplay(override),
+			Required:    false,
+		})
+	}
+	return out
+}
+
 func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.WetManifestTarget {
 	if g.Kind == model.GeneratorApplicationSet {
 		analysis := applicationSetAnalysisForGenerator(detection, g)
@@ -1635,6 +1675,59 @@ func firstDistinctPath(paths []string, primary string) string {
 		}
 	}
 	return ""
+}
+
+func helmCLIOverridesForGenerator(g model.GeneratorDetection, overrides []model.HelmCLIOverride) []model.HelmCLIOverride {
+	if g.Kind != model.GeneratorHelm || len(overrides) == 0 {
+		return nil
+	}
+	out := make([]model.HelmCLIOverride, len(overrides))
+	copy(out, overrides)
+	return out
+}
+
+func helmCLIOverrideSourcesForGenerator(ref string, g model.GeneratorDetection, overrides []model.HelmCLIOverride) []model.SourceRef {
+	if g.Kind != model.GeneratorHelm || len(overrides) == 0 {
+		return nil
+	}
+	sources := make([]model.SourceRef, 0, len(overrides))
+	for _, override := range overrides {
+		sources = append(sources, model.SourceRef{
+			Role:     "cli-override",
+			URI:      fmt.Sprintf("helm-cli://%s/%s", override.Flag, override.Key),
+			Revision: ref,
+			Path:     HelmCLIOverrideDisplay(override),
+		})
+	}
+	return sources
+}
+
+func helmCLIOverrideFieldOrigins(g model.GeneratorDetection, overrides []model.HelmCLIOverride) []model.FieldOrigin {
+	if g.Kind != model.GeneratorHelm {
+		return nil
+	}
+
+	override, ok := lastHelmCLIOverrideForKey(overrides, "image.tag")
+	if !ok {
+		return nil
+	}
+
+	return []model.FieldOrigin{{
+		DryPath:    "values.image.tag",
+		WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+		SourcePath: HelmCLIOverrideDisplay(override),
+		Transform:  helmCLIOverrideTransform,
+		Confidence: 1.0,
+	}}
+}
+
+func lastHelmCLIOverrideForKey(overrides []model.HelmCLIOverride, key string) (model.HelmCLIOverride, bool) {
+	for idx := len(overrides) - 1; idx >= 0; idx-- {
+		if overrides[idx].Key == key {
+			return overrides[idx], true
+		}
+	}
+	return model.HelmCLIOverride{}, false
 }
 
 func applicationSetAnalysisForGenerator(detection model.DetectionResult, g model.GeneratorDetection) *model.ApplicationSetAnalysis {
