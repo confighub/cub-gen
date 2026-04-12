@@ -12,7 +12,8 @@ not cluster/runtime ones.
 |---|---|
 | What does this repo render, and where did it come from? | `gitops import` |
 | Which DRY file/path should I edit for a rendered field? | `change explain` |
-| What would change if I made this edit? | `change preview` |
+| Which rendered fields would this DRY path affect? | `change impact` |
+| What evidence bundle and safe next step should I prepare? | `change preview` |
 | What evidence bundle should I verify or ship? | `publish -> verify -> attest` |
 | How do I use the deeper ConfigHub API flow? | `bridge` |
 
@@ -308,6 +309,7 @@ What works today:
 - One `gitops import` / `publish` invocation works on one repo path pair.
 - Supported generators can pick up overlay files that already live in that repo, such as Helm `values-prod.yaml`, Spring `application-dev.yaml`, and generator-specific overlay files.
 - Helm flows also capture invocation-time `--set`, `--set-string`, and `--set-file` overrides and rank them above values files in provenance and `change explain`.
+- Helm `change explain` also calls out when a field is currently coming from `.Chart.AppVersion` or an unresolved chart-default path instead of an observed values file.
 - Provenance records include those generator inputs in `dry_inputs`, `values_paths`, and `field_origin_map` when the generator emits separate overlay transforms.
 - `change explain` can point to overlay-specific edit locations. For Spring Boot, the current edit hint routes `server.port` changes to `application-dev.yaml` for environment overrides while keeping `application.yaml` as the base.
 
@@ -323,6 +325,10 @@ Reality-check example:
 ```bash
 ./cub-gen gitops import --space platform --json ./examples/springboot-paas \
   | jq '.provenance[0].field_origin_map[] | select(.dry_path=="server.port")'
+
+./cub-gen change impact --space platform \
+  --dry-path "values.image.tag" \
+  ./examples/helm-paas
 
 ./cub-gen change explain --space platform \
   --wet-path "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort" \
@@ -355,6 +361,8 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./cub-gen gitops discover --space platform ./examples/helm-paas
 ./cub-gen gitops import --space platform --json ./examples/helm-paas \
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
+./cub-gen change impact --space platform --dry-path values.image.tag \
+  ./examples/helm-paas
 ./cub-gen change explain --space platform --set image.tag=v1.2.4 \
   ./examples/helm-paas
 ./cub-gen gitops cleanup --space platform ./examples/helm-paas

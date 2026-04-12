@@ -9,7 +9,7 @@ Goal: one stable interface for terminal users, CI jobs, and agent tool-calls.
 
 ## Design principles
 
-1. One `change_id` lifecycle across preview, run, and explain.
+1. One `change_id` lifecycle across preview, run, explain, and impact.
 2. Same JSON shape across local and connected execution.
 3. No shell parsing of multiple intermediate files required.
 4. Additive over existing `discover/import/publish/verify/attest` pipeline.
@@ -93,6 +93,33 @@ Expected output fields (`ChangeExplainResult`):
 - `query.{wet_path_filter,dry_path_filter,owner_filter,match_count}`
 - `explanation.{owner,wet_path,dry_path,edit_hint,confidence,source_path,source_transform,generator_name,generator_profile}`
 
+### 4) `cub-gen change impact`
+
+Purpose:
+- Show the downstream rendered fields affected by a DRY path.
+
+Supported invocation modes:
+
+1. Fresh analysis mode (mints a new lifecycle):
+- `cub-gen change impact [filters] <target-path> [<render-target-path>]`
+
+2. Existing lifecycle mode (no new lifecycle minted):
+- `cub-gen change impact --change-id <id> --bundle <bundle.json> [filters]`
+
+Filters:
+
+- `--dry-path <path>` (optional, primary forward-reasoning filter)
+- `--wet-path <path>` (optional)
+- `--owner <owner>` (optional)
+- `--json` (default output format)
+
+Expected output fields (`ChangeImpactResult`):
+
+- `input.{target_path,render_target_path,target_slug,render_target_slug}`
+- `change.{change_id,bundle_digest,attestation_digest}`
+- `query.{dry_path_filter,wet_path_filter,owner_filter,match_count}`
+- `impacts[].{owner,wet_path,dry_path,edit_hint,confidence,source_path,source_transform,origin_type,generator_name,generator_profile}`
+
 ## Exit code contract
 
 - `0`: success (`ALLOW` or successful local run)
@@ -111,6 +138,7 @@ Native subcommands are implemented for:
 - `change preview`
 - `change run (local|connected)`
 - `change explain`
+- `change impact`
 
 Compatibility wrappers remain useful for demo packaging and story scripts:
 

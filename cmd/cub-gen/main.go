@@ -20,6 +20,8 @@ import (
 )
 
 const helmCLIOverrideTransform = "helm-cli-override"
+const helmBuiltinTransform = "helm-builtin"
+const helmDefaultTransform = "helm-default"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -1041,6 +1043,34 @@ type changeRunResult struct {
 	PromotionReady bool                `json:"promotion_ready"`
 }
 
+type changeImpactQuery struct {
+	DryPathFilter string `json:"dry_path_filter,omitempty"`
+	WetPathFilter string `json:"wet_path_filter,omitempty"`
+	OwnerFilter   string `json:"owner_filter,omitempty"`
+	MatchCount    int    `json:"match_count"`
+}
+
+type changeImpactEntry struct {
+	Owner            string  `json:"owner,omitempty"`
+	WetPath          string  `json:"wet_path"`
+	DryPath          string  `json:"dry_path"`
+	EditHint         string  `json:"edit_hint,omitempty"`
+	Confidence       float64 `json:"confidence"`
+	SourcePath       string  `json:"source_path,omitempty"`
+	SourceTransform  string  `json:"source_transform,omitempty"`
+	OriginType       string  `json:"origin_type,omitempty"`
+	GeneratorName    string  `json:"generator_name,omitempty"`
+	GeneratorProfile string  `json:"generator_profile,omitempty"`
+	Warning          string  `json:"warning,omitempty"`
+}
+
+type changeImpactResult struct {
+	Input   changePreviewInput   `json:"input"`
+	Change  changePreviewSummary `json:"change"`
+	Query   changeImpactQuery    `json:"query"`
+	Impacts []changeImpactEntry  `json:"impacts"`
+}
+
 type changeExplainQuery struct {
 	WetPathFilter string `json:"wet_path_filter,omitempty"`
 	DryPathFilter string `json:"dry_path_filter,omitempty"`
@@ -1056,6 +1086,7 @@ type changeExplainSuggestion struct {
 	Confidence       float64 `json:"confidence"`
 	SourcePath       string  `json:"source_path,omitempty"`
 	SourceTransform  string  `json:"source_transform,omitempty"`
+	OriginType       string  `json:"origin_type,omitempty"`
 	GeneratorName    string  `json:"generator_name,omitempty"`
 	GeneratorProfile string  `json:"generator_profile,omitempty"`
 	Warning          string  `json:"warning,omitempty"`
@@ -1082,6 +1113,8 @@ func runChange(args []string) error {
 		return runChangePreview(args[1:])
 	case "run":
 		return runChangeRun(args[1:])
+	case "impact":
+		return runChangeImpact(args[1:])
 	case "explain":
 		return runChangeExplain(args[1:])
 	case "api":
@@ -1349,6 +1382,139 @@ func runChangeExplain(args []string) error {
 	return writeJSON(f, result, *pretty)
 }
 
+func runChangeImpact(args []string) error {
+	fs := flag.NewFlagSet("change impact", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	space := fs.String("space", "default", "ConfigHub space label")
+	ref := fs.String("ref", "HEAD", "Git ref label to include in output")
+	whereResource := fs.String("where-resource", "", "Additional resource filter expression")
+	changeID := fs.String("change-id", "", "Existing change ID to explain without creating a new lifecycle")
+	bundlePath := fs.String("bundle", "", "Existing change bundle JSON file to use with --change-id")
+	dryPath := fs.String("dry-path", "", "Filter impacts to a specific DRY path")
+	wetPath := fs.String("wet-path", "", "Filter impacts to a specific WET path")
+	owner := fs.String("owner", "", "Filter impacts to a specific owner")
+	out := fs.String("out", "-", "Output file path, or '-' for stdout")
+	jsonOut := fs.Bool("json", true, "Output JSON")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	overrideFlags := addHelmCLIOverrideFlags(fs)
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	_ = jsonOut
+	helmCLIOverrides, err := overrideFlags.parse()
+	if err != nil {
+		return err
+	}
+
+	dryFilter := strings.TrimSpace(*dryPath)
+	wetFilter := strings.TrimSpace(*wetPath)
+	ownerFilter := strings.TrimSpace(*owner)
+	changeIDFilter := strings.TrimSpace(*changeID)
+
+	var (
+		input      changePreviewInput
+		change     changePreviewSummary
+		provenance []model.ProvenanceRecord
+	)
+
+	if changeIDFilter != "" {
+		if len(helmCLIOverrides) > 0 {
+			return errors.New("change impact --change-id/--bundle cannot be combined with Helm CLI override flags")
+		}
+		if fs.NArg() != 0 {
+			return errors.New("usage: cub-gen change impact --change-id ID --bundle FILE [flags]")
+		}
+		bundleRaw := strings.TrimSpace(*bundlePath)
+		if bundleRaw == "" {
+			return errors.New("change impact --change-id requires --bundle FILE")
+		}
+		var bundle publish.ChangeBundle
+		if err := readJSONInput(bundleRaw, &bundle); err != nil {
+			return fmt.Errorf("read bundle json: %w", err)
+		}
+		if err := publish.VerifyBundle(bundle); err != nil {
+			return fmt.Errorf("verify bundle before impact: %w", err)
+		}
+		if bundle.ChangeID == "" {
+			return errors.New("bundle does not contain change_id")
+		}
+		if bundle.ChangeID != changeIDFilter {
+			return fmt.Errorf("bundle change_id mismatch: expected %s, got %s", changeIDFilter, bundle.ChangeID)
+		}
+		input = changePreviewInput{
+			TargetSlug:       bundle.TargetSlug,
+			TargetPath:       bundle.TargetPath,
+			RenderTargetSlug: bundle.RenderTargetSlug,
+			RenderTargetPath: bundle.RenderTargetPath,
+			Space:            bundle.Space,
+			Ref:              bundle.Ref,
+		}
+		change = changePreviewSummary{
+			ChangeID:          bundle.ChangeID,
+			BundleDigest:      bundle.BundleDigest,
+			AttestationDigest: "",
+		}
+		provenance = bundle.Provenance
+	} else {
+		if strings.TrimSpace(*bundlePath) != "" {
+			return errors.New("change impact --bundle requires --change-id")
+		}
+		targetSlug, renderTargetSlug, resolveErr := resolveTargetPairArgs(fs, "usage: cub-gen change impact [flags] <target-path> [<render-target-path>]")
+		if resolveErr != nil {
+			return resolveErr
+		}
+
+		preview, _, imported, err := buildChangePreviewResult(
+			targetSlug,
+			renderTargetSlug,
+			*space,
+			*ref,
+			*whereResource,
+			"cub-gen",
+			helmCLIOverrides,
+		)
+		if err != nil {
+			return err
+		}
+		input = preview.Input
+		change = preview.Change
+		provenance = imported.Provenance
+	}
+
+	impacts, matchCount, ok := collectImpactSuggestions(provenance, dryFilter, wetFilter, ownerFilter)
+	if !ok {
+		return fmt.Errorf("no change impact matched filters (dry_path=%q wet_path=%q owner=%q)", dryFilter, wetFilter, ownerFilter)
+	}
+
+	result := changeImpactResult{
+		Input:  input,
+		Change: change,
+		Query: changeImpactQuery{
+			DryPathFilter: dryFilter,
+			WetPathFilter: wetFilter,
+			OwnerFilter:   ownerFilter,
+			MatchCount:    matchCount,
+		},
+		Impacts: impacts,
+	}
+
+	if *out == "-" {
+		return writeJSON(os.Stdout, result, *pretty)
+	}
+
+	f, err := os.Create(*out)
+	if err != nil {
+		return fmt.Errorf("create output file: %w", err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	return writeJSON(f, result, *pretty)
+}
+
 func buildChangePreviewResult(
 	targetSlug, renderTargetSlug, space, ref, whereResource, verifier string,
 	helmCLIOverrides []model.HelmCLIOverride,
@@ -1474,6 +1640,7 @@ func pickInverseSuggestion(
 				Confidence:       pointer.Confidence,
 				SourcePath:       sourcePath,
 				SourceTransform:  sourceTransform,
+				OriginType:       explainOriginType(sourcePath, sourceTransform),
 				GeneratorName:    record.GeneratorName,
 				GeneratorProfile: record.GeneratorProfile,
 			}
@@ -1481,6 +1648,18 @@ func pickInverseSuggestion(
 				candidate.Owner = "release-automation"
 				candidate.EditHint = overrideAwareEditHint(sourcePath, pointer.EditHint)
 				candidate.Warning = overrideAwareWarning()
+				if sourceConfidence > candidate.Confidence {
+					candidate.Confidence = sourceConfidence
+				}
+			}
+			if sourceTransform == helmBuiltinTransform {
+				candidate.Warning = builtinAwareWarning(sourcePath)
+				if sourceConfidence > candidate.Confidence {
+					candidate.Confidence = sourceConfidence
+				}
+			}
+			if sourceTransform == helmDefaultTransform {
+				candidate.Warning = defaultAwareWarning()
 				if sourceConfidence > candidate.Confidence {
 					candidate.Confidence = sourceConfidence
 				}
@@ -1496,6 +1675,77 @@ func pickInverseSuggestion(
 		return changeExplainSuggestion{}, 0, false
 	}
 	return best, matchCount, true
+}
+
+func collectImpactSuggestions(
+	provenance []model.ProvenanceRecord,
+	dryFilter, wetFilter, ownerFilter string,
+) ([]changeImpactEntry, int, bool) {
+	impacts := make([]changeImpactEntry, 0)
+
+	for _, record := range provenance {
+		for _, origin := range record.FieldOriginMap {
+			if dryFilter != "" && origin.DryPath != dryFilter {
+				continue
+			}
+			if wetFilter != "" && origin.WetPath != wetFilter {
+				continue
+			}
+
+			pointer, ok := bestInversePointer(record.InverseEditPointers, origin.WetPath, origin.DryPath)
+			entry := changeImpactEntry{
+				Owner:            "",
+				WetPath:          origin.WetPath,
+				DryPath:          origin.DryPath,
+				EditHint:         "",
+				Confidence:       origin.Confidence,
+				SourcePath:       origin.SourcePath,
+				SourceTransform:  origin.Transform,
+				OriginType:       explainOriginType(origin.SourcePath, origin.Transform),
+				GeneratorName:    record.GeneratorName,
+				GeneratorProfile: record.GeneratorProfile,
+			}
+			if ok {
+				entry.Owner = pointer.Owner
+				entry.EditHint = pointer.EditHint
+			}
+			switch origin.Transform {
+			case helmCLIOverrideTransform:
+				entry.Owner = "release-automation"
+				entry.EditHint = overrideAwareEditHint(origin.SourcePath, entry.EditHint)
+				entry.Warning = overrideAwareWarning()
+			case helmBuiltinTransform:
+				entry.Warning = builtinAwareWarning(origin.SourcePath)
+			case helmDefaultTransform:
+				entry.Warning = defaultAwareWarning()
+			}
+			if ownerFilter != "" && entry.Owner != ownerFilter {
+				continue
+			}
+			impacts = append(impacts, entry)
+		}
+	}
+
+	sort.Slice(impacts, func(i, j int) bool {
+		if impacts[i].DryPath != impacts[j].DryPath {
+			return impacts[i].DryPath < impacts[j].DryPath
+		}
+		if impacts[i].WetPath != impacts[j].WetPath {
+			return impacts[i].WetPath < impacts[j].WetPath
+		}
+		if impacts[i].Confidence != impacts[j].Confidence {
+			return impacts[i].Confidence > impacts[j].Confidence
+		}
+		if impacts[i].SourcePath != impacts[j].SourcePath {
+			return impacts[i].SourcePath < impacts[j].SourcePath
+		}
+		return impacts[i].GeneratorName < impacts[j].GeneratorName
+	})
+
+	if len(impacts) == 0 {
+		return nil, 0, false
+	}
+	return impacts, len(impacts), true
 }
 
 func bestFieldOrigin(origins []model.FieldOrigin, wetPath, dryPath string) (model.FieldOrigin, bool) {
@@ -1546,12 +1796,65 @@ func bestFieldOrigin(origins []model.FieldOrigin, wetPath, dryPath string) (mode
 	return best, true
 }
 
+func bestInversePointer(pointers []model.InverseEditPointer, wetPath, dryPath string) (model.InverseEditPointer, bool) {
+	best := model.InverseEditPointer{}
+	bestConfidence := -1.0
+
+	for _, pointer := range pointers {
+		if wetPath != "" && pointer.WetPath != wetPath {
+			continue
+		}
+		if dryPath != "" && pointer.DryPath != dryPath {
+			continue
+		}
+		if pointer.Confidence > bestConfidence {
+			best = pointer
+			bestConfidence = pointer.Confidence
+		}
+	}
+	if bestConfidence >= 0 {
+		return best, true
+	}
+
+	for _, pointer := range pointers {
+		if dryPath != "" && pointer.DryPath != dryPath {
+			continue
+		}
+		if pointer.Confidence > bestConfidence {
+			best = pointer
+			bestConfidence = pointer.Confidence
+		}
+	}
+	if bestConfidence >= 0 {
+		return best, true
+	}
+
+	for _, pointer := range pointers {
+		if wetPath != "" && pointer.WetPath != wetPath {
+			continue
+		}
+		if pointer.Confidence > bestConfidence {
+			best = pointer
+			bestConfidence = pointer.Confidence
+		}
+	}
+	if bestConfidence < 0 {
+		return model.InverseEditPointer{}, false
+	}
+	return best, true
+}
+
 func applyFieldOriginToPointer(pointer model.InverseEditPointer, origin model.FieldOrigin) model.InverseEditPointer {
-	if origin.Transform != helmCLIOverrideTransform {
+	switch origin.Transform {
+	case helmCLIOverrideTransform:
+		pointer.Owner = "release-automation"
+		pointer.EditHint = overrideAwareEditHint(origin.SourcePath, pointer.EditHint)
+	case helmBuiltinTransform, helmDefaultTransform:
+		// Keep the generator-produced edit hint, but let the higher-confidence
+		// provenance source win when the hint already points at the right layer.
+	default:
 		return pointer
 	}
-	pointer.Owner = "release-automation"
-	pointer.EditHint = overrideAwareEditHint(origin.SourcePath, pointer.EditHint)
 	if origin.Confidence > pointer.Confidence {
 		pointer.Confidence = origin.Confidence
 	}
@@ -1567,6 +1870,32 @@ func overrideAwareEditHint(sourcePath, fallback string) string {
 
 func overrideAwareWarning() string {
 	return "This field was overridden by the Helm CLI invocation for this run, so editing values files alone will not change the rendered output."
+}
+
+func builtinAwareWarning(sourcePath string) string {
+	if sourcePath == "<helm-builtin>:.Chart.AppVersion" {
+		return "This field currently comes from the Helm built-in .Chart.AppVersion path, not from an observed values file."
+	}
+	return "This field currently comes from a Helm built-in source, not from an observed values file."
+}
+
+func defaultAwareWarning() string {
+	return "This field is not set in the observed values files, so chart defaults or helper logic are likely supplying it."
+}
+
+func explainOriginType(sourcePath, sourceTransform string) string {
+	switch {
+	case sourceTransform == helmCLIOverrideTransform:
+		return "external"
+	case sourceTransform == helmBuiltinTransform:
+		return "builtin"
+	case sourceTransform == helmDefaultTransform:
+		return "default"
+	case strings.TrimSpace(sourcePath) != "":
+		return "dry-file"
+	default:
+		return ""
+	}
 }
 
 func discoveredProfiles(discovered []gitopsflow.DiscoveredResource) []string {
@@ -2089,6 +2418,7 @@ func printUsage(out io.Writer) {
 			Lines: []string{
 				"  gitops import     See what a repo renders and where each field came from",
 				"  change explain    Find the DRY file/path to edit for a rendered field",
+				"  change impact     See which rendered fields a DRY path can affect",
 				"  change preview    Preview a safe repo change",
 				"  detect            Detect generators in a repo",
 				"  generators        List supported generators (Helm, Score, Spring Boot, ...)",
@@ -2133,10 +2463,11 @@ func printUsage(out io.Writer) {
 func printChangeUsage(out io.Writer) {
 	printCommandHelp(
 		out,
-		"cub-gen change: preview and explain safe source edits",
+		"cub-gen change: preview, impact, and explain safe source edits",
 		[]string{
 			"Use these commands after you know the repo path and want to answer:",
 			"  - what will change?",
+			"  - which rendered fields does this DRY path affect?",
 			"  - where should I edit DRY source?",
 			"  - should I ask ConfigHub for a decision?",
 		},
@@ -2145,6 +2476,8 @@ func printChangeUsage(out io.Writer) {
 			Lines: []string{
 				"  cub-gen change preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> [<render-target-path>]",
 				"  cub-gen change run [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--mode local|connected] [--base-url URL] [--token TOKEN] [--ingest-endpoint PATH] [--decision-endpoint PATH] [--out FILE|-] [--verifier NAME] [--json] [--pretty] <target-path> [<render-target-path>]",
+				"  cub-gen change impact [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--dry-path PATH] [--wet-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-path> [<render-target-path>]",
+				"  cub-gen change impact --change-id ID --bundle FILE [--dry-path PATH] [--wet-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]",
 				"  cub-gen change explain [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty] <target-path> [<render-target-path>]",
 				"  cub-gen change explain --change-id ID --bundle FILE [--wet-path PATH] [--dry-path PATH] [--owner OWNER] [--out FILE|-] [--json] [--pretty]",
 				"  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]",
@@ -2154,6 +2487,7 @@ func printChangeUsage(out io.Writer) {
 			Title: "Examples",
 			Lines: []string{
 				"  cub-gen change preview --space my-space ./examples/helm-paas",
+				"  cub-gen change impact --space my-space --dry-path values.image.tag ./examples/helm-paas",
 				"  cub-gen change explain --space my-space --set image.tag=v1.2.4 ./examples/helm-paas",
 				"  cub-gen change run --mode local --space my-space ./examples/scoredev-paas",
 				"  cub-gen change explain --space my-space --wet-path \"Deployment/spec/template/spec/containers[0]/ports[0]/containerPort\" ./examples/springboot-paas",
@@ -2165,6 +2499,7 @@ func printChangeUsage(out io.Writer) {
 			Title: "Tips",
 			Lines: []string{
 				"  - Start with 'change explain' if you already know the rendered field you care about",
+				"  - Use 'change impact' when you know the DRY path and want the downstream blast radius",
 				"  - Start with 'change preview' before 'change run'",
 				"  - Helm CLI overrides win over values-prod.yaml, values.yaml, and chart defaults",
 				"  - 'change run --mode connected' asks ConfigHub for a decision; it does not deploy",

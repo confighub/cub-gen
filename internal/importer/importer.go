@@ -25,6 +25,8 @@ const (
 	provenanceSchema         = "cub.confighub.io/provenance/v1"
 	inversePlanSchema        = "cub.confighub.io/inverse-transform-plan/v1"
 	helmCLIOverrideTransform = "helm-cli-override"
+	helmBuiltinTransform     = "helm-builtin"
+	helmDefaultTransform     = "helm-default"
 )
 
 // ImportRepo detects generators in a repository and produces the initial
@@ -581,6 +583,14 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 		overrideOrigins := helmCLIOverrideFieldOrigins(g, helmCLIOverrides)
 		origins := make([]model.FieldOrigin, 0, len(overrideOrigins)+len(imageTagPaths))
 		origins = append(origins, overrideOrigins...)
+		if len(imageTagPaths) == 0 {
+			if builtinOrigin, ok := helmImageTagBuiltinOrigin(detection.Repo, hints); ok {
+				origins = append(origins, builtinOrigin)
+				return origins
+			}
+			origins = append(origins, helmImageTagDefaultOrigin())
+			return origins
+		}
 		for idx, sourcePath := range imageTagPaths {
 			transform := registry.FieldOriginTransform(g.Kind)
 			confidenceKey := "image_tag_base"
@@ -909,6 +919,28 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 		policy := registry.InversePointerTemplateFor(g.Kind, "image_tag", registry.InversePointerTemplate{
 			Owner: "app-team", Confidence: 0.86,
 		})
+		if len(imageTagPaths) == 0 {
+			if _, ok := helmImageTagBuiltinOrigin(detection.Repo, hints); ok {
+				return []model.InverseEditPointer{
+					{
+						WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+						DryPath:    "values.image.tag",
+						Owner:      "platform-engineer",
+						EditHint:   "This field currently comes from Helm built-in .Chart.AppVersion. Edit appVersion in Chart.yaml or pass --set image.tag=... for an invocation-specific override.",
+						Confidence: 1.0,
+					},
+				}
+			}
+			return []model.InverseEditPointer{
+				{
+					WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+					DryPath:    "values.image.tag",
+					Owner:      "platform-engineer",
+					EditHint:   "This field is not set in the observed Helm values files. Inspect Chart.yaml, templates/, and helper defaults before editing values.yaml.",
+					Confidence: 0.40,
+				},
+			}
+		}
 		preferredImageTagPath := hints.PrimaryValuesPath
 		if hints.OverlayValuesPath != "" {
 			preferredImageTagPath = hints.OverlayValuesPath
@@ -1579,10 +1611,7 @@ func helmImageTagSourcePaths(repoPath string, hints helmProvenancePaths) []strin
 		}
 	}
 	if len(imageTagPaths) == 0 {
-		if strings.TrimSpace(hints.PrimaryValuesPath) == "" {
-			return nil
-		}
-		return []string{hints.PrimaryValuesPath}
+		return nil
 	}
 
 	ordered := make([]string, 0, len(imageTagPaths))
@@ -1596,6 +1625,85 @@ func helmImageTagSourcePaths(repoPath string, hints helmProvenancePaths) []strin
 		ordered = append(ordered, path)
 	}
 	return ordered
+}
+
+func helmImageTagBuiltinOrigin(repoPath string, hints helmProvenancePaths) (model.FieldOrigin, bool) {
+	if strings.TrimSpace(repoPath) == "" {
+		return model.FieldOrigin{}, false
+	}
+	if !helmTemplatesUseChartAppVersionFallback(repoPath) {
+		return model.FieldOrigin{}, false
+	}
+	if appVersion := helmChartAppVersion(repoPath, hints.ChartPath); strings.TrimSpace(appVersion) != "" {
+		return model.FieldOrigin{
+			DryPath:    "values.image.tag",
+			WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+			SourcePath: "<helm-builtin>:.Chart.AppVersion",
+			Transform:  helmBuiltinTransform,
+			Confidence: 1.0,
+		}, true
+	}
+	return model.FieldOrigin{}, false
+}
+
+func helmImageTagDefaultOrigin() model.FieldOrigin {
+	return model.FieldOrigin{
+		DryPath:    "values.image.tag",
+		WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+		SourcePath: "<helm-default>:values.image.tag",
+		Transform:  helmDefaultTransform,
+		Confidence: 0.40,
+	}
+}
+
+func helmTemplatesUseChartAppVersionFallback(repoPath string) bool {
+	templatesDir := filepath.Join(repoPath, "templates")
+	info, err := os.Stat(templatesDir)
+	if err != nil || !info.IsDir() {
+		return false
+	}
+
+	patterns := []string{
+		".Values.image.tag | default .Chart.AppVersion",
+		"default .Chart.AppVersion .Values.image.tag",
+	}
+	found := false
+	_ = filepath.Walk(templatesDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info == nil || info.IsDir() {
+			return nil
+		}
+		content, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		text := string(content)
+		for _, pattern := range patterns {
+			if strings.Contains(text, pattern) {
+				found = true
+				return filepath.SkipAll
+			}
+		}
+		return nil
+	})
+	return found
+}
+
+func helmChartAppVersion(repoPath, chartPath string) string {
+	if strings.TrimSpace(repoPath) == "" || strings.TrimSpace(chartPath) == "" {
+		return ""
+	}
+	content, err := os.ReadFile(filepath.Join(repoPath, chartPath))
+	if err != nil {
+		return ""
+	}
+
+	var chartDoc struct {
+		AppVersion string `yaml:"appVersion"`
+	}
+	if err := yaml.Unmarshal(content, &chartDoc); err != nil {
+		return ""
+	}
+	return strings.TrimSpace(chartDoc.AppVersion)
 }
 
 func stringSliceContains(items []string, want string) bool {

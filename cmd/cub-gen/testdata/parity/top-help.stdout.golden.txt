@@ -8,6 +8,7 @@ Use cub-gen when your question starts in the repo, not the cluster:
 START HERE:
   gitops import     See what a repo renders and where each field came from
   change explain    Find the DRY file/path to edit for a rendered field
+  change impact     See which rendered fields a DRY path can affect
   change preview    Preview a safe repo change
   detect            Detect generators in a repo
   generators        List supported generators (Helm, Score, Spring Boot, ...)

@@ -192,6 +192,91 @@ func TestChangeExplainJSON(t *testing.T) {
 	}
 }
 
+func TestChangeImpactJSON(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{
+		"change", "impact",
+		"--space", "platform",
+		"--dry-path", "service.ports.web.port",
+		"score",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("change impact returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal change impact output: %v\noutput=%s", err, out)
+	}
+
+	query, ok := got["query"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected query object, got %T", got["query"])
+	}
+	if gotDryPath, ok := query["dry_path_filter"].(string); !ok || gotDryPath != "service.ports.web.port" {
+		t.Fatalf("expected dry_path_filter=service.ports.web.port, got %v", query["dry_path_filter"])
+	}
+
+	impacts, ok := got["impacts"].([]any)
+	if !ok || len(impacts) == 0 {
+		t.Fatalf("expected non-empty impacts, got %T %#v", got["impacts"], got["impacts"])
+	}
+	first, ok := impacts[0].(map[string]any)
+	if !ok {
+		t.Fatalf("expected impact entry object, got %T", impacts[0])
+	}
+	if wetPath, ok := first["wet_path"].(string); !ok || wetPath != "Service/spec/ports[name=web]/port" {
+		t.Fatalf("expected wet_path=Service/spec/ports[name=web]/port, got %v", first["wet_path"])
+	}
+	if owner, ok := first["owner"].(string); !ok || owner != "app-team" {
+		t.Fatalf("expected owner=app-team, got %v", first["owner"])
+	}
+}
+
+func TestChangeImpactHelmShowsOverlayAndBaseSources(t *testing.T) {
+	setupAliases(t)
+
+	out, stderr, err := runWithCapturedIO([]string{
+		"change", "impact",
+		"--space", "platform",
+		"--dry-path", "values.image.tag",
+		"helm",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("change impact returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal change impact output: %v\noutput=%s", err, out)
+	}
+
+	impacts, ok := got["impacts"].([]any)
+	if !ok || len(impacts) != 2 {
+		t.Fatalf("expected 2 impacts for Helm image tag, got %T %#v", got["impacts"], got["impacts"])
+	}
+	first, ok := impacts[0].(map[string]any)
+	if !ok {
+		t.Fatalf("expected first impact entry object, got %T", impacts[0])
+	}
+	second, ok := impacts[1].(map[string]any)
+	if !ok {
+		t.Fatalf("expected second impact entry object, got %T", impacts[1])
+	}
+	if first["source_path"] != "values-prod.yaml" || second["source_path"] != "values.yaml" {
+		t.Fatalf("expected overlay-first sources, got %v then %v", first["source_path"], second["source_path"])
+	}
+}
+
 func TestChangeHelmOverlayRecommendation(t *testing.T) {
 	setupAliases(t)
 
@@ -292,6 +377,56 @@ func TestChangeExplainWetPathFilter(t *testing.T) {
 	}
 	if got, ok := query["wet_path_filter"].(string); !ok || got != wetPath {
 		t.Fatalf("expected wet_path_filter=%q, got %v", wetPath, query["wet_path_filter"])
+	}
+}
+
+func TestChangeImpactByChangeIDFromBundle(t *testing.T) {
+	setupAliases(t)
+
+	publishOut, stderr, err := runWithCapturedIO([]string{
+		"publish",
+		"--space", "platform",
+		"score",
+		"render-target",
+	})
+	if err != nil {
+		t.Fatalf("publish returned error: %v\nstderr=%s", err, stderr)
+	}
+
+	var bundle map[string]any
+	if err := json.Unmarshal([]byte(publishOut), &bundle); err != nil {
+		t.Fatalf("unmarshal publish output: %v", err)
+	}
+	changeID, ok := bundle["change_id"].(string)
+	if !ok || strings.TrimSpace(changeID) == "" {
+		t.Fatalf("missing change_id in bundle: %v", bundle["change_id"])
+	}
+
+	bundlePath := filepath.Join(t.TempDir(), "bundle.json")
+	if err := os.WriteFile(bundlePath, []byte(publishOut), 0o600); err != nil {
+		t.Fatalf("write bundle file: %v", err)
+	}
+
+	out, impactErr, err := runWithCapturedIO([]string{
+		"change", "impact",
+		"--change-id", changeID,
+		"--bundle", bundlePath,
+		"--dry-path", "containers.main.image",
+	})
+	if err != nil {
+		t.Fatalf("change impact by change-id returned error: %v\nstderr=%s", err, impactErr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal change impact output: %v\noutput=%s", err, out)
+	}
+	change, ok := got["change"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected change object, got %T", got["change"])
+	}
+	if gotID, ok := change["change_id"].(string); !ok || gotID != changeID {
+		t.Fatalf("expected change_id=%q, got %v", changeID, change["change_id"])
 	}
 }
 
@@ -407,8 +542,18 @@ func TestChangeCommandErrorModes(t *testing.T) {
 			sub:  "usage: cub-gen change explain",
 		},
 		{
+			name: "impact-missing-targets",
+			args: []string{"change", "impact"},
+			sub:  "usage: cub-gen change impact",
+		},
+		{
 			name: "explain-change-id-missing-bundle",
 			args: []string{"change", "explain", "--change-id", "chg_123"},
+			sub:  "requires --bundle FILE",
+		},
+		{
+			name: "impact-change-id-missing-bundle",
+			args: []string{"change", "impact", "--change-id", "chg_123"},
 			sub:  "requires --bundle FILE",
 		},
 		{
