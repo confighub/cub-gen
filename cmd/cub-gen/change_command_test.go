@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	changeflow "github.com/confighub/cub-gen/internal/change"
 	"github.com/confighub/cub-gen/internal/model"
 )
 
@@ -233,7 +234,7 @@ func TestPickInverseSuggestionIncludesGeneratorChainHops(t *testing.T) {
 		}},
 	}}
 
-	suggestion, matchCount, ok := pickInverseSuggestion(provenance, "Deployment/spec/template/spec/containers[0]/image", "", "")
+	suggestion, matchCount, ok := changeflow.PickInverseSuggestion(provenance, "Deployment/spec/template/spec/containers[0]/image", "", "")
 	if !ok {
 		t.Fatal("expected inverse suggestion")
 	}
@@ -245,6 +246,29 @@ func TestPickInverseSuggestionIncludesGeneratorChainHops(t *testing.T) {
 	}
 	if suggestion.Hops[0].GeneratorKind != "score" || suggestion.Hops[1].GeneratorKind != "helm" {
 		t.Fatalf("unexpected hop order: %+v", suggestion.Hops)
+	}
+}
+
+func TestBestFieldOriginRequiresExactMatchWhenBothFiltersProvided(t *testing.T) {
+	origins := []model.FieldOrigin{
+		{
+			DryPath:    "values.image.tag",
+			WetPath:    "Deployment/spec/template/spec/containers[0]/image",
+			SourcePath: "values.yaml",
+			Transform:  "helm-template",
+			Confidence: 0.90,
+		},
+		{
+			DryPath:    "values.service.port",
+			WetPath:    "Service/spec/ports[name=web]/port",
+			SourcePath: "values.yaml",
+			Transform:  "helm-template",
+			Confidence: 0.95,
+		},
+	}
+
+	if _, ok := changeflow.BestFieldOrigin(origins, "Deployment/spec/template/spec/containers[0]/image", "values.service.port"); ok {
+		t.Fatal("expected no exact match when wet_path and dry_path point to different origins")
 	}
 }
 
@@ -291,6 +315,44 @@ func TestChangeImpactJSON(t *testing.T) {
 	}
 	if owner, ok := first["owner"].(string); !ok || owner != "app-team" {
 		t.Fatalf("expected owner=app-team, got %v", first["owner"])
+	}
+}
+
+func TestChangeCommandsRejectJSONFalse(t *testing.T) {
+	setupAliases(t)
+
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{
+			name: "preview",
+			args: []string{"change", "preview", "--json=false", "--space", "platform", "score", "render-target"},
+		},
+		{
+			name: "run",
+			args: []string{"change", "run", "--mode", "local", "--json=false", "--space", "platform", "score", "render-target"},
+		},
+		{
+			name: "explain",
+			args: []string{"change", "explain", "--json=false", "--space", "platform", "score", "render-target"},
+		},
+		{
+			name: "impact",
+			args: []string{"change", "impact", "--json=false", "--space", "platform", "--dry-path", "service.ports.web.port", "score", "render-target"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, err := runWithCapturedIO(tt.args)
+			if err == nil {
+				t.Fatalf("expected %s to reject --json=false", tt.name)
+			}
+			if !strings.Contains(err.Error(), "only supports JSON output") {
+				t.Fatalf("expected JSON-only error, got %q", err.Error())
+			}
+		})
 	}
 }
 

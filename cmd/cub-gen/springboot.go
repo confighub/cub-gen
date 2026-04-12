@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 
@@ -319,7 +320,7 @@ func runSpringBootSetEmbeddedConfig(args []string) error {
 	return fmt.Errorf("mutation to %s is blocked by field routes", result.FieldPath)
 }
 
-func printSpringBootUsage(out *os.File) {
+func printSpringBootUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage: cub-gen springboot <subcommand> [flags]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Spring Boot onboarding and enforcement commands.")

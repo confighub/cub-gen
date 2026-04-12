@@ -1,10 +1,11 @@
 package springboot
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -102,29 +103,11 @@ func ValidateMutation(opts ValidateMutationOptions) (*ValidationResult, error) {
 // matchRoute checks if a field path matches a route pattern.
 // Patterns use glob-style wildcards: * matches any characters (including dots).
 func matchRoute(pattern, fieldPath string) bool {
-	// Convert glob pattern to regex
-	// feature.inventory.* -> ^feature\.inventory\..*$
-	// spring.datasource.* -> ^spring\.datasource\..*$
-
-	// Escape dots, then replace * with .* for regex
-	regexPattern := "^"
-	for _, ch := range pattern {
-		switch ch {
-		case '*':
-			regexPattern += ".*"
-		case '.':
-			regexPattern += `\.`
-		default:
-			regexPattern += string(ch)
-		}
-	}
-	regexPattern += "$"
-
-	re, err := regexp.Compile(regexPattern)
+	matched, err := path.Match(strings.TrimSpace(pattern), strings.TrimSpace(fieldPath))
 	if err != nil {
 		return false
 	}
-	return re.MatchString(fieldPath)
+	return matched
 }
 
 // EnforceMutation validates a mutation and returns an error if blocked.
@@ -164,6 +147,6 @@ func (e *MutationBlockedError) Error() string {
 
 // IsMutationBlocked returns true if the error is a MutationBlockedError.
 func IsMutationBlocked(err error) bool {
-	_, ok := err.(*MutationBlockedError)
-	return ok
+	var blocked *MutationBlockedError
+	return errors.As(err, &blocked)
 }

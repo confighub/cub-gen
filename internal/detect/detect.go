@@ -350,7 +350,11 @@ func detectHelm(repo string) ([]model.GeneratorDetection, error) {
 			}
 			inputs = append(inputs, filepath.ToSlash(rel))
 		}
-		inputs = append(inputs, existingHelmAuxiliaryInputs(repo, root)...)
+		auxInputs, auxErr := existingHelmAuxiliaryInputs(repo, root)
+		if auxErr != nil {
+			return auxErr
+		}
+		inputs = append(inputs, auxInputs...)
 		sort.Strings(inputs)
 
 		name := filepath.Base(root)
@@ -373,7 +377,7 @@ func detectHelm(repo string) ([]model.GeneratorDetection, error) {
 	return mapValuesSorted(detected), nil
 }
 
-func existingHelmAuxiliaryInputs(repo, root string) []string {
+func existingHelmAuxiliaryInputs(repo, root string) ([]string, error) {
 	candidates := make([]string, 0, 24)
 	globs := []string{
 		filepath.Join(root, "values.schema.json"),
@@ -399,9 +403,9 @@ func existingHelmAuxiliaryInputs(repo, root string) []string {
 			candidates = append(candidates, filepath.ToSlash(rel))
 		}
 	}
-	_ = filepath.WalkDir(filepath.Join(root, "crds"), func(path string, d fs.DirEntry, walkErr error) error {
+	if err := walkOptionalDir(filepath.Join(root, "crds"), func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
-			return nil
+			return walkErr
 		}
 		if d.IsDir() {
 			return nil
@@ -416,10 +420,12 @@ func existingHelmAuxiliaryInputs(repo, root string) []string {
 		}
 		candidates = append(candidates, filepath.ToSlash(rel))
 		return nil
-	})
-	_ = filepath.WalkDir(filepath.Join(root, "charts"), func(path string, d fs.DirEntry, walkErr error) error {
+	}); err != nil {
+		return nil, fmt.Errorf("walk helm crds: %w", err)
+	}
+	if err := walkOptionalDir(filepath.Join(root, "charts"), func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
-			return nil
+			return walkErr
 		}
 		if d.IsDir() {
 			return nil
@@ -438,8 +444,18 @@ func existingHelmAuxiliaryInputs(repo, root string) []string {
 		}
 		candidates = append(candidates, filepath.ToSlash(rel))
 		return nil
-	})
-	return uniqueSortedStrings(candidates)
+	}); err != nil {
+		return nil, fmt.Errorf("walk helm dependency charts: %w", err)
+	}
+	return uniqueSortedStrings(candidates), nil
+}
+
+func walkOptionalDir(root string, fn fs.WalkDirFunc) error {
+	err := filepath.WalkDir(root, fn)
+	if err != nil && errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	return err
 }
 
 func isNestedHelmDependencyChart(relRoot string) bool {

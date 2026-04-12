@@ -1,11 +1,11 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,115 +13,10 @@ import (
 	"strings"
 	"sync"
 
-	bridgeflow "github.com/confighub/cub-gen/internal/bridge"
+	changeflow "github.com/confighub/cub-gen/internal/change"
 	"github.com/confighub/cub-gen/internal/importer"
 	"github.com/confighub/cub-gen/internal/model"
 )
-
-type changeRunOptions struct {
-	Space            string
-	Ref              string
-	WhereResource    string
-	HelmCLIOverrides []model.HelmCLIOverride
-	Mode             string
-	BaseURL          string
-	Token            string
-	IngestEndpoint   string
-	DecisionEndpoint string
-	Verifier         string
-}
-
-func executeChangeRun(targetSlug, renderTargetSlug string, opts changeRunOptions) (changeRunResult, []model.ProvenanceRecord, error) {
-	runMode := strings.ToLower(strings.TrimSpace(opts.Mode))
-	if runMode != "local" && runMode != "connected" {
-		return changeRunResult{}, nil, errors.New("change run --mode must be local|connected")
-	}
-	verifier := strings.TrimSpace(opts.Verifier)
-	if verifier == "" {
-		verifier = "cub-gen"
-	}
-
-	preview, bundle, imported, err := buildChangePreviewResult(
-		targetSlug,
-		renderTargetSlug,
-		opts.Space,
-		opts.Ref,
-		opts.WhereResource,
-		verifier,
-		opts.HelmCLIOverrides,
-	)
-	if err != nil {
-		return changeRunResult{}, nil, err
-	}
-
-	decision := changeRunDecision{
-		State:     "ALLOW",
-		Authority: verifier,
-		Source:    "local-preview",
-	}
-	promotionReady := true
-
-	if runMode == "connected" {
-		resolvedBaseURL := strings.TrimSpace(opts.BaseURL)
-		if resolvedBaseURL == "" {
-			resolvedBaseURL = strings.TrimSpace(os.Getenv("CONFIGHUB_BASE_URL"))
-		}
-		if resolvedBaseURL == "" {
-			return changeRunResult{}, nil, errors.New("change run --mode connected requires --base-url or CONFIGHUB_BASE_URL")
-		}
-
-		resolvedToken := strings.TrimSpace(opts.Token)
-		if resolvedToken == "" {
-			resolvedToken = strings.TrimSpace(os.Getenv("CONFIGHUB_TOKEN"))
-		}
-
-		ingestRes, err := bridgeflow.IngestBundle(context.Background(), bridgeflow.Client{
-			BaseURL:      resolvedBaseURL,
-			BearerToken:  resolvedToken,
-			EndpointPath: strings.TrimSpace(opts.IngestEndpoint),
-		}, bundle)
-		if err != nil {
-			return changeRunResult{}, nil, fmt.Errorf("connected ingest: %w", err)
-		}
-
-		decisionRec, err := bridgeflow.QueryDecisionByChangeID(context.Background(), bridgeflow.DecisionClient{
-			BaseURL:      resolvedBaseURL,
-			BearerToken:  resolvedToken,
-			EndpointPath: strings.TrimSpace(opts.DecisionEndpoint),
-		}, preview.Change.ChangeID)
-		if err != nil {
-			return changeRunResult{}, nil, fmt.Errorf("connected decision query: %w", err)
-		}
-
-		authority := strings.TrimSpace(decisionRec.ApprovedBy)
-		if authority == "" {
-			authority = strings.TrimSpace(decisionRec.PolicyDecisionRef)
-		}
-		if authority == "" {
-			authority = "confighub-policy"
-		}
-
-		decision = changeRunDecision{
-			State:     string(decisionRec.State),
-			Authority: authority,
-			Source:    "confighub-backend",
-		}
-		if decision.State != "ALLOW" {
-			promotionReady = false
-		}
-		if strings.TrimSpace(ingestRes.ChangeID) == "" {
-			promotionReady = false
-		}
-	}
-
-	result := changeRunResult{
-		Mode:           runMode,
-		Preview:        preview,
-		Decision:       decision,
-		PromotionReady: promotionReady,
-	}
-	return result, imported.Provenance, nil
-}
 
 type changeAPIInput struct {
 	TargetSlug       string   `json:"target_slug"`
@@ -446,21 +341,15 @@ func (s *changeAPIServer) handleChangeByID(w http.ResponseWriter, r *http.Reques
 		wetFilter := strings.TrimSpace(r.URL.Query().Get("wet_path"))
 		dryFilter := strings.TrimSpace(r.URL.Query().Get("dry_path"))
 		ownerFilter := strings.TrimSpace(r.URL.Query().Get("owner"))
-		suggestion, matchCount, ok := pickInverseSuggestion(record.Provenance, wetFilter, dryFilter, ownerFilter)
-		if !ok {
+		resp, err := changeflow.BuildExplainResult(
+			changeflow.NewQueryContext(record.Input, record.Change, record.Provenance),
+			wetFilter,
+			dryFilter,
+			ownerFilter,
+		)
+		if err != nil {
 			writeAPIError(w, http.StatusNotFound, "NOT_FOUND", "no matching explanations", map[string]any{"change_id": changeID})
 			return
-		}
-		resp := changeExplainResult{
-			Input:  record.Input,
-			Change: record.Change,
-			Query: changeExplainQuery{
-				WetPathFilter: wetFilter,
-				DryPathFilter: dryFilter,
-				OwnerFilter:   ownerFilter,
-				MatchCount:    matchCount,
-			},
-			Explanation: suggestion,
 		}
 		writeJSONResponse(w, http.StatusOK, resp)
 		return
@@ -532,7 +421,7 @@ func writeJSONResponse(w http.ResponseWriter, status int, payload any) {
 	_ = enc.Encode(payload)
 }
 
-func printChangeAPIUsage(out *os.File) {
+func printChangeAPIUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintln(out, "  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]")
 	fmt.Fprintln(out)

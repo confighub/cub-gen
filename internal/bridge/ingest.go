@@ -145,9 +145,19 @@ func IngestBundle(ctx context.Context, client Client, bundle publish.ChangeBundl
 	}
 	defer resp.Body.Close()
 
-	respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
+	respBody, err := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
+	if err != nil {
+		return IngestResult{}, fmt.Errorf("read ingest response: %w", err)
+	}
+
 	var decoded ingestAPIResponse
-	_ = json.Unmarshal(respBody, &decoded)
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusAccepted || resp.StatusCode == http.StatusConflict {
+		if len(bytes.TrimSpace(respBody)) > 0 {
+			if err := json.Unmarshal(respBody, &decoded); err != nil {
+				return IngestResult{}, fmt.Errorf("decode ingest response: %w", err)
+			}
+		}
+	}
 
 	result := IngestResult{
 		StatusCode:     resp.StatusCode,

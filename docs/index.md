@@ -6,6 +6,14 @@
 generators your repo uses, renders them locally, and records provenance so
 every deployed field traces back to a source file, line, and owner.
 
+Install with Homebrew:
+
+```bash
+brew install confighub/tap/cub-gen
+```
+
+Or download a release artifact from [GitHub release `v0.3.0`](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).
+
 **gen = generator.** A generator is a function that maps DRY source (`values.yaml`, `score.yaml`, `application.yaml`) to WET rendered output (the manifests that reach your cluster).
 
 cub-gen works with what teams already run today:
@@ -194,23 +202,21 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
 ## Current status
 
-**Latest shipped:** `v0.2-preview.2` (2026-04-11)
+**Latest shipped:** `v0.3.0` (2026-04-12)
 
-**Current target:** post-preview backlog and productization follow-ups
+**Current target:** post-`0.3` backlog and product polish
 
 - repo-first CLI and contract coverage remain green,
-- the shipped preview now includes a first-class standalone `applicationset`
+- the shipped release includes a first-class standalone `applicationset`
   generator family,
 - flagship Helm, Score, Spring, and Swamp examples carry explicit
   `AI_START_HERE.md`, `prompts.md`, and `contracts.md` bundles,
 - connected release status is backed by the repo's `ConfigHub Smoke` lane.
 
-See the [v0.2-preview.2 Release Plan](releases/v0.2-preview.2-plan.md) for the
-current must-ship and post-release split, and the
-[v0.2-preview.2 Ship Checklist](releases/v0.2-preview.2-ship-checklist.md) for
-what is already landed on `main` versus what still blocks the tag. The current
-[draft release notes](releases/v0.2-preview.2.md) are also in the repo now so
-the final tag write-up can be tightened from the eventual green `main`.
+See the [v0.3.0 release notes](releases/v0.3.0.md) for the shipped summary. The
+[v0.2-preview.2 Release Plan](releases/v0.2-preview.2-plan.md) and
+[v0.2-preview.2 Ship Checklist](releases/v0.2-preview.2-ship-checklist.md) are
+kept as archived preview-planning references for how the release bar was closed.
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
 - Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 9 generators

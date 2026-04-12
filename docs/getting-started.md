@@ -62,6 +62,19 @@ when you need to change a deployed value.
 - [Go 1.22+](https://go.dev/dl/)
 - Git
 
+## Install
+
+Homebrew:
+
+```bash
+brew install confighub/tap/cub-gen
+```
+
+Or download a release asset from [v0.3.0](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).
+
+If you install with Homebrew, you can run `cub-gen` directly. If you build from
+source in this repo, use `./cub-gen` in the examples below.
+
 ## Build
 
 ```bash

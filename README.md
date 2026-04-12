@@ -10,6 +10,24 @@ which source file or path to edit. It is for teams who already run GitHub,
 Helm, Score, Spring Boot, or workflow config, and already rely on Flux or Argo
 CD to reconcile what reaches their clusters.
 
+## Install
+
+Homebrew:
+
+```bash
+brew install confighub/tap/cub-gen
+```
+
+Or download a release artifact from [v0.3.0](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).
+
+If you prefer building from source:
+
+```bash
+git clone https://github.com/confighub/cub-gen.git
+cd cub-gen
+go build -o cub-gen ./cmd/cub-gen
+```
+
 **gen = generator.** A generator is a function that maps DRY source (your `values.yaml`, `score.yaml`, etc.) to WET rendered output (the manifests that reach your cluster). `cub-gen` detects which generators your repo uses, runs the mapping, and records provenance — so every deployed field traces back to a source file, line, and owner.
 
 If you already run app/config in Git, OCI artifacts, and Flux/Argo reconciliation, `cub-gen` answers:
@@ -88,8 +106,6 @@ You see exactly which source field produced each deployed value, who owns it, an
 ## First runs (local, no login)
 
 ```bash
-go build -o ./cub-gen ./cmd/cub-gen
-
 # Platform-first: existing Helm + Flux/Argo team
 ./examples/helm-paas/demo-local.sh
 
@@ -201,9 +217,10 @@ Docs currently live in this repo:
 - [Getting Started](docs/getting-started.md) — 10-minute quickstart
 - [CLI Reference](docs/cli-reference.md) — all commands, flags, and generator recipes
 - [Demo Guide](docs/demo-guide.md) — runnable demo scripts and scenarios
-- [Current release plan](docs/releases/v0.2-preview.2-plan.md) — must-ship and post-release work for the next preview
-- [Current ship checklist](docs/releases/v0.2-preview.2-ship-checklist.md) — what is already landed on `main`, what still blocks the tag, and what can wait
-- [Draft release notes](docs/releases/v0.2-preview.2.md) — the current `v0.2-preview.2` release-note draft to finalize from green `main`
+- [Release Notes (`v0.3.0`)](docs/releases/v0.3.0.md) — current shipped release summary
+- [Release Notes (`v0.2-preview.2`)](docs/releases/v0.2-preview.2.md) — previous preview release
+- [Archived preview release plan](docs/releases/v0.2-preview.2-plan.md) — the prep plan that led to `v0.2-preview.2`
+- [Archived preview ship checklist](docs/releases/v0.2-preview.2-ship-checklist.md) — the prep checklist that led to `v0.2-preview.2`
 - [Examples](examples/README.md) — complete runnable scenarios for every generator
 - [Platform](docs/platform.md) — how cub-gen connects to ConfigHub
 - [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md) — stack-specific entry paths
@@ -226,16 +243,16 @@ Both prove create, update, and drift-correction on a real cluster.
 
 | Status | What is true today |
 |---|---|
-| Latest shipped | `v0.2-preview.2` was released on 2026-04-11 |
-| Strong now | Dual-mode example entrypoints exist across the main catalog; a smaller ConfigHub smoke lane covers the flagship examples; Flux and Argo live reconciler proofs run on real clusters |
-| In progress | Follow-on depth is now mostly Helm-specific: umbrella/subchart support, richer provenance honesty, render-diff depth, multi-stage chaining, and CLI override capture |
-| Current release target | Post-preview follow-on depth: Helm/ApplicationSet richness, remote-store modeling, packaging, and product polish |
-| Current plan | See [docs/releases/v0.2-preview.2-plan.md](docs/releases/v0.2-preview.2-plan.md) |
-| Current ship checklist | See [docs/releases/v0.2-preview.2-ship-checklist.md](docs/releases/v0.2-preview.2-ship-checklist.md) |
-| Example quality | Flagship example blockers are resolved on this branch; deeper Helm follow-on depth is `#238`-`#242` |
-| CLI/docs follow-on | `#238`, `#239`, `#240`, `#241`, `#242` |
-| Release gate | Secrets-backed ConfigHub smoke is green on `main`; rerun it in the release environment before tagging |
-| Actively tracked | `#238`-`#242` |
+| Latest shipped | `v0.3.0` was released on 2026-04-12 |
+| Strong now | Repo-first CLI is stable; 9 generator families ship on `main`; flagship examples have governed and connected/live proof paths; Flux and Argo live reconciler proofs run on real clusters |
+| In progress | Post-`0.3` follow-on is now packaging, the bridge heartbeat/disconnected bug, and GUI/product surfaces |
+| Current release target | Post-`0.3` backlog and product polish |
+| Latest release notes | See [docs/releases/v0.3.0.md](docs/releases/v0.3.0.md) |
+| Previous release notes | See [docs/releases/v0.2-preview.2.md](docs/releases/v0.2-preview.2.md) |
+| Example quality | Flagship example blockers and Helm depth blockers are closed on `main` |
+| CLI/docs follow-on | `#219`, `#236`, `#209`-`#213` |
+| Release gate | `v0.3.0` was cut from green `main`; rerun ConfigHub smoke before the next release |
+| Actively tracked | `#219`, `#236`, `#209`-`#213` |
 
 For exact per-example counts and classifications, use the generated [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is derived from the runnable catalog, source-side tests, the connected smoke lane, and real live-proof harnesses.
 

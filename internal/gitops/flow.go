@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -663,15 +664,9 @@ func discoverUnitSlug(targetSlug, space, targetPath string) string {
 
 func shortHash(s string) string {
 	s = strings.TrimSpace(strings.ToLower(s))
-	h := 2166136261
-	for i := 0; i < len(s); i++ {
-		h ^= int(s[i])
-		h *= 16777619
-	}
-	if h < 0 {
-		h = -h
-	}
-	return fmt.Sprintf("%08x", h)
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(s))
+	return fmt.Sprintf("%08x", h.Sum32())
 }
 
 func slugify(s string) string {
