@@ -9,6 +9,7 @@ import (
 
 func TestRegistryHasSpecForAllKinds(t *testing.T) {
 	expected := []model.GeneratorKind{
+		model.GeneratorApplicationSet,
 		model.GeneratorBackstage,
 		model.GeneratorC3Agent,
 		model.GeneratorHelm,
@@ -41,6 +42,7 @@ func TestRegistryHasSpecForAllKinds(t *testing.T) {
 
 	expectedResourceKinds := []string{
 		"Application",
+		"ApplicationSet",
 		"Component",
 		"ConfigMap",
 		"HelmRelease",
@@ -115,6 +117,8 @@ func TestRegistryInputRoleAndOwnerClassification(t *testing.T) {
 		expectedOwner string
 	}{
 		{name: "helm-chart", kind: model.GeneratorHelm, path: "Chart.yaml", expectedRole: "chart", expectedOwner: "platform-engineer"},
+		{name: "applicationset-spec", kind: model.GeneratorApplicationSet, path: "applicationset.yaml", expectedRole: "application-set", expectedOwner: "platform-engineer"},
+		{name: "applicationset-cluster-inventory", kind: model.GeneratorApplicationSet, path: "clusters/prod-eu.yaml", expectedRole: "cluster-inventory", expectedOwner: "platform-engineer"},
 		{name: "helm-values", kind: model.GeneratorHelm, path: "values-prod.yaml", expectedRole: "values", expectedOwner: "app-team"},
 		{name: "helm-applicationset", kind: model.GeneratorHelm, path: "gitops/argo/applicationset.yaml", expectedRole: "application-set", expectedOwner: "platform-engineer"},
 		{name: "helm-cluster-inventory", kind: model.GeneratorHelm, path: "platform/clusters/prod-eu.yaml", expectedRole: "cluster-inventory", expectedOwner: "platform-engineer"},
@@ -153,6 +157,7 @@ func TestRegistrySchemaRef(t *testing.T) {
 		expected string
 	}{
 		{name: "helm-chart", kind: model.GeneratorHelm, path: "Chart.yaml", expected: "https://json.schemastore.org/chart"},
+		{name: "applicationset", kind: model.GeneratorApplicationSet, path: "applicationset.yaml", expected: "https://schema.confighub.dev/generators/applicationset-v1"},
 		{name: "score", kind: model.GeneratorScore, path: "score.yaml", expected: "https://docs.score.dev/schemas/score-v1b1.json"},
 		{name: "spring-app", kind: model.GeneratorSpringBoot, path: "application.yaml", expected: "https://json.schemastore.org/spring-configuration-metadata"},
 		{name: "backstage-catalog", kind: model.GeneratorBackstage, path: "catalog-info.yaml", expected: "https://json.schemastore.org/backstage-catalog-info"},

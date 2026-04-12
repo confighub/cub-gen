@@ -226,10 +226,10 @@ Both prove create, update, and drift-correction on a real cluster.
 
 | Status | What is true today |
 |---|---|
-| Latest shipped | `v0.2-preview.1` was released on 2026-03-06 |
+| Latest shipped | `v0.2-preview.2` was released on 2026-04-11 |
 | Strong now | Dual-mode example entrypoints exist across the main catalog; a smaller ConfigHub smoke lane covers the flagship examples; Flux and Argo live reconciler proofs run on real clusters |
 | In progress | Follow-on depth is now mostly Helm-specific: umbrella/subchart support, richer provenance honesty, render-diff depth, multi-stage chaining, and CLI override capture |
-| Current release target | `v0.2-preview.2` focuses on all featured examples working well, CLI/docs trust, and a credible connected release signal |
+| Current release target | Post-preview follow-on depth: Helm/ApplicationSet richness, remote-store modeling, packaging, and product polish |
 | Current plan | See [docs/releases/v0.2-preview.2-plan.md](docs/releases/v0.2-preview.2-plan.md) |
 | Current ship checklist | See [docs/releases/v0.2-preview.2-ship-checklist.md](docs/releases/v0.2-preview.2-ship-checklist.md) |
 | Example quality | Flagship example blockers are resolved on this branch; deeper Helm follow-on depth is `#238`-`#242` |

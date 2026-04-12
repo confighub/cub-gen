@@ -28,10 +28,10 @@ flowchart LR
 
 ### Input role rules
 
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `operations-base` | operations.yaml, operations.yml, workflow.yaml, workflow.yml | - | - |
-| `operations-overlay` | - | operations-, workflow- | .yaml, .yml |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `operations-base` | operations.yaml, operations.yml, workflow.yaml, workflow.yml | - | - | - |
+| `operations-overlay` | - | - | operations-, workflow- | .yaml, .yml |
 
 ### Role owners
 

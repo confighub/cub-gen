@@ -46,10 +46,10 @@ flowchart LR
 
 ### Input role rules
 
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `fleet-config-base` | c3agent.yaml, c3agent.yml, c3agent.json | - | - |
-| `fleet-config-overlay` | - | c3agent- | .yaml, .yml, .json |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `fleet-config-base` | c3agent.yaml, c3agent.yml, c3agent.json | - | - | - |
+| `fleet-config-overlay` | - | - | c3agent- | .yaml, .yml, .json |
 
 ### Role owners
 

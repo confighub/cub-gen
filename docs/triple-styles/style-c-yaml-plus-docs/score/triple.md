@@ -28,9 +28,9 @@ flowchart LR
 
 ### Input role rules
 
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `score-spec` | score.yaml, score.yml | - | - |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `score-spec` | score.yaml, score.yml | - | - | - |
 
 ### Role owners
 

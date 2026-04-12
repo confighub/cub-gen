@@ -1,0 +1,288 @@
+{
+  "contracts": [
+    {
+      "capabilities": [
+        "observed-expansion",
+        "authoritative-list-expansion",
+        "authoritative-clusters-expansion",
+        "graceful-degradation"
+      ],
+      "deterministic": true,
+      "generator_id": "gen_e1966fdc610ceae8",
+      "inputs": [
+        {
+          "name": "input_01",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/applicationset-v1"
+        },
+        {
+          "name": "input_02",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/cluster-inventory-v1"
+        },
+        {
+          "name": "input_03",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/cluster-inventory-v1"
+        }
+      ],
+      "kind": "applicationset",
+      "name": "platform-apps",
+      "output_format": "kubernetes/yaml",
+      "profile": "applicationset",
+      "schema_version": "cub.confighub.io/generator-contract/v1",
+      "source_path": "",
+      "source_ref": "HEAD",
+      "source_repo": "\u003ctarget_path\u003e",
+      "transport": "oci+git",
+      "version": "0.1.0"
+    }
+  ],
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
+  "discovered": [
+    {
+      "generator_id": "gen_e1966fdc610ceae8",
+      "generator_kind": "applicationset",
+      "generator_profile": "applicationset",
+      "inputs": [
+        "applicationset.yaml",
+        "clusters/prod-eu.yaml",
+        "clusters/stage-eu.yaml"
+      ],
+      "resource_body": "kind: ApplicationSet\nmetadata:\n  name: platform-apps\nspec:\n  root: \n",
+      "resource_kind": "ApplicationSet",
+      "resource_name": "platform-apps",
+      "resource_type": "argoproj.io/v1alpha1/ApplicationSet",
+      "root": ""
+    }
+  ],
+  "dry_inputs": [
+    {
+      "generator_id": "gen_e1966fdc610ceae8",
+      "owner": "platform-engineer",
+      "path": "applicationset.yaml",
+      "profile": "applicationset",
+      "required": true,
+      "role": "application-set"
+    },
+    {
+      "generator_id": "gen_e1966fdc610ceae8",
+      "owner": "platform-engineer",
+      "path": "clusters/prod-eu.yaml",
+      "profile": "applicationset",
+      "required": true,
+      "role": "cluster-inventory"
+    },
+    {
+      "generator_id": "gen_e1966fdc610ceae8",
+      "owner": "platform-engineer",
+      "path": "clusters/stage-eu.yaml",
+      "profile": "applicationset",
+      "required": true,
+      "role": "cluster-inventory"
+    }
+  ],
+  "dry_units": [
+    {
+      "id": "dry_d63e402db3c718e6",
+      "kind": "dry-unit",
+      "layer": "dry",
+      "name": "platform-apps-dry"
+    }
+  ],
+  "generator_units": [
+    {
+      "id": "gen_7769bb923c4c0945",
+      "kind": "generator-unit",
+      "layer": "generator",
+      "name": "platform-apps-generator"
+    }
+  ],
+  "imported_at": "\u003ctimestamp\u003e",
+  "inverse_transform_plans": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "created_at": "\u003ctimestamp\u003e",
+      "patches": [
+        {
+          "confidence": 0.89,
+          "dry_path": "spec.template.metadata.name",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Child Application identity is generated from the parent ApplicationSet template.",
+          "requires_review": false,
+          "wet_path": "Application/metadata/name"
+        },
+        {
+          "confidence": 0.86,
+          "dry_path": "spec.template.spec.source.path",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "Child Application source path is generated from the parent ApplicationSet template.",
+          "requires_review": true,
+          "wet_path": "Application/spec/source/path"
+        }
+      ],
+      "plan_id": "\u003cplan_id\u003e",
+      "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+      "source_kind": "applicationset",
+      "source_ref": "",
+      "status": "draft",
+      "target_unit_id": "dry_d63e402db3c718e6"
+    }
+  ],
+  "links": [
+    {
+      "dry_unit_id": "dry_d63e402db3c718e6",
+      "generator_unit_id": "gen_7769bb923c4c0945",
+      "wet_unit_id": "wet_be67b94a60379410"
+    }
+  ],
+  "provenance": [
+    {
+      "application_set_analysis": {
+        "application_set_path": "applicationset.yaml",
+        "cluster_inventory_paths": [
+          "clusters/prod-eu.yaml",
+          "clusters/stage-eu.yaml"
+        ],
+        "generated_applications": [
+          {
+            "cluster": "prod-eu",
+            "generator_type": "clusters",
+            "inventory_path": "clusters/prod-eu.yaml",
+            "name": "prod-eu-inventory",
+            "reason": "generated from cluster inventory prod-eu matching selector env=prod, region=eu",
+            "source_path": "applicationset.yaml"
+          }
+        ],
+        "generator_types": [
+          "clusters"
+        ],
+        "matched_clusters": [
+          "prod-eu"
+        ],
+        "mode": "authoritative",
+        "mode_reason": "Authoritative expansion produced 1 child Application(s) from explicit repo inputs."
+      },
+      "change_id": "\u003cchange_id\u003e",
+      "field_origin_map": [
+        {
+          "confidence": 0.89,
+          "dry_path": "spec.template.metadata.name",
+          "source_path": "applicationset.yaml",
+          "transform": "applicationset-template",
+          "wet_path": "Application/metadata/name"
+        },
+        {
+          "confidence": 0.86,
+          "dry_path": "spec.template.spec.source.path",
+          "source_path": "applicationset.yaml",
+          "transform": "applicationset-template",
+          "wet_path": "Application/spec/source/path"
+        }
+      ],
+      "generator_id": "gen_e1966fdc610ceae8",
+      "generator_name": "platform-apps",
+      "generator_profile": "applicationset",
+      "input_digest": "sha256:bac410d03ded81864397dd58a5fccff71ac501e7bc516e3b747d84fec7c5d354",
+      "inverse_edit_pointers": [
+        {
+          "confidence": 0.89,
+          "dry_path": "spec.template.metadata.name",
+          "edit_hint": "Edit spec.template.metadata.name in applicationset.yaml.",
+          "owner": "platform-engineer",
+          "wet_path": "Application/metadata/name"
+        },
+        {
+          "confidence": 0.86,
+          "dry_path": "spec.template.spec.source.path",
+          "edit_hint": "Edit spec.template.spec.source.path in applicationset.yaml.",
+          "owner": "platform-engineer",
+          "wet_path": "Application/spec/source/path"
+        }
+      ],
+      "outputs": [
+        {
+          "digest": "\u003cdigest\u003e",
+          "role": "rendered-manifests",
+          "uri": "oci://example.local/platform/platform-apps:latest"
+        }
+      ],
+      "provenance_id": "\u003cprovenance_id\u003e",
+      "rendered_at": "\u003ctimestamp\u003e",
+      "rendered_object_lineage": [
+        {
+          "kind": "ApplicationSet",
+          "name": "platform-apps",
+          "namespace": "argocd",
+          "source_dry_path": "spec",
+          "source_path": "applicationset.yaml"
+        },
+        {
+          "kind": "Application",
+          "name": "prod-eu-inventory",
+          "namespace": "argocd",
+          "source_dry_path": "spec.template.metadata.name",
+          "source_path": "applicationset.yaml"
+        }
+      ],
+      "schema_version": "cub.confighub.io/provenance/v1",
+      "sources": [
+        {
+          "path": "applicationset.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "clusters/prod-eu.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "clusters/stage-eu.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        }
+      ],
+      "version": "0.1.0"
+    }
+  ],
+  "ref": "HEAD",
+  "render_target_path": "\u003crender_target_path\u003e",
+  "render_target_path_expected_suffix": "testdata/applicationset-standalone",
+  "render_target_slug": "applicationset-standalone",
+  "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
+  "target_path_expected_suffix": "testdata/applicationset-standalone",
+  "target_slug": "applicationset-standalone",
+  "wet_manifest_targets": [
+    {
+      "generator_id": "gen_e1966fdc610ceae8",
+      "kind": "ApplicationSet",
+      "name": "platform-apps",
+      "namespace": "argocd",
+      "owner": "platform-runtime",
+      "source_dry_path": "spec"
+    },
+    {
+      "generator_id": "gen_e1966fdc610ceae8",
+      "kind": "Application",
+      "name": "prod-eu-inventory",
+      "namespace": "argocd",
+      "owner": "platform-runtime",
+      "source_dry_path": "spec.template.metadata.name"
+    }
+  ],
+  "wet_units": [
+    {
+      "id": "wet_be67b94a60379410",
+      "kind": "wet-unit",
+      "layer": "wet",
+      "name": "platform-apps-wet"
+    }
+  ]
+}

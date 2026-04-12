@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/confighub/cub-gen/internal/applicationset"
 	"github.com/confighub/cub-gen/internal/contracts"
 	"github.com/confighub/cub-gen/internal/detect"
 	"github.com/confighub/cub-gen/internal/model"
@@ -172,6 +173,7 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 		FieldOriginMap:      fieldOriginsForGenerator(detection, g),
 		InverseEditPointers: inversePointersForGenerator(detection, g),
 		HelmLayeredAnalysis: helmLayeredAnalysisForGenerator(detection, g),
+		ApplicationSet:      applicationSetAnalysisForGenerator(detection, g),
 		OpsWorkflow:         opsWorkflowAnalysisForGenerator(detection, g),
 		SwampWorkflow:       swampWorkflowAnalysisForGenerator(detection, g),
 		RenderedAt:          renderedAt,
@@ -233,6 +235,40 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 			RequiresReview: policy.RequiresReview,
 			Reason:         registry.InversePatchReason(g.Kind, "image_tag", "Container image tag maps cleanly to helm values."),
 		}}
+	case model.GeneratorApplicationSet:
+		hints := applicationSetHintsFromInputs(detection.Repo, g.Inputs)
+		namePolicy := registry.InversePatchTemplateFor(g.Kind, "child_name", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.89, RequiresReview: false,
+		})
+		sourcePathPolicy := registry.InversePatchTemplateFor(g.Kind, "source_path", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.86, RequiresReview: true,
+		})
+		return []model.InversePatch{
+			{
+				Operation:      "replace",
+				DryPath:        "spec.template.metadata.name",
+				WetPath:        "Application/metadata/name",
+				EditableBy:     namePolicy.EditableBy,
+				Confidence:     namePolicy.Confidence,
+				RequiresReview: namePolicy.RequiresReview,
+				Reason: renderTargetTemplate(
+					registry.InversePatchReason(g.Kind, "child_name", "Child Application identity is generated from the parent ApplicationSet template."),
+					map[string]string{"application_set_path": hints.ApplicationSetPath},
+				),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spec.template.spec.source.path",
+				WetPath:        "Application/spec/source/path",
+				EditableBy:     sourcePathPolicy.EditableBy,
+				Confidence:     sourcePathPolicy.Confidence,
+				RequiresReview: sourcePathPolicy.RequiresReview,
+				Reason: renderTargetTemplate(
+					registry.InversePatchReason(g.Kind, "source_path", "Child Application source path is generated from the parent ApplicationSet template."),
+					map[string]string{"application_set_path": hints.ApplicationSetPath},
+				),
+			},
+		}
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		policy := registry.InversePatchTemplateFor(g.Kind, "env_var", registry.InversePatchTemplate{
@@ -539,6 +575,27 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				SourcePath: sourcePath,
 				Transform:  transform,
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, confidenceKey, confidenceFallback),
+			})
+		}
+		return origins
+	case model.GeneratorApplicationSet:
+		hints := applicationSetHintsFromInputs(detection.Repo, g.Inputs)
+		origins := []model.FieldOrigin{
+			{
+				DryPath:    "spec.template.metadata.name",
+				WetPath:    "Application/metadata/name",
+				SourcePath: hints.ApplicationSetPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "child_name", 0.89),
+			},
+		}
+		if strings.TrimSpace(hints.TemplateSourcePath) != "" {
+			origins = append(origins, model.FieldOrigin{
+				DryPath:    "spec.template.spec.source.path",
+				WetPath:    "Application/spec/source/path",
+				SourcePath: hints.ApplicationSetPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "source_path", 0.86),
 			})
 		}
 		return origins
@@ -856,6 +913,34 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				Confidence: policy.Confidence,
 			},
 		}
+	case model.GeneratorApplicationSet:
+		hints := applicationSetHintsFromInputs(detection.Repo, g.Inputs)
+		namePolicy := registry.InversePointerTemplateFor(g.Kind, "child_name", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.89,
+		})
+		sourcePathPolicy := registry.InversePointerTemplateFor(g.Kind, "source_path", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.86,
+		})
+		vars := map[string]string{"application_set_path": hints.ApplicationSetPath}
+		out := []model.InverseEditPointer{
+			{
+				WetPath:    "Application/metadata/name",
+				DryPath:    "spec.template.metadata.name",
+				Owner:      namePolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "child_name", "Edit spec.template.metadata.name in {{application_set_path}}."), vars),
+				Confidence: namePolicy.Confidence,
+			},
+		}
+		if strings.TrimSpace(hints.TemplateSourcePath) != "" {
+			out = append(out, model.InverseEditPointer{
+				WetPath:    "Application/spec/source/path",
+				DryPath:    "spec.template.spec.source.path",
+				Owner:      sourcePathPolicy.Owner,
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "source_path", "Edit spec.template.spec.source.path in {{application_set_path}}."), vars),
+				Confidence: sourcePathPolicy.Confidence,
+			})
+		}
+		return out
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		imagePolicy := registry.InversePointerTemplateFor(g.Kind, "image", registry.InversePointerTemplate{
@@ -1170,6 +1255,25 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 	}
 }
 
+type applicationSetHints struct {
+	ApplicationSetPath string
+	TemplateSourcePath string
+}
+
+func applicationSetHintsFromInputs(repo string, inputs []string) applicationSetHints {
+	h := applicationSetHints{
+		ApplicationSetPath: registry.HintDefault(model.GeneratorApplicationSet, "application_set_path", "applicationset.yaml"),
+	}
+	appsetPath := firstInputPathForRole(model.GeneratorApplicationSet, inputs, "application-set")
+	if appsetPath != "" {
+		h.ApplicationSetPath = appsetPath
+		if doc, err := applicationset.ParseFile(repo, appsetPath); err == nil {
+			h.TemplateSourcePath = doc.TemplateSourcePath
+		}
+	}
+	return h
+}
+
 type scoreHints struct {
 	SourcePath      string
 	ContainerName   string
@@ -1295,6 +1399,32 @@ func dryInputsForGenerator(g model.GeneratorDetection) []model.DryInputRef {
 }
 
 func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.WetManifestTarget {
+	if g.Kind == model.GeneratorApplicationSet {
+		analysis := applicationSetAnalysisForGenerator(detection, g)
+		out := []model.WetManifestTarget{{
+			GeneratorID:   g.ID,
+			Kind:          "ApplicationSet",
+			Name:          g.Name,
+			Owner:         "platform-runtime",
+			Namespace:     "argocd",
+			SourceDryPath: "spec",
+		}}
+		if analysis == nil {
+			return out
+		}
+		for _, child := range analysis.GeneratedApplications {
+			out = append(out, model.WetManifestTarget{
+				GeneratorID:   g.ID,
+				Kind:          "Application",
+				Name:          child.Name,
+				Owner:         "platform-runtime",
+				Namespace:     "argocd",
+				SourceDryPath: "spec.template.metadata.name",
+			})
+		}
+		return out
+	}
+
 	templates := registry.WetTargetTemplates(g.Kind)
 	if len(templates) == 0 {
 		return []model.WetManifestTarget{}
@@ -1505,6 +1635,51 @@ func firstDistinctPath(paths []string, primary string) string {
 		}
 	}
 	return ""
+}
+
+func applicationSetAnalysisForGenerator(detection model.DetectionResult, g model.GeneratorDetection) *model.ApplicationSetAnalysis {
+	if g.Kind != model.GeneratorApplicationSet {
+		return nil
+	}
+
+	appsetPath := firstInputPathForRole(g.Kind, g.Inputs, "application-set")
+	if appsetPath == "" {
+		return nil
+	}
+
+	clusterPaths := inputPathsForRole(g.Kind, g.Inputs, "cluster-inventory")
+	analysis, err := applicationset.Analyze(detection.Repo, appsetPath, clusterPaths)
+	if err != nil {
+		return &model.ApplicationSetAnalysis{
+			ApplicationSetPath:    appsetPath,
+			ClusterInventoryPaths: append([]string(nil), clusterPaths...),
+			Mode:                  applicationset.ModeObservedOnly,
+			ModeReason:            fmt.Sprintf("ApplicationSet input %s was observed, but cub-gen could not parse it deterministically yet.", appsetPath),
+		}
+	}
+
+	out := &model.ApplicationSetAnalysis{
+		ApplicationSetPath:        analysis.ApplicationSetPath,
+		GeneratorTypes:            append([]string(nil), analysis.GeneratorTypes...),
+		UnsupportedGeneratorTypes: append([]string(nil), analysis.UnsupportedGeneratorTypes...),
+		ClusterInventoryPaths:     append([]string(nil), analysis.ClusterInventoryPaths...),
+		MatchedClusters:           append([]string(nil), analysis.MatchedClusters...),
+		ListElementNames:          append([]string(nil), analysis.ListElementNames...),
+		Mode:                      analysis.Mode,
+		ModeReason:                analysis.ModeReason,
+	}
+	for _, child := range analysis.GeneratedApplications {
+		out.GeneratedApplications = append(out.GeneratedApplications, model.ApplicationSetGeneratedApplication{
+			Name:          child.Name,
+			GeneratorType: child.GeneratorType,
+			Reason:        child.Reason,
+			InventoryPath: child.InventoryPath,
+			Cluster:       child.Cluster,
+			ListElement:   child.ListElement,
+			SourcePath:    child.SourcePath,
+		})
+	}
+	return out
 }
 
 type helmApplicationSetDoc struct {
@@ -1835,6 +2010,31 @@ func uniqueStringsInOrder(values []string) []string {
 }
 
 func renderedLineageForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.RenderedObjectLineage {
+	if g.Kind == model.GeneratorApplicationSet {
+		analysis := applicationSetAnalysisForGenerator(detection, g)
+		hints := applicationSetHintsFromInputs(detection.Repo, g.Inputs)
+		lineage := []model.RenderedObjectLineage{{
+			Kind:          "ApplicationSet",
+			Name:          g.Name,
+			Namespace:     "argocd",
+			SourcePath:    hints.ApplicationSetPath,
+			SourceDryPath: "spec",
+		}}
+		if analysis == nil {
+			return lineage
+		}
+		for _, child := range analysis.GeneratedApplications {
+			lineage = append(lineage, model.RenderedObjectLineage{
+				Kind:          "Application",
+				Name:          child.Name,
+				Namespace:     "argocd",
+				SourcePath:    hints.ApplicationSetPath,
+				SourceDryPath: "spec.template.metadata.name",
+			})
+		}
+		return lineage
+	}
+
 	templates := registry.RenderedLineageTemplates(g.Kind)
 	if len(templates) == 0 {
 		return nil

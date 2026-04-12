@@ -66,6 +66,11 @@ Deterministic blocker messages are locked by tests in:
 3. Render lineage: `rendered_object_lineage[]`
 4. Editability trace: `field_origin_map[]`, `inverse_edit_pointers[]`
 5. Helm-specialized source hints: `chart_path`, `values_paths`
+6. Optional generator-family analysis blocks such as:
+   - `helm_layered_analysis`
+   - `application_set_analysis`
+   - `ops_workflow_analysis`
+   - `swamp_workflow_analysis`
 
 `InverseTransformPlan` (`inverse_transform_plans[]`) captures governed reverse-edit plan:
 
@@ -92,6 +97,11 @@ ConfigHub side (bridge path, intentionally separate):
 1. Governed WET unit state and approval/attestation authority.
 2. Decision path and execution rights after policy gates.
 3. Not a reconciler; Flux/Argo remain runtime reconciliation engines.
+
+Related contract notes:
+
+1. [ApplicationSet Generator Boundary](applicationset-generator-boundary.md)
+2. [Remote Stores And Projection Targets](remote-stores-and-projection-targets.md)
 
 Operational rule:
 

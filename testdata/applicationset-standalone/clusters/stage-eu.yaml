@@ -1,0 +1,9 @@
+apiVersion: cubgen.confighub.dev/v1alpha1
+kind: ClusterInventory
+metadata:
+  name: stage-eu
+  labels:
+    env: stage
+    region: eu
+spec:
+  server: https://stage-eu.example.invalid

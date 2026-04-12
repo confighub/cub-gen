@@ -32,11 +32,11 @@ flowchart LR
 
 ### Input role rules
 
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `build-config` | pom.xml, build.gradle, build.gradle.kts | - | - |
-| `app-config-base` | application.yaml, application.yml | - | - |
-| `app-config-profile` | - | application- | .yaml, .yml |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `build-config` | pom.xml, build.gradle, build.gradle.kts | - | - | - |
+| `app-config-base` | application.yaml, application.yml | - | - | - |
+| `app-config-profile` | - | - | application- | .yaml, .yml |
 
 ### Role owners
 

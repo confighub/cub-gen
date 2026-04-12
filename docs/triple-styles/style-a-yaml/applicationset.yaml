@@ -1,0 +1,73 @@
+kind: "applicationset"
+profile: "applicationset"
+resource_kind: "ApplicationSet"
+resource_type: "argoproj.io/v1alpha1/ApplicationSet"
+capabilities:
+  - "observed-expansion"
+  - "authoritative-list-expansion"
+  - "authoritative-clusters-expansion"
+  - "graceful-degradation"
+contract:
+  default_input_role: "applicationset-input"
+  default_owner: "platform-engineer"
+  input_role_rules:
+    - role: "application-set"
+      exact_basenames:
+        - "applicationset.yaml"
+        - "applicationset.yml"
+    - role: "cluster-inventory"
+      path_prefixes:
+        - "clusters/"
+        - "inventory/clusters/"
+        - "platform/clusters/"
+      extensions:
+        - ".yaml"
+        - ".yml"
+        - ".json"
+  role_owners:
+    application-set: "platform-engineer"
+    cluster-inventory: "platform-engineer"
+  role_schema_refs:
+    application-set: "https://schema.confighub.dev/generators/applicationset-v1"
+    cluster-inventory: "https://schema.confighub.dev/generators/cluster-inventory-v1"
+  wet_targets:
+    - kind: "ApplicationSet"
+      name_template: "{{name}}"
+      owner: "platform-runtime"
+      namespace: "argocd"
+provenance:
+  field_origin_transform: "applicationset-template"
+  field_origin_confidences:
+    child_name: 0.89
+    source_path: 0.86
+  rendered_lineage_templates:
+    - kind: "ApplicationSet"
+      name_template: "{{name}}"
+      namespace: "argocd"
+      source_path_hint: "application_set_path"
+      source_dry_path_template: "spec"
+inverse:
+  inverse_patch_templates:
+    child_name:
+      editable_by: "platform-engineer"
+      confidence: 0.89
+    source_path:
+      editable_by: "platform-engineer"
+      confidence: 0.86
+      requires_review: true
+  inverse_pointer_templates:
+    child_name:
+      owner: "platform-engineer"
+      confidence: 0.89
+    source_path:
+      owner: "platform-engineer"
+      confidence: 0.86
+  inverse_patch_reasons:
+    child_name: "Child Application identity is generated from the parent ApplicationSet template."
+    source_path: "Child Application source path is generated from the parent ApplicationSet template."
+  inverse_edit_hints:
+    child_name: "Edit spec.template.metadata.name in {{application_set_path}}."
+    source_path: "Edit spec.template.spec.source.path in {{application_set_path}}."
+hints:
+  defaults:
+    application_set_path: "applicationset.yaml"

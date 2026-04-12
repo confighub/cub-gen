@@ -127,6 +127,8 @@ nav:
 
   - Contracts:
       - "Canonical Triple & Storage": contracts/canonical-triple-and-storage-boundary.md
+      - "ApplicationSet Boundary": contracts/applicationset-generator-boundary.md
+      - "Remote Stores & Projection Targets": contracts/remote-stores-and-projection-targets.md
       - "Decision & Attestation State": contracts/decision-and-attestation-state.md
       - "PR/MR Linkage & Promotion": contracts/pr-mr-linkage-and-dry-promotion.md
       - "Checkpoint Schemas": agentic-gitops/04-schemas/00-gitops-checkpoint-schemas.md
@@ -135,6 +137,7 @@ nav:
   - Generators:
       - "Overview": triple-styles/README.md
       - Style B (Markdown):
+          - "ApplicationSet": triple-styles/style-b-markdown/applicationset.md
           - "Helm": triple-styles/style-b-markdown/helm.md
           - "Score.dev": triple-styles/style-b-markdown/score.md
           - "Spring Boot": triple-styles/style-b-markdown/springboot.md
@@ -144,6 +147,7 @@ nav:
           - "C3 Agent": triple-styles/style-b-markdown/c3agent.md
           - "Swamp": triple-styles/style-b-markdown/swamp.md
       - Style C (YAML + Docs):
+          - "ApplicationSet": triple-styles/style-c-yaml-plus-docs/applicationset/triple.md
           - "Helm": triple-styles/style-c-yaml-plus-docs/helm/triple.md
           - "Score.dev": triple-styles/style-c-yaml-plus-docs/score/triple.md
           - "Spring Boot": triple-styles/style-c-yaml-plus-docs/springboot/triple.md

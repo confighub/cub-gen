@@ -198,6 +198,9 @@ func renderYAML(entry styleModel) string {
 			if len(rule.ExactBasenames) > 0 {
 				w.stringSlice(3, "exact_basenames", rule.ExactBasenames)
 			}
+			if len(rule.PathPrefixes) > 0 {
+				w.stringSlice(3, "path_prefixes", rule.PathPrefixes)
+			}
 			if len(rule.Prefixes) > 0 {
 				w.stringSlice(3, "prefixes", rule.Prefixes)
 			}
@@ -326,12 +329,13 @@ func renderMarkdown(entry styleModel) string {
 	fmt.Fprintf(&b, "- Default input role: `%s`\n", entry.Contract.DefaultInputRole)
 	fmt.Fprintf(&b, "- Default owner: `%s`\n\n", entry.Contract.DefaultOwner)
 	b.WriteString("### Input role rules\n\n")
-	b.WriteString("| Role | Exact basenames | Prefixes | Extensions |\n")
-	b.WriteString("| --- | --- | --- | --- |\n")
+	b.WriteString("| Role | Exact basenames | Path prefixes | Prefixes | Extensions |\n")
+	b.WriteString("| --- | --- | --- | --- | --- |\n")
 	for _, rule := range entry.Contract.InputRoleRules {
-		fmt.Fprintf(&b, "| `%s` | %s | %s | %s |\n",
+		fmt.Fprintf(&b, "| `%s` | %s | %s | %s | %s |\n",
 			rule.Role,
 			mdCell(strings.Join(rule.ExactBasenames, ", ")),
+			mdCell(strings.Join(rule.PathPrefixes, ", ")),
 			mdCell(strings.Join(rule.Prefixes, ", ")),
 			mdCell(strings.Join(rule.Extensions, ", ")),
 		)

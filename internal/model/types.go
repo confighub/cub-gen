@@ -4,6 +4,7 @@ type GeneratorKind string
 
 const (
 	GeneratorHelm             GeneratorKind = "helm"
+	GeneratorApplicationSet   GeneratorKind = "applicationset"
 	GeneratorScore            GeneratorKind = "score"
 	GeneratorSpringBoot       GeneratorKind = "springboot"
 	GeneratorBackstage        GeneratorKind = "backstage"
@@ -112,6 +113,28 @@ type HelmLayeredAnalysis struct {
 	SecurityDecisionReason   string   `json:"security_decision_reason,omitempty"`
 }
 
+type ApplicationSetGeneratedApplication struct {
+	Name          string `json:"name"`
+	GeneratorType string `json:"generator_type,omitempty"`
+	Reason        string `json:"reason,omitempty"`
+	InventoryPath string `json:"inventory_path,omitempty"`
+	Cluster       string `json:"cluster,omitempty"`
+	ListElement   string `json:"list_element,omitempty"`
+	SourcePath    string `json:"source_path,omitempty"`
+}
+
+type ApplicationSetAnalysis struct {
+	ApplicationSetPath        string                               `json:"application_set_path,omitempty"`
+	GeneratorTypes            []string                             `json:"generator_types,omitempty"`
+	UnsupportedGeneratorTypes []string                             `json:"unsupported_generator_types,omitempty"`
+	ClusterInventoryPaths     []string                             `json:"cluster_inventory_paths,omitempty"`
+	MatchedClusters           []string                             `json:"matched_clusters,omitempty"`
+	ListElementNames          []string                             `json:"list_element_names,omitempty"`
+	Mode                      string                               `json:"mode,omitempty"`
+	ModeReason                string                               `json:"mode_reason,omitempty"`
+	GeneratedApplications     []ApplicationSetGeneratedApplication `json:"generated_applications,omitempty"`
+}
+
 type InverseEditPointer struct {
 	WetPath    string  `json:"wet_path"`
 	DryPath    string  `json:"dry_path"`
@@ -183,6 +206,7 @@ type ProvenanceRecord struct {
 	FieldOriginMap      []FieldOrigin           `json:"field_origin_map"`
 	InverseEditPointers []InverseEditPointer    `json:"inverse_edit_pointers"`
 	HelmLayeredAnalysis *HelmLayeredAnalysis    `json:"helm_layered_analysis,omitempty"`
+	ApplicationSet      *ApplicationSetAnalysis `json:"application_set_analysis,omitempty"`
 	OpsWorkflow         *OpsWorkflowAnalysis    `json:"ops_workflow_analysis,omitempty"`
 	SwampWorkflow       *SwampWorkflowAnalysis  `json:"swamp_workflow_analysis,omitempty"`
 	RenderedAt          string                  `json:"rendered_at"`

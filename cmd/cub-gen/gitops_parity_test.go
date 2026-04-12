@@ -193,6 +193,30 @@ func TestGitOpsParityGoldenDiscoverSwamp(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-swamp.golden.json"), got)
 }
 
+func TestGitOpsParityGoldenDiscoverApplicationSet(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "testdata", "applicationset-standalone"))
+	if err != nil {
+		t.Fatalf("resolve applicationset path: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", repoPath})
+	if err != nil {
+		t.Fatalf("run applicationset discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal applicationset discover json: %v\noutput=%s", err, out)
+	}
+	normalizeDiscover(got)
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("testdata", "applicationset-standalone"))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-applicationset.golden.json"), got)
+}
+
 func TestGitOpsParityGoldenImport(t *testing.T) {
 	setupAliases(t)
 
@@ -377,6 +401,31 @@ func TestGitOpsParityGoldenImportSwamp(t *testing.T) {
 	normalizeImport(got)
 
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-swamp.golden.json"), got)
+}
+
+func TestGitOpsParityGoldenImportApplicationSet(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "testdata", "applicationset-standalone"))
+	if err != nil {
+		t.Fatalf("resolve applicationset path: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", repoPath})
+	if err != nil {
+		t.Fatalf("run applicationset import returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal applicationset import json: %v\noutput=%s", err, out)
+	}
+	normalizeImport(got)
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("testdata", "applicationset-standalone"))
+	got["render_target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("testdata", "applicationset-standalone"))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-applicationset.golden.json"), got)
 }
 
 func TestGitOpsParityGoldenCleanup(t *testing.T) {

@@ -28,10 +28,10 @@ flowchart LR
 
 ### Input role rules
 
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `swamp-config-base` | .swamp.yaml, .swamp.yml | - | - |
-| `swamp-workflow` | - | workflow- | .yaml, .yml |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `swamp-config-base` | .swamp.yaml, .swamp.yml | - | - | - |
+| `swamp-workflow` | - | - | workflow- | .yaml, .yml |
 
 ### Role owners
 

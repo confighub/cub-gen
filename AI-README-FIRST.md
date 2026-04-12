@@ -60,13 +60,13 @@ Together: `cub-gen` knows source → rendered, `cub-scout` knows cluster → own
 
 As of 2026-04-09:
 
-- 8 generator profiles supported (Helm, Score.dev, Spring Boot, Backstage, No-Config-Platform, Ops Workflow, C3 Agent, Swamp)
+- 9 generator profiles supported (ApplicationSet, Helm, Score.dev, Spring Boot, Backstage, No-Config-Platform, Ops Workflow, C3 Agent, Swamp)
 - Local field-origin tracing with confidence scores
 - Inverse-edit pointers for safe DRY edits
 - Provenance bundles with publish/verify/attest pipeline
 - Change CLI: preview, run, explain (local + connected modes)
 - Bridge workflow: ingest → decision → promote
-- ApplicationSet generator support upstream of cub-scout
+- First-class ApplicationSet generator support for standalone deterministic repos, with layered Helm/ApplicationSet provenance still covered separately
 - Live reconciler proofs against Flux and ArgoCD on kind
 
 ## Verification rule

@@ -28,10 +28,10 @@ flowchart LR
 
 ### Input role rules
 
-| Role | Exact basenames | Prefixes | Extensions |
-| --- | --- | --- | --- |
-| `catalog-spec` | catalog-info.yaml, catalog-info.yml | - | - |
-| `app-config` | app-config.yaml, app-config.yml | - | - |
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `catalog-spec` | catalog-info.yaml, catalog-info.yml | - | - | - |
+| `app-config` | app-config.yaml, app-config.yml | - | - | - |
 
 ### Role owners
 
