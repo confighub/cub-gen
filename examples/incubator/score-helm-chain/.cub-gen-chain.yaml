@@ -1,0 +1,27 @@
+chains:
+  - id: score-to-helm
+    name: Score to Helm
+    stages:
+      - kind: score
+        root: .
+      - kind: helm
+        root: chart
+    mappings:
+      - downstream_wet_path: Deployment/spec/template/spec/containers[0]/image
+        downstream_dry_path: values.image.tag
+        upstream_kind: score
+        upstream_root: .
+        upstream_dry_path: containers.api.image
+        upstream_source_path: score.yaml
+        upstream_owner: app-team
+        upstream_transform: score-to-helm
+        upstream_confidence: 0.94
+      - downstream_wet_path: Service/spec/ports[name=http]/port
+        downstream_dry_path: values.service.port
+        upstream_kind: score
+        upstream_root: .
+        upstream_dry_path: service.ports.http.port
+        upstream_source_path: score.yaml
+        upstream_owner: app-team
+        upstream_transform: score-to-helm
+        upstream_confidence: 0.91

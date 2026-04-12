@@ -1056,18 +1056,28 @@ type changeImpactQuery struct {
 	MatchCount    int    `json:"match_count"`
 }
 
-type changeImpactEntry struct {
-	Owner            string  `json:"owner,omitempty"`
-	WetPath          string  `json:"wet_path"`
-	DryPath          string  `json:"dry_path"`
-	EditHint         string  `json:"edit_hint,omitempty"`
-	Confidence       float64 `json:"confidence"`
+type changeProvenanceHop struct {
+	GeneratorKind    string  `json:"generator_kind,omitempty"`
+	GeneratorProfile string  `json:"generator_profile,omitempty"`
+	DryPath          string  `json:"dry_path,omitempty"`
 	SourcePath       string  `json:"source_path,omitempty"`
 	SourceTransform  string  `json:"source_transform,omitempty"`
-	OriginType       string  `json:"origin_type,omitempty"`
-	GeneratorName    string  `json:"generator_name,omitempty"`
-	GeneratorProfile string  `json:"generator_profile,omitempty"`
-	Warning          string  `json:"warning,omitempty"`
+	Confidence       float64 `json:"confidence,omitempty"`
+}
+
+type changeImpactEntry struct {
+	Owner            string                `json:"owner,omitempty"`
+	WetPath          string                `json:"wet_path"`
+	DryPath          string                `json:"dry_path"`
+	EditHint         string                `json:"edit_hint,omitempty"`
+	Confidence       float64               `json:"confidence"`
+	SourcePath       string                `json:"source_path,omitempty"`
+	SourceTransform  string                `json:"source_transform,omitempty"`
+	OriginType       string                `json:"origin_type,omitempty"`
+	GeneratorName    string                `json:"generator_name,omitempty"`
+	GeneratorProfile string                `json:"generator_profile,omitempty"`
+	Hops             []changeProvenanceHop `json:"hops,omitempty"`
+	Warning          string                `json:"warning,omitempty"`
 }
 
 type changeImpactResult struct {
@@ -1105,19 +1115,20 @@ type changeDiffManifestRef struct {
 }
 
 type changeDiffFieldState struct {
-	Exists           bool    `json:"exists"`
-	Value            any     `json:"value,omitempty"`
-	Owner            string  `json:"owner,omitempty"`
-	WetPath          string  `json:"wet_path,omitempty"`
-	DryPath          string  `json:"dry_path,omitempty"`
-	EditHint         string  `json:"edit_hint,omitempty"`
-	Confidence       float64 `json:"confidence,omitempty"`
-	SourcePath       string  `json:"source_path,omitempty"`
-	SourceTransform  string  `json:"source_transform,omitempty"`
-	OriginType       string  `json:"origin_type,omitempty"`
-	GeneratorName    string  `json:"generator_name,omitempty"`
-	GeneratorProfile string  `json:"generator_profile,omitempty"`
-	Warning          string  `json:"warning,omitempty"`
+	Exists           bool                  `json:"exists"`
+	Value            any                   `json:"value,omitempty"`
+	Owner            string                `json:"owner,omitempty"`
+	WetPath          string                `json:"wet_path,omitempty"`
+	DryPath          string                `json:"dry_path,omitempty"`
+	EditHint         string                `json:"edit_hint,omitempty"`
+	Confidence       float64               `json:"confidence,omitempty"`
+	SourcePath       string                `json:"source_path,omitempty"`
+	SourceTransform  string                `json:"source_transform,omitempty"`
+	OriginType       string                `json:"origin_type,omitempty"`
+	GeneratorName    string                `json:"generator_name,omitempty"`
+	GeneratorProfile string                `json:"generator_profile,omitempty"`
+	Hops             []changeProvenanceHop `json:"hops,omitempty"`
+	Warning          string                `json:"warning,omitempty"`
 }
 
 type changeDiffEntry struct {
@@ -1149,17 +1160,18 @@ type changeExplainQuery struct {
 }
 
 type changeExplainSuggestion struct {
-	Owner            string  `json:"owner"`
-	WetPath          string  `json:"wet_path"`
-	DryPath          string  `json:"dry_path"`
-	EditHint         string  `json:"edit_hint"`
-	Confidence       float64 `json:"confidence"`
-	SourcePath       string  `json:"source_path,omitempty"`
-	SourceTransform  string  `json:"source_transform,omitempty"`
-	OriginType       string  `json:"origin_type,omitempty"`
-	GeneratorName    string  `json:"generator_name,omitempty"`
-	GeneratorProfile string  `json:"generator_profile,omitempty"`
-	Warning          string  `json:"warning,omitempty"`
+	Owner            string                `json:"owner"`
+	WetPath          string                `json:"wet_path"`
+	DryPath          string                `json:"dry_path"`
+	EditHint         string                `json:"edit_hint"`
+	Confidence       float64               `json:"confidence"`
+	SourcePath       string                `json:"source_path,omitempty"`
+	SourceTransform  string                `json:"source_transform,omitempty"`
+	OriginType       string                `json:"origin_type,omitempty"`
+	GeneratorName    string                `json:"generator_name,omitempty"`
+	GeneratorProfile string                `json:"generator_profile,omitempty"`
+	Hops             []changeProvenanceHop `json:"hops,omitempty"`
+	Warning          string                `json:"warning,omitempty"`
 }
 
 type changeExplainResult struct {
@@ -1863,6 +1875,7 @@ func changeDiffStateFromProvenance(provenance []model.ProvenanceRecord, wetPath 
 			OriginType:       explainOriginType(origin.SourcePath, origin.Transform),
 			GeneratorName:    record.GeneratorName,
 			GeneratorProfile: record.GeneratorProfile,
+			Hops:             changeProvenanceHops(origin),
 		}
 		if pointer, ok := bestInversePointer(record.InverseEditPointers, wetPath, origin.DryPath); ok {
 			pointer = applyFieldOriginToPointer(pointer, origin)
@@ -2288,10 +2301,12 @@ func pickInverseSuggestion(
 			}
 			matchCount++
 
+			var origin model.FieldOrigin
 			sourcePath := ""
 			sourceTransform := ""
 			sourceConfidence := 0.0
 			if source, ok := bestFieldOrigin(record.FieldOriginMap, pointer.WetPath, pointer.DryPath); ok {
+				origin = source
 				sourcePath = source.SourcePath
 				sourceTransform = source.Transform
 				sourceConfidence = source.Confidence
@@ -2308,6 +2323,7 @@ func pickInverseSuggestion(
 				OriginType:       explainOriginType(sourcePath, sourceTransform),
 				GeneratorName:    record.GeneratorName,
 				GeneratorProfile: record.GeneratorProfile,
+				Hops:             changeProvenanceHops(origin),
 			}
 			if sourceTransform == helmCLIOverrideTransform {
 				candidate.Owner = "release-automation"
@@ -2369,6 +2385,7 @@ func collectImpactSuggestions(
 				OriginType:       explainOriginType(origin.SourcePath, origin.Transform),
 				GeneratorName:    record.GeneratorName,
 				GeneratorProfile: record.GeneratorProfile,
+				Hops:             changeProvenanceHops(origin),
 			}
 			if ok {
 				entry.Owner = pointer.Owner
@@ -2459,6 +2476,24 @@ func bestFieldOrigin(origins []model.FieldOrigin, wetPath, dryPath string) (mode
 		return model.FieldOrigin{}, false
 	}
 	return best, true
+}
+
+func changeProvenanceHops(origin model.FieldOrigin) []changeProvenanceHop {
+	if len(origin.Hops) == 0 {
+		return nil
+	}
+	hops := make([]changeProvenanceHop, 0, len(origin.Hops))
+	for _, hop := range origin.Hops {
+		hops = append(hops, changeProvenanceHop{
+			GeneratorKind:    hop.GeneratorKind,
+			GeneratorProfile: hop.GeneratorProfile,
+			DryPath:          hop.DryPath,
+			SourcePath:       hop.SourcePath,
+			SourceTransform:  hop.Transform,
+			Confidence:       hop.Confidence,
+		})
+	}
+	return hops
 }
 
 func bestInversePointer(pointers []model.InverseEditPointer, wetPath, dryPath string) (model.InverseEditPointer, bool) {

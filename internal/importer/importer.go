@@ -28,6 +28,7 @@ const (
 	helmCLIOverrideTransform = "helm-cli-override"
 	helmBuiltinTransform     = "helm-builtin"
 	helmDefaultTransform     = "helm-default"
+	generatorChainTransform  = "generator-chain"
 )
 
 // ImportRepo detects generators in a repository and produces the initial
@@ -576,6 +577,145 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 	}
 }
 
+func chainForGenerator(detection model.DetectionResult, g model.GeneratorDetection) (model.GeneratorChain, bool) {
+	for _, chain := range detection.Chains {
+		if len(chain.Stages) == 0 {
+			continue
+		}
+		downstream := chain.Stages[len(chain.Stages)-1]
+		if downstream.Kind == g.Kind && strings.TrimSpace(downstream.Root) == strings.TrimSpace(g.Root) {
+			return chain, true
+		}
+	}
+	return model.GeneratorChain{}, false
+}
+
+func chainStageForMapping(chain model.GeneratorChain, mapping model.GeneratorChainMapping) model.GeneratorChainStage {
+	for _, stage := range chain.Stages {
+		if mapping.UpstreamKind != "" && stage.Kind != mapping.UpstreamKind {
+			continue
+		}
+		if strings.TrimSpace(mapping.UpstreamRoot) != "" && strings.TrimSpace(stage.Root) != strings.TrimSpace(mapping.UpstreamRoot) {
+			continue
+		}
+		return stage
+	}
+	if len(chain.Stages) > 0 {
+		return chain.Stages[0]
+	}
+	return model.GeneratorChainStage{}
+}
+
+func chainMappingForOrigin(chain model.GeneratorChain, wetPath, dryPath string) (model.GeneratorChainMapping, bool) {
+	for _, mapping := range chain.Mappings {
+		if mapping.DownstreamWetPath != wetPath {
+			continue
+		}
+		if strings.TrimSpace(mapping.DownstreamDryPath) != "" && mapping.DownstreamDryPath != dryPath {
+			continue
+		}
+		return mapping, true
+	}
+	return model.GeneratorChainMapping{}, false
+}
+
+func chainHops(upstream model.GeneratorChainStage, mapping model.GeneratorChainMapping, downstream model.GeneratorDetection, downstreamOrigin model.FieldOrigin) []model.FieldOriginHop {
+	upstreamTransform := mapping.UpstreamTransform
+	if strings.TrimSpace(upstreamTransform) == "" {
+		upstreamTransform = generatorChainTransform
+	}
+	upstreamConfidence := mapping.UpstreamConfidence
+	if upstreamConfidence == 0 {
+		upstreamConfidence = upstream.Confidence
+	}
+	return []model.FieldOriginHop{
+		{
+			GeneratorKind:    string(upstream.Kind),
+			GeneratorProfile: upstream.Profile,
+			DryPath:          mapping.UpstreamDryPath,
+			SourcePath:       mapping.UpstreamSourcePath,
+			Transform:        upstreamTransform,
+			Confidence:       upstreamConfidence,
+		},
+		{
+			GeneratorKind:    string(downstream.Kind),
+			GeneratorProfile: downstream.Profile,
+			DryPath:          downstreamOrigin.DryPath,
+			SourcePath:       downstreamOrigin.SourcePath,
+			Transform:        downstreamOrigin.Transform,
+			Confidence:       downstreamOrigin.Confidence,
+		},
+	}
+}
+
+func applyGeneratorChainOrigins(detection model.DetectionResult, g model.GeneratorDetection, origins []model.FieldOrigin) []model.FieldOrigin {
+	chain, ok := chainForGenerator(detection, g)
+	if !ok || len(chain.Mappings) == 0 {
+		return origins
+	}
+
+	updated := make([]model.FieldOrigin, 0, len(origins))
+	for _, origin := range origins {
+		mapping, matched := chainMappingForOrigin(chain, origin.WetPath, origin.DryPath)
+		if !matched {
+			updated = append(updated, origin)
+			continue
+		}
+		downstreamOrigin := origin
+		upstream := chainStageForMapping(chain, mapping)
+		upstreamTransform := mapping.UpstreamTransform
+		if strings.TrimSpace(upstreamTransform) == "" {
+			upstreamTransform = generatorChainTransform
+		}
+		upstreamConfidence := mapping.UpstreamConfidence
+		if upstreamConfidence == 0 {
+			upstreamConfidence = upstream.Confidence
+		}
+		origin.DryPath = mapping.UpstreamDryPath
+		origin.SourcePath = mapping.UpstreamSourcePath
+		origin.Transform = upstreamTransform
+		origin.Confidence = origin.Confidence * upstreamConfidence
+		origin.Hops = chainHops(upstream, mapping, g, downstreamOrigin)
+		updated = append(updated, origin)
+	}
+	return updated
+}
+
+func applyGeneratorChainPointers(detection model.DetectionResult, g model.GeneratorDetection, pointers []model.InverseEditPointer) []model.InverseEditPointer {
+	chain, ok := chainForGenerator(detection, g)
+	if !ok || len(chain.Mappings) == 0 {
+		return pointers
+	}
+
+	updated := make([]model.InverseEditPointer, 0, len(pointers))
+	for _, pointer := range pointers {
+		mapping, matched := chainMappingForOrigin(chain, pointer.WetPath, pointer.DryPath)
+		if !matched {
+			updated = append(updated, pointer)
+			continue
+		}
+		upstream := chainStageForMapping(chain, mapping)
+		upstreamConfidence := mapping.UpstreamConfidence
+		if upstreamConfidence == 0 {
+			upstreamConfidence = upstream.Confidence
+		}
+		pointer.DryPath = mapping.UpstreamDryPath
+		if strings.TrimSpace(mapping.UpstreamOwner) != "" {
+			pointer.Owner = mapping.UpstreamOwner
+		}
+		pointer.EditHint = fmt.Sprintf(
+			"Edit %s in %s. This value flows through %s -> %s before reaching the rendered manifest.",
+			mapping.UpstreamDryPath,
+			mapping.UpstreamSourcePath,
+			string(upstream.Kind),
+			string(g.Kind),
+		)
+		pointer.Confidence = pointer.Confidence * upstreamConfidence
+		updated = append(updated, pointer)
+	}
+	return updated
+}
+
 func fieldOriginsForGenerator(detection model.DetectionResult, g model.GeneratorDetection, helmCLIOverrides []model.HelmCLIOverride) []model.FieldOrigin {
 	switch g.Kind {
 	case model.GeneratorHelm:
@@ -614,7 +754,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				Confidence:  registry.FieldOriginConfidenceFor(g.Kind, confidenceKey, confidenceFallback),
 			})
 		}
-		return origins
+		return applyGeneratorChainOrigins(detection, g, origins)
 	case model.GeneratorApplicationSet:
 		hints := applicationSetHintsFromInputs(detection.Repo, g.Inputs)
 		origins := []model.FieldOrigin{
@@ -638,7 +778,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 		return origins
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
-		return []model.FieldOrigin{
+		return applyGeneratorChainOrigins(detection, g, []model.FieldOrigin{
 			{
 				DryPath:    fmt.Sprintf("containers.%s.image", hints.ContainerName),
 				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/image", hints.ContainerName),
@@ -660,7 +800,7 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				Transform:  registry.FieldOriginTransform(g.Kind),
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "port", 0.91),
 			},
-		}
+		})
 	case model.GeneratorSpringBoot:
 		hints := springPathHintsFromInputs(g.Inputs)
 		origins := []model.FieldOrigin{
@@ -963,7 +1103,7 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			hintKey = "image_tag_overlay"
 			hintFallback = "Edit values.image.tag in {{overlay_values_path}} for environment-specific overrides; use {{base_values_path}} for defaults."
 		}
-		return []model.InverseEditPointer{
+		return applyGeneratorChainPointers(detection, g, []model.InverseEditPointer{
 			{
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
 				DryPath:    "values.image.tag",
@@ -971,7 +1111,7 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, hintKey, hintFallback), vars),
 				Confidence: policy.Confidence,
 			},
-		}
+		})
 	case model.GeneratorApplicationSet:
 		hints := applicationSetHintsFromInputs(detection.Repo, g.Inputs)
 		namePolicy := registry.InversePointerTemplateFor(g.Kind, "child_name", registry.InversePointerTemplate{
@@ -1017,7 +1157,7 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			"variable_name":     hints.VariableName,
 			"service_port_name": hints.ServicePortName,
 		}
-		return []model.InverseEditPointer{
+		return applyGeneratorChainPointers(detection, g, []model.InverseEditPointer{
 			{
 				WetPath:    fmt.Sprintf("Deployment/spec/template/spec/containers[name=%s]/image", hints.ContainerName),
 				DryPath:    fmt.Sprintf("containers.%s.image", hints.ContainerName),
@@ -1039,7 +1179,7 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "port", "Edit {{service_port_name}} service port in {{source_path}}."), vars),
 				Confidence: portPolicy.Confidence,
 			},
-		}
+		})
 	case model.GeneratorSpringBoot:
 		hints := springPathHintsFromInputs(g.Inputs)
 		appNamePolicy := registry.InversePointerTemplateFor(g.Kind, "app_name", registry.InversePointerTemplate{

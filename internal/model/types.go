@@ -24,11 +24,41 @@ type GeneratorDetection struct {
 	Confidence float64       `json:"confidence"`
 }
 
+type GeneratorChainStage struct {
+	Kind        GeneratorKind `json:"kind"`
+	Profile     string        `json:"profile,omitempty"`
+	Name        string        `json:"name,omitempty"`
+	Root        string        `json:"root,omitempty"`
+	DetectionID string        `json:"detection_id,omitempty"`
+	Confidence  float64       `json:"confidence,omitempty"`
+}
+
+type GeneratorChainMapping struct {
+	DownstreamWetPath  string        `json:"downstream_wet_path"`
+	DownstreamDryPath  string        `json:"downstream_dry_path,omitempty"`
+	UpstreamKind       GeneratorKind `json:"upstream_kind,omitempty"`
+	UpstreamProfile    string        `json:"upstream_profile,omitempty"`
+	UpstreamRoot       string        `json:"upstream_root,omitempty"`
+	UpstreamDryPath    string        `json:"upstream_dry_path,omitempty"`
+	UpstreamSourcePath string        `json:"upstream_source_path,omitempty"`
+	UpstreamOwner      string        `json:"upstream_owner,omitempty"`
+	UpstreamTransform  string        `json:"upstream_transform,omitempty"`
+	UpstreamConfidence float64       `json:"upstream_confidence,omitempty"`
+}
+
+type GeneratorChain struct {
+	ID       string                  `json:"id"`
+	Name     string                  `json:"name,omitempty"`
+	Stages   []GeneratorChainStage   `json:"stages"`
+	Mappings []GeneratorChainMapping `json:"mappings,omitempty"`
+}
+
 type DetectionResult struct {
 	Repo       string               `json:"repo"`
 	Ref        string               `json:"ref"`
 	DetectedAt string               `json:"detected_at"`
 	Generators []GeneratorDetection `json:"generators"`
+	Chains     []GeneratorChain     `json:"chains,omitempty"`
 }
 
 type UnitRef struct {
@@ -89,12 +119,22 @@ type RenderedObjectLineage struct {
 }
 
 type FieldOrigin struct {
-	DryPath     string  `json:"dry_path"`
-	WetPath     string  `json:"wet_path"`
-	SourcePath  string  `json:"source_path"`
-	SourceLayer string  `json:"source_layer,omitempty"`
-	Transform   string  `json:"transform"`
-	Confidence  float64 `json:"confidence"`
+	DryPath     string           `json:"dry_path"`
+	WetPath     string           `json:"wet_path"`
+	SourcePath  string           `json:"source_path"`
+	SourceLayer string           `json:"source_layer,omitempty"`
+	Transform   string           `json:"transform"`
+	Confidence  float64          `json:"confidence"`
+	Hops        []FieldOriginHop `json:"hops,omitempty"`
+}
+
+type FieldOriginHop struct {
+	GeneratorKind    string  `json:"generator_kind,omitempty"`
+	GeneratorProfile string  `json:"generator_profile,omitempty"`
+	DryPath          string  `json:"dry_path,omitempty"`
+	SourcePath       string  `json:"source_path,omitempty"`
+	Transform        string  `json:"transform,omitempty"`
+	Confidence       float64 `json:"confidence,omitempty"`
 }
 
 type HelmCLIOverride struct {
