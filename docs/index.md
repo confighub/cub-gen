@@ -9,7 +9,7 @@ every deployed field traces back to a source file, line, and owner.
 Install with Homebrew:
 
 ```bash
-brew install --formula https://raw.githubusercontent.com/confighub/cub-gen/main/Formula/cub-gen.rb
+brew install confighub/tap/cub-gen
 ```
 
 Or download a release artifact from [GitHub release `v0.3.0`](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).

@@ -67,7 +67,7 @@ when you need to change a deployed value.
 Homebrew:
 
 ```bash
-brew install --formula https://raw.githubusercontent.com/confighub/cub-gen/main/Formula/cub-gen.rb
+brew install confighub/tap/cub-gen
 ```
 
 Or download a release asset from [v0.3.0](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).

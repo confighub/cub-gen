@@ -12,10 +12,10 @@ CD to reconcile what reaches their clusters.
 
 ## Install
 
-Homebrew from this repo formula:
+Homebrew:
 
 ```bash
-brew install --formula https://raw.githubusercontent.com/confighub/cub-gen/main/Formula/cub-gen.rb
+brew install confighub/tap/cub-gen
 ```
 
 Or download a release artifact from [v0.3.0](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).
