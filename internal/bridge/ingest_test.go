@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -102,6 +103,24 @@ func TestIngestBundleConflictIsIdempotent(t *testing.T) {
 	}
 	if res.StatusCode != http.StatusConflict {
 		t.Fatalf("expected status code %d, got %d", http.StatusConflict, res.StatusCode)
+	}
+}
+
+func TestIngestBundleRejectsMalformedSuccessResponse(t *testing.T) {
+	bundle := sampleBundle("chg_1")
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
+		_, _ = w.Write([]byte(`{"artifact_id":`))
+	}))
+	defer srv.Close()
+
+	_, err := IngestBundle(context.Background(), Client{BaseURL: srv.URL}, bundle)
+	if err == nil {
+		t.Fatal("expected malformed success response to fail")
+	}
+	if !strings.Contains(err.Error(), "decode ingest response") {
+		t.Fatalf("expected decode ingest response error, got %q", err.Error())
 	}
 }
 

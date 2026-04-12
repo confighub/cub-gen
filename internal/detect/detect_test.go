@@ -3,6 +3,7 @@ package detect
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -214,6 +215,38 @@ dependencies:
 		if !contains(g.Inputs, expected) && !containsSuffix(g.Inputs, expected) {
 			t.Fatalf("expected umbrella inputs to contain %q, got %v", expected, g.Inputs)
 		}
+	}
+}
+
+func TestScanRepoHelmReportsAuxiliaryWalkErrors(t *testing.T) {
+	t.Parallel()
+
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod-based walk errors are not reliable on Windows")
+	}
+
+	repo := t.TempDir()
+	mustWriteDetectFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: broken-demo\nversion: 0.1.0\n")
+	mustWriteDetectFile(t, filepath.Join(repo, "values.yaml"), "image:\n  tag: broken-v1\n")
+	blockedDir := filepath.Join(repo, "crds", "blocked")
+	mustWriteDetectFile(t, filepath.Join(blockedDir, "widget.yaml"), "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\n")
+	if err := os.Chmod(blockedDir, 0o000); err != nil {
+		t.Skipf("unable to remove directory permissions: %v", err)
+	}
+	defer func() {
+		_ = os.Chmod(blockedDir, 0o755)
+	}()
+
+	if _, err := os.ReadDir(blockedDir); err == nil {
+		t.Skip("filesystem permissions do not surface traversal errors on this host")
+	}
+
+	_, err := ScanRepo(repo, "main")
+	if err == nil {
+		t.Fatal("expected ScanRepo to report helm auxiliary input walk error")
+	}
+	if !strings.Contains(err.Error(), "walk helm crds") {
+		t.Fatalf("expected walk helm crds error, got %q", err.Error())
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -107,7 +108,7 @@ func runScoreValidateWorkload(args []string) error {
 	return nil
 }
 
-func printScoreUsage(out *os.File) {
+func printScoreUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage: cub-gen score <subcommand> [flags]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Score.dev onboarding and workload-contract checks.")

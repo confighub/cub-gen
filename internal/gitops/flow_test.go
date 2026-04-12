@@ -171,6 +171,12 @@ func TestUnknownTargetReturnsError(t *testing.T) {
 	}
 }
 
+func TestShortHashUsesStable32BitFNV(t *testing.T) {
+	if got := shortHash(" Repo/Path "); got != "cc0d241d" {
+		t.Fatalf("expected stable 32-bit hash cc0d241d, got %q", got)
+	}
+}
+
 func writeFile(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {

@@ -397,8 +397,8 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 | Status | What is true today |
 |--------|--------------------|
 | Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
-| In progress | The flagship proof bar is now met; follow-on depth is concentrated in richer Helm provenance and generation-chain features rather than basic example trust |
-| Actively tracked | `#238`-`#242` |
+| In progress | Post-`0.3` follow-on is now packaging, the bridge heartbeat/disconnected bug, and GUI/product surfaces |
+| Actively tracked | `#219`, `#236`, `#209`-`#213` |
 
 For the per-example truth behind those claims, use the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md). It is derived from the example catalog, connected runners, source-side tests, and live proof scripts.
 
