@@ -10,6 +10,24 @@ which source file or path to edit. It is for teams who already run GitHub,
 Helm, Score, Spring Boot, or workflow config, and already rely on Flux or Argo
 CD to reconcile what reaches their clusters.
 
+## Install
+
+Homebrew from this repo formula:
+
+```bash
+brew install --formula https://raw.githubusercontent.com/confighub/cub-gen/main/Formula/cub-gen.rb
+```
+
+Or download a release artifact from [v0.3.0](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).
+
+If you prefer building from source:
+
+```bash
+git clone https://github.com/confighub/cub-gen.git
+cd cub-gen
+go build -o cub-gen ./cmd/cub-gen
+```
+
 **gen = generator.** A generator is a function that maps DRY source (your `values.yaml`, `score.yaml`, etc.) to WET rendered output (the manifests that reach your cluster). `cub-gen` detects which generators your repo uses, runs the mapping, and records provenance — so every deployed field traces back to a source file, line, and owner.
 
 If you already run app/config in Git, OCI artifacts, and Flux/Argo reconciliation, `cub-gen` answers:
@@ -88,8 +106,6 @@ You see exactly which source field produced each deployed value, who owns it, an
 ## First runs (local, no login)
 
 ```bash
-go build -o ./cub-gen ./cmd/cub-gen
-
 # Platform-first: existing Helm + Flux/Argo team
 ./examples/helm-paas/demo-local.sh
 

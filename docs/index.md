@@ -6,6 +6,14 @@
 generators your repo uses, renders them locally, and records provenance so
 every deployed field traces back to a source file, line, and owner.
 
+Install with Homebrew:
+
+```bash
+brew install --formula https://raw.githubusercontent.com/confighub/cub-gen/main/Formula/cub-gen.rb
+```
+
+Or download a release artifact from [GitHub release `v0.3.0`](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).
+
 **gen = generator.** A generator is a function that maps DRY source (`values.yaml`, `score.yaml`, `application.yaml`) to WET rendered output (the manifests that reach your cluster).
 
 cub-gen works with what teams already run today:
