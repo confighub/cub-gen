@@ -33,7 +33,7 @@ Known gaps still open:
 
 - umbrella/subchart/alias/conditional chart support is still open work ([#238](https://github.com/confighub/cub-gen/issues/238))
 - one-command multi-variant fan-out is not exposed yet ([#237](https://github.com/confighub/cub-gen/issues/237))
-- helper/template/builtin provenance honesty is still partial ([#239](https://github.com/confighub/cub-gen/issues/239))
+- helper chains, `lookup`, and external value-source provenance honesty are still partial ([#239](https://github.com/confighub/cub-gen/issues/239))
 
 ## AI-first bundle
 
@@ -120,8 +120,8 @@ source won, and what to edit next.
 ## What you get
 
 - **Field-origin tracing**: every deployed field maps back to `values.yaml`,
-  `values-prod.yaml`, a Helm CLI override, or a chart template — with owner and
-  confidence score
+  `values-prod.yaml`, a Helm CLI override, a Helm built-in/default, or a chart
+  template — with owner and confidence score
 - **Inverse-edit guidance**: "to change the image tag in production, edit
   `values-prod.yaml`, not the chart template"
 - **Governance decisions**: ALLOW, ESCALATE, or BLOCK changes based on who

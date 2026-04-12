@@ -11,6 +11,7 @@
       "edit_hint": "Edit the Score container image in score.yaml.",
       "generator_name": "scoredev-paas",
       "generator_profile": "scoredev-paas",
+      "origin_type": "dry-file",
       "owner": "app-team",
       "source_path": "score.yaml",
       "source_transform": "score-to-k8s",

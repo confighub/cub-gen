@@ -583,8 +583,44 @@ func TestImportRepoHelmWithoutValuesDoesNotPointToChartYaml(t *testing.T) {
 	if fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "Chart.yaml") {
 		t.Fatalf("expected Chart.yaml not to be treated as a values source, got %+v", prov.FieldOriginMap)
 	}
-	if inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "Chart.yaml") {
-		t.Fatalf("expected Chart.yaml not to appear in Helm inverse edit guidance, got %+v", prov.InverseEditPointers)
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "<helm-default>:values.image.tag") {
+		t.Fatalf("expected default synthetic origin for unset Helm image tag, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "Inspect Chart.yaml, templates/, and helper defaults") {
+		t.Fatalf("expected Helm inverse pointer to explain unresolved chart defaults, got %+v", prov.InverseEditPointers)
+	}
+}
+
+func TestImportRepoHelmBuiltinOriginUsesChartAppVersion(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), "apiVersion: v2\nname: builtin-demo\nversion: 0.1.0\nappVersion: 2.3.4\n")
+	mustWriteFile(t, filepath.Join(repo, "values.yaml"), "image:\n  repository: ghcr.io/example/builtin-demo\n")
+	mustWriteFile(t, filepath.Join(repo, "templates", "deployment.yaml"), `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: builtin-demo
+spec:
+  template:
+    spec:
+      containers:
+        - name: builtin-demo
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+`)
+
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+
+	prov := result.Provenance[0]
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "<helm-builtin>:.Chart.AppVersion") {
+		t.Fatalf("expected builtin Chart.AppVersion origin, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "values.image.tag", "Edit appVersion in Chart.yaml") {
+		t.Fatalf("expected builtin inverse pointer to mention Chart.yaml appVersion, got %+v", prov.InverseEditPointers)
 	}
 }
 
