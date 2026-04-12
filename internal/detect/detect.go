@@ -16,6 +16,7 @@ import (
 	"github.com/confighub/cub-gen/internal/applicationset"
 	"github.com/confighub/cub-gen/internal/model"
 	"github.com/confighub/cub-gen/internal/registry"
+	"gopkg.in/yaml.v3"
 )
 
 // ScanRepo scans a local repository path and returns deterministic generator detections.
@@ -94,12 +95,195 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 		return all[i].Name < all[j].Name
 	})
 
+	chains, err := loadGeneratorChains(absRepo, all)
+	if err != nil {
+		return model.DetectionResult{}, err
+	}
+
 	return model.DetectionResult{
 		Repo:       absRepo,
 		Ref:        ref,
 		DetectedAt: time.Now().UTC().Format(time.RFC3339),
 		Generators: all,
+		Chains:     chains,
 	}, nil
+}
+
+type rawGeneratorChainFile struct {
+	Chains []rawGeneratorChain `yaml:"chains"`
+}
+
+type rawGeneratorChain struct {
+	ID       string                     `yaml:"id"`
+	Name     string                     `yaml:"name"`
+	Stages   []rawGeneratorChainStage   `yaml:"stages"`
+	Mappings []rawGeneratorChainMapping `yaml:"mappings"`
+}
+
+type rawGeneratorChainStage struct {
+	Kind string `yaml:"kind"`
+	Root string `yaml:"root"`
+}
+
+type rawGeneratorChainMapping struct {
+	DownstreamWetPath  string  `yaml:"downstream_wet_path"`
+	DownstreamDryPath  string  `yaml:"downstream_dry_path"`
+	UpstreamKind       string  `yaml:"upstream_kind"`
+	UpstreamRoot       string  `yaml:"upstream_root"`
+	UpstreamDryPath    string  `yaml:"upstream_dry_path"`
+	UpstreamSourcePath string  `yaml:"upstream_source_path"`
+	UpstreamOwner      string  `yaml:"upstream_owner"`
+	UpstreamTransform  string  `yaml:"upstream_transform"`
+	UpstreamConfidence float64 `yaml:"upstream_confidence"`
+}
+
+func loadGeneratorChains(repo string, detections []model.GeneratorDetection) ([]model.GeneratorChain, error) {
+	path := filepath.Join(repo, ".cub-gen-chain.yaml")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("read generator chains: %w", err)
+	}
+
+	var raw rawGeneratorChainFile
+	if err := yaml.Unmarshal(data, &raw); err != nil {
+		return nil, fmt.Errorf("parse generator chains: %w", err)
+	}
+	if len(raw.Chains) == 0 {
+		return nil, nil
+	}
+
+	out := make([]model.GeneratorChain, 0, len(raw.Chains))
+	for idx, chain := range raw.Chains {
+		if len(chain.Stages) < 2 {
+			return nil, fmt.Errorf("generator chain %q must declare at least two stages", rawChainID(chain, idx))
+		}
+
+		stages := make([]model.GeneratorChainStage, 0, len(chain.Stages))
+		for stageIdx, stage := range chain.Stages {
+			kind, err := parseGeneratorKind(stage.Kind)
+			if err != nil {
+				return nil, fmt.Errorf("generator chain %q stage %d: %w", rawChainID(chain, idx), stageIdx+1, err)
+			}
+			root := normalizeChainRoot(stage.Root)
+			detection, ok := matchGeneratorDetection(detections, kind, root)
+			if !ok {
+				return nil, fmt.Errorf("generator chain %q stage %d: no detected generator matched kind=%q root=%q", rawChainID(chain, idx), stageIdx+1, kind, root)
+			}
+			stages = append(stages, model.GeneratorChainStage{
+				Kind:        detection.Kind,
+				Profile:     detection.Profile,
+				Name:        detection.Name,
+				Root:        detection.Root,
+				DetectionID: detection.ID,
+				Confidence:  detection.Confidence,
+			})
+		}
+
+		mappings := make([]model.GeneratorChainMapping, 0, len(chain.Mappings))
+		for mappingIdx, mapping := range chain.Mappings {
+			if strings.TrimSpace(mapping.DownstreamWetPath) == "" {
+				return nil, fmt.Errorf("generator chain %q mapping %d must declare downstream_wet_path", rawChainID(chain, idx), mappingIdx+1)
+			}
+			if strings.TrimSpace(mapping.UpstreamDryPath) == "" {
+				return nil, fmt.Errorf("generator chain %q mapping %d must declare upstream_dry_path", rawChainID(chain, idx), mappingIdx+1)
+			}
+			if strings.TrimSpace(mapping.UpstreamSourcePath) == "" {
+				return nil, fmt.Errorf("generator chain %q mapping %d must declare upstream_source_path", rawChainID(chain, idx), mappingIdx+1)
+			}
+			if mapping.UpstreamConfidence < 0 || mapping.UpstreamConfidence > 1 {
+				return nil, fmt.Errorf("generator chain %q mapping %d upstream_confidence must be between 0 and 1", rawChainID(chain, idx), mappingIdx+1)
+			}
+
+			upstreamStage := stages[0]
+			if strings.TrimSpace(mapping.UpstreamKind) != "" || strings.TrimSpace(mapping.UpstreamRoot) != "" {
+				kind, err := parseGeneratorKind(mapping.UpstreamKind)
+				if err != nil {
+					return nil, fmt.Errorf("generator chain %q mapping %d: %w", rawChainID(chain, idx), mappingIdx+1, err)
+				}
+				root := normalizeChainRoot(mapping.UpstreamRoot)
+				stage, ok := matchChainStage(stages, kind, root)
+				if !ok {
+					return nil, fmt.Errorf("generator chain %q mapping %d: no upstream stage matched kind=%q root=%q", rawChainID(chain, idx), mappingIdx+1, kind, root)
+				}
+				upstreamStage = stage
+			}
+
+			confidence := mapping.UpstreamConfidence
+			if confidence == 0 {
+				confidence = upstreamStage.Confidence
+			}
+			mappings = append(mappings, model.GeneratorChainMapping{
+				DownstreamWetPath:  strings.TrimSpace(mapping.DownstreamWetPath),
+				DownstreamDryPath:  strings.TrimSpace(mapping.DownstreamDryPath),
+				UpstreamKind:       upstreamStage.Kind,
+				UpstreamProfile:    upstreamStage.Profile,
+				UpstreamRoot:       upstreamStage.Root,
+				UpstreamDryPath:    strings.TrimSpace(mapping.UpstreamDryPath),
+				UpstreamSourcePath: filepath.ToSlash(strings.TrimSpace(mapping.UpstreamSourcePath)),
+				UpstreamOwner:      strings.TrimSpace(mapping.UpstreamOwner),
+				UpstreamTransform:  strings.TrimSpace(mapping.UpstreamTransform),
+				UpstreamConfidence: confidence,
+			})
+		}
+
+		out = append(out, model.GeneratorChain{
+			ID:       rawChainID(chain, idx),
+			Name:     strings.TrimSpace(chain.Name),
+			Stages:   stages,
+			Mappings: mappings,
+		})
+	}
+
+	return out, nil
+}
+
+func rawChainID(chain rawGeneratorChain, idx int) string {
+	if strings.TrimSpace(chain.ID) != "" {
+		return strings.TrimSpace(chain.ID)
+	}
+	if strings.TrimSpace(chain.Name) != "" {
+		return strings.TrimSpace(chain.Name)
+	}
+	return fmt.Sprintf("chain-%d", idx+1)
+}
+
+func parseGeneratorKind(raw string) (model.GeneratorKind, error) {
+	kind := model.GeneratorKind(strings.TrimSpace(raw))
+	for _, supported := range registry.Kinds() {
+		if supported == kind {
+			return kind, nil
+		}
+	}
+	return "", fmt.Errorf("unknown generator kind %q", raw)
+}
+
+func normalizeChainRoot(root string) string {
+	root = filepath.ToSlash(strings.TrimSpace(root))
+	if root == "." {
+		return ""
+	}
+	return root
+}
+
+func matchGeneratorDetection(detections []model.GeneratorDetection, kind model.GeneratorKind, root string) (model.GeneratorDetection, bool) {
+	for _, detection := range detections {
+		if detection.Kind == kind && normalizeChainRoot(detection.Root) == root {
+			return detection, true
+		}
+	}
+	return model.GeneratorDetection{}, false
+}
+
+func matchChainStage(stages []model.GeneratorChainStage, kind model.GeneratorKind, root string) (model.GeneratorChainStage, bool) {
+	for _, stage := range stages {
+		if stage.Kind == kind && normalizeChainRoot(stage.Root) == root {
+			return stage, true
+		}
+	}
+	return model.GeneratorChainStage{}, false
 }
 
 func detectHelm(repo string) ([]model.GeneratorDetection, error) {

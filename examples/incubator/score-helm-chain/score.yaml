@@ -1,0 +1,10 @@
+apiVersion: score.dev/v1b1
+metadata:
+  name: checkout-api
+containers:
+  api:
+    image: ghcr.io/example/checkout-api:v1.2.3
+service:
+  ports:
+    http:
+      port: 8080
