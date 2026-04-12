@@ -70,6 +70,18 @@ Arguments:
 
 Output includes: `generator_profile`, `dry_inputs`, `wet_manifest_targets`, `provenance` (field-origin map, inverse-edit pointers).
 
+For layered Helm repos, `provenance[].helm_layered_analysis` also explains how
+the chart is composed:
+
+- `dependency_charts`: subcharts, aliases, vendored chart paths, and any
+  `condition:` expression that controls whether the subchart is active
+- `field_origin_map[].source_layer`: which Helm layer won for a field
+  (`umbrella` vs a subchart alias/name)
+- `crd_paths`: CRDs under `crds/`, kept separate from templated resources
+- `hook_templates`: hook template paths plus their `helm.sh/hook` annotations
+- `values_schema_path`, `schema_validation_state`,
+  `schema_validation_violations`: pre-render values-schema findings
+
 ### `gitops cleanup`
 
 Remove local discover state.

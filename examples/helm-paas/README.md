@@ -359,6 +359,13 @@ DRY:  values.yaml      → image.tag = "v1.0.0"
 WET:  Deployment/spec/template/spec/containers[0]/image = "ghcr.io/example/payments-api:v1.0.3"
 ```
 
+For umbrella-style Helm repos, the same import output also tells you which
+layer won. `field_origin_map[].source_layer` distinguishes umbrella values from
+subchart defaults, while `helm_layered_analysis.dependency_charts` records
+aliased/conditional subcharts, `crd_paths` isolates `crds/`, `hook_templates`
+shows `helm.sh/hook` annotations, and the `values_schema_*` fields surface
+schema violations before you trust the render.
+
 ## Key files
 
 | File | Owner | Purpose |

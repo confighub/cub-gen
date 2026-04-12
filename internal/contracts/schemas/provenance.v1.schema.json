@@ -208,6 +208,10 @@
             "type": "string",
             "minLength": 1
           },
+          "source_layer": {
+            "type": "string",
+            "minLength": 1
+          },
           "transform": {
             "type": "string",
             "minLength": 1
@@ -281,6 +285,102 @@
           }
         },
         "customer_catalog_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "dependency_charts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "alias": {
+                "type": "string",
+                "minLength": 1
+              },
+              "layer": {
+                "type": "string",
+                "minLength": 1
+              },
+              "condition": {
+                "type": "string",
+                "minLength": 1
+              },
+              "repository": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "chart_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "values_path": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "crd_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "hook_templates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hooks": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "hook_template_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "values_schema_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema_validation_state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema_validation_violations": {
           "type": "array",
           "items": {
             "type": "string",
