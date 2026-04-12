@@ -17,6 +17,7 @@ import (
 	"github.com/confighub/cub-gen/internal/detect"
 	"github.com/confighub/cub-gen/internal/model"
 	"github.com/confighub/cub-gen/internal/registry"
+	"github.com/santhosh-tekuri/jsonschema/v5"
 	"gopkg.in/yaml.v3"
 )
 
@@ -579,11 +580,11 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 	switch g.Kind {
 	case model.GeneratorHelm:
 		hints := helmProvenancePathsForGenerator(detection.Repo, g)
-		imageTagPaths := helmImageTagSourcePaths(detection.Repo, hints)
+		imageTagSources := helmImageTagSources(detection.Repo, hints)
 		overrideOrigins := helmCLIOverrideFieldOrigins(g, helmCLIOverrides)
-		origins := make([]model.FieldOrigin, 0, len(overrideOrigins)+len(imageTagPaths))
+		origins := make([]model.FieldOrigin, 0, len(overrideOrigins)+len(imageTagSources)+1)
 		origins = append(origins, overrideOrigins...)
-		if len(imageTagPaths) == 0 {
+		if len(imageTagSources) == 0 {
 			if builtinOrigin, ok := helmImageTagBuiltinOrigin(detection.Repo, hints); ok {
 				origins = append(origins, builtinOrigin)
 				return origins
@@ -591,21 +592,26 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 			origins = append(origins, helmImageTagDefaultOrigin())
 			return origins
 		}
-		for idx, sourcePath := range imageTagPaths {
+		for _, source := range imageTagSources {
 			transform := registry.FieldOriginTransform(g.Kind)
 			confidenceKey := "image_tag_base"
 			confidenceFallback := 0.86
-			if idx > 0 || sourcePath != hints.PrimaryValuesPath {
+			if source.Path != hints.PrimaryValuesPath {
 				transform = registry.FieldOriginOverlayTransform(g.Kind)
 				confidenceKey = "image_tag_overlay"
 				confidenceFallback = 0.90
 			}
+			if strings.HasPrefix(source.Path, "charts/") {
+				confidenceKey = "image_tag_subchart"
+				confidenceFallback = 0.74
+			}
 			origins = append(origins, model.FieldOrigin{
-				DryPath:    "values.image.tag",
-				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
-				SourcePath: sourcePath,
-				Transform:  transform,
-				Confidence: registry.FieldOriginConfidenceFor(g.Kind, confidenceKey, confidenceFallback),
+				DryPath:     "values.image.tag",
+				WetPath:     "Deployment/spec/template/spec/containers[0]/image",
+				SourcePath:  source.Path,
+				SourceLayer: source.Layer,
+				Transform:   transform,
+				Confidence:  registry.FieldOriginConfidenceFor(g.Kind, confidenceKey, confidenceFallback),
 			})
 		}
 		return origins
@@ -915,11 +921,11 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 	switch g.Kind {
 	case model.GeneratorHelm:
 		hints := helmProvenancePathsForGenerator(detection.Repo, g)
-		imageTagPaths := helmImageTagSourcePaths(detection.Repo, hints)
+		imageTagSources := helmImageTagSources(detection.Repo, hints)
 		policy := registry.InversePointerTemplateFor(g.Kind, "image_tag", registry.InversePointerTemplate{
 			Owner: "app-team", Confidence: 0.86,
 		})
-		if len(imageTagPaths) == 0 {
+		if len(imageTagSources) == 0 {
 			if _, ok := helmImageTagBuiltinOrigin(detection.Repo, hints); ok {
 				return []model.InverseEditPointer{
 					{
@@ -944,8 +950,8 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 		preferredImageTagPath := hints.PrimaryValuesPath
 		if hints.OverlayValuesPath != "" {
 			preferredImageTagPath = hints.OverlayValuesPath
-		} else if len(imageTagPaths) > 0 {
-			preferredImageTagPath = imageTagPaths[0]
+		} else if len(imageTagSources) > 0 {
+			preferredImageTagPath = imageTagSources[0].Path
 		}
 		vars := map[string]string{
 			"base_values_path":    hints.PrimaryValuesPath,
@@ -961,7 +967,7 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			{
 				WetPath:    "Deployment/spec/template/spec/containers[0]/image",
 				DryPath:    "values.image.tag",
-				Owner:      policy.Owner,
+				Owner:      helmInversePointerOwner(preferredImageTagPath, policy.Owner),
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, hintKey, hintFallback), vars),
 				Confidence: policy.Confidence,
 			},
@@ -1308,6 +1314,16 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 	}
 }
 
+func helmInversePointerOwner(preferredImageTagPath, fallbackOwner string) string {
+	if helmIsSubchartPath(preferredImageTagPath) {
+		return "platform-engineer"
+	}
+	if strings.TrimSpace(fallbackOwner) == "" {
+		return "platform-engineer"
+	}
+	return fallbackOwner
+}
+
 type applicationSetHints struct {
 	ApplicationSetPath string
 	TemplateSourcePath string
@@ -1546,6 +1562,21 @@ type helmProvenancePaths struct {
 	OverlayValuesPath string
 }
 
+type helmValueSource struct {
+	Path  string
+	Layer string
+}
+
+type helmDependencyDoc struct {
+	Name       string `yaml:"name"`
+	Alias      string `yaml:"alias"`
+	Condition  string `yaml:"condition"`
+	Repository string `yaml:"repository"`
+	Version    string `yaml:"version"`
+	ChartPath  string
+	ValuesPath string
+}
+
 func helmProvenancePathsForGenerator(repoPath string, g model.GeneratorDetection) helmProvenancePaths {
 	if g.Kind != model.GeneratorHelm {
 		return helmProvenancePaths{}
@@ -1565,15 +1596,21 @@ func helmProvenancePathsForGenerator(repoPath string, g model.GeneratorDetection
 	}
 
 	chartPath := firstInputPathForRole(g.Kind, g.Inputs, chartRole)
-	valuesPaths := inputPathsForRole(g.Kind, g.Inputs, valuesRole)
+	valuesPaths := helmValuesPathsForInputs(g.Kind, g.Inputs, valuesRole)
 
 	primaryValuesPath := selectPrimaryHelmValuesPath(valuesPaths, primaryValuesBase)
-	imageTagPaths := helmImageTagSourcePaths(repoPath, helmProvenancePaths{
+	imageTagSources := helmImageTagSources(repoPath, helmProvenancePaths{
 		ChartPath:         chartPath,
 		ValuesPaths:       valuesPaths,
 		PrimaryValuesPath: primaryValuesPath,
 	})
-	overlayValuesPath := firstDistinctPath(imageTagPaths, primaryValuesPath)
+	overlayValuesPath := ""
+	for _, source := range imageTagSources {
+		if source.Path != primaryValuesPath {
+			overlayValuesPath = source.Path
+			break
+		}
+	}
 
 	return helmProvenancePaths{
 		ChartPath:         chartPath,
@@ -1594,6 +1631,18 @@ func selectPrimaryHelmValuesPath(valuesPaths []string, primaryValuesBase string)
 	return primaryValuesPath
 }
 
+func helmValuesPathsForInputs(kind model.GeneratorKind, inputs []string, valuesRole string) []string {
+	out := make([]string, 0, len(inputs))
+	for _, in := range inputs {
+		role := registry.InputRole(kind, in)
+		if role == valuesRole || role == "subchart-values" {
+			out = append(out, in)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
 func firstInputPathForRole(kind model.GeneratorKind, inputs []string, role string) string {
 	for _, in := range inputs {
 		if registry.InputRole(kind, in) == role {
@@ -1603,7 +1652,7 @@ func firstInputPathForRole(kind model.GeneratorKind, inputs []string, role strin
 	return ""
 }
 
-func helmImageTagSourcePaths(repoPath string, hints helmProvenancePaths) []string {
+func helmImageTagSources(repoPath string, hints helmProvenancePaths) []helmValueSource {
 	imageTagPaths := make([]string, 0, len(hints.ValuesPaths))
 	for _, path := range hints.ValuesPaths {
 		if helmValuesPathDefinesImageTag(repoPath, path) {
@@ -1614,17 +1663,71 @@ func helmImageTagSourcePaths(repoPath string, hints helmProvenancePaths) []strin
 		return nil
 	}
 
-	ordered := make([]string, 0, len(imageTagPaths))
-	if stringSliceContains(imageTagPaths, hints.PrimaryValuesPath) {
-		ordered = append(ordered, hints.PrimaryValuesPath)
-	}
-	for _, path := range imageTagPaths {
-		if path == hints.PrimaryValuesPath {
-			continue
+	sort.SliceStable(imageTagPaths, func(i, j int) bool {
+		leftRank := helmValuesPathPrecedence(imageTagPaths[i], hints.PrimaryValuesPath, hints.ChartPath)
+		rightRank := helmValuesPathPrecedence(imageTagPaths[j], hints.PrimaryValuesPath, hints.ChartPath)
+		if leftRank != rightRank {
+			return leftRank < rightRank
 		}
-		ordered = append(ordered, path)
+		return imageTagPaths[i] < imageTagPaths[j]
+	})
+
+	umbrella := helmHasDependencyCharts(repoPath, hints.ChartPath)
+	ordered := make([]helmValueSource, 0, len(imageTagPaths))
+	for _, path := range imageTagPaths {
+		ordered = append(ordered, helmValueSource{
+			Path:  path,
+			Layer: helmValuesSourceLayer(path, umbrella),
+		})
 	}
 	return ordered
+}
+
+func helmValuesPathPrecedence(path, primaryValuesPath, chartPath string) int {
+	pathDir := filepath.ToSlash(filepath.Dir(strings.TrimSpace(path)))
+	if pathDir == "." {
+		pathDir = ""
+	}
+	switch {
+	case path == primaryValuesPath:
+		return 0
+	case helmIsSubchartPath(path):
+		return 2
+	case helmChartDir(chartPath) == pathDir:
+		return 1
+	default:
+		return 3
+	}
+}
+
+func helmValuesSourceLayer(path string, umbrella bool) string {
+	if helmIsSubchartPath(path) {
+		parts := strings.Split(filepath.ToSlash(path), "/")
+		if len(parts) >= 2 {
+			return parts[1]
+		}
+	}
+	if umbrella {
+		return "umbrella"
+	}
+	return ""
+}
+
+func helmIsSubchartPath(path string) bool {
+	normalized := filepath.ToSlash(strings.TrimSpace(path))
+	return normalized == "charts" || strings.HasPrefix(normalized, "charts/")
+}
+
+func helmChartDir(chartPath string) string {
+	dir := filepath.ToSlash(filepath.Dir(strings.TrimSpace(chartPath)))
+	if dir == "." {
+		return ""
+	}
+	return dir
+}
+
+func helmHasDependencyCharts(repoPath, chartPath string) bool {
+	return len(parseHelmDependencyDocs(repoPath, chartPath)) > 0
 }
 
 func helmImageTagBuiltinOrigin(repoPath string, hints helmProvenancePaths) (model.FieldOrigin, bool) {
@@ -1916,18 +2019,35 @@ func helmLayeredAnalysisForGenerator(detection model.DetectionResult, g model.Ge
 	clusterPaths := inputPathsForRole(g.Kind, g.Inputs, "cluster-inventory")
 	managedCatalogPaths := inputPathsForRole(g.Kind, g.Inputs, "managed-service-catalog")
 	customerCatalogPaths := inputPathsForRole(g.Kind, g.Inputs, "customer-service-catalog")
+	helmPaths := helmProvenancePathsForGenerator(detection.Repo, g)
+	dependencyCharts := helmDependencyChartsForGenerator(detection.Repo, helmPaths)
+	crdPaths := helmCRDPathsForChart(detection.Repo, helmPaths.ChartPath)
+	hookTemplates := helmHookTemplates(detection.Repo, helmPaths.ChartPath)
+	hookTemplatePaths := make([]string, 0, len(hookTemplates))
+	for _, hookTemplate := range hookTemplates {
+		hookTemplatePaths = append(hookTemplatePaths, hookTemplate.Path)
+	}
+	valuesSchemaPath := helmValuesSchemaPath(detection.Repo, helmPaths.ChartPath)
+	schemaState, schemaViolations := helmValuesSchemaValidation(detection.Repo, helmPaths, valuesSchemaPath)
 
-	if appsetPath == "" && len(clusterPaths) == 0 && len(managedCatalogPaths) == 0 && len(customerCatalogPaths) == 0 {
+	if appsetPath == "" && len(clusterPaths) == 0 && len(managedCatalogPaths) == 0 && len(customerCatalogPaths) == 0 &&
+		len(dependencyCharts) == 0 && len(crdPaths) == 0 && len(hookTemplatePaths) == 0 && valuesSchemaPath == "" {
 		return nil
 	}
 
-	helmPaths := helmProvenancePathsForGenerator(detection.Repo, g)
 	analysis := &model.HelmLayeredAnalysis{
-		ApplicationSetPath:    appsetPath,
-		ClusterInventoryPaths: append([]string(nil), clusterPaths...),
-		ManagedCatalogPaths:   append([]string(nil), managedCatalogPaths...),
-		CustomerCatalogPaths:  append([]string(nil), customerCatalogPaths...),
-		SelectedValueFiles:    append([]string(nil), helmPaths.ValuesPaths...),
+		ApplicationSetPath:         appsetPath,
+		ClusterInventoryPaths:      append([]string(nil), clusterPaths...),
+		ManagedCatalogPaths:        append([]string(nil), managedCatalogPaths...),
+		CustomerCatalogPaths:       append([]string(nil), customerCatalogPaths...),
+		DependencyCharts:           append([]model.HelmDependencyChart(nil), dependencyCharts...),
+		CRDPaths:                   append([]string(nil), crdPaths...),
+		HookTemplates:              append([]model.HelmHookTemplate(nil), hookTemplates...),
+		HookTemplatePaths:          append([]string(nil), hookTemplatePaths...),
+		ValuesSchemaPath:           valuesSchemaPath,
+		SchemaValidationState:      schemaState,
+		SchemaValidationViolations: append([]string(nil), schemaViolations...),
+		SelectedValueFiles:         append([]string(nil), helmPaths.ValuesPaths...),
 	}
 
 	if appsetPath != "" {
@@ -1989,6 +2109,346 @@ func helmLayeredAnalysisForGenerator(detection model.DetectionResult, g model.Ge
 	}
 
 	return analysis
+}
+
+func helmDependencyChartsForGenerator(repoPath string, hints helmProvenancePaths) []model.HelmDependencyChart {
+	deps := parseHelmDependencyDocs(repoPath, hints.ChartPath)
+	out := make([]model.HelmDependencyChart, 0, len(deps))
+	for _, dep := range deps {
+		layer := strings.TrimSpace(dep.Alias)
+		if layer == "" {
+			layer = strings.TrimSpace(dep.Name)
+		}
+		out = append(out, model.HelmDependencyChart{
+			Name:       dep.Name,
+			Alias:      dep.Alias,
+			Layer:      layer,
+			Condition:  dep.Condition,
+			Repository: dep.Repository,
+			Version:    dep.Version,
+			ChartPath:  dep.ChartPath,
+			ValuesPath: dep.ValuesPath,
+		})
+	}
+	return out
+}
+
+func parseHelmDependencyDocs(repoPath, chartPath string) []helmDependencyDoc {
+	if strings.TrimSpace(repoPath) == "" || strings.TrimSpace(chartPath) == "" {
+		return nil
+	}
+	content, err := os.ReadFile(filepath.Join(repoPath, filepath.FromSlash(chartPath)))
+	if err != nil {
+		return nil
+	}
+
+	var chartDoc struct {
+		Dependencies []helmDependencyDoc `yaml:"dependencies"`
+	}
+	if err := yaml.Unmarshal(content, &chartDoc); err != nil {
+		return nil
+	}
+
+	chartDir := helmChartDir(chartPath)
+	out := make([]helmDependencyDoc, 0, len(chartDoc.Dependencies))
+	for _, dep := range chartDoc.Dependencies {
+		layer := strings.TrimSpace(dep.Alias)
+		if layer == "" {
+			layer = strings.TrimSpace(dep.Name)
+		}
+		chartCandidate := filepath.ToSlash(filepath.Join(chartDir, "charts", layer, "Chart.yaml"))
+		valuesCandidate := filepath.ToSlash(filepath.Join(chartDir, "charts", layer, "values.yaml"))
+		if !fileExists(filepath.Join(repoPath, filepath.FromSlash(chartCandidate))) && strings.TrimSpace(dep.Name) != "" && dep.Name != layer {
+			fallbackChartCandidate := filepath.ToSlash(filepath.Join(chartDir, "charts", dep.Name, "Chart.yaml"))
+			fallbackValuesCandidate := filepath.ToSlash(filepath.Join(chartDir, "charts", dep.Name, "values.yaml"))
+			if fileExists(filepath.Join(repoPath, filepath.FromSlash(fallbackChartCandidate))) {
+				chartCandidate = fallbackChartCandidate
+				valuesCandidate = fallbackValuesCandidate
+			}
+		}
+		if !fileExists(filepath.Join(repoPath, filepath.FromSlash(chartCandidate))) {
+			chartCandidate = ""
+		}
+		if !fileExists(filepath.Join(repoPath, filepath.FromSlash(valuesCandidate))) {
+			valuesCandidate = ""
+		}
+		dep.ChartPath = chartCandidate
+		dep.ValuesPath = valuesCandidate
+		out = append(out, dep)
+	}
+
+	sort.Slice(out, func(i, j int) bool {
+		left := out[i].Alias
+		if strings.TrimSpace(left) == "" {
+			left = out[i].Name
+		}
+		right := out[j].Alias
+		if strings.TrimSpace(right) == "" {
+			right = out[j].Name
+		}
+		return left < right
+	})
+	return out
+}
+
+func helmCRDPathsForChart(repoPath, chartPath string) []string {
+	chartDir := helmChartDir(chartPath)
+	crdDir := filepath.Join(repoPath, filepath.FromSlash(chartDir), "crds")
+	info, err := os.Stat(crdDir)
+	if err != nil || !info.IsDir() {
+		return nil
+	}
+
+	out := make([]string, 0)
+	_ = filepath.WalkDir(crdDir, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil || d.IsDir() {
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(d.Name()))
+		if ext != ".yaml" && ext != ".yml" {
+			return nil
+		}
+		rel, err := filepath.Rel(repoPath, path)
+		if err != nil {
+			return nil
+		}
+		out = append(out, filepath.ToSlash(rel))
+		return nil
+	})
+	sort.Strings(out)
+	return out
+}
+
+func helmHookTemplates(repoPath, chartPath string) []model.HelmHookTemplate {
+	chartDir := helmChartDir(chartPath)
+	templatesDir := filepath.Join(repoPath, filepath.FromSlash(chartDir), "templates")
+	info, err := os.Stat(templatesDir)
+	if err != nil || !info.IsDir() {
+		return nil
+	}
+
+	out := make([]model.HelmHookTemplate, 0)
+	_ = filepath.WalkDir(templatesDir, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil || d.IsDir() {
+			return nil
+		}
+		content, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		hooks := helmHookAnnotations(string(content))
+		if len(hooks) == 0 {
+			return nil
+		}
+		rel, err := filepath.Rel(repoPath, path)
+		if err != nil {
+			return nil
+		}
+		out = append(out, model.HelmHookTemplate{
+			Path:  filepath.ToSlash(rel),
+			Hooks: hooks,
+		})
+		return nil
+	})
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Path < out[j].Path
+	})
+	return out
+}
+
+func helmHookAnnotations(content string) []string {
+	lines := strings.Split(content, "\n")
+	out := make([]string, 0)
+	seen := map[string]struct{}{}
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "helm.sh/hook:") {
+			continue
+		}
+		raw := strings.TrimSpace(strings.TrimPrefix(trimmed, "helm.sh/hook:"))
+		raw = strings.Trim(raw, "\"'")
+		for _, hook := range strings.Split(raw, ",") {
+			hook = strings.TrimSpace(hook)
+			if hook == "" {
+				continue
+			}
+			if _, ok := seen[hook]; ok {
+				continue
+			}
+			seen[hook] = struct{}{}
+			out = append(out, hook)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+func helmValuesSchemaPath(repoPath, chartPath string) string {
+	chartDir := helmChartDir(chartPath)
+	candidate := filepath.Join(repoPath, filepath.FromSlash(chartDir), "values.schema.json")
+	if !fileExists(candidate) {
+		return ""
+	}
+	rel, err := filepath.Rel(repoPath, candidate)
+	if err != nil {
+		return ""
+	}
+	return filepath.ToSlash(rel)
+}
+
+func helmValuesSchemaValidation(repoPath string, hints helmProvenancePaths, valuesSchemaPath string) (string, []string) {
+	if strings.TrimSpace(valuesSchemaPath) == "" {
+		return "", nil
+	}
+
+	schemaContent, err := os.ReadFile(filepath.Join(repoPath, filepath.FromSlash(valuesSchemaPath)))
+	if err != nil {
+		return "unresolved", []string{fmt.Sprintf("%s: %v", valuesSchemaPath, err)}
+	}
+
+	compiler := jsonschema.NewCompiler()
+	if err := compiler.AddResource(valuesSchemaPath, strings.NewReader(string(schemaContent))); err != nil {
+		return "unresolved", []string{fmt.Sprintf("%s: %v", valuesSchemaPath, err)}
+	}
+	schema, err := compiler.Compile(valuesSchemaPath)
+	if err != nil {
+		return "unresolved", []string{fmt.Sprintf("%s: %v", valuesSchemaPath, err)}
+	}
+
+	rootValuesPaths := make([]string, 0, len(hints.ValuesPaths))
+	for _, path := range hints.ValuesPaths {
+		if helmIsSubchartPath(path) {
+			continue
+		}
+		rootValuesPaths = append(rootValuesPaths, path)
+	}
+	sort.SliceStable(rootValuesPaths, func(i, j int) bool {
+		leftRank := helmValuesPathPrecedence(rootValuesPaths[i], hints.PrimaryValuesPath, hints.ChartPath)
+		rightRank := helmValuesPathPrecedence(rootValuesPaths[j], hints.PrimaryValuesPath, hints.ChartPath)
+		if leftRank != rightRank {
+			return leftRank < rightRank
+		}
+		return rootValuesPaths[i] < rootValuesPaths[j]
+	})
+
+	merged := map[string]any{}
+	// Merge from lowest to highest precedence so overlays win over chart defaults.
+	for i := len(rootValuesPaths) - 1; i >= 0; i-- {
+		path := rootValuesPaths[i]
+		payload, err := yamlFileToJSONCompatible(filepath.Join(repoPath, filepath.FromSlash(path)))
+		if err != nil {
+			return "unresolved", []string{fmt.Sprintf("%s: %v", path, err)}
+		}
+		merged = mergeJSONObjects(merged, payload)
+	}
+
+	if err := schema.Validate(merged); err != nil {
+		return "invalid", jsonschemaValidationMessages(err)
+	}
+	return "valid", nil
+}
+
+func yamlFileToJSONCompatible(path string) (map[string]any, error) {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var raw any
+	if err := yaml.Unmarshal(content, &raw); err != nil {
+		return nil, err
+	}
+	converted := yamlToJSONCompatible(raw)
+	if converted == nil {
+		return map[string]any{}, nil
+	}
+	if asMap, ok := converted.(map[string]any); ok {
+		return asMap, nil
+	}
+	return nil, fmt.Errorf("top-level values document must be a mapping")
+}
+
+func yamlToJSONCompatible(v any) any {
+	switch typed := v.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(typed))
+		for key, value := range typed {
+			out[key] = yamlToJSONCompatible(value)
+		}
+		return out
+	case map[any]any:
+		out := make(map[string]any, len(typed))
+		for key, value := range typed {
+			out[fmt.Sprint(key)] = yamlToJSONCompatible(value)
+		}
+		return out
+	case []any:
+		out := make([]any, 0, len(typed))
+		for _, value := range typed {
+			out = append(out, yamlToJSONCompatible(value))
+		}
+		return out
+	default:
+		return typed
+	}
+}
+
+func mergeJSONObjects(base, overlay map[string]any) map[string]any {
+	out := make(map[string]any, len(base))
+	for key, value := range base {
+		out[key] = value
+	}
+	for key, value := range overlay {
+		if baseMap, ok := out[key].(map[string]any); ok {
+			if overlayMap, ok := value.(map[string]any); ok {
+				out[key] = mergeJSONObjects(baseMap, overlayMap)
+				continue
+			}
+		}
+		out[key] = value
+	}
+	return out
+}
+
+func jsonschemaValidationMessages(err error) []string {
+	var validationErr *jsonschema.ValidationError
+	if !errors.As(err, &validationErr) {
+		msg := strings.TrimSpace(err.Error())
+		if msg == "" {
+			return nil
+		}
+		return []string{msg}
+	}
+	leaves := flattenJSONSchemaValidationErrors(validationErr)
+	out := make([]string, 0, len(leaves))
+	for _, leaf := range leaves {
+		location := strings.TrimSpace(leaf.InstanceLocation)
+		if location == "" {
+			location = "/"
+		}
+		out = append(out, fmt.Sprintf("%s: %s", location, strings.TrimSpace(leaf.Message)))
+	}
+	sort.Strings(out)
+	return out
+}
+
+func flattenJSONSchemaValidationErrors(err *jsonschema.ValidationError) []*jsonschema.ValidationError {
+	if err == nil {
+		return nil
+	}
+	if len(err.Causes) == 0 {
+		return []*jsonschema.ValidationError{err}
+	}
+	out := make([]*jsonschema.ValidationError, 0, len(err.Causes))
+	for _, cause := range err.Causes {
+		out = append(out, flattenJSONSchemaValidationErrors(cause)...)
+	}
+	return out
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
 }
 
 func parseHelmApplicationSetFile(repo, path string) (helmApplicationSetDoc, error) {

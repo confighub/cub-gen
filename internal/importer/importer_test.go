@@ -354,6 +354,99 @@ func TestImportRepoHelmDryWetContract(t *testing.T) {
 	}
 }
 
+func TestImportRepoHelmUmbrellaAnalysis(t *testing.T) {
+	repo := t.TempDir()
+	mustWriteFile(t, filepath.Join(repo, "Chart.yaml"), `apiVersion: v2
+name: umbrella-demo
+version: 0.1.0
+dependencies:
+  - name: cache
+    alias: cache-primary
+    condition: cache.enabled
+    version: 1.2.3
+    repository: file://charts/cache-primary
+`)
+	mustWriteFile(t, filepath.Join(repo, "values.yaml"), "image:\n  tag: umbrella-v1\n")
+	mustWriteFile(t, filepath.Join(repo, "values-prod.yaml"), "image:\n  tag: 7\n")
+	mustWriteFile(t, filepath.Join(repo, "values.schema.json"), `{
+  "type": "object",
+  "properties": {
+    "image": {
+      "type": "object",
+      "properties": {
+        "tag": {"type": "string"}
+      }
+    }
+  }
+}`)
+	mustWriteFile(t, filepath.Join(repo, "charts", "cache-primary", "Chart.yaml"), "apiVersion: v2\nname: cache\nversion: 1.2.3\n")
+	mustWriteFile(t, filepath.Join(repo, "charts", "cache-primary", "values.yaml"), "image:\n  tag: cache-v1\n")
+	mustWriteFile(t, filepath.Join(repo, "crds", "widgets.example.io.yaml"), "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\n")
+	mustWriteFile(t, filepath.Join(repo, "templates", "migrate-job.yaml"), `apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+  annotations:
+    helm.sh/hook: pre-install
+`)
+
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+	if len(result.Detection.Generators) != 1 {
+		t.Fatalf("expected single umbrella generator, got %+v", result.Detection.Generators)
+	}
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+
+	prov := result.Provenance[0]
+	if prov.HelmLayeredAnalysis == nil {
+		t.Fatalf("expected helm layered analysis, got nil")
+	}
+	if len(prov.HelmLayeredAnalysis.DependencyCharts) != 1 {
+		t.Fatalf("expected one dependency chart, got %+v", prov.HelmLayeredAnalysis.DependencyCharts)
+	}
+	dep := prov.HelmLayeredAnalysis.DependencyCharts[0]
+	if dep.Name != "cache" || dep.Alias != "cache-primary" || dep.Layer != "cache-primary" {
+		t.Fatalf("expected cache dependency metadata, got %+v", dep)
+	}
+	if dep.Condition != "cache.enabled" {
+		t.Fatalf("expected dependency condition cache.enabled, got %+v", dep)
+	}
+	if dep.ChartPath != "charts/cache-primary/Chart.yaml" || dep.ValuesPath != "charts/cache-primary/values.yaml" {
+		t.Fatalf("expected vendored dependency paths, got %+v", dep)
+	}
+	if !containsString(prov.HelmLayeredAnalysis.CRDPaths, "crds/widgets.example.io.yaml") {
+		t.Fatalf("expected CRD path in analysis, got %+v", prov.HelmLayeredAnalysis)
+	}
+	if !containsString(prov.HelmLayeredAnalysis.HookTemplatePaths, "templates/migrate-job.yaml") {
+		t.Fatalf("expected hook template path in analysis, got %+v", prov.HelmLayeredAnalysis)
+	}
+	if !hookTemplateHasPathHook(prov.HelmLayeredAnalysis.HookTemplates, "templates/migrate-job.yaml", "pre-install") {
+		t.Fatalf("expected hook template metadata for pre-install, got %+v", prov.HelmLayeredAnalysis.HookTemplates)
+	}
+	if prov.HelmLayeredAnalysis.ValuesSchemaPath != "values.schema.json" {
+		t.Fatalf("expected values schema path, got %+v", prov.HelmLayeredAnalysis)
+	}
+	if prov.HelmLayeredAnalysis.SchemaValidationState != "invalid" {
+		t.Fatalf("expected invalid schema validation state, got %+v", prov.HelmLayeredAnalysis)
+	}
+	if !anyContainsString(prov.HelmLayeredAnalysis.SchemaValidationViolations, "/image/tag") {
+		t.Fatalf("expected schema validation violation for /image/tag, got %+v", prov.HelmLayeredAnalysis.SchemaValidationViolations)
+	}
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "values.image.tag", "charts/cache-primary/values.yaml") {
+		t.Fatalf("expected subchart values source path in field origins, got %+v", prov.FieldOriginMap)
+	}
+	if !fieldOriginHasDryPathSourceLayer(prov.FieldOriginMap, "values.image.tag", "cache-primary") {
+		t.Fatalf("expected subchart source layer cache-primary in field origins, got %+v", prov.FieldOriginMap)
+	}
+	if !fieldOriginHasDryPathSourceLayer(prov.FieldOriginMap, "values.image.tag", "umbrella") {
+		t.Fatalf("expected umbrella source layer in field origins, got %+v", prov.FieldOriginMap)
+	}
+}
+
 func TestImportRepoApplicationSetDryWetContract(t *testing.T) {
 	repo := filepath.Join("..", "..", "testdata", "applicationset-standalone")
 	result, err := ImportRepo(repo, "main", "platform")
@@ -1106,6 +1199,15 @@ func fieldOriginHasDryPathSourcePath(v []model.FieldOrigin, dryPath, sourcePath 
 	return false
 }
 
+func fieldOriginHasDryPathSourceLayer(v []model.FieldOrigin, dryPath, sourceLayer string) bool {
+	for _, item := range v {
+		if item.DryPath == dryPath && item.SourceLayer == sourceLayer {
+			return true
+		}
+	}
+	return false
+}
+
 func inversePointerHasDryPath(v []model.InverseEditPointer, dryPath string) bool {
 	for _, item := range v {
 		if item.DryPath == dryPath {
@@ -1128,6 +1230,29 @@ func containsString(v []string, needle string) bool {
 	for _, item := range v {
 		if item == needle {
 			return true
+		}
+	}
+	return false
+}
+
+func anyContainsString(v []string, needle string) bool {
+	for _, item := range v {
+		if strings.Contains(item, needle) {
+			return true
+		}
+	}
+	return false
+}
+
+func hookTemplateHasPathHook(v []model.HelmHookTemplate, path, hook string) bool {
+	for _, item := range v {
+		if item.Path != path {
+			continue
+		}
+		for _, candidate := range item.Hooks {
+			if candidate == hook {
+				return true
+			}
 		}
 	}
 	return false

@@ -123,6 +123,9 @@ func detectHelm(repo string) ([]model.GeneratorDetection, error) {
 		if relRoot == "." {
 			relRoot = ""
 		}
+		if isNestedHelmDependencyChart(relRoot) {
+			return nil
+		}
 		inputs := []string{filepath.ToSlash(relJoin(relRoot, "Chart.yaml"))}
 		matches, _ := filepath.Glob(filepath.Join(root, "values*.yaml"))
 		for _, match := range matches {
@@ -156,8 +159,9 @@ func detectHelm(repo string) ([]model.GeneratorDetection, error) {
 }
 
 func existingHelmAuxiliaryInputs(repo, root string) []string {
-	candidates := make([]string, 0, 12)
+	candidates := make([]string, 0, 24)
 	globs := []string{
+		filepath.Join(root, "values.schema.json"),
 		filepath.Join(root, "gitops", "argo", "applicationset.yaml"),
 		filepath.Join(root, "gitops", "argo", "applicationset.yml"),
 		filepath.Join(root, "platform", "clusters", "*.yaml"),
@@ -180,7 +184,52 @@ func existingHelmAuxiliaryInputs(repo, root string) []string {
 			candidates = append(candidates, filepath.ToSlash(rel))
 		}
 	}
+	_ = filepath.WalkDir(filepath.Join(root, "crds"), func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		if d.IsDir() {
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(d.Name()))
+		if ext != ".yaml" && ext != ".yml" {
+			return nil
+		}
+		rel, err := filepath.Rel(repo, path)
+		if err != nil {
+			return nil
+		}
+		candidates = append(candidates, filepath.ToSlash(rel))
+		return nil
+	})
+	_ = filepath.WalkDir(filepath.Join(root, "charts"), func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		if d.IsDir() {
+			return nil
+		}
+		name := strings.ToLower(d.Name())
+		if name != "chart.yaml" && !strings.HasPrefix(name, "values") {
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(name))
+		if ext != ".yaml" && ext != ".yml" {
+			return nil
+		}
+		rel, err := filepath.Rel(repo, path)
+		if err != nil {
+			return nil
+		}
+		candidates = append(candidates, filepath.ToSlash(rel))
+		return nil
+	})
 	return uniqueSortedStrings(candidates)
+}
+
+func isNestedHelmDependencyChart(relRoot string) bool {
+	normalized := filepath.ToSlash(strings.TrimSpace(relRoot))
+	return normalized == "charts" || strings.HasPrefix(normalized, "charts/")
 }
 
 func detectApplicationSet(repo string) ([]model.GeneratorDetection, error) {

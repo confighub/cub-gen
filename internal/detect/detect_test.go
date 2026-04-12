@@ -169,6 +169,54 @@ func TestScanRepoHelmIncludesLayeredAuxiliaryInputs(t *testing.T) {
 	}
 }
 
+func TestScanRepoHelmUmbrellaKeepsSingleGeneratorAndTracksAuxiliaryInputs(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	mustWriteDetectFile(t, filepath.Join(repo, "Chart.yaml"), `apiVersion: v2
+name: umbrella-demo
+version: 0.1.0
+dependencies:
+  - name: cache
+    alias: cache-primary
+    condition: cache.enabled
+    version: 1.2.3
+    repository: file://charts/cache-primary
+`)
+	mustWriteDetectFile(t, filepath.Join(repo, "values.yaml"), "image:\n  tag: umbrella-v1\n")
+	mustWriteDetectFile(t, filepath.Join(repo, "values-prod.yaml"), "image:\n  tag: umbrella-v2\n")
+	mustWriteDetectFile(t, filepath.Join(repo, "values.schema.json"), `{"type":"object","properties":{"image":{"type":"object","properties":{"tag":{"type":"string"}}}}}`)
+	mustWriteDetectFile(t, filepath.Join(repo, "crds", "widgets.example.io.yaml"), "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\n")
+	mustWriteDetectFile(t, filepath.Join(repo, "charts", "cache-primary", "Chart.yaml"), "apiVersion: v2\nname: cache\nversion: 1.2.3\n")
+	mustWriteDetectFile(t, filepath.Join(repo, "charts", "cache-primary", "values.yaml"), "image:\n  tag: cache-v1\n")
+
+	result, err := ScanRepo(repo, "main")
+	if err != nil {
+		t.Fatalf("ScanRepo returned error: %v", err)
+	}
+	if len(result.Generators) != 1 {
+		t.Fatalf("expected 1 umbrella generator, got %+v", result.Generators)
+	}
+
+	g := result.Generators[0]
+	if g.Kind != model.GeneratorHelm {
+		t.Fatalf("expected helm kind, got %q", g.Kind)
+	}
+	for _, expected := range []string{
+		"Chart.yaml",
+		"values.yaml",
+		"values-prod.yaml",
+		"values.schema.json",
+		"crds/widgets.example.io.yaml",
+		"charts/cache-primary/Chart.yaml",
+		"charts/cache-primary/values.yaml",
+	} {
+		if !contains(g.Inputs, expected) && !containsSuffix(g.Inputs, expected) {
+			t.Fatalf("expected umbrella inputs to contain %q, got %v", expected, g.Inputs)
+		}
+	}
+}
+
 func TestScanRepoApplicationSetStandalone(t *testing.T) {
 	t.Parallel()
 
@@ -361,4 +409,14 @@ func containsSuffix(v []string, suffix string) bool {
 		}
 	}
 	return false
+}
+
+func mustWriteDetectFile(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatalf("mkdir %s: %v", filepath.Dir(path), err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write %s: %v", path, err)
+	}
 }
