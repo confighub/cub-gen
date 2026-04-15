@@ -118,6 +118,17 @@ Use cluster-first tools when the urgent question is "what is running right now?"
 
 Those are complementary flows, not competing ones.
 
+## Use your own repo quickly
+
+If you already have a repo and want the shortest local-first proof:
+
+```bash
+REPO=/path/to/your/repo
+./cub-gen change preview --space platform "$REPO"
+./cub-gen change explain --space platform --owner app-team "$REPO"
+./cub-gen publish --space platform "$REPO" | ./cub-gen verify --in -
+```
+
 ## When You Need More Than The Index
 
 - each example README carries its own honest "what this proves today" section
@@ -125,6 +136,10 @@ Those are complementary flows, not competing ones.
   repo-wide proof source
 - the [Domain POV Matrix](../docs/workflows/domain-pov-matrix.md) helps if you
   want to pick by team or operating model instead of by technology
+- the [Confidence score guide](../docs/workflows/confidence-scores.md) explains
+  how to read tracing certainty
+- the [Operation registry real-apps guide](../docs/workflows/operation-registry-real-apps.md)
+  shows where the stronger real-app proof paths live
 
 If the first operator is an AI assistant, the flagship examples also ship
 example-local `AI_START_HERE.md` files and prompt packs. Use those inside the
