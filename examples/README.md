@@ -96,7 +96,7 @@ uses it as a repo-level AI marker.
 | [`swamp-automation`](./swamp-automation/) | how do we govern agent-written workflow graph changes? |
 | [`swamp-project`](./swamp-project/) | how do we govern the Helm/runtime side of an AI platform? |
 
-### Other stacks and companion examples
+## Other stacks and companion examples
 
 - [`backstage-idp`](./backstage-idp/) — Backstage catalog governance
 - [`just-apps-no-platform-config`](./just-apps-no-platform-config/) — smallest
