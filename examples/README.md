@@ -84,6 +84,18 @@ path for each flagship example.
   story
 - [`swamp-project`](./swamp-project/) — governed Helm/runtime side of Swamp
 
+## AI + automation patterns
+
+This section stays intentionally small because the truth-matrix tooling still
+uses it as a repo-level AI marker.
+
+| Example | Best starting question |
+|---|---|
+| [`c3agent`](./c3agent/) | how do we govern model, budget, and credential changes for an AI fleet? |
+| [`ai-ops-paas`](./ai-ops-paas/) | what does the fuller platform version of that AI fleet story look like? |
+| [`swamp-automation`](./swamp-automation/) | how do we govern agent-written workflow graph changes? |
+| [`swamp-project`](./swamp-project/) | how do we govern the Helm/runtime side of an AI platform? |
+
 ### Other stacks and companion examples
 
 - [`backstage-idp`](./backstage-idp/) — Backstage catalog governance
