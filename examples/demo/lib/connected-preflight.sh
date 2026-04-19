@@ -82,7 +82,7 @@ require_connected_preflight() {
     return 1
   fi
 
-  if ! cub info >/dev/null 2>&1; then
+  if ! cub space list >/dev/null 2>&1; then
     require_cmd curl
     if ! curl -fsS --max-time 5 "$base_url" >/dev/null 2>&1; then
       echo "error: unable to reach ConfigHub server at $base_url." >&2

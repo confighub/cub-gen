@@ -152,7 +152,7 @@ Start with authentication:
 
 ```bash
 cub auth login
-cub info
+cub space list                                     # auth + API reachability check
 cub context get --json | jq -r '.coordinate.user'
 ```
 

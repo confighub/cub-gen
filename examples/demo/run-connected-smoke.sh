@@ -68,7 +68,7 @@ mkdir -p "$OUT_DIR"
 if cub context get --json > "$OUT_DIR/context.json" 2>/dev/null; then
   :
 fi
-cub info > "$OUT_DIR/cub-info.txt"
+cub context get --json > "$OUT_DIR/cub-context.json" 2>/dev/null || true
 
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   echo "[connected-smoke] build cub-gen once"
