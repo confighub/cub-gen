@@ -10,6 +10,27 @@
 ConfigHub Generators turn heterogeneous app/platform source repos into governed,
 traceable deployment contracts.
 
+User-facing doctrine:
+
+```text
+Component
+  -> Deployable Variant
+      -> Target
+      -> Connections
+      -> Proof
+```
+
+A Component is the reusable base. A Deployable Variant is a concrete deployable
+copy or context of that Component. An AI Variant is a Deployable Variant whose
+delta, wiring, or operation is AI-assisted and governed. Generator contracts
+are the implementation mechanism that lets the product derive variants, targets,
+connections, changes, and proof from existing repos.
+
+Plain-English thesis: many app platforms are generators. They take app intent,
+environment context, and platform contracts, then produce deployable config. The
+product does not need to replace those platforms first. It needs to import them,
+record their generator contract, and route changes to the right source layer.
+
 The product must let teams:
 
 1. import existing Helm, Score.dev, Spring Boot, and custom platform patterns,
@@ -18,6 +39,9 @@ The product must let teams:
 4. promote reusable app changes into platform base DRY safely.
 
 This is an adoption bridge, not a reconciler replacement. Flux/Argo stay in place.
+
+For the updated teaching version of this thesis, see
+[Platform Generators Manifesto](90-platform-generators-manifesto.md).
 
 Tooling boundary for this PRD:
 

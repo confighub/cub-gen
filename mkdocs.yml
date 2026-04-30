@@ -124,6 +124,7 @@ nav:
       - "Storage Boundary": agentic-gitops/02-design/60-stored-in-git-vs-confighub.md
       - "DRY/WET Analysis": agentic-gitops/02-design/70-dry-wet-config-analysis.md
       - "Enforcement Matrix": agentic-gitops/02-design/80-agentic-gitops-enforcement-matrix.md
+      - "Platform Generators Manifesto": agentic-gitops/02-design/90-platform-generators-manifesto.md
 
   - Contracts:
       - "Canonical Triple & Storage": contracts/canonical-triple-and-storage-boundary.md
@@ -162,6 +163,8 @@ nav:
       - "Traefik Helm": agentic-gitops/03-worked-examples/02-traefik-helm-dry-wet-unit-worked-example.md
       - "Spring Boot": agentic-gitops/03-worked-examples/03-spring-boot-dry-wet-unit-worked-example.md
       - "Story Card Catalog": agentic-gitops/03-worked-examples/04-eight-example-story-cards.md
+      - "OpenChoreo": agentic-gitops/03-worked-examples/05-openchoreo-generator-worked-example.md
+      - "Argo Generators": agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md
 
   - User Experience:
       - "Day 2 Scenarios": agentic-gitops/05-rollout/30-user-experience.md

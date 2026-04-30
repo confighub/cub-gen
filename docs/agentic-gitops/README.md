@@ -18,9 +18,12 @@ Hard naming rule:
 6. `02-design/80-agentic-gitops-enforcement-matrix.md`
 7. `03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md`
 8. `03-worked-examples/02-traefik-helm-dry-wet-unit-worked-example.md`
-9. `03-worked-examples/04-eight-example-story-cards.md`
-10. `05-rollout/40-adoption-and-reference.md`
-11. `05-rollout/94-demo-illustration-pack.md`
+9. `02-design/90-platform-generators-manifesto.md`
+10. `03-worked-examples/05-openchoreo-generator-worked-example.md`
+11. `03-worked-examples/06-argo-generators-worked-example.md`
+12. `03-worked-examples/04-eight-example-story-cards.md`
+13. `05-rollout/40-adoption-and-reference.md`
+14. `05-rollout/94-demo-illustration-pack.md`
 
 ## Reading order (blog + external feedback)
 

@@ -136,6 +136,20 @@ must include sections 8 and 9 from the universal contract:
 - **Section 8**: Show the generation chain
 - **Section 9**: Explain the ownership boundary
 
+The same rule applies to OpenChoreo-style component platforms and Argo
+app-of-apps catalogs. Start with read-only import and diagrams:
+
+1. name each source layer,
+2. show what each layer generates,
+3. classify who owns each source field,
+4. route generated-field edits to app source, environment source, platform
+   source, temporary overlay, or block/escalate.
+
+Useful worked examples:
+
+- [OpenChoreo as a Clean Generator](../agentic-gitops/03-worked-examples/05-openchoreo-generator-worked-example.md)
+- [Argo ApplicationSet and App-of-Apps as Generators](../agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md)
+
 ## What's not yet available
 
 | Feature | Status |

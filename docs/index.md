@@ -6,6 +6,28 @@
 generators your repo uses, renders them locally, and records provenance so
 every deployed field traces back to a source file, line, and owner.
 
+The user model is intentionally small:
+
+```text
+Component
+  -> Deployable Variant
+      -> Target
+      -> Connections
+      -> Proof
+```
+
+A **Component** is the reusable base. A **Deployable Variant** is a concrete
+copy or context of that Component. A **Target** is where it runs or reconciles.
+**Connections** are what it is wired to. A **Change** is what someone wants to
+alter. **Proof** shows where it came from, who owns it, what changed, and
+whether the change is allowed.
+
+An **AI Variant** is a Deployable Variant whose delta, wiring, or operation is
+AI-assisted and governed.
+
+`cub-gen` exists to make those variants explainable before Flux, Argo, or a
+human applies them.
+
 Install with Homebrew:
 
 ```bash
@@ -14,7 +36,15 @@ brew install confighub/tap/cub-gen
 
 Or download a release artifact from [GitHub release `v0.3.0`](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).
 
-**gen = generator.** A generator is a function that maps DRY source (`values.yaml`, `score.yaml`, `application.yaml`) to WET rendered output (the manifests that reach your cluster).
+**gen = generator.** This is the implementation explanation. A generator is a
+function that maps DRY source (`values.yaml`, `score.yaml`, `application.yaml`)
+to WET rendered output (the manifests that reach your cluster).
+
+Many app platforms are generators in this sense. A Spring platform, Score.dev,
+Helm platform, OpenChoreo-style component model, Argo ApplicationSet,
+app-of-apps catalog, or app-config manager all take source intent plus
+environment/platform context and produce deployable config. `cub-gen` starts by
+importing and explaining that shape, not by replacing the platform.
 
 cub-gen works with what teams already run today:
 
@@ -157,7 +187,14 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
     If your platform has its own framework or layered generator chain, start
     with the user-facing onboarding path.
 
-    [Custom Generator Onboarding](workflows/custom-generator-onboarding.md)
+    [Platform Generators Manifesto](agentic-gitops/02-design/90-platform-generators-manifesto.md) · [Custom Generator Onboarding](workflows/custom-generator-onboarding.md)
+
+-   **Study Clean Generator Examples**
+
+    See how OpenChoreo, ApplicationSet, and app-of-apps map into the same
+    source-to-rendered model.
+
+    [OpenChoreo](agentic-gitops/03-worked-examples/05-openchoreo-generator-worked-example.md) · [Argo Generators](agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md)
 
 -   **Start with workflows (Ops + Swamp)**
 
@@ -204,19 +241,25 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
 **Latest shipped:** `v0.3.0` (2026-04-12)
 
-**Current target:** post-`0.3` backlog and product polish
+**Current target:** working `v0.4` roadmap: make `cub-gen`'s role obvious as
+Component -> Deployable Variant -> Target/Connections/Change/Proof.
 
 - repo-first CLI and contract coverage remain green,
 - the shipped release includes a first-class standalone `applicationset`
   generator family,
 - flagship Helm, Score, Spring, and Swamp examples carry explicit
   `AI_START_HERE.md`, `prompts.md`, and `contracts.md` bundles,
-- connected release status is backed by the repo's `ConfigHub Smoke` lane.
+- connected release status is backed by the repo's `ConfigHub Smoke` lane,
+- the active roadmap is tracked by
+  [GitHub issue #287](https://github.com/confighub/cub-gen/issues/287) and
+  [milestone 4](https://github.com/confighub/cub-gen/milestone/4).
 
 See the [v0.3.0 release notes](releases/v0.3.0.md) for the shipped summary. The
 [v0.2-preview.2 Release Plan](releases/v0.2-preview.2-plan.md) and
 [v0.2-preview.2 Ship Checklist](releases/v0.2-preview.2-ship-checklist.md) are
 kept as archived preview-planning references for how the release bar was closed.
+For the active sequence, see the
+[v0.4 Working Roadmap](plans/2026-04-30-v0.4-obvious-value-roadmap.md).
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
 - Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 9 generators

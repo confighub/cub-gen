@@ -78,6 +78,26 @@ Today the split is:
 That keeps this issue focused on the generator boundary itself while `#187`
 continues to own the deeper Kubara-like multi-layer story.
 
+## Relation to app-of-apps
+
+Argo app-of-apps is also a generator pattern: a root `Application` points at a
+catalog of child `Application` manifests, and those children point at Helm,
+Kustomize, or plain manifest sources.
+
+Today this contract does not make app-of-apps a separate first-class generator
+family. Treat it as a documented follow-on boundary:
+
+1. root `Application` and child app catalog are DRY generator inputs,
+2. child `Application` objects are generated WET targets or catalog entries,
+   depending on repo layout,
+3. downstream Helm/Kustomize/plain manifest sources remain separate generator
+   layers,
+4. unsupported or cluster-only expansion must degrade explicitly instead of
+   guessing.
+
+See the worked example:
+[Argo ApplicationSet and App-of-Apps as Generators](../agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md).
+
 ## Proof commands
 
 Deterministic standalone fixture:
