@@ -84,8 +84,8 @@ Argo app-of-apps is also a generator pattern: a root `Application` points at a
 catalog of child `Application` manifests, and those children point at Helm,
 Kustomize, or plain manifest sources.
 
-Today this contract does not make app-of-apps a separate first-class generator
-family. Treat it as a documented follow-on boundary:
+`cub-gen` now models the bounded root Application -> child Application catalog
+shape as a separate `app-of-apps` generator family:
 
 1. root `Application` and child app catalog are DRY generator inputs,
 2. child `Application` objects are generated WET targets or catalog entries,
@@ -95,7 +95,8 @@ family. Treat it as a documented follow-on boundary:
 4. unsupported or cluster-only expansion must degrade explicitly instead of
    guessing.
 
-See the worked example:
+See the contract and worked example:
+[App-of-Apps Generator Boundary](app-of-apps-generator-boundary.md) and
 [Argo ApplicationSet and App-of-Apps as Generators](../agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md).
 
 ## Proof commands

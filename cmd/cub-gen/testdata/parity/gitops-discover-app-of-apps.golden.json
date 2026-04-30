@@ -1,0 +1,44 @@
+{
+  "detections": [
+    {
+      "confidence": 0.91,
+      "id": "gen_d78223f487aceee1",
+      "inputs": [
+        "apps/catalog-api.yaml",
+        "apps/orders-api.yaml",
+        "apps/payments-api.yaml",
+        "root-application.yaml"
+      ],
+      "kind": "app-of-apps",
+      "name": "platform-root",
+      "profile": "app-of-apps",
+      "root": ""
+    }
+  ],
+  "discover_file": "\u003cdiscover_file\u003e",
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
+  "discovered_at": "\u003ctimestamp\u003e",
+  "ref": "HEAD",
+  "resources": [
+    {
+      "generator_id": "gen_d78223f487aceee1",
+      "generator_kind": "app-of-apps",
+      "generator_profile": "app-of-apps",
+      "inputs": [
+        "apps/catalog-api.yaml",
+        "apps/orders-api.yaml",
+        "apps/payments-api.yaml",
+        "root-application.yaml"
+      ],
+      "resource_body": "kind: Application\nmetadata:\n  name: platform-root\nspec:\n  root: \n",
+      "resource_kind": "Application",
+      "resource_name": "platform-root",
+      "resource_type": "argoproj.io/v1alpha1/Application",
+      "root": ""
+    }
+  ],
+  "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
+  "target_path_expected_suffix": "testdata/app-of-apps-standalone",
+  "target_slug": "app-of-apps-standalone"
+}

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/confighub/cub-gen/internal/applicationset"
+	"github.com/confighub/cub-gen/internal/appofapps"
 	"github.com/confighub/cub-gen/internal/detect"
 	"github.com/confighub/cub-gen/internal/model"
 )
@@ -554,6 +555,49 @@ func TestImportRepoApplicationSetDryWetContract(t *testing.T) {
 	}
 	if !wetTargetHasKind(result.WetManifestTargets, "ApplicationSet") || !wetTargetHasKind(result.WetManifestTargets, "Application") {
 		t.Fatalf("expected ApplicationSet/Application wet targets, got %+v", result.WetManifestTargets)
+	}
+}
+
+func TestImportRepoAppOfAppsDryWetContract(t *testing.T) {
+	repo := filepath.Join("..", "..", "testdata", "app-of-apps-standalone")
+	result, err := ImportRepo(repo, "main", "platform")
+	if err != nil {
+		t.Fatalf("ImportRepo returned error: %v", err)
+	}
+
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected single provenance record, got %d", len(result.Provenance))
+	}
+	prov := result.Provenance[0]
+	if prov.AppOfApps == nil {
+		t.Fatalf("expected app-of-apps analysis, got nil")
+	}
+	if prov.AppOfApps.Mode != appofapps.ModeAuthoritative {
+		t.Fatalf("expected authoritative mode, got %+v", prov.AppOfApps)
+	}
+	if prov.AppOfApps.RootApplicationPath != "root-application.yaml" || prov.AppOfApps.RootSourcePath != "apps" {
+		t.Fatalf("expected root app to select apps catalog, got %+v", prov.AppOfApps)
+	}
+	if len(prov.AppOfApps.GeneratedApplications) != 3 {
+		t.Fatalf("expected three generated applications, got %+v", prov.AppOfApps.GeneratedApplications)
+	}
+	if !renderedLineageHasName(prov.RenderedLineage, "payments-api") {
+		t.Fatalf("expected rendered lineage to include payments-api, got %+v", prov.RenderedLineage)
+	}
+	if !fieldOriginHasDryPathSourcePath(prov.FieldOriginMap, "spec.source.path", "apps/payments-api.yaml") {
+		t.Fatalf("expected child source path field origin, got %+v", prov.FieldOriginMap)
+	}
+	if !inversePointerHintContains(prov.InverseEditPointers, "spec.source.path", "apps/payments-api.yaml") {
+		t.Fatalf("expected inverse pointer to route back to child app catalog, got %+v", prov.InverseEditPointers)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "root-application", "platform-engineer", "root-application.yaml") {
+		t.Fatalf("expected root application dry input, got %+v", result.DryInputs)
+	}
+	if !dryInputHasRoleOwnerPath(result.DryInputs, "child-application", "app-catalog-owner", "apps/payments-api.yaml") {
+		t.Fatalf("expected child application dry input, got %+v", result.DryInputs)
+	}
+	if !wetTargetHasName(result.WetManifestTargets, "payments-api") {
+		t.Fatalf("expected child Application wet target, got %+v", result.WetManifestTargets)
 	}
 }
 
@@ -1426,6 +1470,15 @@ func renderedLineageHasKind(v []model.RenderedObjectLineage, kind string) bool {
 	return false
 }
 
+func renderedLineageHasName(v []model.RenderedObjectLineage, name string) bool {
+	for _, item := range v {
+		if item.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
 func renderedLineageHasSourcePath(v []model.RenderedObjectLineage, sourcePath string) bool {
 	for _, item := range v {
 		if item.SourcePath == sourcePath {
@@ -1465,6 +1518,15 @@ func inversePatchHasDryPath(v []model.InversePatch, dryPath string) bool {
 func wetTargetHasKind(v []model.WetManifestTarget, kind string) bool {
 	for _, item := range v {
 		if item.Kind == kind {
+			return true
+		}
+	}
+	return false
+}
+
+func wetTargetHasName(v []model.WetManifestTarget, name string) bool {
+	for _, item := range v {
+		if item.Name == name {
 			return true
 		}
 	}

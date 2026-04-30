@@ -72,6 +72,69 @@ type FamilySpec struct {
 }
 
 var familySpecs = map[model.GeneratorKind]FamilySpec{
+	model.GeneratorAppOfApps: {
+		Kind:         model.GeneratorAppOfApps,
+		Profile:      "app-of-apps",
+		ResourceKind: "Application",
+		ResourceType: "argoproj.io/v1alpha1/Application",
+		Capabilities: []string{"root-application", "child-application-catalog", "observed-expansion", "inverse-app-catalog-patch"},
+		RoleSchemaRefs: map[string]string{
+			"root-application":  "https://schema.confighub.dev/generators/app-of-apps-root-v1",
+			"child-application": "https://schema.confighub.dev/generators/app-of-apps-child-v1",
+		},
+		HintDefaults: map[string]string{
+			"root_application_path": "root-application.yaml",
+			"child_catalog_path":    "apps",
+		},
+		InversePatchReasons: map[string]string{
+			"child_name":  "Child Application identity is owned by the child app catalog.",
+			"source_repo": "Child Application repo URL is selected by the child app catalog.",
+			"source_path": "Child Application source path is selected by the child app catalog.",
+			"root_path":   "The root Application controls which catalog path is expanded.",
+		},
+		InverseEditHints: map[string]string{
+			"child_name":  "Route: apply-here. Edit metadata.name in {{child_application_path}}.",
+			"source_repo": "Route: apply-here. Edit spec.source.repoURL in {{child_application_path}}.",
+			"source_path": "Route: apply-here. Edit spec.source.path in {{child_application_path}}.",
+			"root_path":   "Route: lift-upstream. Edit spec.source.path in {{root_application_path}} to change the child app catalog.",
+		},
+		InversePatchTemplates: map[string]InversePatchTemplate{
+			"child_name":  {EditableBy: "app-catalog-owner", Confidence: 0.92, RequiresReview: false},
+			"source_repo": {EditableBy: "app-catalog-owner", Confidence: 0.90, RequiresReview: true},
+			"source_path": {EditableBy: "app-catalog-owner", Confidence: 0.90, RequiresReview: true},
+			"root_path":   {EditableBy: "platform-engineer", Confidence: 0.88, RequiresReview: true},
+		},
+		InversePointerTemplates: map[string]InversePointerTemplate{
+			"child_name":  {Owner: "app-catalog-owner", Confidence: 0.92},
+			"source_repo": {Owner: "app-catalog-owner", Confidence: 0.90},
+			"source_path": {Owner: "app-catalog-owner", Confidence: 0.90},
+			"root_path":   {Owner: "platform-engineer", Confidence: 0.88},
+		},
+		FieldOriginConfidences: map[string]float64{
+			"child_name":  0.92,
+			"source_repo": 0.90,
+			"source_path": 0.90,
+			"root_path":   0.88,
+		},
+		RenderedLineageTemplates: []RenderedLineageTemplate{
+			{Kind: "Application", NameTemplate: "{{name}}", Namespace: "argocd", SourcePathHint: "root_application_path", SourceDryPathTemplate: "spec.source.path"},
+		},
+		FieldOriginTransform:        "app-of-apps-catalog",
+		FieldOriginOverlayTransform: "app-of-apps-root-expansion",
+		InputRoleRules: []InputRoleRule{
+			{Role: "root-application", ExactBasenames: []string{"root-application.yaml", "root-application.yml", "root-app.yaml", "root-app.yml", "app-of-apps.yaml", "app-of-apps.yml"}},
+			{Role: "child-application", PathPrefixes: []string{"apps/", "applications/"}, Extensions: []string{".yaml", ".yml"}},
+		},
+		DefaultInputRole: "argo-application",
+		RoleOwners: map[string]string{
+			"root-application":  "platform-engineer",
+			"child-application": "app-catalog-owner",
+		},
+		DefaultOwner: "app-catalog-owner",
+		WetTargets: []WetTargetTemplate{
+			{Kind: "Application", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "argocd", SourceDryPathTemplate: "spec.source.path"},
+		},
+	},
 	model.GeneratorApplicationSet: {
 		Kind:         model.GeneratorApplicationSet,
 		Profile:      "applicationset",

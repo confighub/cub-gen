@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/confighub/cub-gen/internal/applicationset"
+	"github.com/confighub/cub-gen/internal/appofapps"
 	"github.com/confighub/cub-gen/internal/model"
 	"github.com/confighub/cub-gen/internal/registry"
 	"gopkg.in/yaml.v3"
@@ -83,6 +84,13 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 	all = append(all, opsDetections...)
 	all = append(all, c3agentDetections...)
 	all = append(all, swampDetections...)
+	if len(all) == 0 {
+		appOfAppsDetections, err := detectAppOfApps(absRepo)
+		if err != nil {
+			return model.DetectionResult{}, err
+		}
+		all = append(all, appOfAppsDetections...)
+	}
 	if len(all) == 0 {
 		applicationSetDetections, err := detectApplicationSet(absRepo)
 		if err != nil {
@@ -550,6 +558,45 @@ func existingApplicationSetAuxiliaryInputs(repo string) []string {
 		}
 	}
 	return uniqueSortedStrings(candidates)
+}
+
+func detectAppOfApps(repo string) ([]model.GeneratorDetection, error) {
+	roots, err := appofapps.FindRoots(repo)
+	if err != nil {
+		return nil, fmt.Errorf("detect app-of-apps: %w", err)
+	}
+
+	detected := make([]model.GeneratorDetection, 0, len(roots))
+	for _, root := range roots {
+		inputs := []string{root.Path}
+		for _, child := range root.ChildApplications {
+			inputs = append(inputs, child.Path)
+		}
+		inputs = uniqueSortedStrings(inputs)
+
+		relRoot := filepath.ToSlash(filepath.Dir(root.Path))
+		if relRoot == "." {
+			relRoot = ""
+		}
+		id := shortID("app-of-apps:" + root.Path)
+		detected = append(detected, model.GeneratorDetection{
+			ID:         "gen_" + id,
+			Kind:       model.GeneratorAppOfApps,
+			Profile:    profileForKind(model.GeneratorAppOfApps),
+			Name:       root.Name,
+			Root:       relRoot,
+			Inputs:     inputs,
+			Confidence: 0.91,
+		})
+	}
+
+	sort.Slice(detected, func(i, j int) bool {
+		if detected[i].Root != detected[j].Root {
+			return detected[i].Root < detected[j].Root
+		}
+		return detected[i].Name < detected[j].Name
+	})
+	return detected, nil
 }
 
 func detectScore(repo string) ([]model.GeneratorDetection, error) {

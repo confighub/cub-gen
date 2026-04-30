@@ -1,6 +1,18 @@
 {
-  "count": 10,
+  "count": 11,
   "families": [
+    {
+      "capabilities": [
+        "root-application",
+        "child-application-catalog",
+        "observed-expansion",
+        "inverse-app-catalog-patch"
+      ],
+      "kind": "app-of-apps",
+      "profile": "app-of-apps",
+      "resource_kind": "Application",
+      "resource_type": "argoproj.io/v1alpha1/Application"
+    },
     {
       "capabilities": [
         "observed-expansion",

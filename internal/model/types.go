@@ -4,6 +4,7 @@ type GeneratorKind string
 
 const (
 	GeneratorHelm             GeneratorKind = "helm"
+	GeneratorAppOfApps        GeneratorKind = "app-of-apps"
 	GeneratorApplicationSet   GeneratorKind = "applicationset"
 	GeneratorScore            GeneratorKind = "score"
 	GeneratorSpringBoot       GeneratorKind = "springboot"
@@ -217,6 +218,24 @@ type ApplicationSetAnalysis struct {
 	GeneratedApplications     []ApplicationSetGeneratedApplication `json:"generated_applications,omitempty"`
 }
 
+type AppOfAppsChildApplication struct {
+	Name                 string `json:"name"`
+	Path                 string `json:"path,omitempty"`
+	SourceRepo           string `json:"source_repo,omitempty"`
+	SourcePath           string `json:"source_path,omitempty"`
+	DestinationNamespace string `json:"destination_namespace,omitempty"`
+	Reason               string `json:"reason,omitempty"`
+}
+
+type AppOfAppsAnalysis struct {
+	RootApplicationPath   string                      `json:"root_application_path,omitempty"`
+	RootSourcePath        string                      `json:"root_source_path,omitempty"`
+	ChildApplicationPaths []string                    `json:"child_application_paths,omitempty"`
+	Mode                  string                      `json:"mode,omitempty"`
+	ModeReason            string                      `json:"mode_reason,omitempty"`
+	GeneratedApplications []AppOfAppsChildApplication `json:"generated_applications,omitempty"`
+}
+
 type InverseEditPointer struct {
 	WetPath    string  `json:"wet_path"`
 	DryPath    string  `json:"dry_path"`
@@ -291,6 +310,7 @@ type ProvenanceRecord struct {
 	InverseEditPointers []InverseEditPointer    `json:"inverse_edit_pointers"`
 	HelmLayeredAnalysis *HelmLayeredAnalysis    `json:"helm_layered_analysis,omitempty"`
 	ApplicationSet      *ApplicationSetAnalysis `json:"application_set_analysis,omitempty"`
+	AppOfApps           *AppOfAppsAnalysis      `json:"app_of_apps_analysis,omitempty"`
 	OpsWorkflow         *OpsWorkflowAnalysis    `json:"ops_workflow_analysis,omitempty"`
 	SwampWorkflow       *SwampWorkflowAnalysis  `json:"swamp_workflow_analysis,omitempty"`
 	RenderedAt          string                  `json:"rendered_at"`

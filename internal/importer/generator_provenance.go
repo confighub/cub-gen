@@ -218,6 +218,46 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 			})
 		}
 		return origins
+	case model.GeneratorAppOfApps:
+		hints := appOfAppsPathHintsFromInputs(g.Inputs)
+		analysis := appOfAppsAnalysisForGenerator(detection, g)
+		origins := []model.FieldOrigin{{
+			DryPath:    "spec.source.path",
+			WetPath:    "RootApplication/spec/source/path",
+			SourcePath: hints.RootApplicationPath,
+			Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+			Confidence: registry.FieldOriginConfidenceFor(g.Kind, "root_path", 0.88),
+		}}
+		if analysis == nil || len(analysis.GeneratedApplications) == 0 {
+			return origins
+		}
+		for _, child := range analysis.GeneratedApplications {
+			prefix := fmt.Sprintf("Application[name=%s]", child.Name)
+			origins = append(origins,
+				model.FieldOrigin{
+					DryPath:    "metadata.name",
+					WetPath:    prefix + "/metadata/name",
+					SourcePath: child.Path,
+					Transform:  registry.FieldOriginTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "child_name", 0.92),
+				},
+				model.FieldOrigin{
+					DryPath:    "spec.source.repoURL",
+					WetPath:    prefix + "/spec/source/repoURL",
+					SourcePath: child.Path,
+					Transform:  registry.FieldOriginTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "source_repo", 0.90),
+				},
+				model.FieldOrigin{
+					DryPath:    "spec.source.path",
+					WetPath:    prefix + "/spec/source/path",
+					SourcePath: child.Path,
+					Transform:  registry.FieldOriginTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "source_path", 0.90),
+				},
+			)
+		}
+		return origins
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		return applyGeneratorChainOrigins(detection, g, []model.FieldOrigin{
@@ -627,6 +667,65 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "source_path", "Edit spec.template.spec.source.path in {{application_set_path}}."), vars),
 				Confidence: sourcePathPolicy.Confidence,
 			})
+		}
+		return out
+	case model.GeneratorAppOfApps:
+		hints := appOfAppsPathHintsFromInputs(g.Inputs)
+		analysis := appOfAppsAnalysisForGenerator(detection, g)
+		rootPathPolicy := registry.InversePointerTemplateFor(g.Kind, "root_path", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.88,
+		})
+		vars := map[string]string{"root_application_path": hints.RootApplicationPath}
+		out := []model.InverseEditPointer{{
+			WetPath:    "RootApplication/spec/source/path",
+			DryPath:    "spec.source.path",
+			Owner:      rootPathPolicy.Owner,
+			Route:      "lift-upstream",
+			EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "root_path", "Route: lift-upstream. Edit spec.source.path in {{root_application_path}} to change the child app catalog."), vars),
+			Confidence: rootPathPolicy.Confidence,
+		}}
+		if analysis == nil || len(analysis.GeneratedApplications) == 0 {
+			return out
+		}
+
+		namePolicy := registry.InversePointerTemplateFor(g.Kind, "child_name", registry.InversePointerTemplate{
+			Owner: "app-catalog-owner", Confidence: 0.92,
+		})
+		sourceRepoPolicy := registry.InversePointerTemplateFor(g.Kind, "source_repo", registry.InversePointerTemplate{
+			Owner: "app-catalog-owner", Confidence: 0.90,
+		})
+		sourcePathPolicy := registry.InversePointerTemplateFor(g.Kind, "source_path", registry.InversePointerTemplate{
+			Owner: "app-catalog-owner", Confidence: 0.90,
+		})
+		for _, child := range analysis.GeneratedApplications {
+			childVars := map[string]string{"child_application_path": child.Path}
+			prefix := fmt.Sprintf("Application[name=%s]", child.Name)
+			out = append(out,
+				model.InverseEditPointer{
+					WetPath:    prefix + "/metadata/name",
+					DryPath:    "metadata.name",
+					Owner:      namePolicy.Owner,
+					Route:      "apply-here",
+					EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "child_name", "Route: apply-here. Edit metadata.name in {{child_application_path}}."), childVars),
+					Confidence: namePolicy.Confidence,
+				},
+				model.InverseEditPointer{
+					WetPath:    prefix + "/spec/source/repoURL",
+					DryPath:    "spec.source.repoURL",
+					Owner:      sourceRepoPolicy.Owner,
+					Route:      "apply-here",
+					EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "source_repo", "Route: apply-here. Edit spec.source.repoURL in {{child_application_path}}."), childVars),
+					Confidence: sourceRepoPolicy.Confidence,
+				},
+				model.InverseEditPointer{
+					WetPath:    prefix + "/spec/source/path",
+					DryPath:    "spec.source.path",
+					Owner:      sourcePathPolicy.Owner,
+					Route:      "apply-here",
+					EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "source_path", "Route: apply-here. Edit spec.source.path in {{child_application_path}}."), childVars),
+					Confidence: sourcePathPolicy.Confidence,
+				},
+			)
 		}
 		return out
 	case model.GeneratorScore:

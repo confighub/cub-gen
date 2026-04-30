@@ -1,8 +1,9 @@
 # Argo ApplicationSet and App-of-Apps as Generators
 
-Status: worked example. `ApplicationSet` has first-class `cub-gen` support for
-bounded cases. App-of-apps is a documented generator pattern but is not yet a
-separate `cub-gen` generator family.
+Status: worked example plus fixture-backed adapters. `ApplicationSet` has
+first-class `cub-gen` support for bounded cases. App-of-apps now has a
+fixture-backed generator family for the clean root Application -> child app
+catalog shape.
 
 Short answer: Argo CD is the reconciler, but many Argo setups also contain
 generators. `ApplicationSet` and app-of-apps both take higher-level inputs and
@@ -243,8 +244,8 @@ root Application -> apps/payments.yaml child Application -> deploy/helm -> Deplo
 
 ## What cub-gen Already Does
 
-`cub-gen` has a first-class `applicationset` generator family for bounded,
-deterministic cases.
+`cub-gen` has first-class `applicationset` and `app-of-apps` generator families
+for bounded, deterministic cases.
 
 | Case | Current status | Why |
 |---|---|---|
@@ -253,13 +254,16 @@ deterministic cases.
 | missing cluster inventory | graceful degradation | parent spec is governed, child expansion is not guessed |
 | unsupported generator types such as complex `git`, `matrix`, or `merge` | observed-only or degraded | no fake authoritative expansion |
 | Helm repo with ApplicationSet as a layer | supported through `helm_layered_analysis` | primary generator remains Helm |
-| app-of-apps | not a first-class family yet | needs root/child app catalog analysis |
+| app-of-apps with root `Application` and local child catalog | supported | root source path and child app YAML are explicit repo inputs |
 
-Proof command for the existing bounded support:
+Proof commands for the bounded support:
 
 ```bash
 ./cub-gen gitops import --space platform --json ./testdata/applicationset-standalone \
   | jq '.provenance[0].application_set_analysis'
+
+./cub-gen gitops import --space platform --json ./testdata/app-of-apps-standalone \
+  | jq '.provenance[0].app_of_apps_analysis'
 ```
 
 ## Why AppSet and App-of-Apps Teach the Thesis
@@ -293,7 +297,7 @@ Argo has at least three roles:
 |---|---|---|
 | `ApplicationSet` spec | generator source | DRY input |
 | generated `Application` | generated WET object and downstream selector | WET target with provenance |
-| app-of-apps root app | generator source / catalog entrypoint | DRY input candidate |
+| app-of-apps root app | generator source / catalog entrypoint | DRY input |
 | child `Application` manifest | app catalog source or generated target, depending on pattern | classify by repo layout |
 | Argo controller reconciliation | WET-to-LIVE runtime loop | not replaced |
 
@@ -302,4 +306,5 @@ Argo has at least three roles:
 - Argo CD docs: [ApplicationSet Generators](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators/)
 - Argo CD docs: [Cluster Bootstrapping / App of Apps](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/)
 - cub-gen: [ApplicationSet Generator Boundary](../../contracts/applicationset-generator-boundary.md)
+- cub-gen: [App-of-Apps Generator Boundary](../../contracts/app-of-apps-generator-boundary.md)
 - cub-gen: [Helm PaaS layered proof](../../../examples/helm-paas/README.md)

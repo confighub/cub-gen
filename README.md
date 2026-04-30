@@ -20,6 +20,7 @@ In those systems, the right edit might be in:
 - `score.yaml`
 - `application.yaml`
 - an ApplicationSet template
+- an app-of-apps child application catalog
 - a platform policy file
 - a secret or service binding
 - a shared platform default
@@ -174,6 +175,7 @@ These run locally and do not require a login:
 |---|---|---|
 | Helm plus Flux/Argo | [helm-paas](examples/helm-paas/) | Which values file owns this rendered field? |
 | Argo ApplicationSets | [applicationset fixture](testdata/applicationset-standalone/) + [Argo worked example](docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | Which selector, inventory row, or template made this child Application? |
+| Argo app-of-apps | [app-of-apps fixture](testdata/app-of-apps-standalone/) + [Argo worked example](docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | Which root app path or child Application catalog entry owns this app? |
 | Score.dev | [scoredev-paas](examples/scoredev-paas/) | Which `score.yaml` field produced this runtime value? |
 | Spring Boot services | [springboot-paas](examples/springboot-paas/) | Should I edit app config or platform config? |
 | A running cluster first | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
@@ -184,6 +186,7 @@ These run locally and do not require a login:
 |---|---|---|
 | Helm | `Chart.yaml` + `values.yaml` | [helm-paas](examples/helm-paas/) |
 | ApplicationSet | `applicationset.yaml` + pinned inventory | [Argo worked example](docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) |
+| App-of-apps | root `Application` + child `apps/*.yaml` catalog | [app-of-apps fixture](testdata/app-of-apps-standalone/) |
 | Score.dev | `score.yaml` | [scoredev-paas](examples/scoredev-paas/) |
 | Spring Boot | `application.yaml` | [springboot-paas](examples/springboot-paas/) |
 | Backstage | `catalog-info.yaml` | [backstage-idp](examples/backstage-idp/) |

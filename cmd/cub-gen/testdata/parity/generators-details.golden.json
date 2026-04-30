@@ -1,6 +1,132 @@
 {
-  "count": 10,
+  "count": 11,
   "families": [
+    {
+      "capabilities": [
+        "root-application",
+        "child-application-catalog",
+        "observed-expansion",
+        "inverse-app-catalog-patch"
+      ],
+      "kind": "app-of-apps",
+      "policies": {
+        "default_input_role": "argo-application",
+        "default_owner": "app-catalog-owner",
+        "field_origin_confidences": {
+          "child_name": 0.92,
+          "root_path": 0.88,
+          "source_path": 0.9,
+          "source_repo": 0.9
+        },
+        "field_origin_overlay_transform": "app-of-apps-root-expansion",
+        "field_origin_transform": "app-of-apps-catalog",
+        "hint_defaults": {
+          "child_catalog_path": "apps",
+          "root_application_path": "root-application.yaml"
+        },
+        "input_role_rules": [
+          {
+            "exact_basenames": [
+              "root-application.yaml",
+              "root-application.yml",
+              "root-app.yaml",
+              "root-app.yml",
+              "app-of-apps.yaml",
+              "app-of-apps.yml"
+            ],
+            "role": "root-application"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "path_prefixes": [
+              "apps/",
+              "applications/"
+            ],
+            "role": "child-application"
+          }
+        ],
+        "inverse_edit_hints": {
+          "child_name": "Route: apply-here. Edit metadata.name in {{child_application_path}}.",
+          "root_path": "Route: lift-upstream. Edit spec.source.path in {{root_application_path}} to change the child app catalog.",
+          "source_path": "Route: apply-here. Edit spec.source.path in {{child_application_path}}.",
+          "source_repo": "Route: apply-here. Edit spec.source.repoURL in {{child_application_path}}."
+        },
+        "inverse_patch_reasons": {
+          "child_name": "Child Application identity is owned by the child app catalog.",
+          "root_path": "The root Application controls which catalog path is expanded.",
+          "source_path": "Child Application source path is selected by the child app catalog.",
+          "source_repo": "Child Application repo URL is selected by the child app catalog."
+        },
+        "inverse_patch_templates": {
+          "child_name": {
+            "confidence": 0.92,
+            "editable_by": "app-catalog-owner",
+            "requires_review": false
+          },
+          "root_path": {
+            "confidence": 0.88,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          },
+          "source_path": {
+            "confidence": 0.9,
+            "editable_by": "app-catalog-owner",
+            "requires_review": true
+          },
+          "source_repo": {
+            "confidence": 0.9,
+            "editable_by": "app-catalog-owner",
+            "requires_review": true
+          }
+        },
+        "inverse_pointer_templates": {
+          "child_name": {
+            "confidence": 0.92,
+            "owner": "app-catalog-owner"
+          },
+          "root_path": {
+            "confidence": 0.88,
+            "owner": "platform-engineer"
+          },
+          "source_path": {
+            "confidence": 0.9,
+            "owner": "app-catalog-owner"
+          },
+          "source_repo": {
+            "confidence": 0.9,
+            "owner": "app-catalog-owner"
+          }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "Application",
+            "name_template": "{{name}}",
+            "namespace": "argocd",
+            "source_dry_path_template": "spec.source.path",
+            "source_path_hint": "root_application_path"
+          }
+        ],
+        "role_owners": {
+          "child-application": "app-catalog-owner",
+          "root-application": "platform-engineer"
+        },
+        "wet_targets": [
+          {
+            "kind": "Application",
+            "name_template": "{{name}}",
+            "namespace": "argocd",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "spec.source.path"
+          }
+        ]
+      },
+      "profile": "app-of-apps",
+      "resource_kind": "Application",
+      "resource_type": "argoproj.io/v1alpha1/Application"
+    },
     {
       "capabilities": [
         "observed-expansion",

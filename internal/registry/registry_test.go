@@ -9,6 +9,7 @@ import (
 
 func TestRegistryHasSpecForAllKinds(t *testing.T) {
 	expected := []model.GeneratorKind{
+		model.GeneratorAppOfApps,
 		model.GeneratorApplicationSet,
 		model.GeneratorBackstage,
 		model.GeneratorC3Agent,
@@ -121,6 +122,8 @@ func TestRegistryInputRoleAndOwnerClassification(t *testing.T) {
 		{name: "helm-chart", kind: model.GeneratorHelm, path: "Chart.yaml", expectedRole: "chart", expectedOwner: "platform-engineer"},
 		{name: "applicationset-spec", kind: model.GeneratorApplicationSet, path: "applicationset.yaml", expectedRole: "application-set", expectedOwner: "platform-engineer"},
 		{name: "applicationset-cluster-inventory", kind: model.GeneratorApplicationSet, path: "clusters/prod-eu.yaml", expectedRole: "cluster-inventory", expectedOwner: "platform-engineer"},
+		{name: "app-of-apps-root", kind: model.GeneratorAppOfApps, path: "root-application.yaml", expectedRole: "root-application", expectedOwner: "platform-engineer"},
+		{name: "app-of-apps-child", kind: model.GeneratorAppOfApps, path: "apps/payments-api.yaml", expectedRole: "child-application", expectedOwner: "app-catalog-owner"},
 		{name: "helm-values", kind: model.GeneratorHelm, path: "values-prod.yaml", expectedRole: "values", expectedOwner: "app-team"},
 		{name: "helm-applicationset", kind: model.GeneratorHelm, path: "gitops/argo/applicationset.yaml", expectedRole: "application-set", expectedOwner: "platform-engineer"},
 		{name: "helm-cluster-inventory", kind: model.GeneratorHelm, path: "platform/clusters/prod-eu.yaml", expectedRole: "cluster-inventory", expectedOwner: "platform-engineer"},
@@ -166,6 +169,8 @@ func TestRegistrySchemaRef(t *testing.T) {
 	}{
 		{name: "helm-chart", kind: model.GeneratorHelm, path: "Chart.yaml", expected: "https://json.schemastore.org/chart"},
 		{name: "applicationset", kind: model.GeneratorApplicationSet, path: "applicationset.yaml", expected: "https://schema.confighub.dev/generators/applicationset-v1"},
+		{name: "app-of-apps-root", kind: model.GeneratorAppOfApps, path: "root-application.yaml", expected: "https://schema.confighub.dev/generators/app-of-apps-root-v1"},
+		{name: "app-of-apps-child", kind: model.GeneratorAppOfApps, path: "apps/payments-api.yaml", expected: "https://schema.confighub.dev/generators/app-of-apps-child-v1"},
 		{name: "score", kind: model.GeneratorScore, path: "score.yaml", expected: "https://docs.score.dev/schemas/score-v1b1.json"},
 		{name: "spring-app", kind: model.GeneratorSpringBoot, path: "application.yaml", expected: "https://json.schemastore.org/spring-configuration-metadata"},
 		{name: "backstage-catalog", kind: model.GeneratorBackstage, path: "catalog-info.yaml", expected: "https://json.schemastore.org/backstage-catalog-info"},
@@ -255,6 +260,14 @@ func TestRegistryWetTargetTemplates(t *testing.T) {
 	openChoreoLineage := RenderedLineageTemplates(model.GeneratorOpenChoreo)
 	if len(openChoreoLineage) != 5 {
 		t.Fatalf("expected 5 openchoreo rendered lineage templates, got %d", len(openChoreoLineage))
+	}
+
+	appOfApps := WetTargetTemplates(model.GeneratorAppOfApps)
+	if len(appOfApps) != 1 {
+		t.Fatalf("expected 1 app-of-apps wet target template, got %d", len(appOfApps))
+	}
+	if appOfApps[0].Kind != "Application" || appOfApps[0].NameTemplate != "{{name}}" || appOfApps[0].SourceDryPathTemplate != "spec.source.path" {
+		t.Fatalf("unexpected app-of-apps template[0]: %+v", appOfApps[0])
 	}
 }
 

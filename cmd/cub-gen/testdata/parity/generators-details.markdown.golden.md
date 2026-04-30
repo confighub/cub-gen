@@ -1,9 +1,10 @@
 # Generator Families
 
-Total: 10
+Total: 11
 
 | Kind | Profile | Resource Kind | Resource Type | Capabilities |
 | --- | --- | --- | --- | --- |
+| `app-of-apps` | `app-of-apps` | `Application` | `argoproj.io/v1alpha1/Application` | root-application, child-application-catalog, observed-expansion, inverse-app-catalog-patch |
 | `applicationset` | `applicationset` | `ApplicationSet` | `argoproj.io/v1alpha1/ApplicationSet` | observed-expansion, authoritative-list-expansion, authoritative-clusters-expansion, graceful-degradation |
 | `backstage` | `backstage-idp` | `Component` | `backstage.io/v1alpha1/Component` | catalog-metadata, render-manifests, inverse-catalog-patch |
 | `c3agent` | `c3agent` | `ConfigMap` | `v1/ConfigMap` | fleet-config, agent-orchestration, inverse-fleet-config-patch |
@@ -14,6 +15,84 @@ Total: 10
 | `score` | `scoredev-paas` | `Application` | `argoproj.io/v1alpha1/Application` | render-manifests, workload-spec, inverse-score-patch |
 | `springboot` | `springboot-paas` | `Kustomization` | `kustomize.toolkit.fluxcd.io/v1/Kustomization` | render-app-config, profile-overrides, inverse-app-config-patch |
 | `swamp` | `swamp` | `Workflow` | `swamp.dev/v1/Workflow` | workflow-automation, model-orchestration, inverse-workflow-patch |
+
+## `app-of-apps`
+
+- Profile: `app-of-apps`
+- Resource: `Application` (`argoproj.io/v1alpha1/Application`)
+- Capabilities: root-application, child-application-catalog, observed-expansion, inverse-app-catalog-patch
+- Default input role: `argo-application`
+- Default owner: `app-catalog-owner`
+- Field-origin transform: `app-of-apps-catalog`
+- Field-origin overlay transform: `app-of-apps-root-expansion`
+
+### Input Role Rules
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `root-application` | root-application.yaml, root-application.yml, root-app.yaml, root-app.yml, app-of-apps.yaml, app-of-apps.yml | - | - | - |
+| `child-application` | - | apps/, applications/ | - | .yaml, .yml |
+
+### Role Owners
+| Role | Owner |
+| --- | --- |
+| `child-application` | `app-catalog-owner` |
+| `root-application` | `platform-engineer` |
+
+### Inverse Patch Templates
+| Key | Editable by | Confidence | Requires review |
+| --- | --- | --- | --- |
+| `child_name` | `app-catalog-owner` | 0.92 | `false` |
+| `root_path` | `platform-engineer` | 0.88 | `true` |
+| `source_path` | `app-catalog-owner` | 0.90 | `true` |
+| `source_repo` | `app-catalog-owner` | 0.90 | `true` |
+
+### Inverse Pointer Templates
+| Key | Owner | Confidence |
+| --- | --- | --- |
+| `child_name` | `app-catalog-owner` | 0.92 |
+| `root_path` | `platform-engineer` | 0.88 |
+| `source_path` | `app-catalog-owner` | 0.90 |
+| `source_repo` | `app-catalog-owner` | 0.90 |
+
+### Field Origin Confidences
+| Key | Confidence |
+| --- | --- |
+| `child_name` | 0.92 |
+| `root_path` | 0.88 |
+| `source_path` | 0.90 |
+| `source_repo` | 0.90 |
+
+### Hint Defaults
+| Key | Value |
+| --- | --- |
+| `child_catalog_path` | `apps` |
+| `root_application_path` | `root-application.yaml` |
+
+### Inverse Patch Reasons
+| Key | Reason |
+| --- | --- |
+| `child_name` | Child Application identity is owned by the child app catalog. |
+| `root_path` | The root Application controls which catalog path is expanded. |
+| `source_path` | Child Application source path is selected by the child app catalog. |
+| `source_repo` | Child Application repo URL is selected by the child app catalog. |
+
+### Inverse Edit Hints
+| Key | Hint |
+| --- | --- |
+| `child_name` | Route: apply-here. Edit metadata.name in {{child_application_path}}. |
+| `root_path` | Route: lift-upstream. Edit spec.source.path in {{root_application_path}} to change the child app catalog. |
+| `source_path` | Route: apply-here. Edit spec.source.path in {{child_application_path}}. |
+| `source_repo` | Route: apply-here. Edit spec.source.repoURL in {{child_application_path}}. |
+
+### WET Targets
+| Kind | Name template | Owner | Namespace | Source DRY path template |
+| --- | --- | --- | --- | --- |
+| `Application` | `{{name}}` | `platform-runtime` | `argocd` | `spec.source.path` |
+
+### Rendered Lineage Templates
+| Kind | Name template | Namespace | Source path hint | Hint fallback | Multi hint | Source DRY path template | Optional |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `Application` | `{{name}}` | `argocd` | `root_application_path` | `-` | `false` | `spec.source.path` | `false` |
 
 ## `applicationset`
 

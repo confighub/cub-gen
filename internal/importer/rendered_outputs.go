@@ -51,6 +51,31 @@ func dryInputsForHelmCLIOverrides(g model.GeneratorDetection, overrides []model.
 }
 
 func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.WetManifestTarget {
+	if g.Kind == model.GeneratorAppOfApps {
+		analysis := appOfAppsAnalysisForGenerator(detection, g)
+		out := []model.WetManifestTarget{{
+			GeneratorID:   g.ID,
+			Kind:          "Application",
+			Name:          g.Name,
+			Owner:         "platform-runtime",
+			Namespace:     "argocd",
+			SourceDryPath: "spec.source.path",
+		}}
+		if analysis == nil {
+			return out
+		}
+		for _, child := range analysis.GeneratedApplications {
+			out = append(out, model.WetManifestTarget{
+				GeneratorID:   g.ID,
+				Kind:          "Application",
+				Name:          child.Name,
+				Owner:         "platform-runtime",
+				Namespace:     "argocd",
+				SourceDryPath: "metadata.name",
+			})
+		}
+		return out
+	}
 	if g.Kind == model.GeneratorApplicationSet {
 		analysis := applicationSetAnalysisForGenerator(detection, g)
 		out := []model.WetManifestTarget{{
@@ -123,6 +148,39 @@ func renderTargetTemplate(template string, vars map[string]string) string {
 }
 
 func renderedLineageForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.RenderedObjectLineage {
+	if g.Kind == model.GeneratorAppOfApps {
+		analysis := appOfAppsAnalysisForGenerator(detection, g)
+		hints := appOfAppsPathHintsFromInputs(g.Inputs)
+		lineage := []model.RenderedObjectLineage{{
+			Kind:          "Application",
+			Name:          g.Name,
+			Namespace:     "argocd",
+			SourcePath:    hints.RootApplicationPath,
+			SourceDryPath: "spec.source.path",
+		}}
+		if analysis == nil {
+			return lineage
+		}
+		for _, child := range analysis.GeneratedApplications {
+			lineage = append(lineage,
+				model.RenderedObjectLineage{
+					Kind:          "Application",
+					Name:          child.Name,
+					Namespace:     "argocd",
+					SourcePath:    child.Path,
+					SourceDryPath: "metadata.name",
+				},
+				model.RenderedObjectLineage{
+					Kind:          "Application",
+					Name:          child.Name,
+					Namespace:     "argocd",
+					SourcePath:    child.Path,
+					SourceDryPath: "spec.source.path",
+				},
+			)
+		}
+		return lineage
+	}
 	if g.Kind == model.GeneratorApplicationSet {
 		analysis := applicationSetAnalysisForGenerator(detection, g)
 		hints := applicationSetHintsFromInputs(detection.Repo, g.Inputs)

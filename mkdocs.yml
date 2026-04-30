@@ -129,6 +129,7 @@ nav:
   - Contracts:
       - "Canonical Triple & Storage": contracts/canonical-triple-and-storage-boundary.md
       - "ApplicationSet Boundary": contracts/applicationset-generator-boundary.md
+      - "App-of-Apps Boundary": contracts/app-of-apps-generator-boundary.md
       - "Remote Stores & Projection Targets": contracts/remote-stores-and-projection-targets.md
       - "Decision & Attestation State": contracts/decision-and-attestation-state.md
       - "PR/MR Linkage & Promotion": contracts/pr-mr-linkage-and-dry-promotion.md
@@ -138,6 +139,7 @@ nav:
   - Generators:
       - "Overview": triple-styles/README.md
       - Style B (Markdown):
+          - "App-of-Apps": triple-styles/style-b-markdown/app-of-apps.md
           - "ApplicationSet": triple-styles/style-b-markdown/applicationset.md
           - "Helm": triple-styles/style-b-markdown/helm.md
           - "Score.dev": triple-styles/style-b-markdown/score.md
@@ -149,6 +151,7 @@ nav:
           - "C3 Agent": triple-styles/style-b-markdown/c3agent.md
           - "Swamp": triple-styles/style-b-markdown/swamp.md
       - Style C (YAML + Docs):
+          - "App-of-Apps": triple-styles/style-c-yaml-plus-docs/app-of-apps/triple.md
           - "ApplicationSet": triple-styles/style-c-yaml-plus-docs/applicationset/triple.md
           - "Helm": triple-styles/style-c-yaml-plus-docs/helm/triple.md
           - "Score.dev": triple-styles/style-c-yaml-plus-docs/score/triple.md

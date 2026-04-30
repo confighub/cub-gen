@@ -102,10 +102,12 @@ DRY→WET is a one-way deterministic transform. There is no automatic LIVE→DRY
 |-----------|---------|------------|--------|
 | Helm | `helm-paas` | `Chart.yaml` + `values.yaml` | Stable |
 | ApplicationSet | `applicationset` | `applicationset.yaml` + pinned inventory | v0.2 preview |
+| App-of-apps | `app-of-apps` | root `Application` + child app catalog | v0.4 fixture-backed |
 | Score.dev | `scoredev-paas` | `score.yaml` | Stable |
 | Spring Boot | `springboot-paas` | `application.yaml` | Stable |
 | Backstage IDP | `backstage-idp` | `catalog-info.yaml` | v0.2 preview |
 | No Config Platform | `no-config-platform` | Provider config | v0.2 preview |
+| OpenChoreo-style | `openchoreo` | Workload + environment/platform bindings | v0.4 fixture-backed |
 | Ops Workflow | `ops-workflow` | Operations config (structural workflow governance) | v0.2 preview |
 | C3 Agent | `c3agent` | Fleet config | v0.2 preview |
 | Swamp | `swamp` | Workflow config (graph/model-method governance) | v0.2 preview |
@@ -262,6 +264,6 @@ For the active sequence, see the
 [v0.4 Working Roadmap](plans/2026-04-30-v0.4-obvious-value-roadmap.md).
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
-- Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 10 generators
+- Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 11 generators
 - Generator catalog (`generators`) with filtering, details, and markdown output
 - Local-first: works standalone, connects to [ConfigHub](platform.md) for governed execution

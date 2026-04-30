@@ -200,6 +200,7 @@ func buildProvenance(changeID, space string, detection model.DetectionResult, g 
 		InverseEditPointers: inversePointersForGenerator(detection, g),
 		HelmLayeredAnalysis: helmLayeredAnalysisForGenerator(detection, g),
 		ApplicationSet:      applicationSetAnalysisForGenerator(detection, g),
+		AppOfApps:           appOfAppsAnalysisForGenerator(detection, g),
 		OpsWorkflow:         opsWorkflowAnalysisForGenerator(detection, g),
 		SwampWorkflow:       swampWorkflowAnalysisForGenerator(detection, g),
 		RenderedAt:          renderedAt,
@@ -293,6 +294,56 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Reason: renderTargetTemplate(
 					registry.InversePatchReason(g.Kind, "source_path", "Child Application source path is generated from the parent ApplicationSet template."),
 					map[string]string{"application_set_path": hints.ApplicationSetPath},
+				),
+			},
+		}
+	case model.GeneratorAppOfApps:
+		hints := appOfAppsPathHintsFromInputs(g.Inputs)
+		namePolicy := registry.InversePatchTemplateFor(g.Kind, "child_name", registry.InversePatchTemplate{
+			EditableBy: "app-catalog-owner", Confidence: 0.92, RequiresReview: false,
+		})
+		sourcePathPolicy := registry.InversePatchTemplateFor(g.Kind, "source_path", registry.InversePatchTemplate{
+			EditableBy: "app-catalog-owner", Confidence: 0.90, RequiresReview: true,
+		})
+		rootPathPolicy := registry.InversePatchTemplateFor(g.Kind, "root_path", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.88, RequiresReview: true,
+		})
+		vars := map[string]string{
+			"child_application_path": hints.FirstChildPath,
+			"root_application_path":  hints.RootApplicationPath,
+		}
+		return []model.InversePatch{
+			{
+				Operation:      "replace",
+				DryPath:        "metadata.name",
+				WetPath:        "Application/metadata/name",
+				EditableBy:     namePolicy.EditableBy,
+				Confidence:     namePolicy.Confidence,
+				RequiresReview: namePolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "child_name", "Child Application identity is owned by the child app catalog."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spec.source.path",
+				WetPath:        "Application/spec/source/path",
+				EditableBy:     sourcePathPolicy.EditableBy,
+				Confidence:     sourcePathPolicy.Confidence,
+				RequiresReview: sourcePathPolicy.RequiresReview,
+				Reason: renderTargetTemplate(
+					registry.InversePatchReason(g.Kind, "source_path", "Child Application source path is selected by the child app catalog."),
+					vars,
+				),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spec.source.path",
+				WetPath:        "RootApplication/spec/source/path",
+				EditableBy:     rootPathPolicy.EditableBy,
+				Confidence:     rootPathPolicy.Confidence,
+				RequiresReview: rootPathPolicy.RequiresReview,
+				Reason: renderTargetTemplate(
+					registry.InversePatchReason(g.Kind, "root_path", "The root Application controls which catalog path is expanded."),
+					vars,
 				),
 			},
 		}

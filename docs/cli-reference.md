@@ -421,6 +421,22 @@ go build -o ./cub-gen ./cmd/cub-gen
 ./cub-gen gitops cleanup --space platform ./examples/helm-paas
 ```
 
+### Argo ApplicationSet
+
+```bash
+./cub-gen gitops discover --space platform ./testdata/applicationset-standalone
+./cub-gen gitops import --space platform --json ./testdata/applicationset-standalone \
+  | jq '{profile: .discovered[0].generator_profile, analysis: .provenance[0].application_set_analysis}'
+```
+
+### Argo app-of-apps
+
+```bash
+./cub-gen gitops discover --space platform ./testdata/app-of-apps-standalone
+./cub-gen gitops import --space platform --json ./testdata/app-of-apps-standalone \
+  | jq '{profile: .discovered[0].generator_profile, analysis: .provenance[0].app_of_apps_analysis}'
+```
+
 ### Score.dev
 
 ```bash

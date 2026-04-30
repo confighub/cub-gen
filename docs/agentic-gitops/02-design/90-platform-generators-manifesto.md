@@ -122,7 +122,7 @@ ConfigMap payloads for allowed app-owned fields, and has connected/live proof.
 |---|---|---|
 | Generic platform import | import is repo/generator oriented | import a platform estate and stitch app/platform repos into one graph |
 | OpenChoreo adapter | fixture-backed initial adapter | read Workload, ReleaseBinding, SecretReference, ComponentType, RenderedRelease |
-| App-of-apps adapter | documented pattern only | first-class root/child app catalog analysis |
+| App-of-apps adapter | fixture-backed initial adapter | broader root/child app catalog analysis |
 | Automatic annotation/enrichment | not generic | generate sidecar provenance and optional PRs for annotations |
 | "Better config" generation | limited to Spring starter scaffolding | propose normalized variants, secret references, ownership metadata, and source lifts |
 | Multi-env/tenant fanout | no one-command fanout | one invocation emits one bundle per env/tenant/app variant |
@@ -163,7 +163,7 @@ The goal is not a perfect abstraction. The goal is a governed escape path.
 | Spring Boot platform | `application*.yaml`, build metadata, platform policy | Deployment, Service, ConfigMap | strongest route teaching |
 | OpenChoreo | Workload, ReleaseBinding, SecretReference, ComponentType | RenderedRelease and K8s resources | fixture-backed initial adapter; not full upstream conformance |
 | Argo ApplicationSet | selectors, list/git/cluster generators, template | Argo Applications | already partially supported |
-| Argo app-of-apps | root app and child app catalog | child Argo Applications | future adapter candidate |
+| Argo app-of-apps | root app and child app catalog | child Argo Applications | fixture-backed initial adapter |
 | app-config manager | provider config or literal app config | explicit app config data | identity generator case |
 | workflow platform | workflow graph, schedules, approvals | workflow/action manifests | operations as config |
 

@@ -139,8 +139,10 @@ Definition of done:
 
 ### PG-03: App-of-Apps Generator Boundary
 
-Problem: ApplicationSet has bounded support, but app-of-apps is only a
-documented pattern.
+Status: implemented on this branch as a fixture-backed initial adapter.
+
+Problem: ApplicationSet has bounded support, and app-of-apps needed the same
+root/child generator boundary rather than remaining only a documented pattern.
 
 Deterministic success criteria:
 
@@ -154,7 +156,7 @@ Proof matrix:
 | Proof | Required |
 |---|---|
 | unit | root Application detection and child catalog discovery |
-| golden | app-of-apps discover/import outputs |
+| golden | app-of-apps discover/import/publish outputs |
 | example | root app plus three child apps, one Helm, one Kustomize, one plain YAML |
 | degradation | remote-only root path or missing child catalog reports observed-only mode |
 

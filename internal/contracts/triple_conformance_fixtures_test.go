@@ -86,6 +86,7 @@ func TestContractTripleConformanceFixtures(t *testing.T) {
 
 func allFamilyFixtures() []familyFixture {
 	return []familyFixture{
+		{Name: "app-of-apps", RepoDir: filepath.Join("..", "testdata", "app-of-apps-standalone"), Kind: model.GeneratorAppOfApps, Profile: "app-of-apps"},
 		{Name: "applicationset", RepoDir: filepath.Join("..", "testdata", "applicationset-standalone"), Kind: model.GeneratorApplicationSet, Profile: "applicationset"},
 		{Name: "helm", RepoDir: "helm-paas", Kind: model.GeneratorHelm, Profile: "helm-paas"},
 		{Name: "score", RepoDir: "scoredev-paas", Kind: model.GeneratorScore, Profile: "scoredev-paas"},

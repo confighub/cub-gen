@@ -1,9 +1,10 @@
 # Generator Families
 
-Total: 10
+Total: 11
 
 | Kind | Profile | Resource Kind | Resource Type | Capabilities |
 | --- | --- | --- | --- | --- |
+| `app-of-apps` | `app-of-apps` | `Application` | `argoproj.io/v1alpha1/Application` | root-application, child-application-catalog, observed-expansion, inverse-app-catalog-patch |
 | `applicationset` | `applicationset` | `ApplicationSet` | `argoproj.io/v1alpha1/ApplicationSet` | observed-expansion, authoritative-list-expansion, authoritative-clusters-expansion, graceful-degradation |
 | `backstage` | `backstage-idp` | `Component` | `backstage.io/v1alpha1/Component` | catalog-metadata, render-manifests, inverse-catalog-patch |
 | `c3agent` | `c3agent` | `ConfigMap` | `v1/ConfigMap` | fleet-config, agent-orchestration, inverse-fleet-config-patch |

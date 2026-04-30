@@ -280,6 +280,40 @@ func TestScanRepoApplicationSetStandalone(t *testing.T) {
 	}
 }
 
+func TestScanRepoAppOfAppsStandalone(t *testing.T) {
+	t.Parallel()
+
+	repo := filepath.Join("..", "..", "testdata", "app-of-apps-standalone")
+	result, err := ScanRepo(repo, "main")
+	if err != nil {
+		t.Fatalf("ScanRepo returned error: %v", err)
+	}
+	if len(result.Generators) != 1 {
+		t.Fatalf("expected 1 generator, got %d", len(result.Generators))
+	}
+
+	g := result.Generators[0]
+	if g.Kind != model.GeneratorAppOfApps {
+		t.Fatalf("expected kind %q, got %q", model.GeneratorAppOfApps, g.Kind)
+	}
+	if g.Profile != "app-of-apps" {
+		t.Fatalf("expected profile app-of-apps, got %q", g.Profile)
+	}
+	if g.Name != "platform-root" {
+		t.Fatalf("expected name platform-root, got %q", g.Name)
+	}
+	for _, expected := range []string{
+		"root-application.yaml",
+		"apps/catalog-api.yaml",
+		"apps/orders-api.yaml",
+		"apps/payments-api.yaml",
+	} {
+		if !contains(g.Inputs, expected) {
+			t.Fatalf("expected app-of-apps inputs to contain %q; got %v", expected, g.Inputs)
+		}
+	}
+}
+
 func TestScanRepoOpenChoreoHardGate(t *testing.T) {
 	t.Parallel()
 
