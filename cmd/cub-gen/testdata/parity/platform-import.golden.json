@@ -1,0 +1,434 @@
+{
+  "schema_version": "cub.confighub.io/platform-import-graph/v1",
+  "manifest_path": "\u003cmanifest_path\u003e",
+  "name": "checkout-platform",
+  "space": "platform",
+  "ref": "HEAD",
+  "generated_at": "\u003ctimestamp\u003e",
+  "summary": {
+    "repo_count": 6,
+    "component_count": 3,
+    "variant_count": 3,
+    "target_count": 1,
+    "generator_count": 2,
+    "dry_input_count": 3,
+    "wet_target_count": 6,
+    "connection_count": 22,
+    "diagnostic_count": 5
+  },
+  "repos": [
+    {
+      "id": "catalog-api",
+      "role": "app",
+      "path": "apps/catalog-api",
+      "owner": "app-team",
+      "component": "catalog-api",
+      "variant": "dev",
+      "target": "dev-us",
+      "exists": true,
+      "generator_count": 1
+    },
+    {
+      "id": "dev-env",
+      "role": "env",
+      "path": "envs/dev",
+      "owner": "env-team",
+      "target": "dev-us",
+      "exists": true,
+      "generator_count": 0
+    },
+    {
+      "id": "ghost-api",
+      "role": "app",
+      "path": "apps/ghost-api",
+      "owner": "app-team",
+      "component": "ghost-api",
+      "variant": "dev",
+      "target": "dev-us",
+      "exists": false,
+      "generator_count": 0
+    },
+    {
+      "id": "orders-api",
+      "role": "app",
+      "path": "apps/orders-api",
+      "component": "orders-api",
+      "variant": "dev",
+      "target": "dev-us",
+      "exists": true,
+      "generator_count": 1
+    },
+    {
+      "id": "platform-base",
+      "role": "platform",
+      "path": "platform/base",
+      "owner": "platform-team",
+      "exists": true,
+      "generator_count": 0
+    },
+    {
+      "id": "rendered-dev",
+      "role": "rendered",
+      "path": "rendered/dev",
+      "owner": "platform-runtime",
+      "target": "dev-us",
+      "exists": true,
+      "generator_count": 0
+    }
+  ],
+  "components": [
+    {
+      "id": "catalog-api",
+      "name": "catalog-api",
+      "owner": "app-team",
+      "repo_id": "catalog-api"
+    },
+    {
+      "id": "ghost-api",
+      "name": "ghost-api",
+      "owner": "app-team",
+      "repo_id": "ghost-api"
+    },
+    {
+      "id": "orders-api",
+      "name": "orders-api",
+      "repo_id": "orders-api"
+    }
+  ],
+  "variants": [
+    {
+      "id": "catalog-api/dev",
+      "name": "dev",
+      "component": "catalog-api",
+      "target": "dev-us",
+      "owner": "app-team",
+      "repo_id": "catalog-api"
+    },
+    {
+      "id": "ghost-api/dev",
+      "name": "dev",
+      "component": "ghost-api",
+      "target": "dev-us",
+      "owner": "app-team",
+      "repo_id": "ghost-api"
+    },
+    {
+      "id": "orders-api/dev",
+      "name": "dev",
+      "component": "orders-api",
+      "target": "dev-us",
+      "repo_id": "orders-api"
+    }
+  ],
+  "targets": [
+    {
+      "id": "dev-us",
+      "name": "dev-us",
+      "owner": "env-team",
+      "repo_id": "dev-env"
+    }
+  ],
+  "generators": [
+    {
+      "id": "gen_5813cd3820138512",
+      "repo_id": "orders-api",
+      "kind": "score",
+      "profile": "scoredev-paas",
+      "name": "orders-api",
+      "dry_count": 1,
+      "wet_count": 3
+    },
+    {
+      "id": "gen_635643e45fbf3410",
+      "repo_id": "catalog-api",
+      "kind": "helm",
+      "profile": "helm-paas",
+      "name": "catalog-api",
+      "owner": "app-team",
+      "dry_count": 2,
+      "wet_count": 3
+    }
+  ],
+  "dry_inputs": [
+    {
+      "id": "dry_gen-5813cd3820138512-score-yaml",
+      "generator_id": "gen_5813cd3820138512",
+      "repo_id": "orders-api",
+      "role": "score-spec",
+      "owner": "app-team",
+      "path": "score.yaml",
+      "required": true
+    },
+    {
+      "id": "dry_gen-635643e45fbf3410-chart-yaml",
+      "generator_id": "gen_635643e45fbf3410",
+      "repo_id": "catalog-api",
+      "role": "chart",
+      "owner": "platform-engineer",
+      "path": "Chart.yaml",
+      "required": true
+    },
+    {
+      "id": "dry_gen-635643e45fbf3410-values-yaml",
+      "generator_id": "gen_635643e45fbf3410",
+      "repo_id": "catalog-api",
+      "role": "values",
+      "owner": "app-team",
+      "path": "values.yaml",
+      "required": true
+    }
+  ],
+  "wet_targets": [
+    {
+      "id": "wet_gen-5813cd3820138512-apps-application-orders-api",
+      "generator_id": "gen_5813cd3820138512",
+      "repo_id": "orders-api",
+      "kind": "Application",
+      "name": "orders-api",
+      "namespace": "apps",
+      "owner": "platform-runtime"
+    },
+    {
+      "id": "wet_gen-5813cd3820138512-apps-deployment-orders-api",
+      "generator_id": "gen_5813cd3820138512",
+      "repo_id": "orders-api",
+      "kind": "Deployment",
+      "name": "orders-api",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "containers.main.image"
+    },
+    {
+      "id": "wet_gen-5813cd3820138512-apps-service-orders-api",
+      "generator_id": "gen_5813cd3820138512",
+      "repo_id": "orders-api",
+      "kind": "Service",
+      "name": "orders-api",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "service.ports.web.port"
+    },
+    {
+      "id": "wet_gen-635643e45fbf3410-apps-deployment-catalog-api",
+      "generator_id": "gen_635643e45fbf3410",
+      "repo_id": "catalog-api",
+      "kind": "Deployment",
+      "name": "catalog-api",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "values.image.tag"
+    },
+    {
+      "id": "wet_gen-635643e45fbf3410-apps-helmrelease-catalog-api",
+      "generator_id": "gen_635643e45fbf3410",
+      "repo_id": "catalog-api",
+      "kind": "HelmRelease",
+      "name": "catalog-api",
+      "namespace": "apps",
+      "owner": "platform-runtime"
+    },
+    {
+      "id": "wet_gen-635643e45fbf3410-apps-service-catalog-api",
+      "generator_id": "gen_635643e45fbf3410",
+      "repo_id": "catalog-api",
+      "kind": "Service",
+      "name": "catalog-api",
+      "namespace": "apps",
+      "owner": "platform-runtime",
+      "source_dry_path": "values.service.port"
+    }
+  ],
+  "connections": [
+    {
+      "from_type": "component",
+      "from_id": "catalog-api",
+      "to_type": "variant",
+      "to_id": "catalog-api/dev",
+      "kind": "has-variant"
+    },
+    {
+      "from_type": "component",
+      "from_id": "ghost-api",
+      "to_type": "variant",
+      "to_id": "ghost-api/dev",
+      "kind": "has-variant"
+    },
+    {
+      "from_type": "component",
+      "from_id": "orders-api",
+      "to_type": "variant",
+      "to_id": "orders-api/dev",
+      "kind": "has-variant"
+    },
+    {
+      "from_type": "generator",
+      "from_id": "gen_5813cd3820138512",
+      "to_type": "dry-input",
+      "to_id": "dry_gen-5813cd3820138512-score-yaml",
+      "kind": "reads"
+    },
+    {
+      "from_type": "generator",
+      "from_id": "gen_5813cd3820138512",
+      "to_type": "wet-target",
+      "to_id": "wet_gen-5813cd3820138512-apps-application-orders-api",
+      "kind": "renders"
+    },
+    {
+      "from_type": "generator",
+      "from_id": "gen_5813cd3820138512",
+      "to_type": "wet-target",
+      "to_id": "wet_gen-5813cd3820138512-apps-deployment-orders-api",
+      "kind": "renders"
+    },
+    {
+      "from_type": "generator",
+      "from_id": "gen_5813cd3820138512",
+      "to_type": "wet-target",
+      "to_id": "wet_gen-5813cd3820138512-apps-service-orders-api",
+      "kind": "renders"
+    },
+    {
+      "from_type": "generator",
+      "from_id": "gen_635643e45fbf3410",
+      "to_type": "dry-input",
+      "to_id": "dry_gen-635643e45fbf3410-chart-yaml",
+      "kind": "reads"
+    },
+    {
+      "from_type": "generator",
+      "from_id": "gen_635643e45fbf3410",
+      "to_type": "dry-input",
+      "to_id": "dry_gen-635643e45fbf3410-values-yaml",
+      "kind": "reads"
+    },
+    {
+      "from_type": "generator",
+      "from_id": "gen_635643e45fbf3410",
+      "to_type": "wet-target",
+      "to_id": "wet_gen-635643e45fbf3410-apps-deployment-catalog-api",
+      "kind": "renders"
+    },
+    {
+      "from_type": "generator",
+      "from_id": "gen_635643e45fbf3410",
+      "to_type": "wet-target",
+      "to_id": "wet_gen-635643e45fbf3410-apps-helmrelease-catalog-api",
+      "kind": "renders"
+    },
+    {
+      "from_type": "generator",
+      "from_id": "gen_635643e45fbf3410",
+      "to_type": "wet-target",
+      "to_id": "wet_gen-635643e45fbf3410-apps-service-catalog-api",
+      "kind": "renders"
+    },
+    {
+      "from_type": "repo",
+      "from_id": "catalog-api",
+      "to_type": "generator",
+      "to_id": "gen_635643e45fbf3410",
+      "kind": "contains-generator"
+    },
+    {
+      "from_type": "repo",
+      "from_id": "catalog-api",
+      "to_type": "component",
+      "to_id": "catalog-api",
+      "kind": "defines"
+    },
+    {
+      "from_type": "repo",
+      "from_id": "ghost-api",
+      "to_type": "component",
+      "to_id": "ghost-api",
+      "kind": "defines"
+    },
+    {
+      "from_type": "repo",
+      "from_id": "orders-api",
+      "to_type": "generator",
+      "to_id": "gen_5813cd3820138512",
+      "kind": "contains-generator"
+    },
+    {
+      "from_type": "repo",
+      "from_id": "orders-api",
+      "to_type": "component",
+      "to_id": "orders-api",
+      "kind": "defines"
+    },
+    {
+      "from_type": "variant",
+      "from_id": "catalog-api/dev",
+      "to_type": "target",
+      "to_id": "dev-us",
+      "kind": "deploys-to"
+    },
+    {
+      "from_type": "variant",
+      "from_id": "catalog-api/dev",
+      "to_type": "generator",
+      "to_id": "gen_635643e45fbf3410",
+      "kind": "generated-by"
+    },
+    {
+      "from_type": "variant",
+      "from_id": "ghost-api/dev",
+      "to_type": "target",
+      "to_id": "dev-us",
+      "kind": "deploys-to"
+    },
+    {
+      "from_type": "variant",
+      "from_id": "orders-api/dev",
+      "to_type": "target",
+      "to_id": "dev-us",
+      "kind": "deploys-to"
+    },
+    {
+      "from_type": "variant",
+      "from_id": "orders-api/dev",
+      "to_type": "generator",
+      "to_id": "gen_5813cd3820138512",
+      "kind": "generated-by"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "code": "missing_owner",
+      "repo_id": "orders-api",
+      "path": "apps/orders-api",
+      "message": "repo has no owner; route decisions will require review"
+    },
+    {
+      "severity": "error",
+      "code": "missing_repo",
+      "repo_id": "ghost-api",
+      "path": "apps/ghost-api",
+      "message": "repo path does not exist or is not a directory"
+    },
+    {
+      "severity": "warning",
+      "code": "unsupported_generator",
+      "repo_id": "dev-env",
+      "path": "envs/dev",
+      "message": "repo exists but no supported generator was detected"
+    },
+    {
+      "severity": "warning",
+      "code": "unsupported_generator",
+      "repo_id": "platform-base",
+      "path": "platform/base",
+      "message": "repo exists but no supported generator was detected"
+    },
+    {
+      "severity": "warning",
+      "code": "unsupported_generator",
+      "repo_id": "rendered-dev",
+      "path": "rendered/dev",
+      "message": "repo exists but no supported generator was detected"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+schema_version: cub.confighub.io/platform-import-manifest/v1
+name: checkout-platform
+space: platform
+ref: HEAD
+repos:
+  - id: catalog-api
+    role: app
+    path: apps/catalog-api
+    owner: app-team
+    component: catalog-api
+    variant: dev
+    target: dev-us
+  - id: orders-api
+    role: app
+    path: apps/orders-api
+    component: orders-api
+    variant: dev
+    target: dev-us
+  - id: platform-base
+    role: platform
+    path: platform/base
+    owner: platform-team
+  - id: dev-env
+    role: env
+    path: envs/dev
+    owner: env-team
+    target: dev-us
+  - id: rendered-dev
+    role: rendered
+    path: rendered/dev
+    owner: platform-runtime
+    target: dev-us
+  - id: ghost-api
+    role: app
+    path: apps/ghost-api
+    owner: app-team
+    component: ghost-api
+    variant: dev
+    target: dev-us

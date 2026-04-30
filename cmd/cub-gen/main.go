@@ -55,6 +55,8 @@ func run(args []string) error {
 		return runGenerators(args[1:])
 	case "gitops":
 		return runGitOps(args[1:])
+	case "platform":
+		return runPlatform(args[1:])
 	case "bridge":
 		return runBridge(args[1:])
 	case "score":
@@ -1041,6 +1043,7 @@ func printUsage(out io.Writer) {
 				"  change impact     See which rendered fields a DRY path can affect",
 				"  change preview    Preview a safe repo change",
 				"  enrich preview    Propose sidecar proof metadata for PR review",
+				"  platform import   Read a multi-repo platform estate as a graph",
 				"  detect            Detect generators in a repo",
 				"  generators        List supported generators (Helm, Score, Spring Boot, ...)",
 			},
@@ -1064,6 +1067,7 @@ func printUsage(out io.Writer) {
 			Title: "FIRST RUNS",
 			Lines: []string{
 				"  cub-gen gitops import --space my-space ./examples/helm-paas",
+				"  cub-gen platform import --json ./testdata/platform-estate/platform.yaml",
 				"  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas",
 				"  cub-gen enrich preview --space my-space ./examples/helm-paas",
 				"  cub-gen publish --space my-space ./examples/helm-paas | cub-gen verify --in -",

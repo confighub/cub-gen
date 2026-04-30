@@ -77,6 +77,13 @@ REPO=/path/to/your/repo
 ./cub-gen change explain --space platform --owner app-team "$REPO"
 ```
 
+For a small multi-repo platform estate:
+
+```bash
+./cub-gen platform import --json ./testdata/platform-estate/platform.yaml \
+  | jq '.summary'
+```
+
 ## Mental Model
 
 `gen` means generator.
@@ -167,6 +174,7 @@ conflict becomes `review-required`.
 |---|---|
 | Detect | Find the generator style used by the repo |
 | Render/import | Produce or read the deployable config |
+| Platform graph | Read a multi-repo estate as Components, Deployable Variants, Targets, generators, and diagnostics |
 | Trace | Map rendered fields back to source files |
 | Explain | Say who owns the field and where to edit it |
 | Enrich | Create PR-friendly sidecar proof with source links, owners, route badges, and PR/MR link metadata |
@@ -191,6 +199,7 @@ These run locally and do not require a login:
 | Argo app-of-apps | [app-of-apps fixture](testdata/app-of-apps-standalone/) + [Argo worked example](docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | Which root app path or child Application catalog entry owns this app? |
 | Score.dev | [scoredev-paas](examples/scoredev-paas/) | Which `score.yaml` field produced this runtime value? |
 | Spring Boot services | [springboot-paas](examples/springboot-paas/) | Should I edit app config or platform config? |
+| Multi-repo platform estate | [platform-estate fixture](testdata/platform-estate/) | Which Components, Deployable Variants, generators, and gaps exist before any rewrite? |
 | A running cluster first | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 
 ## Supported Inputs

@@ -17,6 +17,7 @@ not cluster/runtime ones.
 | Which rendered fields would this DRY path affect? | `change impact` |
 | What evidence bundle and safe next step should I prepare? | `change preview` |
 | How do I add provenance to a PR without editing manifests? | `enrich preview`, then optionally `enrich write` |
+| How do I see a multi-repo platform estate? | `platform import` |
 | What evidence bundle should I verify or ship? | `publish -> verify -> attest` |
 | How do I use the deeper ConfigHub API flow? | `bridge` |
 
@@ -36,6 +37,37 @@ paths.
 - `<target-path>`: the repo path to inspect and classify
 - `<render-target-path>`: optional local render target path; if omitted, `cub-gen` reuses `<target-path>`
 - For cluster-side import against a real render target, use `cub gitops`, not `cub-gen`
+
+## Platform Import
+
+### `platform import`
+
+Read a local manifest for a multi-repo platform estate and emit one stable
+Component/Deployable Variant graph.
+
+```
+cub-gen platform import --json <manifest>
+```
+
+The manifest names app, platform, environment, and rendered repos. The command
+imports each existing local repo read-only and emits:
+
+- `repos`: manifest entries with owner, role, component, variant, and target metadata
+- `components` and `variants`: the small product model users should see first
+- `generators`: detected generator families per repo
+- `dry_inputs` and `wet_targets`: source inputs and rendered targets from each generator
+- `connections`: repo -> generator -> input/target and component -> variant -> target links
+- `diagnostics`: explicit gaps such as `missing_repo`, `missing_owner`, or `unsupported_generator`
+
+Example:
+
+```
+cub-gen platform import --json ./testdata/platform-estate/platform.yaml
+```
+
+This command does not rewrite repos, deploy, or contact ConfigHub. Use it before
+adoption reports, enrichment, fanout, or rewrite proposals when the first job is
+to understand the estate shape.
 
 ### `gitops discover`
 

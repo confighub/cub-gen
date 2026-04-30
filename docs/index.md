@@ -56,6 +56,7 @@ It adds what those layers do not provide by default:
 
 - source-to-live field traceability (`which file/path controls this field?`)
 - ownership-aware edit routing (`who should edit this?`)
+- multi-repo platform graphs (`which Components and Deployable Variants exist?`)
 - PR-friendly proof sidecars (`enrich preview` / `enrich write`)
 - governed safety decisions before deploy (`ALLOW/ESCALATE/BLOCK`)
 
@@ -75,17 +76,19 @@ AI-assisted changes make this gap wider because more changes happen faster.
 
 cub-gen adds the import/provenance layer that answers these questions while keeping Flux/Argo as reconciler.
 
-## Two import paths, not one
+## Three Import Paths
 
-ConfigHub now has two complementary import stories:
+ConfigHub now has three complementary import stories:
 
 - `cub gitops import` imports existing ArgoCD/Flux application resources from a cluster or worker target into ConfigHub.
 - `cub-gen gitops import` reads source-side generators such as Helm, Score.dev, Spring Boot, and workflow config, then emits provenance, inverse-edit guidance, and evidence.
+- `cub-gen platform import` reads a local multi-repo manifest and emits a read-only Component -> Deployable Variant -> Target graph before rewrites.
 
 Use them for different jobs:
 
 - brownfield GitOps app onboarding -> ConfigHub GitOps import
 - source-to-runtime traceability and governed edits -> `cub-gen`
+- platform-estate discovery across apps, platform contracts, envs, and rendered repos -> `cub-gen platform import`
 
 ## What cub-gen is not
 
@@ -266,6 +269,7 @@ For the active sequence, see the
 [v0.4 Working Roadmap](plans/2026-04-30-v0.4-obvious-value-roadmap.md).
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
+- Platform graph command (`platform import`) emits read-only multi-repo Component/Variant graphs with diagnostics
 - Enrichment commands (`enrich preview`, `enrich write`) produce sidecar proof without manifest rewrites
 - Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 11 generators
 - Generator catalog (`generators`) with filtering, details, and markdown output

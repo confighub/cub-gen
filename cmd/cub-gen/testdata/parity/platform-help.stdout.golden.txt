@@ -1,0 +1,15 @@
+cub-gen platform: import a multi-repo platform estate as a read-only graph
+
+Use platform import when app intent, platform contracts, environment bindings, and rendered output live in separate repos.
+The command reads a manifest, imports each local repo, and emits Components, Deployable Variants, Targets, generator inputs, WET targets, connections, and diagnostics.
+
+Usage:
+  cub-gen platform import [--json] [--out FILE|-] [--pretty] <manifest>
+
+Examples:
+  cub-gen platform import --json ./testdata/platform-estate/platform.yaml
+
+Boundaries:
+  - read-only: no repo rewrites, no deploys, no control-plane side effects
+  - missing repos, missing owners, and unsupported generator paths are diagnostics, not guesses
+  - use gitops import when you only need one repo; use platform import when you need the estate graph

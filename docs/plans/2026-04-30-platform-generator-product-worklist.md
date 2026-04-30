@@ -65,6 +65,12 @@ Problem: `cub-gen` import is still repo/generator oriented. Platform estates
 often spread app intent, platform contracts, environment bindings, and rendered
 output across multiple repos.
 
+Status: implemented in branch via `cub-gen platform import --json <manifest>`.
+The command reads a local manifest, imports each existing repo read-only, emits
+Components, Deployable Variants, Targets, generator inputs, WET targets, and
+connections, and reports missing repo, missing owner, and unsupported generator
+diagnostics explicitly.
+
 Deterministic success criteria:
 
 1. Given a fixture with `apps/`, `platform/`, `envs/`, and `rendered/` repos,
