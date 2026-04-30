@@ -200,6 +200,11 @@ Definition of done:
 Problem: users may want provenance annotations on platform and app artifacts,
 but automatic in-place edits would be risky.
 
+Status: implemented in branch via `cub-gen enrich preview` and
+`cub-gen enrich write`. The command proposes sidecar provenance under
+`.cub-gen/enrichment/`, emits JSON or patch preview, and treats existing
+sidecars as `review-required` instead of overwriting them.
+
 Deterministic success criteria:
 
 1. `cub-gen enrich preview` emits proposed annotations or sidecar files without

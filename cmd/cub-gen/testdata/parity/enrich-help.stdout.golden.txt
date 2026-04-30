@@ -1,0 +1,19 @@
+cub-gen enrich: propose repo-side proof metadata without mutating app manifests
+
+Use enrich when users need provenance, ownership, route badges, and PR/MR link metadata where they review code.
+Preview is read-only. Write creates sidecar files under .cub-gen/enrichment and refuses to overwrite existing artifacts.
+
+Usage:
+  cub-gen enrich preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--json|--patch] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]
+  cub-gen enrich write [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--json] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]
+
+Examples:
+  cub-gen enrich preview --space platform ./testdata/app-of-apps-standalone
+  cub-gen enrich preview --patch --space platform ./testdata/openchoreo-hardgate
+  cub-gen enrich write --space platform ./examples/helm-paas
+
+Output:
+  - source-link annotations point from sidecar proof to source files
+  - ownership-label annotations name app, environment, platform, security, or workflow owners
+  - route-badge annotations summarize apply-here, lift-upstream, overlay, or block/escalate guidance
+  - pr-mr-link annotations carry change_id for GitHub PR and ConfigHub MR correlation

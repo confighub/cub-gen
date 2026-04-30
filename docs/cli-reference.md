@@ -16,6 +16,7 @@ not cluster/runtime ones.
 | Which DRY file/path should I edit for a rendered field? | `change explain` |
 | Which rendered fields would this DRY path affect? | `change impact` |
 | What evidence bundle and safe next step should I prepare? | `change preview` |
+| How do I add provenance to a PR without editing manifests? | `enrich preview`, then optionally `enrich write` |
 | What evidence bundle should I verify or ship? | `publish -> verify -> attest` |
 | How do I use the deeper ConfigHub API flow? | `bridge` |
 
@@ -95,6 +96,42 @@ Remove local discover state.
 ```
 cub-gen gitops cleanup --space <space> <target-path>
 ```
+
+---
+
+## Enrichment
+
+### `enrich preview`
+
+Preview PR-friendly sidecar provenance without mutating the repo.
+
+```
+cub-gen enrich preview --space <space> [--json|--patch] [--where-resource <expr>] <target-path> [<render-target-path>]
+```
+
+The JSON preview proposes `.cub-gen/enrichment/*.provenance.json` artifacts and
+explains four kinds of metadata:
+
+- `source-link`: which source files feed the generator
+- `ownership-label`: who owns source and rendered artifacts
+- `route-badge`: whether edits are `apply-here`, `lift-upstream`, `overlay`, or `block/escalate`
+- `pr-mr-link`: the `change_id` used to correlate a GitHub PR with a ConfigHub MR
+
+`--patch` emits a unified diff for the same sidecar files, suitable for review
+or a small PR. Existing sidecars are marked `review-required`; preview remains
+read-only.
+
+### `enrich write`
+
+Write the reviewed sidecar provenance files.
+
+```
+cub-gen enrich write --space <space> [--where-resource <expr>] <target-path> [<render-target-path>]
+```
+
+`enrich write` creates only sidecar files under `.cub-gen/enrichment/`. It does
+not annotate or rewrite app manifests. It refuses to overwrite an existing
+sidecar so provenance updates stay explicit and reviewable.
 
 ---
 

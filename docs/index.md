@@ -56,6 +56,7 @@ It adds what those layers do not provide by default:
 
 - source-to-live field traceability (`which file/path controls this field?`)
 - ownership-aware edit routing (`who should edit this?`)
+- PR-friendly proof sidecars (`enrich preview` / `enrich write`)
 - governed safety decisions before deploy (`ALLOW/ESCALATE/BLOCK`)
 
 ---
@@ -127,10 +128,11 @@ ConfigHub backend OSS is available today:
 
 1. **DRY** app intent lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.)
 2. **cub-gen** classifies DRY inputs + WET targets and emits provenance with field-origin tracing
-3. **cub-gen publish** produces ConfigHub-ready change bundles with digest verification
-4. **ConfigHub** ingests bundles, enforces governed decision state, manages units with revision history
-5. **Bridge workers** connect ConfigHub to clusters via HTTP/2 SSE
-6. **Flux/Argo** continue to reconcile WET to LIVE — unchanged
+3. **cub-gen enrich** can write reviewable sidecar proof under `.cub-gen/enrichment/`
+4. **cub-gen publish** produces ConfigHub-ready change bundles with digest verification
+5. **ConfigHub** ingests bundles, enforces governed decision state, manages units with revision history
+6. **Bridge workers** connect ConfigHub to clusters via HTTP/2 SSE
+7. **Flux/Argo** continue to reconcile WET to LIVE — unchanged
 
 This is why the import surfaces both exist:
 
@@ -264,6 +266,7 @@ For the active sequence, see the
 [v0.4 Working Roadmap](plans/2026-04-30-v0.4-obvious-value-roadmap.md).
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
+- Enrichment commands (`enrich preview`, `enrich write`) produce sidecar proof without manifest rewrites
 - Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 11 generators
 - Generator catalog (`generators`) with filtering, details, and markdown output
 - Local-first: works standalone, connects to [ConfigHub](platform.md) for governed execution

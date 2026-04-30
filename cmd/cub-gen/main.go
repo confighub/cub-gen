@@ -49,6 +49,8 @@ func run(args []string) error {
 		return runVerifyAttestation(args[1:])
 	case "change":
 		return runChange(args[1:])
+	case "enrich":
+		return runEnrich(args[1:])
 	case "generators":
 		return runGenerators(args[1:])
 	case "gitops":
@@ -1038,6 +1040,7 @@ func printUsage(out io.Writer) {
 				"  change explain    Find the DRY file/path to edit for a rendered field",
 				"  change impact     See which rendered fields a DRY path can affect",
 				"  change preview    Preview a safe repo change",
+				"  enrich preview    Propose sidecar proof metadata for PR review",
 				"  detect            Detect generators in a repo",
 				"  generators        List supported generators (Helm, Score, Spring Boot, ...)",
 			},
@@ -1062,6 +1065,7 @@ func printUsage(out io.Writer) {
 			Lines: []string{
 				"  cub-gen gitops import --space my-space ./examples/helm-paas",
 				"  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas",
+				"  cub-gen enrich preview --space my-space ./examples/helm-paas",
 				"  cub-gen publish --space my-space ./examples/helm-paas | cub-gen verify --in -",
 				"  cub-gen publish --space my-space ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot",
 			},

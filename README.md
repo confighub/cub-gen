@@ -149,6 +149,18 @@ Kubernetes resources. The report names source owners and routes generated
 Deployment edits as `apply-here`, `lift-upstream`, `overlay`, or
 `block/escalate`.
 
+To make proof visible in a pull request without editing app manifests:
+
+```bash
+./cub-gen enrich preview --space platform --json ./testdata/app-of-apps-standalone \
+  | jq '.summary'
+./cub-gen enrich preview --space platform --patch ./testdata/app-of-apps-standalone
+```
+
+`enrich preview` is read-only. `enrich write` creates sidecar provenance files
+under `.cub-gen/enrichment/` and refuses to overwrite existing artifacts; a
+conflict becomes `review-required`.
+
 ## Core capabilities
 
 | Capability | Plain English |
@@ -157,6 +169,7 @@ Deployment edits as `apply-here`, `lift-upstream`, `overlay`, or
 | Render/import | Produce or read the deployable config |
 | Trace | Map rendered fields back to source files |
 | Explain | Say who owns the field and where to edit it |
+| Enrich | Create PR-friendly sidecar proof with source links, owners, route badges, and PR/MR link metadata |
 | Prove | Produce a reviewable bundle for local review, GitHub PRs, or ConfigHub |
 
 ## First runs
@@ -284,7 +297,7 @@ controllers running in kind.
 | Status | What is true today |
 |---|---|
 | Latest shipped | `v0.3.0` was released on 2026-04-12 |
-| Strong now | Repo-first CLI is stable; 10 generator families ship on this branch; the main examples have local, connected, and live proof paths |
+| Strong now | Repo-first CLI is stable; 11 generator families ship on this branch; the main examples have local, connected, and live proof paths |
 | In progress | Working `v0.4` roadmap: make cub-gen's role obvious as Component -> Deployable Variant -> Target/Connections/Change/Proof |
 | Current release target | [v0.4 working roadmap](docs/plans/2026-04-30-v0.4-obvious-value-roadmap.md) and GitHub parent issue [#287](https://github.com/confighub/cub-gen/issues/287) |
 | Latest release notes | See [docs/releases/v0.3.0.md](docs/releases/v0.3.0.md) |
