@@ -50,6 +50,12 @@ func BridgeSymmetryMatrix() []FamilyFixture {
 			ExpectedKind:    "no-config-platform",
 		},
 		{
+			Name:            "openchoreo",
+			RepoSuffix:      filepath.Join("testdata", "openchoreo-hardgate"),
+			ExpectedProfile: "openchoreo",
+			ExpectedKind:    "openchoreo",
+		},
+		{
 			Name:            "ops",
 			RepoSuffix:      filepath.Join("examples", "ops-workflow"),
 			ExpectedProfile: "ops-workflow",

@@ -411,6 +411,85 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Reason:         registry.InversePatchReason(g.Kind, "channels", "Channel mapping is app-level runtime behavior."),
 			},
 		}
+	case model.GeneratorOpenChoreo:
+		hints := openChoreoPathHintsFromInputs(g.Inputs)
+		imagePolicy := registry.InversePatchTemplateFor(g.Kind, "image", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.88, RequiresReview: false,
+		})
+		envPolicy := registry.InversePatchTemplateFor(g.Kind, "env_var", registry.InversePatchTemplate{
+			EditableBy: "environment-owner", Confidence: 0.84, RequiresReview: false,
+		})
+		portPolicy := registry.InversePatchTemplateFor(g.Kind, "service_port", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.82, RequiresReview: true,
+		})
+		secretPolicy := registry.InversePatchTemplateFor(g.Kind, "secret_ref", registry.InversePatchTemplate{
+			EditableBy: "security-team", Confidence: 0.86, RequiresReview: true,
+		})
+		resourcePolicy := registry.InversePatchTemplateFor(g.Kind, "resource_limit", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.80, RequiresReview: true,
+		})
+		defaultPolicy := registry.InversePatchTemplateFor(g.Kind, "platform_default", registry.InversePatchTemplate{
+			EditableBy: "platform-engineer", Confidence: 0.78, RequiresReview: true,
+		})
+		return []model.InversePatch{
+			{
+				Operation:      "replace",
+				DryPath:        "spec.containers.main.image",
+				WetPath:        "Deployment/spec/template/spec/containers[name=main]/image",
+				EditableBy:     imagePolicy.EditableBy,
+				Confidence:     imagePolicy.Confidence,
+				RequiresReview: imagePolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "image", "Container image is app-owned Workload intent."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spec.environment.env.LOG_LEVEL",
+				WetPath:        "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value",
+				EditableBy:     envPolicy.EditableBy,
+				Confidence:     envPolicy.Confidence,
+				RequiresReview: envPolicy.RequiresReview,
+				Reason: renderTargetTemplate(
+					registry.InversePatchReason(g.Kind, "env_var", "Environment values flow through the environment/release binding."),
+					map[string]string{"release_binding_path": hints.ReleaseBindingPath},
+				),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spec.service.port",
+				WetPath:        "Service/spec/ports[name=http]/port",
+				EditableBy:     portPolicy.EditableBy,
+				Confidence:     portPolicy.Confidence,
+				RequiresReview: portPolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "service_port", "Service port is constrained by the ComponentType platform contract."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spec.secretRef",
+				WetPath:        "Deployment/spec/template/spec/containers[name=main]/env[name=DATABASE_URL]/valueFrom/secretKeyRef/name",
+				EditableBy:     secretPolicy.EditableBy,
+				Confidence:     secretPolicy.Confidence,
+				RequiresReview: secretPolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "secret_ref", "Secret references are security-owned bindings and should not be edited on generated resources."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spec.resources.limits.cpu",
+				WetPath:        "Deployment/spec/template/spec/containers[name=main]/resources/limits/cpu",
+				EditableBy:     resourcePolicy.EditableBy,
+				Confidence:     resourcePolicy.Confidence,
+				RequiresReview: resourcePolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "resource_limit", "Resource limits are environment/platform-owned policy defaults."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spec.runtime.defaults.securityContext.runAsNonRoot",
+				WetPath:        "Deployment/spec/template/spec/securityContext/runAsNonRoot",
+				EditableBy:     defaultPolicy.EditableBy,
+				Confidence:     defaultPolicy.Confidence,
+				RequiresReview: defaultPolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "platform_default", "Platform defaults are owned by the ComponentType or platform policy, not generated Deployment YAML."),
+			},
+		}
 	case model.GeneratorOpsFlow:
 		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
 		imageTagPolicy := registry.InversePatchTemplateFor(g.Kind, "image_tag", registry.InversePatchTemplate{

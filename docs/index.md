@@ -262,6 +262,6 @@ For the active sequence, see the
 [v0.4 Working Roadmap](plans/2026-04-30-v0.4-obvious-value-roadmap.md).
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
-- Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 9 generators
+- Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 10 generators
 - Generator catalog (`generators`) with filtering, details, and markdown output
 - Local-first: works standalone, connects to [ConfigHub](platform.md) for governed execution

@@ -1,0 +1,12 @@
+apiVersion: openchoreo.dev/v1alpha1
+kind: RenderedRelease
+metadata:
+  name: payments-api-prod
+spec:
+  workloadRef: payments-api
+  releaseBindingRef: payments-api-prod
+  output:
+    namespace: apps-prod
+    objects:
+      - Deployment/payments-api
+      - Service/payments-api

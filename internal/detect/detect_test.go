@@ -280,6 +280,45 @@ func TestScanRepoApplicationSetStandalone(t *testing.T) {
 	}
 }
 
+func TestScanRepoOpenChoreoHardGate(t *testing.T) {
+	t.Parallel()
+
+	repo := filepath.Join("..", "..", "testdata", "openchoreo-hardgate")
+	result, err := ScanRepo(repo, "main")
+	if err != nil {
+		t.Fatalf("ScanRepo returned error: %v", err)
+	}
+	if len(result.Generators) != 1 {
+		t.Fatalf("expected 1 generator, got %d", len(result.Generators))
+	}
+
+	g := result.Generators[0]
+	if g.Kind != model.GeneratorOpenChoreo {
+		t.Fatalf("expected kind %q, got %q", model.GeneratorOpenChoreo, g.Kind)
+	}
+	if g.Profile != "openchoreo" {
+		t.Fatalf("expected profile openchoreo, got %q", g.Profile)
+	}
+	if g.Name != "payments-api" {
+		t.Fatalf("expected name payments-api, got %q", g.Name)
+	}
+
+	for _, expected := range []string{
+		"workload-payments-api.yaml",
+		"component-type-web-service.yaml",
+		"secret-reference-payments-db.yaml",
+		"envs/dev/release-binding-dev.yaml",
+		"envs/prod/release-binding-prod.yaml",
+		"rendered/dev/rendered-release-dev.yaml",
+		"rendered/prod/rendered-release-prod.yaml",
+		"rendered/prod/deployment.yaml",
+	} {
+		if !containsSuffix(g.Inputs, expected) {
+			t.Fatalf("expected inputs to contain %q; got %v", expected, g.Inputs)
+		}
+	}
+}
+
 func TestScanRepoGeneratorChains(t *testing.T) {
 	t.Parallel()
 

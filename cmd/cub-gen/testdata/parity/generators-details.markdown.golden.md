@@ -1,6 +1,6 @@
 # Generator Families
 
-Total: 9
+Total: 10
 
 | Kind | Profile | Resource Kind | Resource Type | Capabilities |
 | --- | --- | --- | --- | --- |
@@ -9,6 +9,7 @@ Total: 9
 | `c3agent` | `c3agent` | `ConfigMap` | `v1/ConfigMap` | fleet-config, agent-orchestration, inverse-fleet-config-patch |
 | `helm` | `helm-paas` | `HelmRelease` | `helm.toolkit.fluxcd.io/v2/HelmRelease` | render-manifests, values-overrides, inverse-values-patch |
 | `no-config-platform` | `no-config-platform` | `ConfigMap` | `v1/ConfigMap` | app-config-only, provider-config, inverse-provider-config-patch |
+| `openchoreo` | `openchoreo` | `Workload` | `openchoreo.dev/v1alpha1/Workload` | platform-crds, rendered-release, generated-resource-ownership, inverse-route-patch, adoption-report |
 | `opsworkflow` | `ops-workflow` | `Workflow` | `argoproj.io/v1alpha1/Workflow` | workflow-plan, governed-execution-intent, inverse-workflow-patch |
 | `score` | `scoredev-paas` | `Application` | `argoproj.io/v1alpha1/Application` | render-manifests, workload-spec, inverse-score-patch |
 | `springboot` | `springboot-paas` | `Kustomization` | `kustomize.toolkit.fluxcd.io/v1/Kustomization` | render-app-config, profile-overrides, inverse-app-config-patch |
@@ -397,6 +398,118 @@ Total: 9
 | `ConfigMap` | `{{name}}-provider-config` | `apps` | `base_config_path` | `-` | `false` | `app.environment` | `false` |
 | `Secret` | `{{name}}-provider-credentials` | `apps` | `base_config_path` | `-` | `false` | `credentials.api_key_ref` | `false` |
 | `ConfigMap` | `{{name}}-provider-config` | `apps` | `overlay_config_path` | `-` | `false` | `channels.inbound` | `true` |
+
+## `openchoreo`
+
+- Profile: `openchoreo`
+- Resource: `Workload` (`openchoreo.dev/v1alpha1/Workload`)
+- Capabilities: platform-crds, rendered-release, generated-resource-ownership, inverse-route-patch, adoption-report
+- Default input role: `openchoreo-input`
+- Default owner: `platform-engineer`
+- Field-origin transform: `openchoreo-release-render`
+- Field-origin overlay transform: `openchoreo-environment-binding`
+
+### Input Role Rules
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `workload` | - | - | workload- | .yaml, .yml |
+| `workload` | workload.yaml, workload.yml | - | - | - |
+| `component-type` | - | - | component-type- | .yaml, .yml |
+| `component-type` | component-type.yaml, component-type.yml | - | - | - |
+| `release-binding` | - | - | release-binding- | .yaml, .yml |
+| `release-binding` | release-binding.yaml, release-binding.yml | - | - | - |
+| `secret-reference` | - | - | secret-reference- | .yaml, .yml |
+| `secret-reference` | secret-reference.yaml, secret-reference.yml | - | - | - |
+| `rendered-release` | - | - | rendered-release- | .yaml, .yml |
+| `rendered-release` | rendered-release.yaml, rendered-release.yml | - | - | - |
+| `rendered-manifest` | - | rendered/ | - | .yaml, .yml |
+
+### Role Owners
+| Role | Owner |
+| --- | --- |
+| `component-type` | `platform-engineer` |
+| `release-binding` | `environment-owner` |
+| `rendered-manifest` | `platform-runtime` |
+| `rendered-release` | `platform-runtime` |
+| `secret-reference` | `security-team` |
+| `workload` | `app-team` |
+
+### Inverse Patch Templates
+| Key | Editable by | Confidence | Requires review |
+| --- | --- | --- | --- |
+| `env_var` | `environment-owner` | 0.84 | `false` |
+| `image` | `app-team` | 0.88 | `false` |
+| `platform_default` | `platform-engineer` | 0.78 | `true` |
+| `resource_limit` | `platform-engineer` | 0.80 | `true` |
+| `secret_ref` | `security-team` | 0.86 | `true` |
+| `service_port` | `platform-engineer` | 0.82 | `true` |
+
+### Inverse Pointer Templates
+| Key | Owner | Confidence |
+| --- | --- | --- |
+| `env_var` | `environment-owner` | 0.84 |
+| `image` | `app-team` | 0.88 |
+| `platform_default` | `platform-engineer` | 0.78 |
+| `resource_limit` | `platform-engineer` | 0.80 |
+| `secret_ref` | `security-team` | 0.86 |
+| `service_port` | `platform-engineer` | 0.82 |
+
+### Field Origin Confidences
+| Key | Confidence |
+| --- | --- |
+| `env_var` | 0.84 |
+| `image` | 0.88 |
+| `platform_default` | 0.78 |
+| `resource_limit` | 0.80 |
+| `secret_ref` | 0.86 |
+| `service_port` | 0.82 |
+
+### Hint Defaults
+| Key | Value |
+| --- | --- |
+| `component_type_path` | `component-type.yaml` |
+| `release_binding_path` | `release-binding.yaml` |
+| `rendered_manifest_path` | `rendered/deployment.yaml` |
+| `rendered_release_path` | `rendered-release.yaml` |
+| `secret_reference_path` | `secret-reference.yaml` |
+| `workload_path` | `workload.yaml` |
+
+### Inverse Patch Reasons
+| Key | Reason |
+| --- | --- |
+| `env_var` | Environment values flow through the environment/release binding. |
+| `image` | Container image is app-owned Workload intent. |
+| `platform_default` | Platform defaults are owned by the ComponentType or platform policy, not generated Deployment YAML. |
+| `resource_limit` | Resource limits are environment/platform-owned policy defaults. |
+| `secret_ref` | Secret references are security-owned bindings and should not be edited on generated resources. |
+| `service_port` | Service port is constrained by the ComponentType platform contract. |
+
+### Inverse Edit Hints
+| Key | Hint |
+| --- | --- |
+| `env_var` | Route: apply-here. Edit environment binding data in {{release_binding_path}}. |
+| `image` | Route: lift-upstream. Edit spec.containers.main.image in {{workload_path}}. |
+| `platform_default` | Route: block/escalate. Edit the platform default in {{component_type_path}} or platform policy, not the generated Deployment. |
+| `resource_limit` | Route: overlay. Keep this as an environment/platform overlay in {{release_binding_path}} or policy. |
+| `secret_ref` | Route: block/escalate. Edit {{secret_reference_path}} through the security-owned secret flow. |
+| `service_port` | Route: lift-upstream. Edit the service port contract in {{component_type_path}}. |
+
+### WET Targets
+| Kind | Name template | Owner | Namespace | Source DRY path template |
+| --- | --- | --- | --- | --- |
+| `RenderedRelease` | `{{name}}-prod` | `platform-runtime` | `apps` | `spec` |
+| `Deployment` | `{{name}}` | `platform-runtime` | `apps` | `spec.containers.main.image` |
+| `Service` | `{{name}}` | `platform-runtime` | `apps` | `spec.service.port` |
+| `Secret` | `{{name}}-secret-ref` | `security-team` | `apps` | `spec.secretRef` |
+
+### Rendered Lineage Templates
+| Kind | Name template | Namespace | Source path hint | Hint fallback | Multi hint | Source DRY path template | Optional |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `RenderedRelease` | `{{name}}-prod` | `apps` | `rendered_release_path` | `-` | `false` | `spec` | `false` |
+| `Deployment` | `{{name}}` | `apps` | `workload_path` | `-` | `false` | `spec.containers.main.image` | `false` |
+| `Deployment` | `{{name}}` | `apps` | `release_binding_path` | `-` | `false` | `spec.environment.env.LOG_LEVEL` | `false` |
+| `Deployment` | `{{name}}` | `apps` | `secret_reference_path` | `-` | `false` | `spec.secretRef` | `false` |
+| `Service` | `{{name}}` | `apps` | `component_type_path` | `-` | `false` | `spec.service.port` | `false` |
 
 ## `opsworkflow`
 

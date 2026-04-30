@@ -47,7 +47,7 @@ become full runnable adapters.
 
 | Pattern | Worked example | What it teaches | Product status |
 |---|---|---|---|
-| OpenChoreo-style component platform | [OpenChoreo as a Clean Generator](../docs/agentic-gitops/03-worked-examples/05-openchoreo-generator-worked-example.md) | Workload + ReleaseBinding + SecretReference + ComponentType -> rendered release | adapter not implemented |
+| OpenChoreo-style component platform | [OpenChoreo as a Clean Generator](../docs/agentic-gitops/03-worked-examples/05-openchoreo-generator-worked-example.md) | Workload + ReleaseBinding + SecretReference + ComponentType -> rendered release | fixture-backed initial adapter |
 | Argo ApplicationSet | [Argo Generators](../docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | selectors, inventory, and templates generate child Applications | bounded support exists |
 | Argo app-of-apps | [Argo Generators](../docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | root app plus child app catalog behaves like a generator | documented pattern, not first-class adapter |
 

@@ -1,5 +1,5 @@
 {
-  "count": 9,
+  "count": 10,
   "families": [
     {
       "capabilities": [
@@ -769,6 +769,287 @@
       "profile": "no-config-platform",
       "resource_kind": "ConfigMap",
       "resource_type": "v1/ConfigMap"
+    },
+    {
+      "capabilities": [
+        "platform-crds",
+        "rendered-release",
+        "generated-resource-ownership",
+        "inverse-route-patch",
+        "adoption-report"
+      ],
+      "kind": "openchoreo",
+      "policies": {
+        "default_input_role": "openchoreo-input",
+        "default_owner": "platform-engineer",
+        "field_origin_confidences": {
+          "env_var": 0.84,
+          "image": 0.88,
+          "platform_default": 0.78,
+          "resource_limit": 0.8,
+          "secret_ref": 0.86,
+          "service_port": 0.82
+        },
+        "field_origin_overlay_transform": "openchoreo-environment-binding",
+        "field_origin_transform": "openchoreo-release-render",
+        "hint_defaults": {
+          "component_type_path": "component-type.yaml",
+          "release_binding_path": "release-binding.yaml",
+          "rendered_manifest_path": "rendered/deployment.yaml",
+          "rendered_release_path": "rendered-release.yaml",
+          "secret_reference_path": "secret-reference.yaml",
+          "workload_path": "workload.yaml"
+        },
+        "input_role_rules": [
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "workload-"
+            ],
+            "role": "workload"
+          },
+          {
+            "exact_basenames": [
+              "workload.yaml",
+              "workload.yml"
+            ],
+            "role": "workload"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "component-type-"
+            ],
+            "role": "component-type"
+          },
+          {
+            "exact_basenames": [
+              "component-type.yaml",
+              "component-type.yml"
+            ],
+            "role": "component-type"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "release-binding-"
+            ],
+            "role": "release-binding"
+          },
+          {
+            "exact_basenames": [
+              "release-binding.yaml",
+              "release-binding.yml"
+            ],
+            "role": "release-binding"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "secret-reference-"
+            ],
+            "role": "secret-reference"
+          },
+          {
+            "exact_basenames": [
+              "secret-reference.yaml",
+              "secret-reference.yml"
+            ],
+            "role": "secret-reference"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "rendered-release-"
+            ],
+            "role": "rendered-release"
+          },
+          {
+            "exact_basenames": [
+              "rendered-release.yaml",
+              "rendered-release.yml"
+            ],
+            "role": "rendered-release"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "path_prefixes": [
+              "rendered/"
+            ],
+            "role": "rendered-manifest"
+          }
+        ],
+        "inverse_edit_hints": {
+          "env_var": "Route: apply-here. Edit environment binding data in {{release_binding_path}}.",
+          "image": "Route: lift-upstream. Edit spec.containers.main.image in {{workload_path}}.",
+          "platform_default": "Route: block/escalate. Edit the platform default in {{component_type_path}} or platform policy, not the generated Deployment.",
+          "resource_limit": "Route: overlay. Keep this as an environment/platform overlay in {{release_binding_path}} or policy.",
+          "secret_ref": "Route: block/escalate. Edit {{secret_reference_path}} through the security-owned secret flow.",
+          "service_port": "Route: lift-upstream. Edit the service port contract in {{component_type_path}}."
+        },
+        "inverse_patch_reasons": {
+          "env_var": "Environment values flow through the environment/release binding.",
+          "image": "Container image is app-owned Workload intent.",
+          "platform_default": "Platform defaults are owned by the ComponentType or platform policy, not generated Deployment YAML.",
+          "resource_limit": "Resource limits are environment/platform-owned policy defaults.",
+          "secret_ref": "Secret references are security-owned bindings and should not be edited on generated resources.",
+          "service_port": "Service port is constrained by the ComponentType platform contract."
+        },
+        "inverse_patch_templates": {
+          "env_var": {
+            "confidence": 0.84,
+            "editable_by": "environment-owner",
+            "requires_review": false
+          },
+          "image": {
+            "confidence": 0.88,
+            "editable_by": "app-team",
+            "requires_review": false
+          },
+          "platform_default": {
+            "confidence": 0.78,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          },
+          "resource_limit": {
+            "confidence": 0.8,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          },
+          "secret_ref": {
+            "confidence": 0.86,
+            "editable_by": "security-team",
+            "requires_review": true
+          },
+          "service_port": {
+            "confidence": 0.82,
+            "editable_by": "platform-engineer",
+            "requires_review": true
+          }
+        },
+        "inverse_pointer_templates": {
+          "env_var": {
+            "confidence": 0.84,
+            "owner": "environment-owner"
+          },
+          "image": {
+            "confidence": 0.88,
+            "owner": "app-team"
+          },
+          "platform_default": {
+            "confidence": 0.78,
+            "owner": "platform-engineer"
+          },
+          "resource_limit": {
+            "confidence": 0.8,
+            "owner": "platform-engineer"
+          },
+          "secret_ref": {
+            "confidence": 0.86,
+            "owner": "security-team"
+          },
+          "service_port": {
+            "confidence": 0.82,
+            "owner": "platform-engineer"
+          }
+        },
+        "rendered_lineage_templates": [
+          {
+            "kind": "RenderedRelease",
+            "name_template": "{{name}}-prod",
+            "namespace": "apps",
+            "source_dry_path_template": "spec",
+            "source_path_hint": "rendered_release_path"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "spec.containers.main.image",
+            "source_path_hint": "workload_path"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "spec.environment.env.LOG_LEVEL",
+            "source_path_hint": "release_binding_path"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "spec.secretRef",
+            "source_path_hint": "secret_reference_path"
+          },
+          {
+            "kind": "Service",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "source_dry_path_template": "spec.service.port",
+            "source_path_hint": "component_type_path"
+          }
+        ],
+        "role_owners": {
+          "component-type": "platform-engineer",
+          "release-binding": "environment-owner",
+          "rendered-manifest": "platform-runtime",
+          "rendered-release": "platform-runtime",
+          "secret-reference": "security-team",
+          "workload": "app-team"
+        },
+        "wet_targets": [
+          {
+            "kind": "RenderedRelease",
+            "name_template": "{{name}}-prod",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "spec"
+          },
+          {
+            "kind": "Deployment",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "spec.containers.main.image"
+          },
+          {
+            "kind": "Service",
+            "name_template": "{{name}}",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "spec.service.port"
+          },
+          {
+            "kind": "Secret",
+            "name_template": "{{name}}-secret-ref",
+            "namespace": "apps",
+            "owner": "security-team",
+            "source_dry_path_template": "spec.secretRef"
+          }
+        ]
+      },
+      "profile": "openchoreo",
+      "resource_kind": "Workload",
+      "resource_type": "openchoreo.dev/v1alpha1/Workload"
     },
     {
       "capabilities": [

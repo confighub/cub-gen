@@ -144,6 +144,7 @@ nav:
           - "Spring Boot": triple-styles/style-b-markdown/springboot.md
           - "Backstage IDP": triple-styles/style-b-markdown/backstage.md
           - "No Config Platform Config": triple-styles/style-b-markdown/no-config-platform.md
+          - "OpenChoreo": triple-styles/style-b-markdown/openchoreo.md
           - "Ops Workflow": triple-styles/style-b-markdown/opsworkflow.md
           - "C3 Agent": triple-styles/style-b-markdown/c3agent.md
           - "Swamp": triple-styles/style-b-markdown/swamp.md
@@ -154,6 +155,7 @@ nav:
           - "Spring Boot": triple-styles/style-c-yaml-plus-docs/springboot/triple.md
           - "Backstage IDP": triple-styles/style-c-yaml-plus-docs/backstage/triple.md
           - "No Config Platform Config": triple-styles/style-c-yaml-plus-docs/no-config-platform/triple.md
+          - "OpenChoreo": triple-styles/style-c-yaml-plus-docs/openchoreo/triple.md
           - "Ops Workflow": triple-styles/style-c-yaml-plus-docs/opsworkflow/triple.md
           - "C3 Agent": triple-styles/style-c-yaml-plus-docs/c3agent/triple.md
           - "Swamp": triple-styles/style-c-yaml-plus-docs/swamp/triple.md

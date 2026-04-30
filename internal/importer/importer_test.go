@@ -120,6 +120,68 @@ func TestImportRepoExamples(t *testing.T) {
 	}
 }
 
+func TestImportRepoOpenChoreoHardGate(t *testing.T) {
+	t.Parallel()
+
+	repo := filepath.Join("..", "..", "testdata", "openchoreo-hardgate")
+	detection, err := detect.ScanRepo(repo, "main")
+	if err != nil {
+		t.Fatalf("ScanRepo returned error: %v", err)
+	}
+	result, err := ImportDetection(detection, "platform")
+	if err != nil {
+		t.Fatalf("ImportDetection returned error: %v", err)
+	}
+	if len(result.GeneratorContracts) != 1 {
+		t.Fatalf("expected one OpenChoreo contract, got %d", len(result.GeneratorContracts))
+	}
+	contract := result.GeneratorContracts[0]
+	if contract.Kind != string(model.GeneratorOpenChoreo) {
+		t.Fatalf("expected OpenChoreo contract, got %+v", contract)
+	}
+	if len(result.WetManifestTargets) != 8 {
+		t.Fatalf("expected dev+prod rendered target set, got %d: %+v", len(result.WetManifestTargets), result.WetManifestTargets)
+	}
+	if len(result.Provenance) != 1 {
+		t.Fatalf("expected one provenance record, got %d", len(result.Provenance))
+	}
+
+	prov := result.Provenance[0]
+	routes := map[string]string{}
+	for _, pointer := range prov.InverseEditPointers {
+		routes[pointer.DryPath] = pointer.Route
+	}
+	for dryPath, expectedRoute := range map[string]string{
+		"spec.containers.main.image":                         "lift-upstream",
+		"spec.environment.env.LOG_LEVEL":                     "apply-here",
+		"spec.service.port":                                  "lift-upstream",
+		"spec.secretRef":                                     "block/escalate",
+		"spec.resources.limits.cpu":                          "overlay",
+		"spec.runtime.defaults.securityContext.runAsNonRoot": "block/escalate",
+	} {
+		if routes[dryPath] != expectedRoute {
+			t.Fatalf("expected route %q for %s, got %q in %+v", expectedRoute, dryPath, routes[dryPath], routes)
+		}
+	}
+
+	sourceRoles := map[string]string{}
+	for _, input := range result.DryInputs {
+		sourceRoles[input.Role] = input.Owner
+	}
+	for role, expectedOwner := range map[string]string{
+		"workload":          "app-team",
+		"component-type":    "platform-engineer",
+		"release-binding":   "environment-owner",
+		"secret-reference":  "security-team",
+		"rendered-release":  "platform-runtime",
+		"rendered-manifest": "platform-runtime",
+	} {
+		if sourceRoles[role] != expectedOwner {
+			t.Fatalf("expected owner %q for role %s, got %q in %+v", expectedOwner, role, sourceRoles[role], sourceRoles)
+		}
+	}
+}
+
 func TestImportRepoGeneratorCapabilities(t *testing.T) {
 	t.Parallel()
 

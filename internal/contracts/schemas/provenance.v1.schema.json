@@ -284,6 +284,10 @@
             "type": "string",
             "minLength": 1
           },
+          "route": {
+            "type": "string",
+            "minLength": 1
+          },
           "edit_hint": {
             "type": "string",
             "minLength": 1

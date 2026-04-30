@@ -1,5 +1,5 @@
 {
-  "count": 9,
+  "count": 10,
   "families": [
     {
       "capabilities": [
@@ -56,6 +56,19 @@
       "profile": "no-config-platform",
       "resource_kind": "ConfigMap",
       "resource_type": "v1/ConfigMap"
+    },
+    {
+      "capabilities": [
+        "platform-crds",
+        "rendered-release",
+        "generated-resource-ownership",
+        "inverse-route-patch",
+        "adoption-report"
+      ],
+      "kind": "openchoreo",
+      "profile": "openchoreo",
+      "resource_kind": "Workload",
+      "resource_type": "openchoreo.dev/v1alpha1/Workload"
     },
     {
       "capabilities": [

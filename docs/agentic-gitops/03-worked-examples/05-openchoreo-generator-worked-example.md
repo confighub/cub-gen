@@ -246,8 +246,8 @@ sequenceDiagram
 
 | Capability | Status in cub-gen today | OpenChoreo-specific status |
 |---|---|---|
-| Generator contract triple | implemented for current generator families | adapter needed |
-| Field-origin and inverse edit pointers | implemented for current generator families | adapter needed |
+| Generator contract triple | implemented for current generator families | fixture-backed initial adapter |
+| Field-origin and inverse edit pointers | implemented for current generator families | field routes proved by `testdata/openchoreo-hardgate` |
 | Apply-here / lift-upstream / block-escalate teaching model | strongest in Spring examples | model maps cleanly |
 | PR/MR linkage contract | commands and demos exist | OC wiring needed |
 | Multi-repo platform import | not generic yet | needed for real OC estates |

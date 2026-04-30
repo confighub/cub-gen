@@ -27,6 +27,10 @@ func TestPublishGoldenFromImportNoConfigPlatform(t *testing.T) {
 	assertPublishFromImportGolden(t, "no-config-platform", filepath.Join("testdata", "parity", "publish-from-import-no-config-platform.golden.json"))
 }
 
+func TestPublishGoldenFromImportOpenChoreo(t *testing.T) {
+	assertPublishFromImportGolden(t, "openchoreo", filepath.Join("testdata", "parity", "publish-from-import-openchoreo.golden.json"))
+}
+
 func TestPublishGoldenFromImportOps(t *testing.T) {
 	assertPublishFromImportGolden(t, "ops", filepath.Join("testdata", "parity", "publish-from-import-ops.golden.json"))
 }
@@ -88,6 +92,10 @@ func TestPublishGoldenDirectBackstage(t *testing.T) {
 
 func TestPublishGoldenDirectNoConfigPlatform(t *testing.T) {
 	assertPublishDirectGolden(t, "no-config-platform", filepath.Join("testdata", "parity", "publish-direct-no-config-platform.golden.json"))
+}
+
+func TestPublishGoldenDirectOpenChoreo(t *testing.T) {
+	assertPublishDirectGolden(t, "openchoreo", filepath.Join("testdata", "parity", "publish-direct-openchoreo.golden.json"))
 }
 
 func TestPublishGoldenDirectOps(t *testing.T) {

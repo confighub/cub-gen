@@ -15,6 +15,7 @@ Canonical runtime source remains Go registry specs in `internal/registry/registr
 | `c3agent` | [yaml](style-a-yaml/c3agent.yaml) | [markdown](style-b-markdown/c3agent.md) | [pair](style-c-yaml-plus-docs/c3agent/) |
 | `helm` | [yaml](style-a-yaml/helm.yaml) | [markdown](style-b-markdown/helm.md) | [pair](style-c-yaml-plus-docs/helm/) |
 | `no-config-platform` | [yaml](style-a-yaml/no-config-platform.yaml) | [markdown](style-b-markdown/no-config-platform.md) | [pair](style-c-yaml-plus-docs/no-config-platform/) |
+| `openchoreo` | [yaml](style-a-yaml/openchoreo.yaml) | [markdown](style-b-markdown/openchoreo.md) | [pair](style-c-yaml-plus-docs/openchoreo/) |
 | `opsworkflow` | [yaml](style-a-yaml/opsworkflow.yaml) | [markdown](style-b-markdown/opsworkflow.md) | [pair](style-c-yaml-plus-docs/opsworkflow/) |
 | `score` | [yaml](style-a-yaml/score.yaml) | [markdown](style-b-markdown/score.md) | [pair](style-c-yaml-plus-docs/score/) |
 | `springboot` | [yaml](style-a-yaml/springboot.yaml) | [markdown](style-b-markdown/springboot.md) | [pair](style-c-yaml-plus-docs/springboot/) |

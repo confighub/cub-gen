@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-api
+  namespace: apps-prod
+  ownerReferences:
+    - apiVersion: openchoreo.dev/v1alpha1
+      kind: RenderedRelease
+      name: payments-api-prod
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: main
+          image: ghcr.io/acme/payments-api:v1.4.2
+          env:
+            - name: LOG_LEVEL
+              value: warn
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: payments-db-url
+                  key: DATABASE_URL
+          resources:
+            limits:
+              cpu: "1000m"

@@ -92,6 +92,7 @@ func allFamilyFixtures() []familyFixture {
 		{Name: "spring", RepoDir: "springboot-paas", Kind: model.GeneratorSpringBoot, Profile: "springboot-paas"},
 		{Name: "backstage", RepoDir: "backstage-idp", Kind: model.GeneratorBackstage, Profile: "backstage-idp"},
 		{Name: "no-config-platform", RepoDir: "just-apps-no-platform-config", Kind: model.GeneratorNoConfigPlatform, Profile: "no-config-platform"},
+		{Name: "openchoreo", RepoDir: filepath.Join("..", "testdata", "openchoreo-hardgate"), Kind: model.GeneratorOpenChoreo, Profile: "openchoreo"},
 		{Name: "ops", RepoDir: "ops-workflow", Kind: model.GeneratorOpsFlow, Profile: "ops-workflow"},
 		{Name: "c3agent", RepoDir: "c3agent", Kind: model.GeneratorC3Agent, Profile: "c3agent"},
 		{Name: "swamp", RepoDir: "swamp-automation", Kind: model.GeneratorSwamp, Profile: "swamp"},

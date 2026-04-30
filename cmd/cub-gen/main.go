@@ -1150,7 +1150,7 @@ func printGitOpsUsage(out io.Writer) {
 		helpSection{
 			Title: "Usage",
 			Lines: []string{
-				"  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--json] <target-path>",
+				"  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--adoption-report] [--json] <target-path>",
 				"  cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--wait] [--json] <target-path> [<render-target-path>]",
 				"  cub-gen gitops cleanup [--space SPACE] [--json] <target-path>",
 			},

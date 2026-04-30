@@ -217,6 +217,54 @@ func TestGitOpsParityGoldenDiscoverApplicationSet(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-applicationset.golden.json"), got)
 }
 
+func TestGitOpsParityGoldenDiscoverOpenChoreo(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "testdata", "openchoreo-hardgate"))
+	if err != nil {
+		t.Fatalf("resolve openchoreo path: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--json", repoPath})
+	if err != nil {
+		t.Fatalf("run openchoreo discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal openchoreo discover json: %v\noutput=%s", err, out)
+	}
+	normalizeDiscover(got)
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("testdata", "openchoreo-hardgate"))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-openchoreo.golden.json"), got)
+}
+
+func TestGitOpsParityGoldenDiscoverOpenChoreoAdoptionReport(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "testdata", "openchoreo-hardgate"))
+	if err != nil {
+		t.Fatalf("resolve openchoreo path: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "discover", "--space", "platform", "--adoption-report", "--json", repoPath})
+	if err != nil {
+		t.Fatalf("run openchoreo adoption discover returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal openchoreo adoption json: %v\noutput=%s", err, out)
+	}
+	normalizeDiscover(got)
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("testdata", "openchoreo-hardgate"))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-discover-openchoreo-adoption.golden.json"), got)
+}
+
 func TestDetectReportsGeneratorChainSummary(t *testing.T) {
 	repoPath, err := filepath.Abs(filepath.Join("..", "..", "examples", "incubator", "score-helm-chain"))
 	if err != nil {
@@ -495,6 +543,31 @@ func TestGitOpsParityGoldenImportApplicationSet(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-applicationset.golden.json"), got)
 }
 
+func TestGitOpsParityGoldenImportOpenChoreo(t *testing.T) {
+	repoPath, err := filepath.Abs(filepath.Join("..", "..", "testdata", "openchoreo-hardgate"))
+	if err != nil {
+		t.Fatalf("resolve openchoreo path: %v", err)
+	}
+
+	out, stderr, err := runWithCapturedIO([]string{"gitops", "import", "--space", "platform", "--json", repoPath})
+	if err != nil {
+		t.Fatalf("run openchoreo import returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got: %s", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal openchoreo import json: %v\noutput=%s", err, out)
+	}
+	normalizeImport(got)
+	got["target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("testdata", "openchoreo-hardgate"))
+	got["render_target_path_expected_suffix"] = filepath.ToSlash(filepath.Join("testdata", "openchoreo-hardgate"))
+
+	assertGoldenJSON(t, filepath.Join("testdata", "parity", "gitops-import-openchoreo.golden.json"), got)
+}
+
 func TestGitOpsParityGoldenCleanup(t *testing.T) {
 	setupAliases(t)
 
@@ -742,6 +815,10 @@ func setupAliases(t *testing.T) map[string]string {
 	if err != nil {
 		t.Fatalf("resolve no-config-platform path: %v", err)
 	}
+	openChoreoAbs, err := filepath.Abs(filepath.Join("..", "..", "testdata", "openchoreo-hardgate"))
+	if err != nil {
+		t.Fatalf("resolve openchoreo path: %v", err)
+	}
 	opsAbs, err := filepath.Abs(filepath.Join("..", "..", "examples", "ops-workflow"))
 	if err != nil {
 		t.Fatalf("resolve ops path: %v", err)
@@ -765,6 +842,7 @@ func setupAliases(t *testing.T) map[string]string {
 			"spring":             springAbs,
 			"backstage":          backstageAbs,
 			"no-config-platform": noConfigPlatformAbs,
+			"openchoreo":         openChoreoAbs,
 			"ops":                opsAbs,
 			"c3agent":            c3agentAbs,
 			"swamp":              swampAbs,
@@ -789,6 +867,7 @@ func setupAliases(t *testing.T) map[string]string {
 		"spring":             springAbs,
 		"backstage":          backstageAbs,
 		"no-config-platform": noConfigPlatformAbs,
+		"openchoreo":         openChoreoAbs,
 		"ops":                opsAbs,
 		"c3agent":            c3agentAbs,
 		"swamp":              swampAbs,

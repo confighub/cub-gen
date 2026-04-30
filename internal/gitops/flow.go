@@ -64,6 +64,69 @@ type DiscoverResult struct {
 	Detections       []model.GeneratorDetection    `json:"detections"`
 	Chains           []model.GeneratorChain        `json:"chains,omitempty"`
 	ChainSummaries   []model.GeneratorChainSummary `json:"chain_summaries,omitempty"`
+	AdoptionReport   *AdoptionReport               `json:"adoption_report,omitempty"`
+}
+
+// DiscoverOptions controls optional, read-only analysis attached to discover.
+type DiscoverOptions struct {
+	AdoptionReport bool
+}
+
+// AdoptionReport is a read-only map of how an existing platform can be treated
+// as a generator before cub-gen performs any import, rewrite, or PR/MR action.
+type AdoptionReport struct {
+	SchemaVersion   string                    `json:"schema_version"`
+	Summary         AdoptionSummary           `json:"summary"`
+	Generators      []AdoptionGeneratorReport `json:"generators"`
+	UnsupportedGaps []string                  `json:"unsupported_gaps,omitempty"`
+	NextActions     []string                  `json:"next_actions,omitempty"`
+}
+
+type AdoptionSummary struct {
+	GeneratorCount      int      `json:"generator_count"`
+	SourceArtifactCount int      `json:"source_artifact_count"`
+	RenderedTargetCount int      `json:"rendered_target_count"`
+	OwnerCount          int      `json:"owner_count"`
+	Owners              []string `json:"owners,omitempty"`
+}
+
+type AdoptionGeneratorReport struct {
+	GeneratorID     string                   `json:"generator_id"`
+	Kind            string                   `json:"kind"`
+	Profile         string                   `json:"profile"`
+	Name            string                   `json:"name"`
+	Confidence      float64                  `json:"confidence"`
+	ReadOnly        bool                     `json:"read_only"`
+	SourceArtifacts []AdoptionSourceArtifact `json:"source_artifacts"`
+	RenderedTargets []AdoptionRenderedTarget `json:"rendered_targets"`
+	ChangeRoutes    []AdoptionChangeRoute    `json:"change_routes,omitempty"`
+	UnsupportedGaps []string                 `json:"unsupported_gaps,omitempty"`
+	NextActions     []string                 `json:"next_actions,omitempty"`
+}
+
+type AdoptionSourceArtifact struct {
+	Path      string `json:"path"`
+	Role      string `json:"role"`
+	Owner     string `json:"owner"`
+	SchemaRef string `json:"schema_ref,omitempty"`
+	Required  bool   `json:"required"`
+}
+
+type AdoptionRenderedTarget struct {
+	Kind          string `json:"kind"`
+	Name          string `json:"name"`
+	Namespace     string `json:"namespace,omitempty"`
+	Owner         string `json:"owner"`
+	SourceDryPath string `json:"source_dry_path,omitempty"`
+}
+
+type AdoptionChangeRoute struct {
+	WetPath    string  `json:"wet_path"`
+	DryPath    string  `json:"dry_path"`
+	Owner      string  `json:"owner"`
+	Route      string  `json:"route,omitempty"`
+	EditHint   string  `json:"edit_hint,omitempty"`
+	Confidence float64 `json:"confidence"`
 }
 
 // ImportFlowResult models the staged import output in the same conceptual shape
@@ -128,6 +191,12 @@ type targetConfig struct {
 // Discover scans a local repo target, applies where-resource filtering, and
 // writes discover-unit state to .cub-gen/discover/<discover-slug>.json.
 func Discover(targetPath, ref, space, whereResource string) (DiscoverResult, error) {
+	return DiscoverWithOptions(targetPath, ref, space, whereResource, DiscoverOptions{})
+}
+
+// DiscoverWithOptions mirrors Discover and can attach optional read-only
+// adoption analysis without changing the discovered platform or app artifacts.
+func DiscoverWithOptions(targetPath, ref, space, whereResource string, opts DiscoverOptions) (DiscoverResult, error) {
 	if strings.TrimSpace(targetPath) == "" {
 		return DiscoverResult{}, errors.New("target slug is required")
 	}
@@ -157,6 +226,7 @@ func Discover(targetPath, ref, space, whereResource string) (DiscoverResult, err
 	}
 	filteredChains := filterChains(detection.Chains, filtered)
 	resources := toDiscoveredResources(filtered)
+	discoveredAt := time.Now().UTC().Format(time.RFC3339)
 
 	discoverSlug := discoverUnitSlug(resolved.Slug, space, resolved.Path)
 	discoverFile := filepath.Join(resolved.Path, discoverDirName, discoverSlug+".json")
@@ -169,11 +239,27 @@ func Discover(targetPath, ref, space, whereResource string) (DiscoverResult, err
 		WhereResource:    strings.TrimSpace(whereResource),
 		DiscoverUnitSlug: discoverSlug,
 		DiscoverFile:     discoverFile,
-		DiscoveredAt:     time.Now().UTC().Format(time.RFC3339),
+		DiscoveredAt:     discoveredAt,
 		Resources:        resources,
 		Detections:       filtered,
 		Chains:           filteredChains,
 		ChainSummaries:   detect.SummarizeGeneratorChains(filteredChains),
+	}
+
+	if opts.AdoptionReport {
+		adoptionDetection := model.DetectionResult{
+			Repo:       resolved.Path,
+			Ref:        ref,
+			DetectedAt: discoveredAt,
+			Generators: filtered,
+			Chains:     filteredChains,
+		}
+		adoptionImport, importErr := importer.ImportDetection(adoptionDetection, space)
+		if importErr != nil {
+			return DiscoverResult{}, fmt.Errorf("build adoption report: %w", importErr)
+		}
+		report := buildAdoptionReport(filtered, adoptionImport)
+		result.AdoptionReport = &report
 	}
 
 	if err := persistDiscoverResult(result); err != nil {
@@ -263,6 +349,203 @@ func ImportWithOptions(targetPath, renderTargetSlug, ref, space, whereResource s
 		DryInputs:          importResult.DryInputs,
 		WetManifestTargets: importResult.WetManifestTargets,
 	}, nil
+}
+
+func buildAdoptionReport(detections []model.GeneratorDetection, importResult model.ImportResult) AdoptionReport {
+	dryByGeneratorID := map[string][]model.DryInputRef{}
+	for _, dry := range importResult.DryInputs {
+		dryByGeneratorID[dry.GeneratorID] = append(dryByGeneratorID[dry.GeneratorID], dry)
+	}
+	wetByGeneratorID := map[string][]model.WetManifestTarget{}
+	for _, wet := range importResult.WetManifestTargets {
+		wetByGeneratorID[wet.GeneratorID] = append(wetByGeneratorID[wet.GeneratorID], wet)
+	}
+	provenanceByGeneratorID := map[string]model.ProvenanceRecord{}
+	for _, prov := range importResult.Provenance {
+		provenanceByGeneratorID[prov.GeneratorID] = prov
+	}
+
+	ownerSet := map[string]struct{}{}
+	reports := make([]AdoptionGeneratorReport, 0, len(detections))
+	for _, detection := range detections {
+		sourceArtifacts := adoptionSourceArtifacts(detection.Kind, dryByGeneratorID[detection.ID])
+		renderedTargets := adoptionRenderedTargets(wetByGeneratorID[detection.ID])
+		changeRoutes := adoptionChangeRoutes(provenanceByGeneratorID[detection.ID])
+		for _, artifact := range sourceArtifacts {
+			if artifact.Owner != "" {
+				ownerSet[artifact.Owner] = struct{}{}
+			}
+		}
+		for _, target := range renderedTargets {
+			if target.Owner != "" {
+				ownerSet[target.Owner] = struct{}{}
+			}
+		}
+		for _, route := range changeRoutes {
+			if route.Owner != "" {
+				ownerSet[route.Owner] = struct{}{}
+			}
+		}
+
+		reports = append(reports, AdoptionGeneratorReport{
+			GeneratorID:     detection.ID,
+			Kind:            string(detection.Kind),
+			Profile:         detection.Profile,
+			Name:            detection.Name,
+			Confidence:      detection.Confidence,
+			ReadOnly:        true,
+			SourceArtifacts: sourceArtifacts,
+			RenderedTargets: renderedTargets,
+			ChangeRoutes:    changeRoutes,
+			UnsupportedGaps: adoptionUnsupportedGaps(detection.Kind),
+			NextActions:     adoptionNextActions(detection.Kind),
+		})
+	}
+
+	owners := sortedKeys(ownerSet)
+	sourceArtifactCount := 0
+	renderedTargetCount := 0
+	for _, report := range reports {
+		sourceArtifactCount += len(report.SourceArtifacts)
+		renderedTargetCount += len(report.RenderedTargets)
+	}
+
+	return AdoptionReport{
+		SchemaVersion: "cub.confighub.io/platform-adoption-report/v1",
+		Summary: AdoptionSummary{
+			GeneratorCount:      len(reports),
+			SourceArtifactCount: sourceArtifactCount,
+			RenderedTargetCount: renderedTargetCount,
+			OwnerCount:          len(owners),
+			Owners:              owners,
+		},
+		Generators:      reports,
+		UnsupportedGaps: adoptionReportUnsupportedGaps(reports),
+		NextActions: []string{
+			"Review the source artifact roles and owners before any rewrite.",
+			"Use gitops import only after the adoption report matches the platform team's ownership model.",
+			"Route generated-resource edits as apply-here, lift-upstream, overlay, or block/escalate instead of adding another platform knob by default.",
+		},
+	}
+}
+
+func adoptionSourceArtifacts(kind model.GeneratorKind, inputs []model.DryInputRef) []AdoptionSourceArtifact {
+	out := make([]AdoptionSourceArtifact, 0, len(inputs))
+	for _, input := range inputs {
+		out = append(out, AdoptionSourceArtifact{
+			Path:      input.Path,
+			Role:      input.Role,
+			Owner:     input.Owner,
+			SchemaRef: registry.SchemaRef(kind, input.Path),
+			Required:  input.Required,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Owner != out[j].Owner {
+			return out[i].Owner < out[j].Owner
+		}
+		if out[i].Role != out[j].Role {
+			return out[i].Role < out[j].Role
+		}
+		return out[i].Path < out[j].Path
+	})
+	return out
+}
+
+func adoptionRenderedTargets(targets []model.WetManifestTarget) []AdoptionRenderedTarget {
+	out := make([]AdoptionRenderedTarget, 0, len(targets))
+	for _, target := range targets {
+		out = append(out, AdoptionRenderedTarget{
+			Kind:          target.Kind,
+			Name:          target.Name,
+			Namespace:     target.Namespace,
+			Owner:         target.Owner,
+			SourceDryPath: target.SourceDryPath,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Namespace != out[j].Namespace {
+			return out[i].Namespace < out[j].Namespace
+		}
+		if out[i].Kind != out[j].Kind {
+			return out[i].Kind < out[j].Kind
+		}
+		return out[i].Name < out[j].Name
+	})
+	return out
+}
+
+func adoptionChangeRoutes(prov model.ProvenanceRecord) []AdoptionChangeRoute {
+	out := make([]AdoptionChangeRoute, 0, len(prov.InverseEditPointers))
+	for _, pointer := range prov.InverseEditPointers {
+		out = append(out, AdoptionChangeRoute{
+			WetPath:    pointer.WetPath,
+			DryPath:    pointer.DryPath,
+			Owner:      pointer.Owner,
+			Route:      pointer.Route,
+			EditHint:   pointer.EditHint,
+			Confidence: pointer.Confidence,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Route != out[j].Route {
+			return out[i].Route < out[j].Route
+		}
+		if out[i].Owner != out[j].Owner {
+			return out[i].Owner < out[j].Owner
+		}
+		return out[i].WetPath < out[j].WetPath
+	})
+	return out
+}
+
+func adoptionUnsupportedGaps(kind model.GeneratorKind) []string {
+	switch kind {
+	case model.GeneratorOpenChoreo:
+		return []string{
+			"OpenChoreo support is fixture-backed initial adapter support, not full upstream OpenChoreo conformance.",
+			"cub-gen does not rewrite OpenChoreo repos automatically from this report.",
+			"Generated Kubernetes resources are modeled as owned outputs; direct edits must be routed, not blindly preserved.",
+		}
+	default:
+		return []string{
+			"Automatic repo-wide rewrites are not performed by adoption report.",
+		}
+	}
+}
+
+func adoptionNextActions(kind model.GeneratorKind) []string {
+	switch kind {
+	case model.GeneratorOpenChoreo:
+		return []string{
+			"Validate Workload, ComponentType, SecretReference, ReleaseBinding, and RenderedRelease roles against a real OpenChoreo repo.",
+			"Classify generated Deployment edits into apply-here, lift-upstream, overlay, or block/escalate before proposing PR/MR mappings.",
+			"Keep platform CRD changes owned by platform maintainers, not individual app deployments.",
+		}
+	default:
+		return []string{
+			"Compare source artifacts, rendered targets, and owners with the platform team's expected model.",
+		}
+	}
+}
+
+func adoptionReportUnsupportedGaps(reports []AdoptionGeneratorReport) []string {
+	seen := map[string]struct{}{}
+	for _, report := range reports {
+		for _, gap := range report.UnsupportedGaps {
+			seen[gap] = struct{}{}
+		}
+	}
+	return sortedKeys(seen)
+}
+
+func sortedKeys(values map[string]struct{}) []string {
+	out := make([]string, 0, len(values))
+	for value := range values {
+		out = append(out, value)
+	}
+	sort.Strings(out)
+	return out
 }
 
 // Cleanup deletes the persisted discover-unit state for a local target.

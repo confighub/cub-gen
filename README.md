@@ -92,7 +92,6 @@ Component
   -> Deployable Variant
       -> Target
       -> Connections
-      -> Change
       -> Proof
 ```
 
@@ -100,6 +99,11 @@ A **Component** is the reusable thing. A **Deployable Variant** is the concrete
 copy of it for one environment, tenant, region, customer, or cluster. `cub-gen`
 helps explain how that variant was generated and where a proposed change should
 land.
+
+An **AI Variant** is a deployable variant whose delta, wiring, or operation is
+AI-assisted and governed. A **Change** is any proposed edit to the source or
+rendered config. **Proof** is the field-origin, owner, route, and decision
+evidence that makes the change reviewable.
 
 That is the pitch: **repo in, explanation out**.
 
@@ -129,6 +133,20 @@ That is the pitch: **repo in, explanation out**.
 
 The JSON field names still use `dry_path` and `wet_path` in v0.3 output. Read
 them as source path and rendered path.
+
+For an OpenChoreo-shaped platform, start read-only:
+
+```bash
+./cub-gen gitops discover --space platform --adoption-report --json \
+  ./testdata/openchoreo-hardgate \
+  | jq '.adoption_report.summary'
+```
+
+That fixture proves the hard case: `Workload`, `ComponentType`,
+`ReleaseBinding`, `SecretReference`, `RenderedRelease`, and generated
+Kubernetes resources. The report names source owners and routes generated
+Deployment edits as `apply-here`, `lift-upstream`, `overlay`, or
+`block/escalate`.
 
 ## Core capabilities
 
@@ -170,6 +188,7 @@ These run locally and do not require a login:
 | Spring Boot | `application.yaml` | [springboot-paas](examples/springboot-paas/) |
 | Backstage | `catalog-info.yaml` | [backstage-idp](examples/backstage-idp/) |
 | No-config platform | `app.yaml` provider config | [just-apps-no-platform-config](examples/just-apps-no-platform-config/) |
+| OpenChoreo-style platform | `Workload` + `ReleaseBinding` + `ComponentType` + `SecretReference` + `RenderedRelease` | [openchoreo-hardgate](testdata/openchoreo-hardgate/) |
 | Ops workflow | `ops-workflow.yaml` | [ops-workflow](examples/ops-workflow/) |
 | C3 agent | `c3agent.yaml` | [c3agent](examples/c3agent/) |
 | Swamp | `.swamp.yaml` + `workflow-*.yaml` | [swamp-automation](examples/swamp-automation/) |
@@ -262,7 +281,7 @@ controllers running in kind.
 | Status | What is true today |
 |---|---|
 | Latest shipped | `v0.3.0` was released on 2026-04-12 |
-| Strong now | Repo-first CLI is stable; 9 generator families ship on `main`; the main examples have local, connected, and live proof paths |
+| Strong now | Repo-first CLI is stable; 10 generator families ship on this branch; the main examples have local, connected, and live proof paths |
 | In progress | Working `v0.4` roadmap: make cub-gen's role obvious as Component -> Deployable Variant -> Target/Connections/Change/Proof |
 | Current release target | [v0.4 working roadmap](docs/plans/2026-04-30-v0.4-obvious-value-roadmap.md) and GitHub parent issue [#287](https://github.com/confighub/cub-gen/issues/287) |
 | Latest release notes | See [docs/releases/v0.3.0.md](docs/releases/v0.3.0.md) |

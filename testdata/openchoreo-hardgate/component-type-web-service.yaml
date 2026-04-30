@@ -1,0 +1,14 @@
+apiVersion: openchoreo.dev/v1alpha1
+kind: ComponentType
+metadata:
+  name: web-service
+spec:
+  service:
+    port: 8080
+  runtime:
+    defaults:
+      securityContext:
+        runAsNonRoot: true
+  allowedOverrides:
+    - spec.containers.main.image
+    - spec.environment.env.LOG_LEVEL

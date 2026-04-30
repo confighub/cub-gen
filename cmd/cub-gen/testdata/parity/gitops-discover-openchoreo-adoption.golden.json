@@ -1,0 +1,291 @@
+{
+  "adoption_report": {
+    "generators": [
+      {
+        "change_routes": [
+          {
+            "confidence": 0.84,
+            "dry_path": "spec.environment.env.LOG_LEVEL",
+            "edit_hint": "Route: apply-here. Edit environment binding data in envs/prod/release-binding-prod.yaml.",
+            "owner": "environment-owner",
+            "route": "apply-here",
+            "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value"
+          },
+          {
+            "confidence": 0.78,
+            "dry_path": "spec.runtime.defaults.securityContext.runAsNonRoot",
+            "edit_hint": "Route: block/escalate. Edit the platform default in component-type-web-service.yaml or platform policy, not the generated Deployment.",
+            "owner": "platform-engineer",
+            "route": "block/escalate",
+            "wet_path": "Deployment/spec/template/spec/securityContext/runAsNonRoot"
+          },
+          {
+            "confidence": 0.86,
+            "dry_path": "spec.secretRef",
+            "edit_hint": "Route: block/escalate. Edit secret-reference-payments-db.yaml through the security-owned secret flow.",
+            "owner": "security-team",
+            "route": "block/escalate",
+            "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=DATABASE_URL]/valueFrom/secretKeyRef/name"
+          },
+          {
+            "confidence": 0.88,
+            "dry_path": "spec.containers.main.image",
+            "edit_hint": "Route: lift-upstream. Edit spec.containers.main.image in workload-payments-api.yaml.",
+            "owner": "app-team",
+            "route": "lift-upstream",
+            "wet_path": "Deployment/spec/template/spec/containers[name=main]/image"
+          },
+          {
+            "confidence": 0.82,
+            "dry_path": "spec.service.port",
+            "edit_hint": "Route: lift-upstream. Edit the service port contract in component-type-web-service.yaml.",
+            "owner": "platform-engineer",
+            "route": "lift-upstream",
+            "wet_path": "Service/spec/ports[name=http]/port"
+          },
+          {
+            "confidence": 0.8,
+            "dry_path": "spec.resources.limits.cpu",
+            "edit_hint": "Route: overlay. Keep this as an environment/platform overlay in envs/prod/release-binding-prod.yaml or policy.",
+            "owner": "platform-engineer",
+            "route": "overlay",
+            "wet_path": "Deployment/spec/template/spec/containers[name=main]/resources/limits/cpu"
+          }
+        ],
+        "confidence": 0.88,
+        "generator_id": "gen_4a0a30075a9aed02",
+        "kind": "openchoreo",
+        "name": "payments-api",
+        "next_actions": [
+          "Validate Workload, ComponentType, SecretReference, ReleaseBinding, and RenderedRelease roles against a real OpenChoreo repo.",
+          "Classify generated Deployment edits into apply-here, lift-upstream, overlay, or block/escalate before proposing PR/MR mappings.",
+          "Keep platform CRD changes owned by platform maintainers, not individual app deployments."
+        ],
+        "profile": "openchoreo",
+        "read_only": true,
+        "rendered_targets": [
+          {
+            "kind": "Deployment",
+            "name": "payments-api",
+            "namespace": "apps-dev",
+            "owner": "platform-runtime",
+            "source_dry_path": "spec.containers.main.image"
+          },
+          {
+            "kind": "RenderedRelease",
+            "name": "payments-api-dev",
+            "namespace": "apps-dev",
+            "owner": "platform-runtime",
+            "source_dry_path": "spec"
+          },
+          {
+            "kind": "Secret",
+            "name": "payments-api-secret-ref",
+            "namespace": "apps-dev",
+            "owner": "security-team",
+            "source_dry_path": "spec.secretRef"
+          },
+          {
+            "kind": "Service",
+            "name": "payments-api",
+            "namespace": "apps-dev",
+            "owner": "platform-runtime",
+            "source_dry_path": "spec.service.port"
+          },
+          {
+            "kind": "Deployment",
+            "name": "payments-api",
+            "namespace": "apps-prod",
+            "owner": "platform-runtime",
+            "source_dry_path": "spec.containers.main.image"
+          },
+          {
+            "kind": "RenderedRelease",
+            "name": "payments-api-prod",
+            "namespace": "apps-prod",
+            "owner": "platform-runtime",
+            "source_dry_path": "spec"
+          },
+          {
+            "kind": "Secret",
+            "name": "payments-api-secret-ref",
+            "namespace": "apps-prod",
+            "owner": "security-team",
+            "source_dry_path": "spec.secretRef"
+          },
+          {
+            "kind": "Service",
+            "name": "payments-api",
+            "namespace": "apps-prod",
+            "owner": "platform-runtime",
+            "source_dry_path": "spec.service.port"
+          }
+        ],
+        "source_artifacts": [
+          {
+            "owner": "app-team",
+            "path": "workload-payments-api.yaml",
+            "required": true,
+            "role": "workload",
+            "schema_ref": "https://schema.confighub.dev/generators/openchoreo-workload-v1"
+          },
+          {
+            "owner": "environment-owner",
+            "path": "envs/dev/release-binding-dev.yaml",
+            "required": true,
+            "role": "release-binding",
+            "schema_ref": "https://schema.confighub.dev/generators/openchoreo-release-binding-v1"
+          },
+          {
+            "owner": "environment-owner",
+            "path": "envs/prod/release-binding-prod.yaml",
+            "required": true,
+            "role": "release-binding",
+            "schema_ref": "https://schema.confighub.dev/generators/openchoreo-release-binding-v1"
+          },
+          {
+            "owner": "platform-engineer",
+            "path": "component-type-web-service.yaml",
+            "required": true,
+            "role": "component-type",
+            "schema_ref": "https://schema.confighub.dev/generators/openchoreo-component-type-v1"
+          },
+          {
+            "owner": "platform-runtime",
+            "path": "rendered/dev/deployment.yaml",
+            "required": true,
+            "role": "rendered-manifest",
+            "schema_ref": "https://schema.confighub.dev/kubernetes/resource-v1"
+          },
+          {
+            "owner": "platform-runtime",
+            "path": "rendered/dev/service.yaml",
+            "required": true,
+            "role": "rendered-manifest",
+            "schema_ref": "https://schema.confighub.dev/kubernetes/resource-v1"
+          },
+          {
+            "owner": "platform-runtime",
+            "path": "rendered/prod/deployment.yaml",
+            "required": true,
+            "role": "rendered-manifest",
+            "schema_ref": "https://schema.confighub.dev/kubernetes/resource-v1"
+          },
+          {
+            "owner": "platform-runtime",
+            "path": "rendered/prod/service.yaml",
+            "required": true,
+            "role": "rendered-manifest",
+            "schema_ref": "https://schema.confighub.dev/kubernetes/resource-v1"
+          },
+          {
+            "owner": "platform-runtime",
+            "path": "rendered/dev/rendered-release-dev.yaml",
+            "required": true,
+            "role": "rendered-release",
+            "schema_ref": "https://schema.confighub.dev/generators/openchoreo-rendered-release-v1"
+          },
+          {
+            "owner": "platform-runtime",
+            "path": "rendered/prod/rendered-release-prod.yaml",
+            "required": true,
+            "role": "rendered-release",
+            "schema_ref": "https://schema.confighub.dev/generators/openchoreo-rendered-release-v1"
+          },
+          {
+            "owner": "security-team",
+            "path": "secret-reference-payments-db.yaml",
+            "required": true,
+            "role": "secret-reference",
+            "schema_ref": "https://schema.confighub.dev/generators/openchoreo-secret-reference-v1"
+          }
+        ],
+        "unsupported_gaps": [
+          "OpenChoreo support is fixture-backed initial adapter support, not full upstream OpenChoreo conformance.",
+          "cub-gen does not rewrite OpenChoreo repos automatically from this report.",
+          "Generated Kubernetes resources are modeled as owned outputs; direct edits must be routed, not blindly preserved."
+        ]
+      }
+    ],
+    "next_actions": [
+      "Review the source artifact roles and owners before any rewrite.",
+      "Use gitops import only after the adoption report matches the platform team's ownership model.",
+      "Route generated-resource edits as apply-here, lift-upstream, overlay, or block/escalate instead of adding another platform knob by default."
+    ],
+    "schema_version": "cub.confighub.io/platform-adoption-report/v1",
+    "summary": {
+      "generator_count": 1,
+      "owner_count": 5,
+      "owners": [
+        "app-team",
+        "environment-owner",
+        "platform-engineer",
+        "platform-runtime",
+        "security-team"
+      ],
+      "rendered_target_count": 8,
+      "source_artifact_count": 11
+    },
+    "unsupported_gaps": [
+      "Generated Kubernetes resources are modeled as owned outputs; direct edits must be routed, not blindly preserved.",
+      "OpenChoreo support is fixture-backed initial adapter support, not full upstream OpenChoreo conformance.",
+      "cub-gen does not rewrite OpenChoreo repos automatically from this report."
+    ]
+  },
+  "detections": [
+    {
+      "confidence": 0.88,
+      "id": "gen_4a0a30075a9aed02",
+      "inputs": [
+        "component-type-web-service.yaml",
+        "envs/dev/release-binding-dev.yaml",
+        "envs/prod/release-binding-prod.yaml",
+        "rendered/dev/deployment.yaml",
+        "rendered/dev/rendered-release-dev.yaml",
+        "rendered/dev/service.yaml",
+        "rendered/prod/deployment.yaml",
+        "rendered/prod/rendered-release-prod.yaml",
+        "rendered/prod/service.yaml",
+        "secret-reference-payments-db.yaml",
+        "workload-payments-api.yaml"
+      ],
+      "kind": "openchoreo",
+      "name": "payments-api",
+      "profile": "openchoreo",
+      "root": ""
+    }
+  ],
+  "discover_file": "\u003cdiscover_file\u003e",
+  "discover_unit_slug": "\u003cdiscover_unit_slug\u003e",
+  "discovered_at": "\u003ctimestamp\u003e",
+  "ref": "HEAD",
+  "resources": [
+    {
+      "generator_id": "gen_4a0a30075a9aed02",
+      "generator_kind": "openchoreo",
+      "generator_profile": "openchoreo",
+      "inputs": [
+        "component-type-web-service.yaml",
+        "envs/dev/release-binding-dev.yaml",
+        "envs/prod/release-binding-prod.yaml",
+        "rendered/dev/deployment.yaml",
+        "rendered/dev/rendered-release-dev.yaml",
+        "rendered/dev/service.yaml",
+        "rendered/prod/deployment.yaml",
+        "rendered/prod/rendered-release-prod.yaml",
+        "rendered/prod/service.yaml",
+        "secret-reference-payments-db.yaml",
+        "workload-payments-api.yaml"
+      ],
+      "resource_body": "kind: Workload\nmetadata:\n  name: payments-api\nspec:\n  root: \n",
+      "resource_kind": "Workload",
+      "resource_name": "payments-api",
+      "resource_type": "openchoreo.dev/v1alpha1/Workload",
+      "root": ""
+    }
+  ],
+  "space": "platform",
+  "target_path": "\u003ctarget_path\u003e",
+  "target_path_expected_suffix": "testdata/openchoreo-hardgate",
+  "target_slug": "openchoreo-hardgate"
+}

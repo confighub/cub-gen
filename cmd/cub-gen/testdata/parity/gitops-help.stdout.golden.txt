@@ -4,13 +4,13 @@ Start here when your first question is: what does this repo render, and where di
 These commands read local repo paths. They do not import from a cluster or deploy.
 
 Usage:
-  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--json] <target-path>
+  cub-gen gitops discover [--space SPACE] [--ref REF] [--where-resource EXPR] [--adoption-report] [--json] <target-path>
   cub-gen gitops import [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--wait] [--json] <target-path> [<render-target-path>]
   cub-gen gitops cleanup [--space SPACE] [--json] <target-path>
 
 Supported where-resource clauses:
-  kind = 'Application' | kind = 'ApplicationSet' | kind = 'Component' | kind = 'ConfigMap' | kind = 'HelmRelease' | kind = 'Kustomization' | kind = 'Workflow'
-  kind IN ('Application','ApplicationSet','Component','ConfigMap','HelmRelease','Kustomization','Workflow')
+  kind = 'Application' | kind = 'ApplicationSet' | kind = 'Component' | kind = 'ConfigMap' | kind = 'HelmRelease' | kind = 'Kustomization' | kind = 'Workflow' | kind = 'Workload'
+  kind IN ('Application','ApplicationSet','Component','ConfigMap','HelmRelease','Kustomization','Workflow','Workload')
   name = 'checkout-api' | resource_name LIKE '<contains-api>' | root LIKE '<contains-prod>'
   combine clauses with AND
 

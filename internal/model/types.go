@@ -9,6 +9,7 @@ const (
 	GeneratorSpringBoot       GeneratorKind = "springboot"
 	GeneratorBackstage        GeneratorKind = "backstage"
 	GeneratorNoConfigPlatform GeneratorKind = "no-config-platform"
+	GeneratorOpenChoreo       GeneratorKind = "openchoreo"
 	GeneratorOpsFlow          GeneratorKind = "opsworkflow"
 	GeneratorC3Agent          GeneratorKind = "c3agent"
 	GeneratorSwamp            GeneratorKind = "swamp"
@@ -220,6 +221,7 @@ type InverseEditPointer struct {
 	WetPath    string  `json:"wet_path"`
 	DryPath    string  `json:"dry_path"`
 	Owner      string  `json:"owner"`
+	Route      string  `json:"route,omitempty"`
 	EditHint   string  `json:"edit_hint"`
 	Confidence float64 `json:"confidence"`
 }

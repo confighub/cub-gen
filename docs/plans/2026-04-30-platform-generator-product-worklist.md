@@ -92,8 +92,9 @@ Definition of done:
 
 ### PG-02: OpenChoreo Adapter
 
-Problem: OpenChoreo is a clean candidate generator, but `cub-gen` cannot read
-its CRDs yet.
+Problem: OpenChoreo is a clean candidate generator. This branch can read a
+fixture-backed subset of its CRD shape, but full upstream conformance and
+multi-repo estate import are still open.
 
 Quality gate: the adapter is not credible until the README is honest about
 support status ([#288](https://github.com/confighub/cub-gen/issues/288)), the
@@ -110,12 +111,14 @@ Deterministic success criteria:
 1. Given Workload, ReleaseBinding, SecretReference, ComponentType, and
    RenderedRelease fixtures, `cub-gen gitops import` detects `openchoreo`.
 2. Import emits DRY roles for app intent, variant binding, secret reference,
-   and component type.
-3. Field-origin map routes at least env vars, mounted files, secret refs,
-   image, service port, and platform defaults.
+   component type, rendered release, and generated manifests.
+3. Field-origin map routes env vars, secret refs, image, service port, resource
+   limits, and platform defaults.
 4. Generated Kubernetes resources can be identified as platform/controller
    owned where applicable.
 5. At least two deployable variants are represented.
+6. `gitops discover --adoption-report` emits a read-only platform adoption
+   report before any rewrite.
 
 Proof matrix:
 
