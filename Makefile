@@ -1,4 +1,4 @@
-.PHONY: build test test-parity test-contracts test-bridge-symmetry test-examples test-change-api-http test-connected-smoke test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-flow-a-git-pr-to-mr test-flow-b-mr-to-git-pr test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo lint-dual-mode check-story-status check-story-evidence check-flow-evidence check-ai-only-scope check-docs-entrypoints check-example-truth-matrix check-connected-release-gate check-no-legacy-provider-terms check-connected-auth-contract check-registry-discoverability update-goldens sync-triple-styles ci ci-local ci-connected ci-connected-deep ci-connected-troubleshoot docs docs-serve
+.PHONY: build test test-parity test-contracts test-bridge-symmetry test-examples test-change-api-http test-connected-smoke test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-flow-a-git-pr-to-mr test-flow-b-mr-to-git-pr test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo lint-dual-mode check-story-status check-story-evidence check-flow-evidence check-ai-only-scope check-docs-entrypoints check-example-truth-matrix check-connected-release-gate check-connected-ingest-preflight check-no-legacy-provider-terms check-connected-auth-contract check-registry-discoverability update-goldens sync-triple-styles ci ci-local ci-connected ci-connected-deep ci-connected-troubleshoot docs docs-serve
 
 PARITY_TEST_PATTERN := ^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand|TestGeneratorsGolden)
 BRIDGE_SYMMETRY_PATTERN := ^(TestBridgeSymmetryMatrix|TestExamplesPathModeBridgeFlow)$
@@ -77,6 +77,9 @@ check-example-truth-matrix:
 check-connected-release-gate:
 	./test/checks/check-connected-release-gate.sh
 
+check-connected-ingest-preflight:
+	bash ./test/checks/check-connected-ingest-preflight.sh
+
 check-no-legacy-provider-terms:
 	./test/checks/check-no-legacy-provider-terms.sh
 
@@ -92,9 +95,9 @@ update-goldens:
 sync-triple-styles:
 	go run ./cmd/cub-gen-style-sync
 
-ci-local: build test test-contracts test-bridge-symmetry test-examples test-change-api-http lint-dual-mode check-story-status check-ai-only-scope check-docs-entrypoints check-example-truth-matrix check-connected-release-gate check-no-legacy-provider-terms check-connected-auth-contract check-registry-discoverability
+ci-local: build test test-contracts test-bridge-symmetry test-examples test-change-api-http lint-dual-mode check-story-status check-ai-only-scope check-docs-entrypoints check-example-truth-matrix check-connected-release-gate check-connected-ingest-preflight check-no-legacy-provider-terms check-connected-auth-contract check-registry-discoverability
 
-ci-connected: build test-connected-smoke check-ai-only-scope check-docs-entrypoints check-example-truth-matrix check-connected-release-gate check-no-legacy-provider-terms check-connected-auth-contract check-registry-discoverability
+ci-connected: build test-connected-smoke check-ai-only-scope check-docs-entrypoints check-example-truth-matrix check-connected-release-gate check-connected-ingest-preflight check-no-legacy-provider-terms check-connected-auth-contract check-registry-discoverability
 
 ci-connected-deep: ci-connected test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-flow-a-git-pr-to-mr test-flow-b-mr-to-git-pr test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo check-story-evidence check-flow-evidence
 
