@@ -31,7 +31,9 @@ If you are unsure, start with `helm-paas` for the platform view or
   covers source-side provenance, governed change, layered Helm/ApplicationSet
   proof, and a paired live runtime wrapper.
 - [`springboot-paas`](./springboot-paas/) is the strongest standalone
-  end-to-end app example today.
+  end-to-end app example today. It also demonstrates `normalize preview` for
+  turning route rules, variants, owners, and secret wiring into reviewable
+  sidecar proposals.
 - [`scoredev-paas`](./scoredev-paas/) is the strongest Score end-to-end path
   today.
 - [`live-reconcile`](./live-reconcile/) is the runtime harness. Pair it with

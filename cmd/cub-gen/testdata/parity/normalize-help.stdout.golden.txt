@@ -1,0 +1,18 @@
+cub-gen normalize: propose governed config rewrites without applying them
+
+Use normalize when a repo renders correctly but the review/governance shape is still too implicit.
+Preview is read-only. It creates a reviewable patch set for sidecar proposals, not direct app or platform mutations.
+
+Usage:
+  cub-gen normalize preview [--space SPACE] [--ref REF] [--where-resource EXPR] [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] [--json|--patch] [--out FILE|-] [--pretty] <target-path> [<render-target-path>]
+
+Examples:
+  cub-gen normalize preview --space platform ./examples/springboot-paas
+  cub-gen normalize preview --patch --space platform ./examples/springboot-paas
+
+Transforms:
+  - add-route-policy-annotation: turn field-route metadata into ConfigHub Unit route policy annotations
+  - lift-generated-patch-to-source: show where rendered edits should become source PRs
+  - split-env-values-into-variants: expose environment/profile files as Deployable Variants
+  - add-missing-owners: propose owner labels from generator provenance
+  - replace-implicit-secret-wiring: propose explicit SecretReference records for literal secret-shaped env values

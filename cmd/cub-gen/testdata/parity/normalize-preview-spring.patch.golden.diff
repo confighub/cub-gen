@@ -1,0 +1,215 @@
+diff --git a/.cub-gen/normalize/confighub-route-policy.annotation.json b/.cub-gen/normalize/confighub-route-policy.annotation.json
+new file mode 100644
+index 0000000..0000000
+--- /dev/null
++++ b/.cub-gen/normalize/confighub-route-policy.annotation.json
+@@ -0,0 +1,86 @@
++{
++  "schema_version": "cub.confighub.io/unit-annotation-proposal/v1",
++  "applies_to": {
++    "space": "platform",
++    "target_slug": "spring"
++  },
++  "annotations": {
++    "confighub.io/generator-route-policy": "{\"schema_version\":\"cub.confighub.io/generator-route-policy/v1\",\"routes\":[{\"resource_type\":\"ConfigMap\",\"resource_name\":\"inventory-api-config\",\"path\":\"data.application*.yaml:feature.inventory.*\",\"wet_path\":\"ConfigMap/data/application*.yaml:feature.inventory.*\",\"route\":\"apply-here\",\"owner\":\"app-team\",\"source_path\":\"operational/field-routes.yaml\",\"proposal_hint\":\"allow local ConfigHub mutation and preserve it across generator refresh\"},{\"resource_type\":\"Deployment\",\"resource_name\":\"inventory-api\",\"path\":\"spec.template.spec.containers[*].env[FEATURE_INVENTORY_*].value\",\"wet_path\":\"Deployment/spec/template/spec/containers[*]/env[FEATURE_INVENTORY_*]/value\",\"route\":\"apply-here\",\"owner\":\"app-team\",\"source_path\":\"operational/field-routes.yaml\",\"proposal_hint\":\"allow local ConfigHub mutation and preserve it across generator refresh\"},{\"resource_type\":\"ConfigMap\",\"resource_name\":\"inventory-api-config\",\"path\":\"data.application*.yaml:spring.datasource.*\",\"wet_path\":\"ConfigMap/data/application*.yaml:spring.datasource.*\",\"route\":\"generator-owned\",\"owner\":\"platform-engineering\",\"source_path\":\"operational/field-routes.yaml\",\"proposal_hint\":\"block direct mutation and escalate to the platform owner\"},{\"resource_type\":\"Deployment\",\"resource_name\":\"inventory-api\",\"path\":\"spec.template.spec.containers[*].env[SPRING_DATASOURCE_*].value\",\"wet_path\":\"Deployment/spec/template/spec/containers[*]/env[SPRING_DATASOURCE_*]/value\",\"route\":\"generator-owned\",\"owner\":\"platform-engineering\",\"source_path\":\"operational/field-routes.yaml\",\"proposal_hint\":\"block direct mutation and escalate to the platform owner\"},{\"resource_type\":\"Deployment\",\"resource_name\":\"inventory-api\",\"path\":\"spec.template.spec.securityContext.*\",\"wet_path\":\"Deployment/spec/template/spec/securityContext/*\",\"route\":\"generator-owned\",\"owner\":\"platform-engineering\",\"source_path\":\"operational/field-routes.yaml\",\"proposal_hint\":\"block direct mutation and escalate to the platform owner\"},{\"resource_type\":\"ConfigMap\",\"resource_name\":\"inventory-api-config\",\"path\":\"data.application*.yaml:spring.cache.*\",\"wet_path\":\"ConfigMap/data/application*.yaml:spring.cache.*\",\"route\":\"lift-upstream\",\"owner\":\"app-team\",\"source_path\":\"operational/field-routes.yaml\",\"proposal_hint\":\"create a source PR before accepting this as a durable change\"},{\"resource_type\":\"Deployment\",\"resource_name\":\"inventory-api\",\"path\":\"spec.template.spec.containers[*].env[SPRING_CACHE_*].value\",\"wet_path\":\"Deployment/spec/template/spec/containers[*]/env[SPRING_CACHE_*]/value\",\"route\":\"lift-upstream\",\"owner\":\"app-team\",\"source_path\":\"operational/field-routes.yaml\",\"proposal_hint\":\"create a source PR before accepting this as a durable change\"}]}",
++    "confighub.io/generator-route-policy-required": "true"
++  },
++  "policy": {
++    "schema_version": "cub.confighub.io/generator-route-policy/v1",
++    "routes": [
++      {
++        "resource_type": "ConfigMap",
++        "resource_name": "inventory-api-config",
++        "path": "data.application*.yaml:feature.inventory.*",
++        "wet_path": "ConfigMap/data/application*.yaml:feature.inventory.*",
++        "route": "apply-here",
++        "owner": "app-team",
++        "source_path": "operational/field-routes.yaml",
++        "proposal_hint": "allow local ConfigHub mutation and preserve it across generator refresh"
++      },
++      {
++        "resource_type": "Deployment",
++        "resource_name": "inventory-api",
++        "path": "spec.template.spec.containers[*].env[FEATURE_INVENTORY_*].value",
++        "wet_path": "Deployment/spec/template/spec/containers[*]/env[FEATURE_INVENTORY_*]/value",
++        "route": "apply-here",
++        "owner": "app-team",
++        "source_path": "operational/field-routes.yaml",
++        "proposal_hint": "allow local ConfigHub mutation and preserve it across generator refresh"
++      },
++      {
++        "resource_type": "ConfigMap",
++        "resource_name": "inventory-api-config",
++        "path": "data.application*.yaml:spring.datasource.*",
++        "wet_path": "ConfigMap/data/application*.yaml:spring.datasource.*",
++        "route": "generator-owned",
++        "owner": "platform-engineering",
++        "source_path": "operational/field-routes.yaml",
++        "proposal_hint": "block direct mutation and escalate to the platform owner"
++      },
++      {
++        "resource_type": "Deployment",
++        "resource_name": "inventory-api",
++        "path": "spec.template.spec.containers[*].env[SPRING_DATASOURCE_*].value",
++        "wet_path": "Deployment/spec/template/spec/containers[*]/env[SPRING_DATASOURCE_*]/value",
++        "route": "generator-owned",
++        "owner": "platform-engineering",
++        "source_path": "operational/field-routes.yaml",
++        "proposal_hint": "block direct mutation and escalate to the platform owner"
++      },
++      {
++        "resource_type": "Deployment",
++        "resource_name": "inventory-api",
++        "path": "spec.template.spec.securityContext.*",
++        "wet_path": "Deployment/spec/template/spec/securityContext/*",
++        "route": "generator-owned",
++        "owner": "platform-engineering",
++        "source_path": "operational/field-routes.yaml",
++        "proposal_hint": "block direct mutation and escalate to the platform owner"
++      },
++      {
++        "resource_type": "ConfigMap",
++        "resource_name": "inventory-api-config",
++        "path": "data.application*.yaml:spring.cache.*",
++        "wet_path": "ConfigMap/data/application*.yaml:spring.cache.*",
++        "route": "lift-upstream",
++        "owner": "app-team",
++        "source_path": "operational/field-routes.yaml",
++        "proposal_hint": "create a source PR before accepting this as a durable change"
++      },
++      {
++        "resource_type": "Deployment",
++        "resource_name": "inventory-api",
++        "path": "spec.template.spec.containers[*].env[SPRING_CACHE_*].value",
++        "wet_path": "Deployment/spec/template/spec/containers[*]/env[SPRING_CACHE_*]/value",
++        "route": "lift-upstream",
++        "owner": "app-team",
++        "source_path": "operational/field-routes.yaml",
++        "proposal_hint": "create a source PR before accepting this as a durable change"
++      }
++    ]
++  }
++}
+diff --git a/.cub-gen/normalize/lift-upstream.proposals.json b/.cub-gen/normalize/lift-upstream.proposals.json
+new file mode 100644
+index 0000000..0000000
+--- /dev/null
++++ b/.cub-gen/normalize/lift-upstream.proposals.json
+@@ -0,0 +1,20 @@
++{
++  "schema_version": "cub.confighub.io/lift-upstream-proposal/v1",
++  "routes": [
++    {
++      "field_pattern": "spring.cache.*",
++      "owner": "app-team",
++      "reason": "Cache adoption changes the app contract and should update upstream app inputs.",
++      "source_candidates": [
++        "src/main/resources/application-dev.yaml",
++        "src/main/resources/application-prod.yaml",
++        "src/main/resources/application-stage.yaml",
++        "src/main/resources/application.yaml"
++      ],
++      "rendered_paths": [
++        "ConfigMap/data/application*.yaml:spring.cache.*",
++        "Deployment/spec/template/spec/containers[*]/env[SPRING_CACHE_*]/value"
++      ]
++    }
++  ]
++}
+diff --git a/.cub-gen/normalize/deployable-variants.yaml b/.cub-gen/normalize/deployable-variants.yaml
+new file mode 100644
+index 0000000..0000000
+--- /dev/null
++++ b/.cub-gen/normalize/deployable-variants.yaml
+@@ -0,0 +1,15 @@
++schema_version: cub.confighub.io/deployable-variant-plan/v1
++component: inventory-api
++variants:
++    - name: dev
++      source_inputs:
++        - src/main/resources/application-dev.yaml
++      rendered_proof: confighub/inventory-api-dev.yaml
++    - name: prod
++      source_inputs:
++        - src/main/resources/application-prod.yaml
++      rendered_proof: confighub/inventory-api-prod.yaml
++    - name: stage
++      source_inputs:
++        - src/main/resources/application-stage.yaml
++      rendered_proof: confighub/inventory-api-stage.yaml
+diff --git a/.cub-gen/normalize/owner-annotations.yaml b/.cub-gen/normalize/owner-annotations.yaml
+new file mode 100644
+index 0000000..0000000
+--- /dev/null
++++ b/.cub-gen/normalize/owner-annotations.yaml
+@@ -0,0 +1,52 @@
++schema_version: cub.confighub.io/owner-annotation-plan/v1
++annotations:
++    - scope: rendered
++      kind: ConfigMap
++      name: inventory-api-config
++      namespace: apps
++      owner: platform-runtime
++      annotation: cub.confighub.io/owner=platform-runtime
++    - scope: rendered
++      kind: Deployment
++      name: inventory-api
++      namespace: apps
++      owner: platform-runtime
++      annotation: cub.confighub.io/owner=platform-runtime
++    - scope: rendered
++      kind: Kustomization
++      name: springboot-paas
++      namespace: apps
++      owner: platform-runtime
++      annotation: cub.confighub.io/owner=platform-runtime
++    - scope: rendered
++      kind: Service
++      name: inventory-api
++      namespace: apps
++      owner: platform-runtime
++      annotation: cub.confighub.io/owner=platform-runtime
++    - scope: rendered
++      kind: ServiceAccount
++      name: inventory-api
++      namespace: apps
++      owner: platform-runtime
++      annotation: cub.confighub.io/owner=platform-runtime
++    - scope: source
++      path: src/main/resources/application-dev.yaml
++      owner: app-team
++      annotation: cub.confighub.io/owner=app-team
++    - scope: source
++      path: src/main/resources/application-prod.yaml
++      owner: app-team
++      annotation: cub.confighub.io/owner=app-team
++    - scope: source
++      path: src/main/resources/application-stage.yaml
++      owner: app-team
++      annotation: cub.confighub.io/owner=app-team
++    - scope: source
++      path: src/main/resources/application.yaml
++      owner: app-team
++      annotation: cub.confighub.io/owner=app-team
++    - scope: source
++      path: pom.xml
++      owner: platform-engineer
++      annotation: cub.confighub.io/owner=platform-engineer
+diff --git a/.cub-gen/normalize/secret-references.yaml b/.cub-gen/normalize/secret-references.yaml
+new file mode 100644
+index 0000000..0000000
+--- /dev/null
++++ b/.cub-gen/normalize/secret-references.yaml
+@@ -0,0 +1,12 @@
++schema_version: cub.confighub.io/secret-reference-proposal/v1
++references:
++    - resource: Deployment/inventory-api
++      namespace: apps
++      container: inventory-api
++      env: SPRING_DATASOURCE_URL
++      owner: platform-engineering
++      current: literal-value
++      proposed_ref:
++        key: url
++        secret_name: inventory-api-datasource
++      review: replace env.value with env.valueFrom.secretKeyRef only after the secret lifecycle is owned and audited

@@ -51,6 +51,8 @@ func run(args []string) error {
 		return runChange(args[1:])
 	case "enrich":
 		return runEnrich(args[1:])
+	case "normalize":
+		return runNormalize(args[1:])
 	case "generators":
 		return runGenerators(args[1:])
 	case "gitops":
@@ -1043,6 +1045,7 @@ func printUsage(out io.Writer) {
 				"  change impact     See which rendered fields a DRY path can affect",
 				"  change preview    Preview a safe repo change",
 				"  enrich preview    Propose sidecar proof metadata for PR review",
+				"  normalize preview  Propose governed rewrite patches for review",
 				"  platform import   Read a multi-repo platform estate as a graph",
 				"  platform fanout   Emit one proof bundle per deployable variant",
 				"  detect            Detect generators in a repo",
@@ -1072,6 +1075,7 @@ func printUsage(out io.Writer) {
 				"  cub-gen platform fanout --variant dev --json ./testdata/variant-fanout/platform.yaml",
 				"  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas",
 				"  cub-gen enrich preview --space my-space ./examples/helm-paas",
+				"  cub-gen normalize preview --space my-space ./examples/springboot-paas",
 				"  cub-gen publish --space my-space ./examples/helm-paas | cub-gen verify --in -",
 				"  cub-gen publish --space my-space ./examples/helm-paas | cub-gen attest --in - --verifier ci-bot",
 			},

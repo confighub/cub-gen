@@ -19,7 +19,6 @@ Open issues checked on 2026-05-01:
 |---|---|---|
 | [#287](https://github.com/confighub/cub-gen/issues/287) | make cub-gen role and value obvious | parent roadmap issue keeping the product story coherent |
 | [#283](https://github.com/confighub/cub-gen/issues/283) | enforce generator route metadata server-side | route ownership must become an authoritative backend decision |
-| [#281](https://github.com/confighub/cub-gen/issues/281) | propose governed config rewrites | import should lead to reviewable improvements, not magic rewrites |
 | [#277](https://github.com/confighub/cub-gen/issues/277) | OpenChoreo adapter | external platform-family proof needs upstream conformance |
 | [#236](https://github.com/confighub/cub-gen/issues/236) | ship cub-gen as `cub gen` plugin | product workflow should feel like one platform, not a sidecar binary |
 | [#213](https://github.com/confighub/cub-gen/issues/213) | GUI provenance trace | click-field-to-source is the core teaching moment |
@@ -247,6 +246,11 @@ Definition of done:
 
 Problem: `springboot init` scaffolds starter material, but there is no general
 "make this config better" proposal engine.
+
+Status: implemented by `cub-gen normalize preview`. The Spring Boot example now
+produces one review-only patch set with route policy annotations,
+lift-upstream source routing, Deployable Variant inventory, owner annotations,
+and explicit secret-reference proposals.
 
 Deterministic success criteria:
 
