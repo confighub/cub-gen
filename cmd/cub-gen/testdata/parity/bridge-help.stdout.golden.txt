@@ -5,11 +5,13 @@ Most users should start with demo-connected.sh or run-connected-smoke.sh first.
 
 Usage:
   cub-gen bridge ingest [--in FILE|-] --base-url URL [--token TOKEN] [--endpoint PATH] [--json] [--pretty]
+  cub-gen bridge link --bundle FILE|- --github-pr-repo REPO --github-pr-number N --github-pr-url URL --confighub-mr-id ID --confighub-mr-url URL [--base-url URL --token TOKEN]
   cub-gen bridge decision <create|attach|apply|query> [flags]
   cub-gen bridge promote <init|govern|verify|open|approve|merge> [flags]
 
 What it's for:
   ingest      Submit a verified bundle to ConfigHub
+  link        Create/update GitHub PR <-> ConfigHub MR review links
   decision    Query backend decision state or simulate it offline
   promote     Track PR<->MR and upstream DRY promotion flows
 
@@ -19,8 +21,10 @@ Examples:
   cub-gen bridge decision attach --decision decision.json --attestation attestation.json
   cub-gen bridge decision apply --decision decision.json --state ALLOW --approved-by platform-admin --reason "policy checks passed"
   cub-gen bridge decision query --base-url https://confighub.example --change-id chg_123
+  cub-gen bridge link --bundle bundle.json --github-pr-repo github.com/confighub/apps --github-pr-number 42 --github-pr-url https://github.com/confighub/apps/pull/42 --confighub-mr-id mr_123 --confighub-mr-url https://confighub.example/mr/123
   cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123
 
 Tips:
+  - bridge link is the single-command PR/MR correlation path
   - bridge decision query is the authoritative backend lookup path
   - local decision create|attach|apply commands are for offline contract simulation

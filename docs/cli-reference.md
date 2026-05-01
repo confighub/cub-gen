@@ -313,6 +313,27 @@ cub-gen bridge decision attach --decision <decision.json> --attestation <attesta
 cub-gen bridge decision apply --decision <decision.json> --state ALLOW --approved-by <who> --reason <why>
 ```
 
+### `bridge link`
+
+One-command GitHub PR to ConfigHub MR correlation. It derives `change_id` from a
+`cub-gen publish` bundle, builds the canonical review-link record, and can POST
+it to ConfigHub with an idempotency key.
+
+```bash
+cub-gen bridge link \
+  --bundle bundle.json \
+  --github-pr-repo github.com/confighub/apps \
+  --github-pr-number 42 \
+  --github-pr-url https://github.com/confighub/apps/pull/42 \
+  --confighub-mr-id mr_123 \
+  --confighub-mr-url https://confighub.example/mr/123 \
+  --base-url https://confighub.example \
+  --token "$CONFIGHUB_TOKEN"
+```
+
+Omit `--base-url` when you only want the local review-link JSON for a PR body,
+status payload, or changeset label set.
+
 ### `bridge promote`
 
 Promotion guardrail flow (app PR -> CH MR -> platform DRY PR).
@@ -667,6 +688,17 @@ connected path.
 # 4) Query decision state by change_id
 ./cub-gen bridge decision query --base-url https://confighub.example \
   --change-id "$(jq -r .change_id decision-allow.json)"
+
+# 5) Link the GitHub PR and ConfigHub MR with the same change_id
+./cub-gen bridge link \
+  --bundle bundle.json \
+  --github-pr-repo github.com/confighub/apps \
+  --github-pr-number 42 \
+  --github-pr-url https://github.com/confighub/apps/pull/42 \
+  --confighub-mr-id "$(jq -r .artifact_id ingest-result.json)" \
+  --confighub-mr-url https://confighub.example/mr/123 \
+  --base-url https://confighub.example \
+  --token "$CONFIGHUB_TOKEN"
 ```
 
 ### Promotion guardrail flow

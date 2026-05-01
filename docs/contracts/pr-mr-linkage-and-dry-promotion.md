@@ -43,4 +43,5 @@ Blocked by contract:
 ## Implementation anchors
 
 1. Correlation + promotion state machine: `internal/bridge/workflow.go`
-2. Gate tests and happy-path proof: `internal/bridge/workflow_test.go`
+2. One-command PR/MR linkage CLI: `cub-gen bridge link`
+3. Gate tests and happy-path proof: `internal/bridge/workflow_test.go`

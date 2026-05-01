@@ -242,6 +242,130 @@ func TestBridgePromoteLifecycleCommands(t *testing.T) {
 	}
 }
 
+func TestBridgeLinkCommandPostsReviewLinkFromBundle(t *testing.T) {
+	setupAliases(t)
+
+	publishOut, publishErr, err := runWithCapturedIO([]string{"publish", "--space", "platform", "helm", "render-target"})
+	if err != nil {
+		t.Fatalf("publish returned error: %v\nstderr=%s", err, publishErr)
+	}
+	if strings.TrimSpace(publishErr) != "" {
+		t.Fatalf("expected empty publish stderr, got %q", publishErr)
+	}
+
+	var bundle publish.ChangeBundle
+	if err := json.Unmarshal([]byte(publishOut), &bundle); err != nil {
+		t.Fatalf("unmarshal bundle: %v\noutput=%s", err, publishOut)
+	}
+
+	var gotPayload bridgeflow.ReviewLink
+	var gotKey string
+	var gotAuth string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("expected POST, got %s", r.Method)
+		}
+		if r.URL.Path != "/api/v1/pr-mr-links" {
+			t.Fatalf("unexpected link path: %s", r.URL.Path)
+		}
+		gotKey = r.Header.Get("Idempotency-Key")
+		gotAuth = r.Header.Get("Authorization")
+		if err := json.NewDecoder(r.Body).Decode(&gotPayload); err != nil {
+			t.Fatalf("decode payload: %v", err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_, _ = w.Write([]byte(`{"link_id":"link_123","status":"linked"}`))
+	}))
+	defer srv.Close()
+
+	out, stderr, err := runWithCapturedIOAndStdin([]string{
+		"bridge", "link",
+		"--bundle", "-",
+		"--base-url", srv.URL,
+		"--token", "token-123",
+		"--github-pr-repo", "github.com/confighub/app",
+		"--github-pr-number", "42",
+		"--github-pr-url", "https://github.com/confighub/app/pull/42",
+		"--github-pr-sha", "abc123",
+		"--confighub-mr-id", "mr_123",
+		"--confighub-mr-url", "https://hub.confighub.com/mr/123",
+		"--confighub-mr-status", "OPEN",
+	}, publishOut)
+	if err != nil {
+		t.Fatalf("bridge link returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got bridgeflow.LinkResult
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal bridge link output: %v\noutput=%s", err, out)
+	}
+	if got.ChangeID != bundle.ChangeID {
+		t.Fatalf("expected change_id %q, got %q", bundle.ChangeID, got.ChangeID)
+	}
+	expectedKey := bundle.ChangeID + ":github.com/confighub/app:42:mr_123"
+	if gotKey != expectedKey || got.IdempotencyKey != expectedKey {
+		t.Fatalf("expected idempotency key %q, header=%q output=%q", expectedKey, gotKey, got.IdempotencyKey)
+	}
+	if gotAuth != "Bearer token-123" {
+		t.Fatalf("expected bearer auth, got %q", gotAuth)
+	}
+	if gotPayload.ChangeID != bundle.ChangeID {
+		t.Fatalf("expected payload change_id %q, got %q", bundle.ChangeID, gotPayload.ChangeID)
+	}
+	if got.LinkID != "link_123" || got.Status != "linked" || got.ReviewLink.GitPR.Number != 42 {
+		t.Fatalf("unexpected link result: %+v", got)
+	}
+}
+
+func TestBridgeLinkCommandLocalReviewLink(t *testing.T) {
+	out, stderr, err := runWithCapturedIO([]string{
+		"bridge", "link",
+		"--change-id", "chg_123",
+		"--app-pr-repo", "github.com/confighub/app",
+		"--app-pr-number", "42",
+		"--app-pr-url", "https://github.com/confighub/app/pull/42",
+		"--mr-id", "mr_123",
+		"--mr-url", "https://hub.confighub.com/mr/123",
+	})
+	if err != nil {
+		t.Fatalf("bridge link local returned error: %v\nstderr=%s", err, stderr)
+	}
+	if strings.TrimSpace(stderr) != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+	var got bridgeflow.ReviewLink
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal local review link: %v\noutput=%s", err, out)
+	}
+	if got.ChangeID != "chg_123" || got.GitPR.Repo != "github.com/confighub/app" || got.ConfigHubMR.ID != "mr_123" {
+		t.Fatalf("unexpected local review link: %+v", got)
+	}
+}
+
+func TestBridgeLinkCommandRequiresTokenForRemote(t *testing.T) {
+	t.Setenv("CONFIGHUB_TOKEN", "")
+	_, stderr, err := runWithCapturedIO([]string{
+		"bridge", "link",
+		"--change-id", "chg_123",
+		"--base-url", "https://hub.confighub.test",
+		"--github-pr-repo", "github.com/confighub/app",
+		"--github-pr-number", "42",
+		"--github-pr-url", "https://github.com/confighub/app/pull/42",
+		"--confighub-mr-id", "mr_123",
+		"--confighub-mr-url", "https://hub.confighub.com/mr/123",
+	})
+	if err == nil {
+		t.Fatal("expected missing token error")
+	}
+	if !strings.Contains(err.Error(), "requires --token or CONFIGHUB_TOKEN") {
+		t.Fatalf("expected missing token error, got %v stderr=%s", err, stderr)
+	}
+}
+
 func TestBridgeDecisionQueryCommand(t *testing.T) {
 	record := bridgeflow.DecisionRecord{
 		SchemaVersion:     "cub.confighub.io/governed-decision-state/v1",
