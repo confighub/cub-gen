@@ -307,4 +307,4 @@ Argo has at least three roles:
 - Argo CD docs: [Cluster Bootstrapping / App of Apps](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/)
 - cub-gen: [ApplicationSet Generator Boundary](../../contracts/applicationset-generator-boundary.md)
 - cub-gen: [App-of-Apps Generator Boundary](../../contracts/app-of-apps-generator-boundary.md)
-- cub-gen: [Helm PaaS layered proof](../../../examples/helm-paas/README.md)
+- cub-gen: [Helm PaaS layered proof](https://github.com/confighub/cub-gen/tree/main/examples/helm-paas)
