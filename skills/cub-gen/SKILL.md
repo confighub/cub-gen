@@ -1,118 +1,207 @@
 ---
 name: cub-gen
-description: Use when working in the cub-gen repo or when answering what cub-gen can do versus ConfigHub/cub/cub-scout. Covers cub-gen's source-side provenance role, generator detection, DRY/WET field origin tracing, change CLI (preview/run/explain), publish/verify/attest pipeline, and how to verify current command truth before claiming capability.
+description: Use when working in the cub-gen repo or when explaining cub-gen's source-side role versus ConfigHub cub and cub-scout. Covers generator discovery, Component -> Deployable Variant proof, DRY/WET field-origin tracing, inverse-edit routing, platform import/fanout, enrichment/normalization previews, publish/verify/attest bundles, and ConfigHub bridge workflows.
+tier: plugin-candidate
+plugin: cub-gen
+canonical_command: cub-gen
+future_command: cub gen
 ---
 
 # cub-gen
 
-Start here when the task is about:
+Use this skill when the task is about:
 
 - what `cub-gen` does today
-- how `cub-gen` differs from `cub` and `cub-scout`
-- generator detection and support (Helm, Score, Spring Boot, etc.)
-- field-origin tracing and inverse-edit guidance
-- the publish/verify/attest provenance bundle pipeline
-- change preview/run/explain workflows
-- bridge workflows (ingest, decision, promote)
+- how `cub-gen` differs from `cub`, `cub gitops`, and `cub-scout`
+- generator detection and supported generator families
+- Component, Deployable Variant, Target, Connection, Change, and Proof mapping
+- field-origin tracing, confidence scores, and inverse-edit guidance
+- platform estate import, variant fanout, enrichment, and normalization previews
+- publish, verify, attest, and verify-attestation bundles
+- ConfigHub bridge workflows for ingest, decisions, PR/MR links, and promotion
+- the future `cub gen` plugin surface
 
-## Read first
+## Read First
 
 1. `AI-README-FIRST.md`
 2. `HANDOVER.md`
-3. `docs/cli-reference.md`
-4. `docs/contracts/change-cli-v1.md`
-5. `docs/workflows/confidence-scores.md`
+3. `README.md`
+4. `docs/cli-reference.md`
+5. `docs/cub-gen-plugin.md`
+6. `docs/ai/cub-gen-tasks.md`
 
-If the user is asking you to *use* cub-gen against a real source repo (not work on the repo), load `docs/ai/cub-gen-tasks.md` instead — that file is task-oriented with concrete command flows for source-side investigation.
+When the user wants you to use `cub-gen` against a real source repo, prefer
+`docs/ai/cub-gen-tasks.md`; it is task-oriented and has concrete command flows.
 
-## Product value in one breath
+## Product Value In One Breath
 
-`cub-gen` is the repo-side traceability and governed-change CLI. It starts from DRY source files, maps them to WET rendered manifests, records field-level origins with confidence scores, and emits inverse-edit hints so app/platform teams know exactly where to edit safely.
+`cub-gen` is the repo-side traceability and governed-change tool. It starts
+from source/config repos, maps source intent to rendered deployable config,
+records field-level provenance with confidence scores, and emits inverse-edit
+hints so app, platform, environment, and security owners know where a change
+belongs.
 
-## Tool boundaries
+The user model should stay small:
 
-### Use `cub-gen` for
+```text
+Component
+  -> Deployable Variant
+      -> Target
+      -> Connections
+      -> Change
+      -> Proof
+```
 
-- generator detection (`detect`, `generators`)
-- DRY/WET classification and field-origin tracing
-- provenance bundles (`publish`, `verify`, `attest`, `verify-attestation`)
-- developer change workflows (`change preview|run|explain`)
-- bridge workflows to ConfigHub (`bridge ingest|decision|promote`)
+## Command Status
 
-### Use `cub` for
+Today the canonical command is `cub-gen`. The target product surface is
+`cub gen`, but that requires the external `cub` plugin loader/distribution
+mechanism. Do not claim `cub gen --help` works unless you have verified it in
+the user's environment.
 
-- ConfigHub intended-state workflows
-- spaces, units, targets, workers
-- `cub gitops discover`
-- `cub gitops import` (cluster + render-target based)
+Use this mapping when discussing the migration:
 
-### Use `cub-scout` for
+| Today | Future plugin surface |
+|---|---|
+| `cub-gen detect` | `cub gen detect` |
+| `cub-gen generators` | `cub gen generators` |
+| `cub-gen gitops discover` | `cub gen discover` |
+| `cub-gen gitops import` | `cub gen import` or `cub gen render` |
+| `cub-gen platform import` | `cub gen platform import` |
+| `cub-gen platform fanout` | `cub gen fanout` |
+| `cub-gen enrich preview` | `cub gen enrich preview` |
+| `cub-gen normalize preview` | `cub gen normalize preview` |
+| `cub-gen publish` | `cub gen bundle` |
+| `cub-gen verify` | `cub gen bundle verify` |
+| `cub-gen attest` | `cub gen bundle attest` |
+| `cub-gen verify-attestation` | `cub gen bundle verify-attestation` |
+| `cub-gen change preview` | `cub gen preview` |
+| `cub-gen change run` | `cub gen run` |
+| `cub-gen change explain` | `cub gen explain` |
+| `cub-gen bridge ingest` | `cub gen ingest` |
+| `cub-gen bridge link` | `cub gen link` |
+| `cub-gen bridge promote ...` | `cub gen promote ...` |
 
-- cluster-side read-only observation
-- ownership detection (Flux, Argo, Helm, etc.)
-- live cluster troubleshooting
+## Tool Boundaries
 
-### Do not blur these
+Use `cub-gen` for source-side work:
 
-- `cub-gen gitops import` reads source repos and emits provenance from DRY/WET pairs
-- `cub gitops import` reads from a cluster target via a render-target
-- both have the same command shape but different inputs and different outputs
-- `cub-gen` is local-first: no implicit deploys, no control-plane side effects
+- generator detection and registry inspection
+- source-to-rendered provenance and inverse-edit routing
+- read-only platform estate import and variant fanout
+- enrichment sidecars and normalization preview proposals
+- governed evidence bundles and attestations
+- bridge records that connect GitHub PRs and ConfigHub MRs
 
-## High-signal shipped capabilities
+Use `cub` / `cub gitops` for ConfigHub intended-state workflows:
 
-- 8 generator profiles: Helm, Score.dev, Spring Boot, Backstage, No-Config-Platform, Ops Workflow, C3 Agent, Swamp
-- Field-origin map with confidence scores per field
-- Inverse-edit pointers (which DRY file/path/owner to edit)
-- Provenance bundle pipeline: publish → verify → attest → verify-attestation
-- Change CLI: preview, run (local|connected), explain
-- Bridge workflow: ingest, decision query, promote init
-- Live reconciler proofs against Flux and ArgoCD on kind clusters
+- spaces, units, targets, workers, and ConfigHub control-plane operations
+- cluster-integrated GitOps import where ConfigHub owns the operation
 
-## Variants and overlays today
+Use `cub-scout` for runtime observation:
 
-Current status: partial support.
+- live cluster discovery
+- ownership detection from Flux, Argo, Helm, and Kubernetes state
+- runtime health and troubleshooting
 
-- One `gitops import` or `publish` invocation works on one repo path pair.
-- Supported generators can pick up overlay files that already live in that repo, such as Helm `values-prod.yaml`, Spring `application-dev.yaml`, or generator-specific overlay files.
-- Provenance records can distinguish base vs overlay source paths when the generator emits separate overlay transforms.
-- `change explain` can point operators toward overlay-specific edits, but it does not expose a full CLI surface for "render N explicit variants and emit N bundles" yet.
-- There is no `--values`, `--overlay`, or `--variant` fan-out flag today.
+Do not blur these:
 
-## Confidence score routing
+- `cub-gen gitops import` reads source-side repos and emits local provenance.
+- `cub gitops import` is the ConfigHub product surface.
+- `cub-gen` is local-first: no implicit deploys and no hidden control-plane
+  side effects.
 
-- `>= 0.90` — proceed with normal app/team edit flow
-- `0.75 - 0.89` — run `change preview` and `change explain` before merge
-- `< 0.75` — escalate for platform review
+## Shipped Generator Families
 
-See `docs/workflows/confidence-scores.md` for the full guide.
+Verify the exact current list with:
 
-## Verification rule
+```bash
+./cub-gen generators --markdown --details
+```
 
-Do not invent command surfaces or generator capabilities.
+Current families include:
 
-Verify from local help before claiming capability:
+- Helm
+- Score.dev
+- Spring Boot
+- Backstage IDP
+- No-config platform
+- OpenChoreo-style platform
+- Argo ApplicationSet
+- Argo app-of-apps
+- Ops workflow
+- C3 Agent
+- Swamp
+
+## Current High-Signal Workflows
+
+```bash
+./cub-gen gitops discover --space platform --json <repo>
+./cub-gen gitops import --space platform --json <repo> [<render-target>]
+./cub-gen change explain --space platform --owner app-team <repo>
+```
+
+```bash
+./cub-gen platform import --json <platform-manifest>
+./cub-gen platform fanout --json <variant-manifest>
+./cub-gen change explain --change-id <id> --bundle fanout.json --variant <component>/<variant>
+```
+
+```bash
+./cub-gen enrich preview --space platform --patch <repo>
+./cub-gen normalize preview --space platform --patch <repo>
+```
+
+```bash
+./cub-gen publish --space platform <repo> > bundle.json
+./cub-gen verify --in bundle.json
+./cub-gen attest --in bundle.json --verifier ci-bot > attestation.json
+./cub-gen verify-attestation --in attestation.json --bundle bundle.json
+```
+
+```bash
+./cub-gen bridge link \
+  --bundle bundle.json \
+  --git-provider github \
+  --git-repo confighub/cub-gen \
+  --git-pr 300 \
+  --mr-id <confighub-mr-id>
+```
+
+## Confidence Score Routing
+
+- `>= 0.90`: normal app/team edit flow
+- `0.75 - 0.89`: run `change preview` and `change explain` before merge
+- `< 0.75`: escalate for platform review
+
+Always surface confidence when reporting field origins or inverse-edit guidance.
+
+## Verification Rule
+
+Do not invent command surfaces or generator capabilities. Verify from local help
+before claiming capability:
 
 ```bash
 ./cub-gen --help
 ./cub-gen generators --markdown --details
-./cub-gen detect --help
+./cub-gen gitops import --help
+./cub-gen platform --help
 ./cub-gen change --help
 ./cub-gen publish --help
-./cub-gen verify --help
 ./cub-gen bridge --help
 ```
 
-When the workflow crosses into ConfigHub or cluster-side observation:
+When the workflow crosses into ConfigHub or runtime state:
 
 ```bash
 cub gitops --help
 cub-scout --help
 ```
 
-## Safety rule
+## Safety Rule
 
-- `cub-gen` is local-first by default
-- Connected mode (`change run --mode connected`) talks to a ConfigHub backend but does not deploy
-- Bridge workflows ingest provenance bundles into ConfigHub for governed decisions
-- `cub-gen` never directly modifies a cluster
+- `cub-gen` is local-first by default.
+- Connected mode talks to a ConfigHub backend but does not deploy.
+- Bridge workflows ingest provenance bundles into ConfigHub for governed
+  decisions.
+- `cub-gen` never directly modifies a cluster.
