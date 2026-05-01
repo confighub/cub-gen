@@ -9,8 +9,42 @@ SPACE="${2:-springboot-infra}"
 KUBECONFIG_PATH="${PROJECT_DIR}/var/${CLUSTER_NAME}.kubeconfig"
 PID_FILE="${PROJECT_DIR}/var/worker.pid"
 LOG_FILE="${PROJECT_DIR}/var/worker.log"
+WORKER_READY_ATTEMPTS="${WORKER_READY_ATTEMPTS:-30}"
+WORKER_READY_SLEEP_SECONDS="${WORKER_READY_SLEEP_SECONDS:-2}"
 
 export KUBECONFIG="${KUBECONFIG_PATH}"
+
+worker_pid() {
+  if [[ -f "${PID_FILE}" ]]; then
+    cat "${PID_FILE}"
+  fi
+}
+
+worker_running() {
+  local pid="$1"
+  [[ -n "${pid}" ]] && kill -0 "${pid}" 2>/dev/null
+}
+
+worker_condition() {
+  ${CUB} worker list --space "${SPACE}" --json 2>/dev/null | \
+    jq -r '.[0].BridgeWorker.Condition // "unknown"' 2>/dev/null || echo "unknown"
+}
+
+worker_last_seen() {
+  ${CUB} worker list --space "${SPACE}" --json 2>/dev/null | \
+    jq -r '.[0].BridgeWorker.LastSeenAt // .[0].LastSeenAt // "unknown"' 2>/dev/null || echo "unknown"
+}
+
+worker_log_has_heartbeat_ack() {
+  [[ -f "${LOG_FILE}" ]] && grep -Eiq 'heartbeat.*ack|ack.*heartbeat|Sending Heartbeat acknowledged' "${LOG_FILE}"
+}
+
+print_worker_log_tail() {
+  if [[ -f "${LOG_FILE}" ]]; then
+    echo "Recent worker log:" >&2
+    tail -n 20 "${LOG_FILE}" >&2
+  fi
+}
 
 echo "Installing ConfigHub worker for space '${SPACE}'..."
 
@@ -47,14 +81,54 @@ echo "  Worker started (PID $(cat "${PID_FILE}"))"
 
 # Wait for ready
 echo "Waiting for worker to become Ready..."
-for i in $(seq 1 30); do
-  CONDITION=$(${CUB} worker list --space "${SPACE}" --json 2>/dev/null | jq -r '.[0].BridgeWorker.Condition' 2>/dev/null || echo "unknown")
+READY=0
+CONDITION="unknown"
+for i in $(seq 1 "${WORKER_READY_ATTEMPTS}"); do
+  CONDITION="$(worker_condition)"
   if [[ "$CONDITION" == "Ready" ]]; then
     echo "  Worker is Ready."
+    READY=1
     break
   fi
-  sleep 2
+
+  if ! worker_running "$(worker_pid)"; then
+    break
+  fi
+
+  sleep "${WORKER_READY_SLEEP_SECONDS}"
 done
+
+if [[ "${READY}" != "1" ]]; then
+  CURRENT_PID="$(worker_pid)"
+  LAST_SEEN="$(worker_last_seen)"
+
+  echo "error: worker did not become Ready for space '${SPACE}'." >&2
+  echo "  Condition: ${CONDITION}" >&2
+  echo "  LastSeenAt: ${LAST_SEEN}" >&2
+  echo "  PID: ${CURRENT_PID:-unknown}" >&2
+  echo "  Log: ${LOG_FILE}" >&2
+
+  if worker_running "${CURRENT_PID:-}"; then
+    if worker_log_has_heartbeat_ack; then
+      echo "" >&2
+      echo "The worker process is alive and the log contains heartbeat acknowledgements, but ConfigHub still reports Condition=${CONDITION}." >&2
+      echo "This matches the stale worker-condition failure tracked in cub-gen issue #219." >&2
+      echo "Restart the worker with './bin/teardown && ./bin/install-worker', then re-run the proof." >&2
+    else
+      echo "" >&2
+      echo "The worker process is alive, but it has not reported Ready yet." >&2
+      echo "Inspect the worker log and ConfigHub worker state before continuing." >&2
+    fi
+  else
+    echo "" >&2
+    echo "The worker process exited before ConfigHub reported Ready." >&2
+    echo "Inspect the worker log before continuing." >&2
+  fi
+
+  echo "" >&2
+  print_worker_log_tail
+  exit 1
+fi
 
 echo ""
 echo "====================================="

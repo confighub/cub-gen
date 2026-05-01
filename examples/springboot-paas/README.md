@@ -146,6 +146,11 @@ cub auth login
 ./verify-e2e.sh
 ```
 
+`./bin/install-worker` now treats ConfigHub's server-side worker condition as
+the source of truth. If the local worker process is still alive but ConfigHub
+continues to report `Disconnected`, the script exits with the PID, `LastSeenAt`,
+and recent worker log lines instead of letting the next proof step hang.
+
 Start with `./examples/demo/run-connected-smoke.sh` first to confirm the
 standard ConfigHub-connected environment. Use
 `./examples/springboot-paas/demo-connected.sh` when you specifically want the
