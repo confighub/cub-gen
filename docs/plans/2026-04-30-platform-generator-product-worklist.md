@@ -1,7 +1,7 @@
 # Platform Generator Product Worklist
 
-Status: issues created
-Date: 2026-04-30
+Status: issues sequenced; first product slices landed
+Date: 2026-05-01
 
 This worklist turns the platform-generator manifesto into product work. It
 combines the current open roadmap items with the gaps exposed by the
@@ -13,13 +13,15 @@ and GitHub parent issue [#287](https://github.com/confighub/cub-gen/issues/287).
 
 ## Current Open Roadmap Touchpoints
 
-Open issues checked on 2026-04-30:
+Open issues checked on 2026-05-01:
 
 | Issue | Title | Why it matters for the manifesto |
 |---|---|---|
-| [#275](https://github.com/confighub/cub-gen/issues/275) | bridge ingest 404 against hub.confighub.com | connected proof must work before PR/MR magic feels real |
+| [#287](https://github.com/confighub/cub-gen/issues/287) | make cub-gen role and value obvious | parent roadmap issue keeping the product story coherent |
+| [#283](https://github.com/confighub/cub-gen/issues/283) | enforce generator route metadata server-side | route ownership must become an authoritative backend decision |
+| [#281](https://github.com/confighub/cub-gen/issues/281) | propose governed config rewrites | import should lead to reviewable improvements, not magic rewrites |
+| [#277](https://github.com/confighub/cub-gen/issues/277) | OpenChoreo adapter | external platform-family proof needs upstream conformance |
 | [#236](https://github.com/confighub/cub-gen/issues/236) | ship cub-gen as `cub gen` plugin | product workflow should feel like one platform, not a sidecar binary |
-| [#219](https://github.com/confighub/cub-gen/issues/219) | bridge worker disconnected despite heartbeats | live/connected trust depends on correct runtime status |
 | [#213](https://github.com/confighub/cub-gen/issues/213) | GUI provenance trace | click-field-to-source is the core teaching moment |
 | [#212](https://github.com/confighub/cub-gen/issues/212) | GUI regeneration/refresh preview | users need to see generated impact before merge/apply |
 | [#211](https://github.com/confighub/cub-gen/issues/211) | GUI mutation history/activity log | overlay, lift, and block decisions need visible history |
@@ -276,6 +278,11 @@ Definition of done:
 Problem: PR/MR linkage exists as contracts, bridge promote commands, and demo
 scripts, but not as one easy product workflow.
 
+Status: landed in PR #297 via `cub-gen bridge link`. The command derives
+`change_id` from a verified publish bundle, emits canonical review-link JSON for
+local evidence, and can POST the linkage record to ConfigHub with a deterministic
+idempotency key.
+
 Deterministic success criteria:
 
 1. Given a GitHub PR and a `cub-gen publish` bundle, one command creates or
@@ -333,6 +340,11 @@ Definition of done:
 
 Problem: Jesper-style skepticism is evidence that the thesis needs teaching
 artifacts, not only commands.
+
+Status: landed in PR #296. The teaching pack now has conservative
+OpenChoreo-support language, stricter docs checks, and fixture-backed diagrams
+and examples. The `spring-platform` teaching repo was aligned in
+`confighub/examples` PR #138.
 
 Deterministic success criteria:
 
