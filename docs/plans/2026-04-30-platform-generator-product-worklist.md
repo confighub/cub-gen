@@ -65,7 +65,7 @@ Problem: `cub-gen` import is still repo/generator oriented. Platform estates
 often spread app intent, platform contracts, environment bindings, and rendered
 output across multiple repos.
 
-Status: implemented in branch via `cub-gen platform import --json <manifest>`.
+Status: landed in PR #286 via `cub-gen platform import --json <manifest>`.
 The command reads a local manifest, imports each existing repo read-only, emits
 Components, Deployable Variants, Targets, generator inputs, WET targets, and
 connections, and reports missing repo, missing owner, and unsupported generator
@@ -145,7 +145,7 @@ Definition of done:
 
 ### PG-03: App-of-Apps Generator Boundary
 
-Status: implemented on this branch as a fixture-backed initial adapter.
+Status: landed in PR #286 as a fixture-backed initial adapter.
 
 Problem: ApplicationSet has bounded support, and app-of-apps needed the same
 root/child generator boundary rather than remaining only a documented pattern.
@@ -178,7 +178,7 @@ Definition of done:
 Problem: the docs explicitly say there is no one-command multi-env/tenant
 fanout.
 
-Status: implemented in branch via `cub-gen platform fanout`. The command reads
+Status: landed in PR #286 via `cub-gen platform fanout`. The command reads
 explicit `variants:` entries from a platform manifest, emits one standard
 `change-bundle/v1` per variant, supports `--variant` scoping, and lets
 `change explain` select a variant bundle from fanout JSON. It remains
@@ -212,7 +212,7 @@ Definition of done:
 Problem: users may want provenance annotations on platform and app artifacts,
 but automatic in-place edits would be risky.
 
-Status: implemented in branch via `cub-gen enrich preview` and
+Status: landed in PR #286 via `cub-gen enrich preview` and
 `cub-gen enrich write`. The command proposes sidecar provenance under
 `.cub-gen/enrichment/`, emits JSON or patch preview, and treats existing
 sidecars as `review-required` instead of overwriting them.
