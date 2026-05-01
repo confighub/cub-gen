@@ -1,0 +1,158 @@
+schema_version: cub.confighub.io/platform-import-manifest/v1
+name: checkout-variant-fanout
+space: platform
+ref: HEAD
+repos:
+  - id: helm-checkout
+    role: app
+    path: helm
+    owner: app-team
+    component: checkout-api
+  - id: score-checkout-dev
+    role: app
+    path: score-dev
+    owner: app-team
+    component: score-checkout
+    variant: dev
+    target: dev-us
+  - id: score-checkout-stage
+    role: app
+    path: score-stage
+    owner: app-team
+    component: score-checkout
+    variant: stage
+    target: stage-us
+  - id: score-checkout-prod
+    role: app
+    path: score-prod
+    owner: app-team
+    component: score-checkout
+    variant: prod
+    target: prod-us
+  - id: spring-checkout-dev
+    role: app
+    path: spring-dev
+    owner: app-team
+    component: spring-checkout
+    variant: dev
+    target: dev-us
+  - id: spring-checkout-stage
+    role: app
+    path: spring-stage
+    owner: app-team
+    component: spring-checkout
+    variant: stage
+    target: stage-us
+  - id: spring-checkout-prod
+    role: app
+    path: spring-prod
+    owner: app-team
+    component: spring-checkout
+    variant: prod
+    target: prod-us
+variants:
+  - id: checkout-api/dev
+    component: checkout-api
+    variant: dev
+    target: dev-us
+    repo: helm-checkout
+    shared_inputs:
+      - Chart.yaml
+      - values.yaml
+    variant_inputs:
+      - --set image.tag=dev
+      - --set replicaCount=1
+    helm_set:
+      - image.tag=dev
+      - replicaCount=1
+  - id: checkout-api/stage
+    component: checkout-api
+    variant: stage
+    target: stage-us
+    repo: helm-checkout
+    shared_inputs:
+      - Chart.yaml
+      - values.yaml
+    variant_inputs:
+      - --set image.tag=stage
+      - --set replicaCount=2
+    helm_set:
+      - image.tag=stage
+      - replicaCount=2
+  - id: checkout-api/prod
+    component: checkout-api
+    variant: prod
+    target: prod-us
+    repo: helm-checkout
+    shared_inputs:
+      - Chart.yaml
+      - values.yaml
+    variant_inputs:
+      - --set image.tag=prod
+      - --set replicaCount=4
+    helm_set:
+      - image.tag=prod
+      - replicaCount=4
+  - id: score-checkout/dev
+    component: score-checkout
+    variant: dev
+    target: dev-us
+    repo: score-checkout-dev
+    shared_inputs:
+      - score.yaml#containers.web
+    variant_inputs:
+      - score.yaml#metadata.name
+      - score.yaml#resources
+  - id: score-checkout/stage
+    component: score-checkout
+    variant: stage
+    target: stage-us
+    repo: score-checkout-stage
+    shared_inputs:
+      - score.yaml#containers.web
+    variant_inputs:
+      - score.yaml#metadata.name
+      - score.yaml#resources
+  - id: score-checkout/prod
+    component: score-checkout
+    variant: prod
+    target: prod-us
+    repo: score-checkout-prod
+    shared_inputs:
+      - score.yaml#containers.web
+    variant_inputs:
+      - score.yaml#metadata.name
+      - score.yaml#resources
+  - id: spring-checkout/dev
+    component: spring-checkout
+    variant: dev
+    target: dev-us
+    repo: spring-checkout-dev
+    shared_inputs:
+      - pom.xml
+      - src/main/resources/application.yaml#spring.application.name
+    variant_inputs:
+      - src/main/resources/application.yaml#server.port
+      - src/main/resources/application.yaml#spring.datasource.url
+  - id: spring-checkout/stage
+    component: spring-checkout
+    variant: stage
+    target: stage-us
+    repo: spring-checkout-stage
+    shared_inputs:
+      - pom.xml
+      - src/main/resources/application.yaml#spring.application.name
+    variant_inputs:
+      - src/main/resources/application.yaml#server.port
+      - src/main/resources/application.yaml#spring.datasource.url
+  - id: spring-checkout/prod
+    component: spring-checkout
+    variant: prod
+    target: prod-us
+    repo: spring-checkout-prod
+    shared_inputs:
+      - pom.xml
+      - src/main/resources/application.yaml#spring.application.name
+    variant_inputs:
+      - src/main/resources/application.yaml#server.port
+      - src/main/resources/application.yaml#spring.datasource.url

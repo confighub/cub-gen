@@ -22,6 +22,8 @@ func runPlatform(args []string) error {
 		return nil
 	case "import":
 		return runPlatformImport(args[1:])
+	case "fanout":
+		return runPlatformFanout(args[1:])
 	default:
 		printPlatformUsage(os.Stderr)
 		return fmt.Errorf("unknown platform subcommand: %s", args[0])
@@ -53,24 +55,56 @@ func runPlatformImport(args []string) error {
 	return writeJSONOutput(*out, graph, *pretty)
 }
 
+func runPlatformFanout(args []string) error {
+	fs := flag.NewFlagSet("platform fanout", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	jsonOut := fs.Bool("json", true, "Output JSON")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	out := fs.String("out", "-", "Output file path, or '-' for stdout")
+	variant := fs.String("variant", "", "Variant filter: variant name, component/variant, or variant id")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	if err := requireJSONOutput("platform fanout", *jsonOut); err != nil {
+		return err
+	}
+	if fs.NArg() != 1 {
+		return errors.New("usage: cub-gen platform fanout [flags] <manifest>")
+	}
+	result, err := platformflow.FanoutManifest(fs.Arg(0), platformflow.FanoutOptions{
+		VariantFilter: *variant,
+	})
+	if err != nil {
+		return err
+	}
+	return writeJSONOutput(*out, result, *pretty)
+}
+
 func printPlatformUsage(out io.Writer) {
 	printCommandHelp(
 		out,
-		"cub-gen platform: import a multi-repo platform estate as a read-only graph",
+		"cub-gen platform: import estates and emit variant bundles without deploying",
 		[]string{
 			"Use platform import when app intent, platform contracts, environment bindings, and rendered output live in separate repos.",
 			"The command reads a manifest, imports each local repo, and emits Components, Deployable Variants, Targets, generator inputs, WET targets, connections, and diagnostics.",
+			"Use platform fanout when the same Component has dev/stage/prod or tenant variants and each needs its own governed ConfigHub bundle.",
 		},
 		helpSection{
 			Title: "Usage",
 			Lines: []string{
 				"  cub-gen platform import [--json] [--out FILE|-] [--pretty] <manifest>",
+				"  cub-gen platform fanout [--json] [--out FILE|-] [--pretty] [--variant NAME] <manifest>",
 			},
 		},
 		helpSection{
 			Title: "Examples",
 			Lines: []string{
 				"  cub-gen platform import --json ./testdata/platform-estate/platform.yaml",
+				"  cub-gen platform fanout --json ./testdata/variant-fanout/platform.yaml",
+				"  cub-gen platform fanout --variant dev --json ./testdata/variant-fanout/platform.yaml",
 			},
 		},
 		helpSection{
@@ -78,6 +112,7 @@ func printPlatformUsage(out io.Writer) {
 			Lines: []string{
 				"  - read-only: no repo rewrites, no deploys, no control-plane side effects",
 				"  - missing repos, missing owners, and unsupported generator paths are diagnostics, not guesses",
+				"  - fanout requires explicit variant sources when repo metadata would be ambiguous",
 				"  - use gitops import when you only need one repo; use platform import when you need the estate graph",
 			},
 		},

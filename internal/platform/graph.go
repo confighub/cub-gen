@@ -20,11 +20,12 @@ const (
 )
 
 type Manifest struct {
-	SchemaVersion string         `json:"schema_version" yaml:"schema_version"`
-	Name          string         `json:"name" yaml:"name"`
-	Space         string         `json:"space,omitempty" yaml:"space,omitempty"`
-	Ref           string         `json:"ref,omitempty" yaml:"ref,omitempty"`
-	Repos         []ManifestRepo `json:"repos" yaml:"repos"`
+	SchemaVersion string            `json:"schema_version" yaml:"schema_version"`
+	Name          string            `json:"name" yaml:"name"`
+	Space         string            `json:"space,omitempty" yaml:"space,omitempty"`
+	Ref           string            `json:"ref,omitempty" yaml:"ref,omitempty"`
+	Repos         []ManifestRepo    `json:"repos" yaml:"repos"`
+	Variants      []ManifestVariant `json:"variants,omitempty" yaml:"variants,omitempty"`
 }
 
 type ManifestRepo struct {
@@ -35,6 +36,19 @@ type ManifestRepo struct {
 	Component string `json:"component,omitempty" yaml:"component,omitempty"`
 	Variant   string `json:"variant,omitempty" yaml:"variant,omitempty"`
 	Target    string `json:"target,omitempty" yaml:"target,omitempty"`
+}
+
+type ManifestVariant struct {
+	ID            string   `json:"id,omitempty" yaml:"id,omitempty"`
+	Component     string   `json:"component" yaml:"component"`
+	Variant       string   `json:"variant" yaml:"variant"`
+	Target        string   `json:"target,omitempty" yaml:"target,omitempty"`
+	Repo          string   `json:"repo" yaml:"repo"`
+	SharedInputs  []string `json:"shared_inputs,omitempty" yaml:"shared_inputs,omitempty"`
+	VariantInputs []string `json:"variant_inputs,omitempty" yaml:"variant_inputs,omitempty"`
+	HelmSet       []string `json:"helm_set,omitempty" yaml:"helm_set,omitempty"`
+	HelmSetString []string `json:"helm_set_string,omitempty" yaml:"helm_set_string,omitempty"`
+	HelmSetFile   []string `json:"helm_set_file,omitempty" yaml:"helm_set_file,omitempty"`
 }
 
 type ImportOptions struct {

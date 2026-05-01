@@ -12,6 +12,7 @@ START HERE:
   change preview    Preview a safe repo change
   enrich preview    Propose sidecar proof metadata for PR review
   platform import   Read a multi-repo platform estate as a graph
+  platform fanout   Emit one proof bundle per deployable variant
   detect            Detect generators in a repo
   generators        List supported generators (Helm, Score, Spring Boot, ...)
 
@@ -27,6 +28,7 @@ ADVANCED CONNECTED:
 FIRST RUNS:
   cub-gen gitops import --space my-space ./examples/helm-paas
   cub-gen platform import --json ./testdata/platform-estate/platform.yaml
+  cub-gen platform fanout --variant dev --json ./testdata/variant-fanout/platform.yaml
   cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas
   cub-gen enrich preview --space my-space ./examples/helm-paas
   cub-gen publish --space my-space ./examples/helm-paas | cub-gen verify --in -

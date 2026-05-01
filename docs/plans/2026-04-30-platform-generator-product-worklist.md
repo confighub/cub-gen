@@ -178,6 +178,12 @@ Definition of done:
 Problem: the docs explicitly say there is no one-command multi-env/tenant
 fanout.
 
+Status: implemented in branch via `cub-gen platform fanout`. The command reads
+explicit `variants:` entries from a platform manifest, emits one standard
+`change-bundle/v1` per variant, supports `--variant` scoping, and lets
+`change explain` select a variant bundle from fanout JSON. It remains
+manifest-driven; implicit glob discovery is intentionally not implemented.
+
 Deterministic success criteria:
 
 1. Given a repo with `dev`, `stage`, and `prod` inputs, one command emits one

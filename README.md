@@ -46,6 +46,7 @@ and explains the source, owner, and safe edit path for generated config.
 | Who owns the field? | App, environment, platform, security, or workflow owner |
 | Where should the edit go? | Apply here, lift upstream, or block/escalate |
 | What changed? | A reviewable before/after bundle |
+| Which variants need proof? | One governed bundle per environment, tenant, or region |
 | How do I prove it? | Field-origin map, edit hint, proof bundle, and optional ConfigHub decision |
 
 The output is useful locally, in GitHub PRs, and in connected ConfigHub flows.
@@ -82,6 +83,16 @@ For a small multi-repo platform estate:
 ```bash
 ./cub-gen platform import --json ./testdata/platform-estate/platform.yaml \
   | jq '.summary'
+```
+
+For a component with dev/stage/prod or tenant variants:
+
+```bash
+./cub-gen platform fanout --json ./testdata/variant-fanout/platform.yaml \
+  | jq '.summary'
+
+./cub-gen platform fanout --variant dev --json ./testdata/variant-fanout/platform.yaml \
+  | jq '.variants[] | {variant_id, change_id, profiles: .generator_profiles}'
 ```
 
 ## Mental Model
@@ -175,6 +186,7 @@ conflict becomes `review-required`.
 | Detect | Find the generator style used by the repo |
 | Render/import | Produce or read the deployable config |
 | Platform graph | Read a multi-repo estate as Components, Deployable Variants, Targets, generators, and diagnostics |
+| Variant fanout | Emit one ConfigHub-ready proof bundle per environment, tenant, region, or cluster variant |
 | Trace | Map rendered fields back to source files |
 | Explain | Say who owns the field and where to edit it |
 | Enrich | Create PR-friendly sidecar proof with source links, owners, route badges, and PR/MR link metadata |
@@ -200,6 +212,7 @@ These run locally and do not require a login:
 | Score.dev | [scoredev-paas](examples/scoredev-paas/) | Which `score.yaml` field produced this runtime value? |
 | Spring Boot services | [springboot-paas](examples/springboot-paas/) | Should I edit app config or platform config? |
 | Multi-repo platform estate | [platform-estate fixture](testdata/platform-estate/) | Which Components, Deployable Variants, generators, and gaps exist before any rewrite? |
+| Multi-env or tenant variants | [variant-fanout fixture](testdata/variant-fanout/) | Can I produce one governed proof bundle for every deployable variant? |
 | A running cluster first | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 
 ## Supported Inputs

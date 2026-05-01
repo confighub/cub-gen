@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: spring-checkout
+  datasource:
+    url: jdbc:postgresql://stage-db/checkout
+server:
+  port: 8082

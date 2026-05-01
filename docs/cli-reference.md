@@ -18,6 +18,7 @@ not cluster/runtime ones.
 | What evidence bundle and safe next step should I prepare? | `change preview` |
 | How do I add provenance to a PR without editing manifests? | `enrich preview`, then optionally `enrich write` |
 | How do I see a multi-repo platform estate? | `platform import` |
+| How do I emit one proof bundle per environment or tenant? | `platform fanout` |
 | What evidence bundle should I verify or ship? | `publish -> verify -> attest` |
 | How do I use the deeper ConfigHub API flow? | `bridge` |
 
@@ -68,6 +69,42 @@ cub-gen platform import --json ./testdata/platform-estate/platform.yaml
 This command does not rewrite repos, deploy, or contact ConfigHub. Use it before
 adoption reports, enrichment, fanout, or rewrite proposals when the first job is
 to understand the estate shape.
+
+### `platform fanout`
+
+Read the same platform manifest and emit one ConfigHub-ready change bundle per
+Deployable Variant.
+
+```
+cub-gen platform fanout --json <manifest>
+cub-gen platform fanout --variant <name-or-component/variant> --json <manifest>
+```
+
+Use this when one Component has concrete deployable copies such as dev, stage,
+prod, tenant-a, tenant-b, or per-region targets. The manifest declares which
+repo/input set owns each variant. The command emits:
+
+| Output | Meaning |
+|---|---|
+| `variants[].variant_id` | Stable identity such as `checkout-api/prod` |
+| `variants[].shared_inputs` | Base inputs shared by the Component |
+| `variants[].variant_inputs` | Variant-specific values, files, or invocation overrides |
+| `variants[].change_id` | Stable change identity for that variant bundle |
+| `variants[].bundle` | Standard `change-bundle/v1`, accepted by publish/bridge proof flows |
+
+Example:
+
+```
+cub-gen platform fanout --json ./testdata/variant-fanout/platform.yaml \
+  | jq '.summary'
+
+cub-gen platform fanout --variant dev --json ./testdata/variant-fanout/platform.yaml \
+  | jq '.variants[] | {variant_id, change_id, profiles: .generator_profiles}'
+```
+
+Ambiguous repo metadata is rejected. If two repos claim the same
+`component/variant`, declare the `variants:` list explicitly instead of relying
+on inference.
 
 ### `gitops discover`
 
@@ -422,11 +459,14 @@ for the full contributor-facing drift matrix.
 
 ## Variants and overlays
 
-Current status: partial support.
+Current status: explicit variant fanout plus generator-specific overlays.
 
 What works today:
 
 - One `gitops import` / `publish` invocation works on one repo path pair.
+- `platform fanout` reads a platform manifest and emits one ConfigHub-ready bundle per declared deployable variant.
+- `platform fanout --variant dev` scopes output to one environment name across Components; `--variant checkout-api/prod` scopes to one concrete variant.
+- `change explain --change-id ID --bundle fanout.json --variant checkout-api/prod` can explain a selected variant bundle from fanout output.
 - Supported generators can pick up overlay files that already live in that repo, such as Helm `values-prod.yaml`, Spring `application-dev.yaml`, and generator-specific overlay files.
 - Helm flows also capture invocation-time `--set`, `--set-string`, and `--set-file` overrides and rank them above values files in provenance and `change explain`.
 - Helm `change explain` also calls out when a field is currently coming from `.Chart.AppVersion`, `.Files.Get`, a helper chain, `lookup`/other render-time logic, an external ref declared in values, or an unresolved chart-default path instead of an observed values file.
@@ -439,7 +479,6 @@ What does not work today:
 
 - No repeated `--values`, `--overlay`, or `--variant` flag surface
 - No glob-based fan-out
-- No single command that emits one provenance bundle per environment or tenant
 - No generic Kustomize overlay workflow beyond the generator-specific support already implemented
 
 Reality-check example:
@@ -455,10 +494,19 @@ Reality-check example:
 ./cub-gen change explain --space platform \
   --wet-path "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort" \
   ./examples/springboot-paas
+
+./cub-gen platform fanout --json --out fanout.json \
+  ./testdata/variant-fanout/platform.yaml
+
+CHANGE_ID="$(jq -r '.variants[] | select(.variant_id=="checkout-api/dev") | .change_id' fanout.json)"
+./cub-gen change explain --change-id "$CHANGE_ID" --bundle fanout.json \
+  --variant checkout-api/dev
 ```
 
 Use this section as the answer for "can cub-gen render N explicit variants from one generator in one command?":
-not yet. Today it can understand supported overlay files already present in a repo, but it does not fan out one invocation into N per-environment bundles.
+yes, when the variants are explicit in a platform manifest. It does not yet
+perform implicit glob fanout or guess environment semantics from directory
+names.
 
 Helm precedence today is:
 
