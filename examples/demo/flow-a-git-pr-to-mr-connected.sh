@@ -181,41 +181,54 @@ if [ -n "$PR_NUMBER" ]; then
   fi
 fi
 
-jq -n \
-  --arg schema "cub.confighub.io/pr-mr-promotion-flow/v1" \
-  --arg change_id "$change_id" \
-  --arg git_repo "$GIT_REPO" \
-  --arg git_pr_number "${PR_NUMBER:-}" \
-  --arg git_pr_url "$pr_url" \
-  --arg git_pr_state "$pr_state" \
-  --arg confighub_mr_id "$artifact_id" \
-  --arg confighub_mr_status "$ingest_status" \
-  --arg decision_state "$decision_state" \
-  --arg policy_ref "$policy_ref" \
-  --arg flow "A" \
-  --arg flow_direction "git-pr-to-confighub-mr" \
-  --arg updated_at "$now" \
-  '{
-    schema: $schema,
-    change_id: $change_id,
-    flow: $flow,
-    flow_direction: $flow_direction,
-    git_pr: {
-      repo: $git_repo,
-      number: (if $git_pr_number == "" then null else ($git_pr_number | tonumber) end),
-      url: (if $git_pr_url == "" then null else $git_pr_url end),
-      state: (if $git_pr_state == "" then null else $git_pr_state end)
-    },
-    confighub_mr: {
-      id: $confighub_mr_id,
-      status: $confighub_mr_status
-    },
-    decision: {
-      state: $decision_state,
-      policy_ref: (if $policy_ref == "" then null else $policy_ref end)
-    },
-    updated_at: $updated_at
-  }' > "$OUT_DIR/pr-mr-linkage.json"
+if [ -n "$PR_NUMBER" ] && [ -n "$pr_url" ]; then
+  ./cub-gen bridge link \
+    --bundle "$OUT_DIR/bundle.json" \
+    --app-pr-repo "$GIT_REPO" \
+    --app-pr-number "$PR_NUMBER" \
+    --app-pr-url "$pr_url" \
+    --mr-id "$artifact_id" \
+    --mr-url "${CONFIGHUB_BASE_URL%/}/changes/${change_id}" \
+    --mr-status "$ingest_status" \
+    --at "$now" \
+    > "$OUT_DIR/pr-mr-linkage.json"
+else
+  jq -n \
+    --arg schema "cub.confighub.io/pr-mr-promotion-flow/v1" \
+    --arg change_id "$change_id" \
+    --arg git_repo "$GIT_REPO" \
+    --arg git_pr_number "${PR_NUMBER:-}" \
+    --arg git_pr_url "$pr_url" \
+    --arg git_pr_state "$pr_state" \
+    --arg confighub_mr_id "$artifact_id" \
+    --arg confighub_mr_status "$ingest_status" \
+    --arg decision_state "$decision_state" \
+    --arg policy_ref "$policy_ref" \
+    --arg flow "A" \
+    --arg flow_direction "git-pr-to-confighub-mr" \
+    --arg updated_at "$now" \
+    '{
+      schema: $schema,
+      change_id: $change_id,
+      flow: $flow,
+      flow_direction: $flow_direction,
+      git_pr: {
+        repo: $git_repo,
+        number: (if $git_pr_number == "" then null else ($git_pr_number | tonumber) end),
+        url: (if $git_pr_url == "" then null else $git_pr_url end),
+        state: (if $git_pr_state == "" then null else $git_pr_state end)
+      },
+      confighub_mr: {
+        id: $confighub_mr_id,
+        status: $confighub_mr_status
+      },
+      decision: {
+        state: $decision_state,
+        policy_ref: (if $policy_ref == "" then null else $policy_ref end)
+      },
+      updated_at: $updated_at
+    }' > "$OUT_DIR/pr-mr-linkage.json"
+fi
 
 # Step 6: Create ConfigHub changeset for audit trail
 echo "[flow-a][step-6] record linkage in ConfigHub changeset"

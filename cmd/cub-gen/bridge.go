@@ -28,6 +28,8 @@ func runBridge(args []string) error {
 		return nil
 	case "ingest":
 		return runBridgeIngest(args[1:])
+	case "link":
+		return runBridgeLink(args[1:])
 	case "decision":
 		return runBridgeDecision(args[1:])
 	case "promote":
@@ -80,6 +82,102 @@ func runBridgeIngest(args []string) error {
 	}
 	fmt.Printf("Bridge ingest OK: change_id=%s status=%s artifact_id=%s idempotent=%t\n", res.ChangeID, res.Status, res.ArtifactID, res.Idempotent)
 	return nil
+}
+
+func runBridgeLink(args []string) error {
+	fs := flag.NewFlagSet("bridge link", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+
+	bundlePath := fs.String("bundle", "", "Publish bundle JSON path, or '-' for stdin, used to derive change_id")
+	changeID := fs.String("change-id", "", "Change ID override when --bundle is not supplied")
+	baseURL := fs.String("base-url", "", "Optional ConfigHub base URL; when omitted, writes the local review-link record")
+	token := fs.String("token", "", "Bearer token; defaults to CONFIGHUB_TOKEN when --base-url is set")
+	endpoint := fs.String("endpoint", "", "Optional review-link endpoint path override")
+	githubPRRepo := fs.String("github-pr-repo", "", "GitHub PR repository")
+	githubPRNumber := fs.Int("github-pr-number", 0, "GitHub PR number")
+	githubPRURL := fs.String("github-pr-url", "", "GitHub PR URL")
+	githubPRSHA := fs.String("github-pr-sha", "", "GitHub PR commit SHA")
+	appPRRepo := fs.String("app-pr-repo", "", "Alias for --github-pr-repo")
+	appPRNumber := fs.Int("app-pr-number", 0, "Alias for --github-pr-number")
+	appPRURL := fs.String("app-pr-url", "", "Alias for --github-pr-url")
+	appPRSHA := fs.String("app-pr-sha", "", "Alias for --github-pr-sha")
+	confighubMRID := fs.String("confighub-mr-id", "", "ConfigHub merge request ID")
+	confighubMRURL := fs.String("confighub-mr-url", "", "ConfigHub merge request URL")
+	confighubMRStatus := fs.String("confighub-mr-status", "", "Optional ConfigHub merge request status")
+	mrID := fs.String("mr-id", "", "Alias for --confighub-mr-id")
+	mrURL := fs.String("mr-url", "", "Alias for --confighub-mr-url")
+	mrStatus := fs.String("mr-status", "", "Alias for --confighub-mr-status")
+	out := fs.String("out", "-", "Review-link JSON output path, or '-' for stdout")
+	atRaw := fs.String("at", "", "Optional RFC3339 timestamp override")
+	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	if fs.NArg() != 0 {
+		return errors.New("usage: cub-gen bridge link [flags]")
+	}
+
+	resolvedChangeID, err := resolveBridgeLinkChangeID(strings.TrimSpace(*changeID), strings.TrimSpace(*bundlePath))
+	if err != nil {
+		return err
+	}
+	repo := firstNonEmpty(*githubPRRepo, *appPRRepo)
+	number := firstPositive(*githubPRNumber, *appPRNumber)
+	prURL := firstNonEmpty(*githubPRURL, *appPRURL)
+	prSHA := firstNonEmpty(*githubPRSHA, *appPRSHA)
+	if strings.TrimSpace(repo) == "" || number <= 0 || strings.TrimSpace(prURL) == "" {
+		return errors.New("bridge link requires --github-pr-repo, --github-pr-number, and --github-pr-url (or --app-pr-* aliases)")
+	}
+
+	linkMRID := firstNonEmpty(*confighubMRID, *mrID)
+	linkMRURL := firstNonEmpty(*confighubMRURL, *mrURL)
+	linkMRStatus := firstNonEmpty(*confighubMRStatus, *mrStatus)
+	if strings.TrimSpace(linkMRID) == "" || strings.TrimSpace(linkMRURL) == "" {
+		return errors.New("bridge link requires --confighub-mr-id and --confighub-mr-url (or --mr-* aliases)")
+	}
+
+	at, err := parseAt(*atRaw)
+	if err != nil {
+		return err
+	}
+	link, err := bridgeflow.NewReviewLink(resolvedChangeID, bridgeflow.PullRequestRef{
+		Repo:      strings.TrimSpace(repo),
+		Number:    number,
+		URL:       strings.TrimSpace(prURL),
+		CommitSHA: strings.TrimSpace(prSHA),
+	}, bridgeflow.MergeRequestRef{
+		ID:     strings.TrimSpace(linkMRID),
+		URL:    strings.TrimSpace(linkMRURL),
+		Status: strings.TrimSpace(linkMRStatus),
+	}, at)
+	if err != nil {
+		return err
+	}
+
+	if strings.TrimSpace(*baseURL) == "" {
+		return writeJSONOutput(*out, link, *pretty)
+	}
+
+	resolvedToken := strings.TrimSpace(*token)
+	if resolvedToken == "" {
+		resolvedToken = strings.TrimSpace(os.Getenv("CONFIGHUB_TOKEN"))
+	}
+	if resolvedToken == "" {
+		return errors.New("bridge link requires --token or CONFIGHUB_TOKEN when --base-url is set")
+	}
+
+	result, err := bridgeflow.SubmitReviewLink(context.Background(), bridgeflow.LinkClient{
+		BaseURL:      strings.TrimSpace(*baseURL),
+		BearerToken:  resolvedToken,
+		EndpointPath: strings.TrimSpace(*endpoint),
+	}, link)
+	if err != nil {
+		return err
+	}
+	return writeJSONOutput(*out, result, *pretty)
 }
 
 func runBridgeDecision(args []string) error {
@@ -532,6 +630,40 @@ func runBridgePromoteMerge(args []string) error {
 	return writeJSONOutput(*out, updated, *pretty)
 }
 
+func resolveBridgeLinkChangeID(changeID, bundlePath string) (string, error) {
+	if strings.TrimSpace(bundlePath) == "" {
+		if strings.TrimSpace(changeID) == "" {
+			return "", errors.New("bridge link requires --bundle or --change-id")
+		}
+		return strings.TrimSpace(changeID), nil
+	}
+
+	var bundle publish.ChangeBundle
+	if err := readJSONInput(bundlePath, &bundle); err != nil {
+		return "", fmt.Errorf("read bundle json: %w", err)
+	}
+	if err := publish.VerifyBundle(bundle); err != nil {
+		return "", fmt.Errorf("verify bundle before link: %w", err)
+	}
+	bundleChangeID := strings.TrimSpace(bundle.ChangeID)
+	if bundleChangeID == "" {
+		return "", errors.New("bridge link bundle is missing change_id")
+	}
+	if strings.TrimSpace(changeID) != "" && strings.TrimSpace(changeID) != bundleChangeID {
+		return "", fmt.Errorf("bridge link change_id mismatch: --change-id=%s bundle=%s", strings.TrimSpace(changeID), bundleChangeID)
+	}
+	return bundleChangeID, nil
+}
+
+func firstPositive(values ...int) int {
+	for _, value := range values {
+		if value > 0 {
+			return value
+		}
+	}
+	return 0
+}
+
 func parseDecisionState(raw string) (bridgeflow.DecisionState, error) {
 	state := strings.ToUpper(strings.TrimSpace(raw))
 	switch state {
@@ -614,6 +746,7 @@ func printBridgeUsage(out io.Writer) {
 			Title: "Usage",
 			Lines: []string{
 				"  cub-gen bridge ingest [--in FILE|-] --base-url URL [--token TOKEN] [--endpoint PATH] [--json] [--pretty]",
+				"  cub-gen bridge link --bundle FILE|- --github-pr-repo REPO --github-pr-number N --github-pr-url URL --confighub-mr-id ID --confighub-mr-url URL [--base-url URL --token TOKEN]",
 				"  cub-gen bridge decision <create|attach|apply|query> [flags]",
 				"  cub-gen bridge promote <init|govern|verify|open|approve|merge> [flags]",
 			},
@@ -622,6 +755,7 @@ func printBridgeUsage(out io.Writer) {
 			Title: "What it's for",
 			Lines: []string{
 				"  ingest      Submit a verified bundle to ConfigHub",
+				"  link        Create/update GitHub PR <-> ConfigHub MR review links",
 				"  decision    Query backend decision state or simulate it offline",
 				"  promote     Track PR<->MR and upstream DRY promotion flows",
 			},
@@ -634,12 +768,14 @@ func printBridgeUsage(out io.Writer) {
 				"  cub-gen bridge decision attach --decision decision.json --attestation attestation.json",
 				"  cub-gen bridge decision apply --decision decision.json --state ALLOW --approved-by platform-admin --reason \"policy checks passed\"",
 				"  cub-gen bridge decision query --base-url https://confighub.example --change-id chg_123",
+				"  cub-gen bridge link --bundle bundle.json --github-pr-repo github.com/confighub/apps --github-pr-number 42 --github-pr-url https://github.com/confighub/apps/pull/42 --confighub-mr-id mr_123 --confighub-mr-url https://confighub.example/mr/123",
 				"  cub-gen bridge promote init --change-id chg_123 --app-pr-repo github.com/confighub/apps --app-pr-number 42 --app-pr-url https://github.com/confighub/apps/pull/42 --mr-id mr_123 --mr-url https://confighub.example/mr/123",
 			},
 		},
 		helpSection{
 			Title: "Tips",
 			Lines: []string{
+				"  - bridge link is the single-command PR/MR correlation path",
 				"  - bridge decision query is the authoritative backend lookup path",
 				"  - local decision create|attach|apply commands are for offline contract simulation",
 			},
