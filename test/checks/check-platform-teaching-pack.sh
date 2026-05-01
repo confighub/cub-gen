@@ -57,7 +57,8 @@ require_pattern "$argo_doc" './cub-gen gitops import --space platform --json ./t
 require_pattern "$argo_doc" './cub-gen gitops import --space platform --json ./testdata/app-of-apps-standalone' "Argo doc must prove app-of-apps against a real fixture"
 require_pattern "$argo_doc" 'unsupported generator types.*observed-only|observed-only or degraded' "Argo doc must describe graceful degradation"
 
-require_pattern "README.md" 'That is the pitch: \*\*repo in, explanation out\*\*' "README must keep the first-minute pitch"
+require_pattern "README.md" 'A \*\*Generator\*\* is a function on config data' "README must define Generator in the first-minute pitch"
+require_pattern "README.md" 'repo in, explanation out' "README must keep the first-minute repo-in explanation-out line"
 require_pattern "README.md" 'It does not deploy\. Flux and Argo still reconcile|Not a Flux or Argo replacement' "README must explain generator, not replacement"
 require_pattern "docs/index.md" 'not by replacing the platform' "Docs index must explain generator, not replacement"
 require_pattern "examples/README.md" 'fixture-backed hardgate; not full upstream conformance' "Examples index must keep OpenChoreo claims conservative"
