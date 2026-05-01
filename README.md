@@ -37,6 +37,10 @@ If not, where should the change go?
 It does not deploy. Flux and Argo still reconcile. `cub-gen` sits before them
 and explains the source, owner, and safe edit path for generated config.
 
+The target product surface is `cub gen`, the source-side counterpart to
+`cub gitops`. Today the command in this repo remains `cub-gen`; the plugin
+migration contract is documented in [cub gen Plugin Readiness](docs/cub-gen-plugin.md).
+
 ## What You Get
 
 | Question | cub-gen answer |

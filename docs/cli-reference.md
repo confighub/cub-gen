@@ -6,6 +6,10 @@ All commands are deterministic: same input produces same output.
 field back to the file you should edit. It is for repo-side GitOps questions,
 not cluster/runtime ones.
 
+The future product surface is `cub gen`; the current shipped command is still
+`cub-gen`. See [`cub gen` Plugin Readiness](cub-gen-plugin.md) for the migration
+and compatibility contract.
+
 ## Start By Question
 
 | If you want to know... | Start with |
