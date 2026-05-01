@@ -1,6 +1,24 @@
 # cub-gen
 
-Find the source of generated Kubernetes config.
+A **Generator** is a function on config data.
+
+`cub-gen` treats platforms like OpenChoreo, Helm, Score, Spring, and Argo
+app-of-apps as Generators. They read things teams already keep in Git: app
+code, Helm values, Score files, Spring config, OpenChoreo CRs, environment
+settings, and secret references. They return deployable Kubernetes config.
+
+`cub-gen` makes those functions explicit so ConfigHub can reason about inputs,
+outputs, provenance, ownership, and inverse edit paths. It can show which
+Component produced which Deployable Variants, where each variant deploys, what
+it connects to, and which source field owns each rendered field.
+
+When someone changes generated config, `cub-gen` can route the edit: apply it
+here, lift it back to the source file, or block/escalate it because the platform
+owns that field.
+
+Short version: `cub-gen` turns the app/platform repos people already have into
+explicit, governed functions on config data. It does this without pretending
+Kubernetes stopped being Kubernetes.
 
 > Working on this repo as a contributor or AI agent? Start with [AI-README-FIRST.md](AI-README-FIRST.md).
 
@@ -37,9 +55,9 @@ If not, where should the change go?
 It does not deploy. Flux and Argo still reconcile. `cub-gen` sits before them
 and explains the source, owner, and safe edit path for generated config.
 
-The target product surface is `cub gen`, the source-side counterpart to
-`cub gitops`. Today the command in this repo remains `cub-gen`; the plugin
-migration contract is documented in [cub gen Plugin Readiness](docs/cub-gen-plugin.md).
+The intended command name is `cub gen`, matching `cub gitops`. Today this repo
+still builds `cub-gen`. The plugin migration details are in
+[cub gen Plugin Readiness](docs/cub-gen-plugin.md).
 
 ## What You Get
 
@@ -82,7 +100,7 @@ REPO=/path/to/your/repo
 ./cub-gen change explain --space platform --owner app-team "$REPO"
 ```
 
-For a small multi-repo platform estate:
+For a small multi-repo platform:
 
 ```bash
 ./cub-gen platform import --json ./testdata/platform-estate/platform.yaml \
@@ -123,12 +141,11 @@ copy of it for one environment, tenant, region, customer, or cluster. `cub-gen`
 helps explain how that variant was generated and where a proposed change should
 land.
 
-An **AI Variant** is a deployable variant whose delta, wiring, or operation is
-AI-assisted and governed. A **Change** is any proposed edit to the source or
-rendered config. **Proof** is the field-origin, owner, route, and decision
-evidence that makes the change reviewable.
+A **Change** is any proposed edit to the source or rendered config. **Proof**
+is the field-origin, owner, route, and decision evidence that makes the change
+reviewable.
 
-That is the pitch: **repo in, explanation out**.
+The short version is **repo in, explanation out**.
 
 ## What it looks like
 
@@ -165,7 +182,7 @@ For an OpenChoreo-shaped platform, start read-only:
   | jq '.adoption_report.summary'
 ```
 
-That fixture proves the hard case: `Workload`, `ComponentType`,
+That fixture covers the hard case: `Workload`, `ComponentType`,
 `ReleaseBinding`, `SecretReference`, `RenderedRelease`, and generated
 Kubernetes resources, including a mounted-file `ConfigMap`. The report names
 source owners and routes generated edits as `apply-here`, `lift-upstream`,
@@ -184,7 +201,7 @@ To make proof visible in a pull request without editing app manifests:
 under `.cub-gen/enrichment/` and refuses to overwrite existing artifacts; a
 conflict becomes `review-required`.
 
-To propose governed cleanups without touching source or rendered YAML:
+To propose reviewable cleanup patches without touching source or rendered YAML:
 
 ```bash
 ./cub-gen normalize preview --space platform --patch ./examples/springboot-paas
@@ -201,12 +218,12 @@ owner annotations, and an explicit datasource SecretReference candidate.
 |---|---|
 | Detect | Find the generator style used by the repo |
 | Render/import | Produce or read the deployable config |
-| Platform graph | Read a multi-repo estate as Components, Deployable Variants, Targets, generators, and diagnostics |
+| Platform graph | Read several app/platform repos as Components, Deployable Variants, Targets, Generators, and diagnostics |
 | Variant fanout | Emit one ConfigHub-ready proof bundle per environment, tenant, region, or cluster variant |
 | Trace | Map rendered fields back to source files |
 | Explain | Say who owns the field and where to edit it |
 | Enrich | Create PR-friendly sidecar proof with source links, owners, route badges, and PR/MR link metadata |
-| Normalize | Propose reviewable cleanups when platform rules, owners, variants, or secret wiring are implicit |
+| Normalize | Propose reviewable cleanup patches when platform rules, owners, variants, or secret wiring are implicit |
 | Prove | Produce a reviewable bundle for local review, GitHub PRs, or ConfigHub |
 
 ## First runs
@@ -228,7 +245,7 @@ These run locally and do not require a login:
 | Argo app-of-apps | [app-of-apps fixture](testdata/app-of-apps-standalone/) + [Argo worked example](docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | Which root app path or child Application catalog entry owns this app? |
 | Score.dev | [scoredev-paas](examples/scoredev-paas/) | Which `score.yaml` field produced this runtime value? |
 | Spring Boot services | [springboot-paas](examples/springboot-paas/) | Should I edit app config or platform config? |
-| Multi-repo platform estate | [platform-estate fixture](testdata/platform-estate/) | Which Components, Deployable Variants, generators, and gaps exist before any rewrite? |
+| Multi-repo platform | [platform-estate fixture](testdata/platform-estate/) | Which Components, Deployable Variants, Generators, and gaps exist before any rewrite? |
 | Multi-env or tenant variants | [variant-fanout fixture](testdata/variant-fanout/) | Can I produce one governed proof bundle for every deployable variant? |
 | A running cluster first | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 
@@ -322,8 +339,8 @@ controllers running in kind.
 - [Platform](docs/platform.md) - how cub-gen connects to ConfigHub
 - [Demo Guide](docs/demo-guide.md) - demo scripts
 - [Persona 5-minute runbooks](docs/workflows/persona-5-minute-runbooks.md) - stack-specific entry paths
-- [AI Example Hygiene Checklist](docs/workflows/ai-example-hygiene-checklist.md) - safe AI-assisted example design
-- [Prompt as DRY](docs/workflows/prompt-as-dry.md) - worked AI-assisted config story
+- [AI Example Hygiene Checklist](docs/workflows/ai-example-hygiene-checklist.md) - checks for AI-assisted example design
+- [Prompt as DRY](docs/workflows/prompt-as-dry.md) - worked config-generation example
 - [Operation registry for real apps](docs/workflows/operation-registry-real-apps.md) - registry-backed platform operations
 - [Example Truth Matrix](docs/testing/example-truth-matrix.md) - generated status for examples
 - [v0.4 Working Roadmap](docs/plans/2026-04-30-v0.4-obvious-value-roadmap.md) - sequenced plan to make cub-gen obvious
@@ -337,7 +354,7 @@ controllers running in kind.
 |---|---|
 | Latest shipped | `v0.3.0` was released on 2026-04-12 |
 | Strong now | Repo-first CLI is stable; 11 generator families ship on this branch; the main examples have local, connected, and live proof paths |
-| In progress | Working `v0.4` roadmap: make cub-gen's role obvious as Component -> Deployable Variant -> Target/Connections/Change/Proof |
+| In progress | Working `v0.4` roadmap: make cub-gen's role clear as Component -> Deployable Variant -> Target/Connections/Change/Proof |
 | Current release target | [v0.4 working roadmap](docs/plans/2026-04-30-v0.4-obvious-value-roadmap.md) and GitHub parent issue [#287](https://github.com/confighub/cub-gen/issues/287) |
 | Latest release notes | See [docs/releases/v0.3.0.md](docs/releases/v0.3.0.md) |
 | Previous release notes | See [docs/releases/v0.2-preview.2.md](docs/releases/v0.2-preview.2.md) |
