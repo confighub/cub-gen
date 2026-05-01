@@ -15,6 +15,7 @@ type QueryContext struct {
 }
 
 type ImpactQuery struct {
+	VariantFilter string `json:"variant_filter,omitempty"`
 	DryPathFilter string `json:"dry_path_filter,omitempty"`
 	WetPathFilter string `json:"wet_path_filter,omitempty"`
 	OwnerFilter   string `json:"owner_filter,omitempty"`
@@ -29,6 +30,7 @@ type ImpactResult struct {
 }
 
 type ExplainQuery struct {
+	VariantFilter string `json:"variant_filter,omitempty"`
 	WetPathFilter string `json:"wet_path_filter,omitempty"`
 	DryPathFilter string `json:"dry_path_filter,omitempty"`
 	OwnerFilter   string `json:"owner_filter,omitempty"`

@@ -14,6 +14,12 @@ type FamilyFixture struct {
 func BridgeSymmetryMatrix() []FamilyFixture {
 	return []FamilyFixture{
 		{
+			Name:            "app-of-apps",
+			RepoSuffix:      filepath.Join("testdata", "app-of-apps-standalone"),
+			ExpectedProfile: "app-of-apps",
+			ExpectedKind:    "app-of-apps",
+		},
+		{
 			Name:            "applicationset",
 			RepoSuffix:      filepath.Join("testdata", "applicationset-standalone"),
 			ExpectedProfile: "applicationset",
@@ -48,6 +54,12 @@ func BridgeSymmetryMatrix() []FamilyFixture {
 			RepoSuffix:      filepath.Join("examples", "just-apps-no-platform-config"),
 			ExpectedProfile: "no-config-platform",
 			ExpectedKind:    "no-config-platform",
+		},
+		{
+			Name:            "openchoreo",
+			RepoSuffix:      filepath.Join("testdata", "openchoreo-hardgate"),
+			ExpectedProfile: "openchoreo",
+			ExpectedKind:    "openchoreo",
 		},
 		{
 			Name:            "ops",

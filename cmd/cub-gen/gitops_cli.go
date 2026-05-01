@@ -43,6 +43,7 @@ func runGitOpsDiscover(args []string) error {
 	space := fs.String("space", "default", "ConfigHub space label")
 	ref := fs.String("ref", "HEAD", "Git ref label to include in output")
 	whereResource := fs.String("where-resource", "", "Additional resource filter expression")
+	adoptionReport := fs.Bool("adoption-report", false, "Include read-only platform adoption report")
 	jsonOut := fs.Bool("json", false, "Output JSON")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
 	if err := fs.Parse(args); err != nil {
@@ -57,7 +58,9 @@ func runGitOpsDiscover(args []string) error {
 	}
 	targetSlug := fs.Arg(0)
 
-	result, err := gitopsflow.Discover(targetSlug, *ref, *space, *whereResource)
+	result, err := gitopsflow.DiscoverWithOptions(targetSlug, *ref, *space, *whereResource, gitopsflow.DiscoverOptions{
+		AdoptionReport: *adoptionReport,
+	})
 	if err != nil {
 		return err
 	}
@@ -72,6 +75,7 @@ func runGitOpsDiscover(args []string) error {
 	}
 
 	printDiscoverTable(result)
+	printAdoptionReport(result.AdoptionReport)
 	return nil
 }
 
@@ -205,6 +209,30 @@ func printDiscoverTable(result gitopsflow.DiscoverResult) {
 	fmt.Println("Resource Type\tResource Name\tGenerator Kind\tProfile\tCapabilities\tConfidence")
 	for _, row := range rows {
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\t%s\n", row[0], row[1], row[2], row[3], row[4], row[5])
+	}
+}
+
+func printAdoptionReport(report *gitopsflow.AdoptionReport) {
+	if report == nil {
+		return
+	}
+	fmt.Println()
+	fmt.Println("Adoption report")
+	fmt.Println("Generators\tSource Artifacts\tRendered Targets\tOwners")
+	fmt.Printf("%d\t%d\t%d\t%s\n",
+		report.Summary.GeneratorCount,
+		report.Summary.SourceArtifactCount,
+		report.Summary.RenderedTargetCount,
+		strings.Join(report.Summary.Owners, ","),
+	)
+	for _, generator := range report.Generators {
+		fmt.Printf("%s\t%s\t%s\t%d routes\t%d gaps\n",
+			generator.Kind,
+			generator.Profile,
+			generator.Name,
+			len(generator.ChangeRoutes),
+			len(generator.UnsupportedGaps),
+		)
 	}
 }
 

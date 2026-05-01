@@ -218,6 +218,46 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 			})
 		}
 		return origins
+	case model.GeneratorAppOfApps:
+		hints := appOfAppsPathHintsFromInputs(g.Inputs)
+		analysis := appOfAppsAnalysisForGenerator(detection, g)
+		origins := []model.FieldOrigin{{
+			DryPath:    "spec.source.path",
+			WetPath:    "RootApplication/spec/source/path",
+			SourcePath: hints.RootApplicationPath,
+			Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+			Confidence: registry.FieldOriginConfidenceFor(g.Kind, "root_path", 0.88),
+		}}
+		if analysis == nil || len(analysis.GeneratedApplications) == 0 {
+			return origins
+		}
+		for _, child := range analysis.GeneratedApplications {
+			prefix := fmt.Sprintf("Application[name=%s]", child.Name)
+			origins = append(origins,
+				model.FieldOrigin{
+					DryPath:    "metadata.name",
+					WetPath:    prefix + "/metadata/name",
+					SourcePath: child.Path,
+					Transform:  registry.FieldOriginTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "child_name", 0.92),
+				},
+				model.FieldOrigin{
+					DryPath:    "spec.source.repoURL",
+					WetPath:    prefix + "/spec/source/repoURL",
+					SourcePath: child.Path,
+					Transform:  registry.FieldOriginTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "source_repo", 0.90),
+				},
+				model.FieldOrigin{
+					DryPath:    "spec.source.path",
+					WetPath:    prefix + "/spec/source/path",
+					SourcePath: child.Path,
+					Transform:  registry.FieldOriginTransform(g.Kind),
+					Confidence: registry.FieldOriginConfidenceFor(g.Kind, "source_path", 0.90),
+				},
+			)
+		}
+		return origins
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		return applyGeneratorChainOrigins(detection, g, []model.FieldOrigin{
@@ -324,6 +364,52 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 			})
 		}
 		return origins
+	case model.GeneratorOpenChoreo:
+		hints := openChoreoPathHintsFromInputs(g.Inputs)
+		return []model.FieldOrigin{
+			{
+				DryPath:    "spec.containers.main.image",
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/image",
+				SourcePath: hints.WorkloadPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "image", 0.88),
+			},
+			{
+				DryPath:    "spec.environment.env.LOG_LEVEL",
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value",
+				SourcePath: hints.ReleaseBindingPath,
+				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "env_var", 0.84),
+			},
+			{
+				DryPath:    "spec.service.port",
+				WetPath:    "Service/spec/ports[name=http]/port",
+				SourcePath: hints.ComponentTypePath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "service_port", 0.82),
+			},
+			{
+				DryPath:    "spec.secretRef",
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/env[name=DATABASE_URL]/valueFrom/secretKeyRef/name",
+				SourcePath: hints.SecretReferencePath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "secret_ref", 0.86),
+			},
+			{
+				DryPath:    "spec.resources.limits.cpu",
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/resources/limits/cpu",
+				SourcePath: hints.ReleaseBindingPath,
+				Transform:  registry.FieldOriginOverlayTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "resource_limit", 0.80),
+			},
+			{
+				DryPath:    "spec.runtime.defaults.securityContext.runAsNonRoot",
+				WetPath:    "Deployment/spec/template/spec/securityContext/runAsNonRoot",
+				SourcePath: hints.ComponentTypePath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "platform_default", 0.78),
+			},
+		}
 	case model.GeneratorOpsFlow:
 		hints := opsWorkflowPathHintsFromInputs(g.Inputs)
 		origins := []model.FieldOrigin{
@@ -583,6 +669,65 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 			})
 		}
 		return out
+	case model.GeneratorAppOfApps:
+		hints := appOfAppsPathHintsFromInputs(g.Inputs)
+		analysis := appOfAppsAnalysisForGenerator(detection, g)
+		rootPathPolicy := registry.InversePointerTemplateFor(g.Kind, "root_path", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.88,
+		})
+		vars := map[string]string{"root_application_path": hints.RootApplicationPath}
+		out := []model.InverseEditPointer{{
+			WetPath:    "RootApplication/spec/source/path",
+			DryPath:    "spec.source.path",
+			Owner:      rootPathPolicy.Owner,
+			Route:      "lift-upstream",
+			EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "root_path", "Route: lift-upstream. Edit spec.source.path in {{root_application_path}} to change the child app catalog."), vars),
+			Confidence: rootPathPolicy.Confidence,
+		}}
+		if analysis == nil || len(analysis.GeneratedApplications) == 0 {
+			return out
+		}
+
+		namePolicy := registry.InversePointerTemplateFor(g.Kind, "child_name", registry.InversePointerTemplate{
+			Owner: "app-catalog-owner", Confidence: 0.92,
+		})
+		sourceRepoPolicy := registry.InversePointerTemplateFor(g.Kind, "source_repo", registry.InversePointerTemplate{
+			Owner: "app-catalog-owner", Confidence: 0.90,
+		})
+		sourcePathPolicy := registry.InversePointerTemplateFor(g.Kind, "source_path", registry.InversePointerTemplate{
+			Owner: "app-catalog-owner", Confidence: 0.90,
+		})
+		for _, child := range analysis.GeneratedApplications {
+			childVars := map[string]string{"child_application_path": child.Path}
+			prefix := fmt.Sprintf("Application[name=%s]", child.Name)
+			out = append(out,
+				model.InverseEditPointer{
+					WetPath:    prefix + "/metadata/name",
+					DryPath:    "metadata.name",
+					Owner:      namePolicy.Owner,
+					Route:      "apply-here",
+					EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "child_name", "Route: apply-here. Edit metadata.name in {{child_application_path}}."), childVars),
+					Confidence: namePolicy.Confidence,
+				},
+				model.InverseEditPointer{
+					WetPath:    prefix + "/spec/source/repoURL",
+					DryPath:    "spec.source.repoURL",
+					Owner:      sourceRepoPolicy.Owner,
+					Route:      "apply-here",
+					EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "source_repo", "Route: apply-here. Edit spec.source.repoURL in {{child_application_path}}."), childVars),
+					Confidence: sourceRepoPolicy.Confidence,
+				},
+				model.InverseEditPointer{
+					WetPath:    prefix + "/spec/source/path",
+					DryPath:    "spec.source.path",
+					Owner:      sourcePathPolicy.Owner,
+					Route:      "apply-here",
+					EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "source_path", "Route: apply-here. Edit spec.source.path in {{child_application_path}}."), childVars),
+					Confidence: sourcePathPolicy.Confidence,
+				},
+			)
+		}
+		return out
 	case model.GeneratorScore:
 		hints := scorePathHintsFromInputs(detection.Repo, g.Inputs)
 		imagePolicy := registry.InversePointerTemplateFor(g.Kind, "image", registry.InversePointerTemplate{
@@ -724,6 +869,82 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				Owner:      channelsPolicy.Owner,
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, channelsHintKey, channelsHintFallback), vars),
 				Confidence: channelsPolicy.Confidence,
+			},
+		}
+	case model.GeneratorOpenChoreo:
+		hints := openChoreoPathHintsFromInputs(g.Inputs)
+		imagePolicy := registry.InversePointerTemplateFor(g.Kind, "image", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.88,
+		})
+		envPolicy := registry.InversePointerTemplateFor(g.Kind, "env_var", registry.InversePointerTemplate{
+			Owner: "environment-owner", Confidence: 0.84,
+		})
+		portPolicy := registry.InversePointerTemplateFor(g.Kind, "service_port", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.82,
+		})
+		secretPolicy := registry.InversePointerTemplateFor(g.Kind, "secret_ref", registry.InversePointerTemplate{
+			Owner: "security-team", Confidence: 0.86,
+		})
+		resourcePolicy := registry.InversePointerTemplateFor(g.Kind, "resource_limit", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.80,
+		})
+		defaultPolicy := registry.InversePointerTemplateFor(g.Kind, "platform_default", registry.InversePointerTemplate{
+			Owner: "platform-engineer", Confidence: 0.78,
+		})
+		vars := map[string]string{
+			"workload_path":         hints.WorkloadPath,
+			"component_type_path":   hints.ComponentTypePath,
+			"release_binding_path":  hints.ReleaseBindingPath,
+			"secret_reference_path": hints.SecretReferencePath,
+		}
+		return []model.InverseEditPointer{
+			{
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/image",
+				DryPath:    "spec.containers.main.image",
+				Owner:      imagePolicy.Owner,
+				Route:      "lift-upstream",
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "image", "Route: lift-upstream. Edit spec.containers.main.image in {{workload_path}}."), vars),
+				Confidence: imagePolicy.Confidence,
+			},
+			{
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value",
+				DryPath:    "spec.environment.env.LOG_LEVEL",
+				Owner:      envPolicy.Owner,
+				Route:      "apply-here",
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "env_var", "Route: apply-here. Edit environment binding data in {{release_binding_path}}."), vars),
+				Confidence: envPolicy.Confidence,
+			},
+			{
+				WetPath:    "Service/spec/ports[name=http]/port",
+				DryPath:    "spec.service.port",
+				Owner:      portPolicy.Owner,
+				Route:      "lift-upstream",
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "service_port", "Route: lift-upstream. Edit the service port contract in {{component_type_path}}."), vars),
+				Confidence: portPolicy.Confidence,
+			},
+			{
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/env[name=DATABASE_URL]/valueFrom/secretKeyRef/name",
+				DryPath:    "spec.secretRef",
+				Owner:      secretPolicy.Owner,
+				Route:      "block/escalate",
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "secret_ref", "Route: block/escalate. Edit {{secret_reference_path}} through the security-owned secret flow."), vars),
+				Confidence: secretPolicy.Confidence,
+			},
+			{
+				WetPath:    "Deployment/spec/template/spec/containers[name=main]/resources/limits/cpu",
+				DryPath:    "spec.resources.limits.cpu",
+				Owner:      resourcePolicy.Owner,
+				Route:      "overlay",
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "resource_limit", "Route: overlay. Keep this as an environment/platform overlay in {{release_binding_path}} or policy."), vars),
+				Confidence: resourcePolicy.Confidence,
+			},
+			{
+				WetPath:    "Deployment/spec/template/spec/securityContext/runAsNonRoot",
+				DryPath:    "spec.runtime.defaults.securityContext.runAsNonRoot",
+				Owner:      defaultPolicy.Owner,
+				Route:      "block/escalate",
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "platform_default", "Route: block/escalate. Edit the platform default in {{component_type_path}} or platform policy, not the generated Deployment."), vars),
+				Confidence: defaultPolicy.Confidence,
 			},
 		}
 	case model.GeneratorOpsFlow:

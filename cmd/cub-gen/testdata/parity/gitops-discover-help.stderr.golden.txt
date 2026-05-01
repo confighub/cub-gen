@@ -1,4 +1,6 @@
 Usage of gitops discover:
+  -adoption-report
+    	Include read-only platform adoption report
   -json
     	Output JSON
   -pretty

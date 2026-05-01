@@ -1,0 +1,15 @@
+apiVersion: score.dev/v1b1
+kind: Workload
+metadata:
+  name: orders-api
+containers:
+  main:
+    image: ghcr.io/example/orders-api:v1.0.0
+service:
+  ports:
+    web:
+      port: 8080
+      targetPort: 8080
+resources:
+  db:
+    type: postgres

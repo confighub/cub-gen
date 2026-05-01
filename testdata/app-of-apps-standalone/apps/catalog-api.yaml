@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: catalog-api
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/acme/catalog-api
+    targetRevision: main
+    path: deploy/kustomize/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: catalog
+

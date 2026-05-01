@@ -1,0 +1,6 @@
+replicaCount: 1
+image:
+  repository: example.local/checkout-api
+  tag: latest
+service:
+  port: 8080

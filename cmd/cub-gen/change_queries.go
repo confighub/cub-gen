@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 
 	changeflow "github.com/confighub/cub-gen/internal/change"
 	"github.com/confighub/cub-gen/internal/model"
+	platformflow "github.com/confighub/cub-gen/internal/platform"
 	"github.com/confighub/cub-gen/internal/publish"
 )
 
@@ -28,6 +30,7 @@ func runChangeExplain(args []string) error {
 	whereResource := fs.String("where-resource", "", "Additional resource filter expression")
 	changeID := fs.String("change-id", "", "Existing change ID to explain without creating a new lifecycle")
 	bundlePath := fs.String("bundle", "", "Existing change bundle JSON file to use with --change-id")
+	variant := fs.String("variant", "", "Variant filter when --bundle points at a platform fanout JSON file")
 	wetPath := fs.String("wet-path", "", "Filter explanations to a specific WET path")
 	dryPath := fs.String("dry-path", "", "Filter explanations to a specific DRY path")
 	owner := fs.String("owner", "", "Filter explanations to a specific owner")
@@ -57,6 +60,7 @@ func runChangeExplain(args []string) error {
 		strings.TrimSpace(*space),
 		strings.TrimSpace(*ref),
 		strings.TrimSpace(*whereResource),
+		strings.TrimSpace(*variant),
 		helmCLIOverrides,
 		"usage: cub-gen change explain [flags] <target-path> [<render-target-path>]",
 	)
@@ -68,6 +72,7 @@ func runChangeExplain(args []string) error {
 	if err != nil {
 		return err
 	}
+	result.Query.VariantFilter = strings.TrimSpace(*variant)
 
 	if *out == "-" {
 		return writeJSON(os.Stdout, result, *pretty)
@@ -90,6 +95,7 @@ func runChangeImpact(args []string) error {
 	whereResource := fs.String("where-resource", "", "Additional resource filter expression")
 	changeID := fs.String("change-id", "", "Existing change ID to explain without creating a new lifecycle")
 	bundlePath := fs.String("bundle", "", "Existing change bundle JSON file to use with --change-id")
+	variant := fs.String("variant", "", "Variant filter when --bundle points at a platform fanout JSON file")
 	dryPath := fs.String("dry-path", "", "Filter impacts to a specific DRY path")
 	wetPath := fs.String("wet-path", "", "Filter impacts to a specific WET path")
 	owner := fs.String("owner", "", "Filter impacts to a specific owner")
@@ -119,6 +125,7 @@ func runChangeImpact(args []string) error {
 		strings.TrimSpace(*space),
 		strings.TrimSpace(*ref),
 		strings.TrimSpace(*whereResource),
+		strings.TrimSpace(*variant),
 		helmCLIOverrides,
 		"usage: cub-gen change impact [flags] <target-path> [<render-target-path>]",
 	)
@@ -130,6 +137,7 @@ func runChangeImpact(args []string) error {
 	if err != nil {
 		return err
 	}
+	result.Query.VariantFilter = strings.TrimSpace(*variant)
 
 	if *out == "-" {
 		return writeJSON(os.Stdout, result, *pretty)
@@ -152,6 +160,7 @@ func loadChangeQueryContext(
 	space string,
 	ref string,
 	whereResource string,
+	variantFilter string,
 	helmCLIOverrides []model.HelmCLIOverride,
 	targetUsage string,
 ) (changeflow.QueryContext, error) {
@@ -165,8 +174,8 @@ func loadChangeQueryContext(
 		if bundleRaw == "" {
 			return changeflow.QueryContext{}, fmt.Errorf("%s --change-id requires --bundle FILE", command)
 		}
-		var bundle publish.ChangeBundle
-		if err := readJSONInput(bundleRaw, &bundle); err != nil {
+		bundle, err := readBundleForChangeQuery(bundleRaw, changeIDFilter, variantFilter)
+		if err != nil {
 			return changeflow.QueryContext{}, fmt.Errorf("read bundle json: %w", err)
 		}
 		if err := publish.VerifyBundle(bundle); err != nil {
@@ -183,6 +192,9 @@ func loadChangeQueryContext(
 
 	if bundleRaw != "" {
 		return changeflow.QueryContext{}, fmt.Errorf("%s --bundle requires --change-id", command)
+	}
+	if strings.TrimSpace(variantFilter) != "" {
+		return changeflow.QueryContext{}, fmt.Errorf("%s --variant requires --change-id and --bundle fanout JSON", command)
 	}
 	targetSlug, renderTargetSlug, err := resolveTargetPairArgs(fs, targetUsage)
 	if err != nil {
@@ -201,4 +213,57 @@ func loadChangeQueryContext(
 		return changeflow.QueryContext{}, err
 	}
 	return changeflow.NewQueryContext(preview.Input, preview.Change, imported.Provenance), nil
+}
+
+func readBundleForChangeQuery(bundleRaw string, changeIDFilter string, variantFilter string) (publish.ChangeBundle, error) {
+	var raw json.RawMessage
+	if err := readJSONInput(bundleRaw, &raw); err != nil {
+		return publish.ChangeBundle{}, err
+	}
+	var envelope struct {
+		SchemaVersion string `json:"schema_version"`
+	}
+	if err := json.Unmarshal(raw, &envelope); err != nil {
+		return publish.ChangeBundle{}, fmt.Errorf("parse json: %w", err)
+	}
+	if envelope.SchemaVersion == platformflow.FanoutSchemaVersion {
+		var fanout platformflow.FanoutResult
+		if err := json.Unmarshal(raw, &fanout); err != nil {
+			return publish.ChangeBundle{}, fmt.Errorf("parse fanout json: %w", err)
+		}
+		return selectFanoutBundle(fanout, changeIDFilter, variantFilter)
+	}
+	if strings.TrimSpace(variantFilter) != "" {
+		return publish.ChangeBundle{}, errors.New("--variant can only be used when --bundle points at platform fanout JSON")
+	}
+	var bundle publish.ChangeBundle
+	if err := json.Unmarshal(raw, &bundle); err != nil {
+		return publish.ChangeBundle{}, fmt.Errorf("parse bundle json: %w", err)
+	}
+	return bundle, nil
+}
+
+func selectFanoutBundle(fanout platformflow.FanoutResult, changeIDFilter string, variantFilter string) (publish.ChangeBundle, error) {
+	filter := strings.TrimSpace(variantFilter)
+	var matches []platformflow.FanoutVariant
+	for _, variant := range fanout.Variants {
+		if filter == "" || variant.VariantID == filter || variant.Variant == filter || variant.Component+"/"+variant.Variant == filter {
+			if changeIDFilter == "" || variant.Bundle.ChangeID == changeIDFilter {
+				matches = append(matches, variant)
+			}
+		}
+	}
+	if len(matches) == 0 {
+		if filter == "" {
+			return publish.ChangeBundle{}, fmt.Errorf("fanout bundle contains no variant with change_id %q", changeIDFilter)
+		}
+		return publish.ChangeBundle{}, fmt.Errorf("fanout bundle contains no variant matching %q and change_id %q", filter, changeIDFilter)
+	}
+	if len(matches) > 1 {
+		if filter == "" {
+			return publish.ChangeBundle{}, fmt.Errorf("fanout bundle contains %d matching variants; pass --variant", len(matches))
+		}
+		return publish.ChangeBundle{}, fmt.Errorf("fanout bundle filter %q matched %d variants; use component/variant or variant id", filter, len(matches))
+	}
+	return matches[0].Bundle, nil
 }

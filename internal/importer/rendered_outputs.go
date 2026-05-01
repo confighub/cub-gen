@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -50,6 +51,31 @@ func dryInputsForHelmCLIOverrides(g model.GeneratorDetection, overrides []model.
 }
 
 func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.WetManifestTarget {
+	if g.Kind == model.GeneratorAppOfApps {
+		analysis := appOfAppsAnalysisForGenerator(detection, g)
+		out := []model.WetManifestTarget{{
+			GeneratorID:   g.ID,
+			Kind:          "Application",
+			Name:          g.Name,
+			Owner:         "platform-runtime",
+			Namespace:     "argocd",
+			SourceDryPath: "spec.source.path",
+		}}
+		if analysis == nil {
+			return out
+		}
+		for _, child := range analysis.GeneratedApplications {
+			out = append(out, model.WetManifestTarget{
+				GeneratorID:   g.ID,
+				Kind:          "Application",
+				Name:          child.Name,
+				Owner:         "platform-runtime",
+				Namespace:     "argocd",
+				SourceDryPath: "metadata.name",
+			})
+		}
+		return out
+	}
 	if g.Kind == model.GeneratorApplicationSet {
 		analysis := applicationSetAnalysisForGenerator(detection, g)
 		out := []model.WetManifestTarget{{
@@ -74,6 +100,9 @@ func wetManifestTargetsForGenerator(detection model.DetectionResult, g model.Gen
 			})
 		}
 		return out
+	}
+	if g.Kind == model.GeneratorOpenChoreo {
+		return openChoreoWetManifestTargets(g)
 	}
 
 	templates := registry.WetTargetTemplates(g.Kind)
@@ -119,6 +148,39 @@ func renderTargetTemplate(template string, vars map[string]string) string {
 }
 
 func renderedLineageForGenerator(detection model.DetectionResult, g model.GeneratorDetection) []model.RenderedObjectLineage {
+	if g.Kind == model.GeneratorAppOfApps {
+		analysis := appOfAppsAnalysisForGenerator(detection, g)
+		hints := appOfAppsPathHintsFromInputs(g.Inputs)
+		lineage := []model.RenderedObjectLineage{{
+			Kind:          "Application",
+			Name:          g.Name,
+			Namespace:     "argocd",
+			SourcePath:    hints.RootApplicationPath,
+			SourceDryPath: "spec.source.path",
+		}}
+		if analysis == nil {
+			return lineage
+		}
+		for _, child := range analysis.GeneratedApplications {
+			lineage = append(lineage,
+				model.RenderedObjectLineage{
+					Kind:          "Application",
+					Name:          child.Name,
+					Namespace:     "argocd",
+					SourcePath:    child.Path,
+					SourceDryPath: "metadata.name",
+				},
+				model.RenderedObjectLineage{
+					Kind:          "Application",
+					Name:          child.Name,
+					Namespace:     "argocd",
+					SourcePath:    child.Path,
+					SourceDryPath: "spec.source.path",
+				},
+			)
+		}
+		return lineage
+	}
 	if g.Kind == model.GeneratorApplicationSet {
 		analysis := applicationSetAnalysisForGenerator(detection, g)
 		hints := applicationSetHintsFromInputs(detection.Repo, g.Inputs)
@@ -142,6 +204,9 @@ func renderedLineageForGenerator(detection model.DetectionResult, g model.Genera
 			})
 		}
 		return lineage
+	}
+	if g.Kind == model.GeneratorOpenChoreo {
+		return openChoreoRenderedLineage(g)
 	}
 
 	templates := registry.RenderedLineageTemplates(g.Kind)
@@ -209,6 +274,136 @@ func renderedLineageForGenerator(detection model.DetectionResult, g model.Genera
 		}
 	}
 	return lineage
+}
+
+func openChoreoWetManifestTargets(g model.GeneratorDetection) []model.WetManifestTarget {
+	hints := openChoreoPathHintsFromInputs(g.Inputs)
+	out := make([]model.WetManifestTarget, 0, len(hints.Variants)*4)
+	for _, variant := range hints.Variants {
+		namespace := "apps-" + variant
+		out = append(out,
+			model.WetManifestTarget{
+				GeneratorID:   g.ID,
+				Kind:          "RenderedRelease",
+				Name:          g.Name + "-" + variant,
+				Owner:         "platform-runtime",
+				Namespace:     namespace,
+				SourceDryPath: "spec",
+			},
+			model.WetManifestTarget{
+				GeneratorID:   g.ID,
+				Kind:          "Deployment",
+				Name:          g.Name,
+				Owner:         "platform-runtime",
+				Namespace:     namespace,
+				SourceDryPath: "spec.containers.main.image",
+			},
+			model.WetManifestTarget{
+				GeneratorID:   g.ID,
+				Kind:          "Service",
+				Name:          g.Name,
+				Owner:         "platform-runtime",
+				Namespace:     namespace,
+				SourceDryPath: "spec.service.port",
+			},
+			model.WetManifestTarget{
+				GeneratorID:   g.ID,
+				Kind:          "Secret",
+				Name:          g.Name + "-secret-ref",
+				Owner:         "security-team",
+				Namespace:     namespace,
+				SourceDryPath: "spec.secretRef",
+			},
+		)
+	}
+	return out
+}
+
+func openChoreoRenderedLineage(g model.GeneratorDetection) []model.RenderedObjectLineage {
+	hints := openChoreoPathHintsFromInputs(g.Inputs)
+	releasePathsByVariant := openChoreoRolePathByVariant(g.Inputs, "rendered-release")
+	releaseBindingPathsByVariant := openChoreoRolePathByVariant(g.Inputs, "release-binding")
+	renderedManifestPathsByVariant := openChoreoRolePathByVariant(g.Inputs, "rendered-manifest")
+
+	lineage := make([]model.RenderedObjectLineage, 0, len(hints.Variants)*6)
+	for _, variant := range hints.Variants {
+		namespace := "apps-" + variant
+		releasePath := firstNonEmpty(releasePathsByVariant[variant], hints.RenderedReleasePath)
+		bindingPath := firstNonEmpty(releaseBindingPathsByVariant[variant], hints.ReleaseBindingPath)
+		renderedManifestPath := firstNonEmpty(renderedManifestPathsByVariant[variant], hints.RenderedManifestPath)
+		lineage = append(lineage,
+			model.RenderedObjectLineage{
+				Kind:          "RenderedRelease",
+				Name:          g.Name + "-" + variant,
+				Namespace:     namespace,
+				SourcePath:    releasePath,
+				SourceDryPath: "spec",
+			},
+			model.RenderedObjectLineage{
+				Kind:          "Deployment",
+				Name:          g.Name,
+				Namespace:     namespace,
+				SourcePath:    hints.WorkloadPath,
+				SourceDryPath: "spec.containers.main.image",
+			},
+			model.RenderedObjectLineage{
+				Kind:          "Deployment",
+				Name:          g.Name,
+				Namespace:     namespace,
+				SourcePath:    bindingPath,
+				SourceDryPath: "spec.environment.env.LOG_LEVEL",
+			},
+			model.RenderedObjectLineage{
+				Kind:          "Deployment",
+				Name:          g.Name,
+				Namespace:     namespace,
+				SourcePath:    hints.SecretReferencePath,
+				SourceDryPath: "spec.secretRef",
+			},
+			model.RenderedObjectLineage{
+				Kind:          "Service",
+				Name:          g.Name,
+				Namespace:     namespace,
+				SourcePath:    hints.ComponentTypePath,
+				SourceDryPath: "spec.service.port",
+			},
+			model.RenderedObjectLineage{
+				Kind:          "Deployment",
+				Name:          g.Name,
+				Namespace:     namespace,
+				SourcePath:    renderedManifestPath,
+				SourceDryPath: "metadata.ownerReferences",
+			},
+		)
+	}
+	return lineage
+}
+
+func openChoreoRolePathByVariant(inputs []string, role string) map[string]string {
+	out := map[string]string{}
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		if registry.InputRole(model.GeneratorOpenChoreo, p) != role {
+			continue
+		}
+		variant := variantNameFromOpenChoreoPath(p)
+		if variant == "" {
+			continue
+		}
+		if current := out[variant]; current == "" || p < current {
+			out[variant] = p
+		}
+	}
+	return out
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func lineageTemplateContext(detection model.DetectionResult, g model.GeneratorDetection) (map[string]string, map[string]string, map[string][]string) {

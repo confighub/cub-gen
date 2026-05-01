@@ -1,0 +1,13 @@
+apiVersion: score.dev/v1b1
+metadata:
+  name: score-checkout-prod
+containers:
+  web:
+    image: example.local/score-checkout:prod
+service:
+  ports:
+    web:
+      port: 8080
+resources:
+  postgres:
+    type: postgres

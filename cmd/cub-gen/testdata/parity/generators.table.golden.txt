@@ -1,9 +1,11 @@
 Kind	Profile	Resource Kind	Resource Type	Capabilities
+app-of-apps	app-of-apps	Application	argoproj.io/v1alpha1/Application	root-application,child-application-catalog,observed-expansion,inverse-app-catalog-patch
 applicationset	applicationset	ApplicationSet	argoproj.io/v1alpha1/ApplicationSet	observed-expansion,authoritative-list-expansion,authoritative-clusters-expansion,graceful-degradation
 backstage	backstage-idp	Component	backstage.io/v1alpha1/Component	catalog-metadata,render-manifests,inverse-catalog-patch
 c3agent	c3agent	ConfigMap	v1/ConfigMap	fleet-config,agent-orchestration,inverse-fleet-config-patch
 helm	helm-paas	HelmRelease	helm.toolkit.fluxcd.io/v2/HelmRelease	render-manifests,values-overrides,inverse-values-patch
 no-config-platform	no-config-platform	ConfigMap	v1/ConfigMap	app-config-only,provider-config,inverse-provider-config-patch
+openchoreo	openchoreo	Workload	openchoreo.dev/v1alpha1/Workload	platform-crds,rendered-release,generated-resource-ownership,inverse-route-patch,adoption-report
 opsworkflow	ops-workflow	Workflow	argoproj.io/v1alpha1/Workflow	workflow-plan,governed-execution-intent,inverse-workflow-patch
 score	scoredev-paas	Application	argoproj.io/v1alpha1/Application	render-manifests,workload-spec,inverse-score-patch
 springboot	springboot-paas	Kustomization	kustomize.toolkit.fluxcd.io/v1/Kustomization	render-app-config,profile-overrides,inverse-app-config-patch

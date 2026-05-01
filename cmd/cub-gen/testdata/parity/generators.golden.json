@@ -1,6 +1,18 @@
 {
-  "count": 9,
+  "count": 11,
   "families": [
+    {
+      "capabilities": [
+        "root-application",
+        "child-application-catalog",
+        "observed-expansion",
+        "inverse-app-catalog-patch"
+      ],
+      "kind": "app-of-apps",
+      "profile": "app-of-apps",
+      "resource_kind": "Application",
+      "resource_type": "argoproj.io/v1alpha1/Application"
+    },
     {
       "capabilities": [
         "observed-expansion",
@@ -56,6 +68,19 @@
       "profile": "no-config-platform",
       "resource_kind": "ConfigMap",
       "resource_type": "v1/ConfigMap"
+    },
+    {
+      "capabilities": [
+        "platform-crds",
+        "rendered-release",
+        "generated-resource-ownership",
+        "inverse-route-patch",
+        "adoption-report"
+      ],
+      "kind": "openchoreo",
+      "profile": "openchoreo",
+      "resource_kind": "Workload",
+      "resource_type": "openchoreo.dev/v1alpha1/Workload"
     },
     {
       "capabilities": [

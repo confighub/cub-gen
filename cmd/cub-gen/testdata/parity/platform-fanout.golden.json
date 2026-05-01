@@ -1,0 +1,2798 @@
+{
+  "generated_at": "\u003ctimestamp\u003e",
+  "manifest_path": "\u003cmanifest_path\u003e",
+  "name": "checkout-variant-fanout",
+  "ref": "HEAD",
+  "schema_version": "cub.confighub.io/variant-fanout/v1",
+  "space": "platform",
+  "summary": {
+    "bundle_count": 9,
+    "component_count": 3,
+    "diagnostic_count": 0,
+    "target_count": 3,
+    "variant_count": 9
+  },
+  "variants": [
+    {
+      "bundle": {
+        "bundle_digest": "\u003cbundle_digest\u003e",
+        "change_id": "\u003cchange_id\u003e",
+        "contracts": [
+          {
+            "capabilities": [
+              "render-manifests",
+              "values-overrides",
+              "inverse-values-patch"
+            ],
+            "deterministic": true,
+            "generator_id": "gen_635643e45fbf3410",
+            "inputs": [
+              {
+                "name": "input_01",
+                "required": true,
+                "schema_ref": "https://json.schemastore.org/chart"
+              },
+              {
+                "name": "input_02",
+                "required": true,
+                "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+              }
+            ],
+            "kind": "helm",
+            "name": "helm",
+            "output_format": "kubernetes/yaml",
+            "profile": "helm-paas",
+            "schema_version": "cub.confighub.io/generator-contract/v1",
+            "source_path": "",
+            "source_ref": "HEAD",
+            "source_repo": "\u003ctarget_path\u003e",
+            "transport": "oci+git",
+            "version": "0.1.0"
+          }
+        ],
+        "digest_algorithm": "sha256",
+        "discovered": [
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "generator_kind": "helm",
+            "generator_profile": "helm-paas",
+            "inputs": [
+              "Chart.yaml",
+              "values.yaml"
+            ],
+            "resource_body": "kind: HelmRelease\nmetadata:\n  name: helm\nspec:\n  root: \n",
+            "resource_kind": "HelmRelease",
+            "resource_name": "helm",
+            "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease",
+            "root": ""
+          }
+        ],
+        "dry_inputs": [
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "platform-engineer",
+            "path": "Chart.yaml",
+            "profile": "helm-paas",
+            "required": true,
+            "role": "chart"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "app-team",
+            "path": "values.yaml",
+            "profile": "helm-paas",
+            "required": true,
+            "role": "values"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "release-automation",
+            "path": "--set image.tag=dev",
+            "profile": "helm-paas",
+            "required": false,
+            "role": "cli-override"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "release-automation",
+            "path": "--set replicaCount=1",
+            "profile": "helm-paas",
+            "required": false,
+            "role": "cli-override"
+          }
+        ],
+        "dry_units": [
+          {
+            "id": "dry_55f23c7293f5bf86",
+            "kind": "dry-unit",
+            "layer": "dry",
+            "name": "helm-dry"
+          }
+        ],
+        "generated_at": "\u003ctimestamp\u003e",
+        "generator_units": [
+          {
+            "id": "gen_70b4d2ade0642f1c",
+            "kind": "generator-unit",
+            "layer": "generator",
+            "name": "helm-generator"
+          }
+        ],
+        "inverse_transform_plans": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "created_at": "\u003ctimestamp\u003e",
+            "patches": [
+              {
+                "confidence": 0.86,
+                "dry_path": "values.image.tag",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Container image tag maps cleanly to helm values.",
+                "requires_review": false,
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              }
+            ],
+            "plan_id": "\u003cplan_id\u003e",
+            "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+            "source_kind": "helm",
+            "source_ref": "",
+            "status": "draft",
+            "target_unit_id": "dry_55f23c7293f5bf86"
+          }
+        ],
+        "links": [
+          {
+            "dry_unit_id": "dry_55f23c7293f5bf86",
+            "generator_unit_id": "gen_70b4d2ade0642f1c",
+            "wet_unit_id": "wet_b4595877225309fc"
+          }
+        ],
+        "provenance": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "chart_path": "Chart.yaml",
+            "field_origin_map": [
+              {
+                "confidence": 1,
+                "dry_path": "values.image.tag",
+                "source_path": "--set image.tag=dev",
+                "transform": "helm-cli-override",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              },
+              {
+                "confidence": 0.86,
+                "dry_path": "values.image.tag",
+                "source_path": "values.yaml",
+                "transform": "helm-template",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              }
+            ],
+            "generator_id": "gen_635643e45fbf3410",
+            "generator_name": "helm",
+            "generator_profile": "helm-paas",
+            "helm_cli_overrides": [
+              {
+                "flag": "set",
+                "key": "image.tag",
+                "value": "dev"
+              },
+              {
+                "flag": "set",
+                "key": "replicaCount",
+                "value": "1"
+              }
+            ],
+            "input_digest": "sha256:329a05b45e2bf074e821d4ec03cfc28e51482b1b22fe82dcfc6588cd5bd13351",
+            "inverse_edit_pointers": [
+              {
+                "confidence": 0.86,
+                "dry_path": "values.image.tag",
+                "edit_hint": "Edit values.image.tag in values.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              }
+            ],
+            "outputs": [
+              {
+                "digest": "\u003cdigest\u003e",
+                "role": "rendered-manifests",
+                "uri": "oci://example.local/platform/helm:latest"
+              }
+            ],
+            "provenance_id": "\u003cprovenance_id\u003e",
+            "rendered_at": "\u003ctimestamp\u003e",
+            "rendered_object_lineage": [
+              {
+                "kind": "HelmRelease",
+                "name": "helm",
+                "namespace": "apps",
+                "source_dry_path": "Chart.yaml",
+                "source_path": "Chart.yaml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "helm",
+                "namespace": "apps",
+                "source_dry_path": "values.image.tag",
+                "source_path": "values.yaml"
+              },
+              {
+                "kind": "Service",
+                "name": "helm",
+                "namespace": "apps",
+                "source_dry_path": "values.service.port",
+                "source_path": "values.yaml"
+              }
+            ],
+            "schema_version": "cub.confighub.io/provenance/v1",
+            "sources": [
+              {
+                "path": "Chart.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "values.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "--set image.tag=dev",
+                "revision": "HEAD",
+                "role": "cli-override",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "--set replicaCount=1",
+                "revision": "HEAD",
+                "role": "cli-override",
+                "uri": "\u003csource_uri\u003e"
+              }
+            ],
+            "values_paths": [
+              "values.yaml"
+            ],
+            "version": "0.1.0"
+          }
+        ],
+        "ref": "HEAD",
+        "render_target_path": "\u003crender_target_path\u003e",
+        "render_target_slug": "checkout-api/dev",
+        "schema_version": "cub.confighub.io/change-bundle/v1",
+        "source": "cub-gen",
+        "space": "platform",
+        "summary": {
+          "contracts": 1,
+          "discovered_resources": 1,
+          "dry_inputs": 4,
+          "dry_units": 1,
+          "generator_profiles": [
+            "helm-paas"
+          ],
+          "generator_units": 1,
+          "inverse_transform_plans": 1,
+          "links": 1,
+          "provenance_records": 1,
+          "wet_manifest_targets": 3,
+          "wet_units": 1
+        },
+        "target_path": "\u003ctarget_path\u003e",
+        "target_slug": "checkout-api/dev",
+        "wet_manifest_targets": [
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "kind": "HelmRelease",
+            "name": "helm",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "kind": "Deployment",
+            "name": "helm",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "values.image.tag"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "kind": "Service",
+            "name": "helm",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "values.service.port"
+          }
+        ],
+        "wet_units": [
+          {
+            "id": "wet_b4595877225309fc",
+            "kind": "wet-unit",
+            "layer": "wet",
+            "name": "helm-wet"
+          }
+        ]
+      },
+      "bundle_digest": "\u003cbundle_digest\u003e",
+      "bundle_valid": true,
+      "change_id": "\u003cchange_id\u003e",
+      "component": "checkout-api",
+      "generator_profiles": [
+        "helm-paas"
+      ],
+      "repo_id": "helm-checkout",
+      "repo_path": "helm",
+      "shared_inputs": [
+        "Chart.yaml",
+        "values.yaml"
+      ],
+      "target": "dev-us",
+      "variant": "dev",
+      "variant_id": "checkout-api/dev",
+      "variant_inputs": [
+        "--set image.tag=dev",
+        "--set replicaCount=1"
+      ]
+    },
+    {
+      "bundle": {
+        "bundle_digest": "\u003cbundle_digest\u003e",
+        "change_id": "\u003cchange_id\u003e",
+        "contracts": [
+          {
+            "capabilities": [
+              "render-manifests",
+              "values-overrides",
+              "inverse-values-patch"
+            ],
+            "deterministic": true,
+            "generator_id": "gen_635643e45fbf3410",
+            "inputs": [
+              {
+                "name": "input_01",
+                "required": true,
+                "schema_ref": "https://json.schemastore.org/chart"
+              },
+              {
+                "name": "input_02",
+                "required": true,
+                "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+              }
+            ],
+            "kind": "helm",
+            "name": "helm",
+            "output_format": "kubernetes/yaml",
+            "profile": "helm-paas",
+            "schema_version": "cub.confighub.io/generator-contract/v1",
+            "source_path": "",
+            "source_ref": "HEAD",
+            "source_repo": "\u003ctarget_path\u003e",
+            "transport": "oci+git",
+            "version": "0.1.0"
+          }
+        ],
+        "digest_algorithm": "sha256",
+        "discovered": [
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "generator_kind": "helm",
+            "generator_profile": "helm-paas",
+            "inputs": [
+              "Chart.yaml",
+              "values.yaml"
+            ],
+            "resource_body": "kind: HelmRelease\nmetadata:\n  name: helm\nspec:\n  root: \n",
+            "resource_kind": "HelmRelease",
+            "resource_name": "helm",
+            "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease",
+            "root": ""
+          }
+        ],
+        "dry_inputs": [
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "platform-engineer",
+            "path": "Chart.yaml",
+            "profile": "helm-paas",
+            "required": true,
+            "role": "chart"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "app-team",
+            "path": "values.yaml",
+            "profile": "helm-paas",
+            "required": true,
+            "role": "values"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "release-automation",
+            "path": "--set image.tag=prod",
+            "profile": "helm-paas",
+            "required": false,
+            "role": "cli-override"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "release-automation",
+            "path": "--set replicaCount=4",
+            "profile": "helm-paas",
+            "required": false,
+            "role": "cli-override"
+          }
+        ],
+        "dry_units": [
+          {
+            "id": "dry_55f23c7293f5bf86",
+            "kind": "dry-unit",
+            "layer": "dry",
+            "name": "helm-dry"
+          }
+        ],
+        "generated_at": "\u003ctimestamp\u003e",
+        "generator_units": [
+          {
+            "id": "gen_70b4d2ade0642f1c",
+            "kind": "generator-unit",
+            "layer": "generator",
+            "name": "helm-generator"
+          }
+        ],
+        "inverse_transform_plans": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "created_at": "\u003ctimestamp\u003e",
+            "patches": [
+              {
+                "confidence": 0.86,
+                "dry_path": "values.image.tag",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Container image tag maps cleanly to helm values.",
+                "requires_review": false,
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              }
+            ],
+            "plan_id": "\u003cplan_id\u003e",
+            "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+            "source_kind": "helm",
+            "source_ref": "",
+            "status": "draft",
+            "target_unit_id": "dry_55f23c7293f5bf86"
+          }
+        ],
+        "links": [
+          {
+            "dry_unit_id": "dry_55f23c7293f5bf86",
+            "generator_unit_id": "gen_70b4d2ade0642f1c",
+            "wet_unit_id": "wet_b4595877225309fc"
+          }
+        ],
+        "provenance": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "chart_path": "Chart.yaml",
+            "field_origin_map": [
+              {
+                "confidence": 1,
+                "dry_path": "values.image.tag",
+                "source_path": "--set image.tag=prod",
+                "transform": "helm-cli-override",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              },
+              {
+                "confidence": 0.86,
+                "dry_path": "values.image.tag",
+                "source_path": "values.yaml",
+                "transform": "helm-template",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              }
+            ],
+            "generator_id": "gen_635643e45fbf3410",
+            "generator_name": "helm",
+            "generator_profile": "helm-paas",
+            "helm_cli_overrides": [
+              {
+                "flag": "set",
+                "key": "image.tag",
+                "value": "prod"
+              },
+              {
+                "flag": "set",
+                "key": "replicaCount",
+                "value": "4"
+              }
+            ],
+            "input_digest": "sha256:778b80a32b2199fc7ce609f7f5a52addf333c62231538c2ae2a304d69ea8cd0a",
+            "inverse_edit_pointers": [
+              {
+                "confidence": 0.86,
+                "dry_path": "values.image.tag",
+                "edit_hint": "Edit values.image.tag in values.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              }
+            ],
+            "outputs": [
+              {
+                "digest": "\u003cdigest\u003e",
+                "role": "rendered-manifests",
+                "uri": "oci://example.local/platform/helm:latest"
+              }
+            ],
+            "provenance_id": "\u003cprovenance_id\u003e",
+            "rendered_at": "\u003ctimestamp\u003e",
+            "rendered_object_lineage": [
+              {
+                "kind": "HelmRelease",
+                "name": "helm",
+                "namespace": "apps",
+                "source_dry_path": "Chart.yaml",
+                "source_path": "Chart.yaml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "helm",
+                "namespace": "apps",
+                "source_dry_path": "values.image.tag",
+                "source_path": "values.yaml"
+              },
+              {
+                "kind": "Service",
+                "name": "helm",
+                "namespace": "apps",
+                "source_dry_path": "values.service.port",
+                "source_path": "values.yaml"
+              }
+            ],
+            "schema_version": "cub.confighub.io/provenance/v1",
+            "sources": [
+              {
+                "path": "Chart.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "values.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "--set image.tag=prod",
+                "revision": "HEAD",
+                "role": "cli-override",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "--set replicaCount=4",
+                "revision": "HEAD",
+                "role": "cli-override",
+                "uri": "\u003csource_uri\u003e"
+              }
+            ],
+            "values_paths": [
+              "values.yaml"
+            ],
+            "version": "0.1.0"
+          }
+        ],
+        "ref": "HEAD",
+        "render_target_path": "\u003crender_target_path\u003e",
+        "render_target_slug": "checkout-api/prod",
+        "schema_version": "cub.confighub.io/change-bundle/v1",
+        "source": "cub-gen",
+        "space": "platform",
+        "summary": {
+          "contracts": 1,
+          "discovered_resources": 1,
+          "dry_inputs": 4,
+          "dry_units": 1,
+          "generator_profiles": [
+            "helm-paas"
+          ],
+          "generator_units": 1,
+          "inverse_transform_plans": 1,
+          "links": 1,
+          "provenance_records": 1,
+          "wet_manifest_targets": 3,
+          "wet_units": 1
+        },
+        "target_path": "\u003ctarget_path\u003e",
+        "target_slug": "checkout-api/prod",
+        "wet_manifest_targets": [
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "kind": "HelmRelease",
+            "name": "helm",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "kind": "Deployment",
+            "name": "helm",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "values.image.tag"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "kind": "Service",
+            "name": "helm",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "values.service.port"
+          }
+        ],
+        "wet_units": [
+          {
+            "id": "wet_b4595877225309fc",
+            "kind": "wet-unit",
+            "layer": "wet",
+            "name": "helm-wet"
+          }
+        ]
+      },
+      "bundle_digest": "\u003cbundle_digest\u003e",
+      "bundle_valid": true,
+      "change_id": "\u003cchange_id\u003e",
+      "component": "checkout-api",
+      "generator_profiles": [
+        "helm-paas"
+      ],
+      "repo_id": "helm-checkout",
+      "repo_path": "helm",
+      "shared_inputs": [
+        "Chart.yaml",
+        "values.yaml"
+      ],
+      "target": "prod-us",
+      "variant": "prod",
+      "variant_id": "checkout-api/prod",
+      "variant_inputs": [
+        "--set image.tag=prod",
+        "--set replicaCount=4"
+      ]
+    },
+    {
+      "bundle": {
+        "bundle_digest": "\u003cbundle_digest\u003e",
+        "change_id": "\u003cchange_id\u003e",
+        "contracts": [
+          {
+            "capabilities": [
+              "render-manifests",
+              "values-overrides",
+              "inverse-values-patch"
+            ],
+            "deterministic": true,
+            "generator_id": "gen_635643e45fbf3410",
+            "inputs": [
+              {
+                "name": "input_01",
+                "required": true,
+                "schema_ref": "https://json.schemastore.org/chart"
+              },
+              {
+                "name": "input_02",
+                "required": true,
+                "schema_ref": "https://json-schema.org/draft/2020-12/schema"
+              }
+            ],
+            "kind": "helm",
+            "name": "helm",
+            "output_format": "kubernetes/yaml",
+            "profile": "helm-paas",
+            "schema_version": "cub.confighub.io/generator-contract/v1",
+            "source_path": "",
+            "source_ref": "HEAD",
+            "source_repo": "\u003ctarget_path\u003e",
+            "transport": "oci+git",
+            "version": "0.1.0"
+          }
+        ],
+        "digest_algorithm": "sha256",
+        "discovered": [
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "generator_kind": "helm",
+            "generator_profile": "helm-paas",
+            "inputs": [
+              "Chart.yaml",
+              "values.yaml"
+            ],
+            "resource_body": "kind: HelmRelease\nmetadata:\n  name: helm\nspec:\n  root: \n",
+            "resource_kind": "HelmRelease",
+            "resource_name": "helm",
+            "resource_type": "helm.toolkit.fluxcd.io/v2/HelmRelease",
+            "root": ""
+          }
+        ],
+        "dry_inputs": [
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "platform-engineer",
+            "path": "Chart.yaml",
+            "profile": "helm-paas",
+            "required": true,
+            "role": "chart"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "app-team",
+            "path": "values.yaml",
+            "profile": "helm-paas",
+            "required": true,
+            "role": "values"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "release-automation",
+            "path": "--set image.tag=stage",
+            "profile": "helm-paas",
+            "required": false,
+            "role": "cli-override"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "owner": "release-automation",
+            "path": "--set replicaCount=2",
+            "profile": "helm-paas",
+            "required": false,
+            "role": "cli-override"
+          }
+        ],
+        "dry_units": [
+          {
+            "id": "dry_55f23c7293f5bf86",
+            "kind": "dry-unit",
+            "layer": "dry",
+            "name": "helm-dry"
+          }
+        ],
+        "generated_at": "\u003ctimestamp\u003e",
+        "generator_units": [
+          {
+            "id": "gen_70b4d2ade0642f1c",
+            "kind": "generator-unit",
+            "layer": "generator",
+            "name": "helm-generator"
+          }
+        ],
+        "inverse_transform_plans": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "created_at": "\u003ctimestamp\u003e",
+            "patches": [
+              {
+                "confidence": 0.86,
+                "dry_path": "values.image.tag",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Container image tag maps cleanly to helm values.",
+                "requires_review": false,
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              }
+            ],
+            "plan_id": "\u003cplan_id\u003e",
+            "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+            "source_kind": "helm",
+            "source_ref": "",
+            "status": "draft",
+            "target_unit_id": "dry_55f23c7293f5bf86"
+          }
+        ],
+        "links": [
+          {
+            "dry_unit_id": "dry_55f23c7293f5bf86",
+            "generator_unit_id": "gen_70b4d2ade0642f1c",
+            "wet_unit_id": "wet_b4595877225309fc"
+          }
+        ],
+        "provenance": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "chart_path": "Chart.yaml",
+            "field_origin_map": [
+              {
+                "confidence": 1,
+                "dry_path": "values.image.tag",
+                "source_path": "--set image.tag=stage",
+                "transform": "helm-cli-override",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              },
+              {
+                "confidence": 0.86,
+                "dry_path": "values.image.tag",
+                "source_path": "values.yaml",
+                "transform": "helm-template",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              }
+            ],
+            "generator_id": "gen_635643e45fbf3410",
+            "generator_name": "helm",
+            "generator_profile": "helm-paas",
+            "helm_cli_overrides": [
+              {
+                "flag": "set",
+                "key": "image.tag",
+                "value": "stage"
+              },
+              {
+                "flag": "set",
+                "key": "replicaCount",
+                "value": "2"
+              }
+            ],
+            "input_digest": "sha256:9f8ad07ec2de0b88ab29ee5d1fd3d6fa311d4912a31445b31aac53d0e5f691f5",
+            "inverse_edit_pointers": [
+              {
+                "confidence": 0.86,
+                "dry_path": "values.image.tag",
+                "edit_hint": "Edit values.image.tag in values.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/image"
+              }
+            ],
+            "outputs": [
+              {
+                "digest": "\u003cdigest\u003e",
+                "role": "rendered-manifests",
+                "uri": "oci://example.local/platform/helm:latest"
+              }
+            ],
+            "provenance_id": "\u003cprovenance_id\u003e",
+            "rendered_at": "\u003ctimestamp\u003e",
+            "rendered_object_lineage": [
+              {
+                "kind": "HelmRelease",
+                "name": "helm",
+                "namespace": "apps",
+                "source_dry_path": "Chart.yaml",
+                "source_path": "Chart.yaml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "helm",
+                "namespace": "apps",
+                "source_dry_path": "values.image.tag",
+                "source_path": "values.yaml"
+              },
+              {
+                "kind": "Service",
+                "name": "helm",
+                "namespace": "apps",
+                "source_dry_path": "values.service.port",
+                "source_path": "values.yaml"
+              }
+            ],
+            "schema_version": "cub.confighub.io/provenance/v1",
+            "sources": [
+              {
+                "path": "Chart.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "values.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "--set image.tag=stage",
+                "revision": "HEAD",
+                "role": "cli-override",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "--set replicaCount=2",
+                "revision": "HEAD",
+                "role": "cli-override",
+                "uri": "\u003csource_uri\u003e"
+              }
+            ],
+            "values_paths": [
+              "values.yaml"
+            ],
+            "version": "0.1.0"
+          }
+        ],
+        "ref": "HEAD",
+        "render_target_path": "\u003crender_target_path\u003e",
+        "render_target_slug": "checkout-api/stage",
+        "schema_version": "cub.confighub.io/change-bundle/v1",
+        "source": "cub-gen",
+        "space": "platform",
+        "summary": {
+          "contracts": 1,
+          "discovered_resources": 1,
+          "dry_inputs": 4,
+          "dry_units": 1,
+          "generator_profiles": [
+            "helm-paas"
+          ],
+          "generator_units": 1,
+          "inverse_transform_plans": 1,
+          "links": 1,
+          "provenance_records": 1,
+          "wet_manifest_targets": 3,
+          "wet_units": 1
+        },
+        "target_path": "\u003ctarget_path\u003e",
+        "target_slug": "checkout-api/stage",
+        "wet_manifest_targets": [
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "kind": "HelmRelease",
+            "name": "helm",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "kind": "Deployment",
+            "name": "helm",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "values.image.tag"
+          },
+          {
+            "generator_id": "gen_635643e45fbf3410",
+            "kind": "Service",
+            "name": "helm",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "values.service.port"
+          }
+        ],
+        "wet_units": [
+          {
+            "id": "wet_b4595877225309fc",
+            "kind": "wet-unit",
+            "layer": "wet",
+            "name": "helm-wet"
+          }
+        ]
+      },
+      "bundle_digest": "\u003cbundle_digest\u003e",
+      "bundle_valid": true,
+      "change_id": "\u003cchange_id\u003e",
+      "component": "checkout-api",
+      "generator_profiles": [
+        "helm-paas"
+      ],
+      "repo_id": "helm-checkout",
+      "repo_path": "helm",
+      "shared_inputs": [
+        "Chart.yaml",
+        "values.yaml"
+      ],
+      "target": "stage-us",
+      "variant": "stage",
+      "variant_id": "checkout-api/stage",
+      "variant_inputs": [
+        "--set image.tag=stage",
+        "--set replicaCount=2"
+      ]
+    },
+    {
+      "bundle": {
+        "bundle_digest": "\u003cbundle_digest\u003e",
+        "change_id": "\u003cchange_id\u003e",
+        "contracts": [
+          {
+            "capabilities": [
+              "render-manifests",
+              "workload-spec",
+              "inverse-score-patch"
+            ],
+            "deterministic": true,
+            "generator_id": "gen_5813cd3820138512",
+            "inputs": [
+              {
+                "name": "input_01",
+                "required": true,
+                "schema_ref": "https://docs.score.dev/schemas/score-v1b1.json"
+              }
+            ],
+            "kind": "score",
+            "name": "score-dev",
+            "output_format": "kubernetes/yaml",
+            "profile": "scoredev-paas",
+            "schema_version": "cub.confighub.io/generator-contract/v1",
+            "source_path": "",
+            "source_ref": "HEAD",
+            "source_repo": "\u003ctarget_path\u003e",
+            "transport": "oci+git",
+            "version": "0.1.0"
+          }
+        ],
+        "digest_algorithm": "sha256",
+        "discovered": [
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "generator_kind": "score",
+            "generator_profile": "scoredev-paas",
+            "inputs": [
+              "score.yaml"
+            ],
+            "resource_body": "kind: Application\nmetadata:\n  name: score-dev\nspec:\n  root: \n",
+            "resource_kind": "Application",
+            "resource_name": "score-dev",
+            "resource_type": "argoproj.io/v1alpha1/Application",
+            "root": ""
+          }
+        ],
+        "dry_inputs": [
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "owner": "app-team",
+            "path": "score.yaml",
+            "profile": "scoredev-paas",
+            "required": true,
+            "role": "score-spec"
+          }
+        ],
+        "dry_units": [
+          {
+            "id": "dry_9a0407a761eadbab",
+            "kind": "dry-unit",
+            "layer": "dry",
+            "name": "score-dev-dry"
+          }
+        ],
+        "generated_at": "\u003ctimestamp\u003e",
+        "generator_units": [
+          {
+            "id": "gen_9670efa074cb2d03",
+            "kind": "generator-unit",
+            "layer": "generator",
+            "name": "score-dev-generator"
+          }
+        ],
+        "inverse_transform_plans": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "created_at": "\u003ctimestamp\u003e",
+            "patches": [
+              {
+                "confidence": 0.9,
+                "dry_path": "containers.web.variables.LOG_LEVEL",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Score variable maps to a single Kubernetes env var.",
+                "requires_review": false,
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/env[name=LOG_LEVEL]/value"
+              }
+            ],
+            "plan_id": "\u003cplan_id\u003e",
+            "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+            "source_kind": "score",
+            "source_ref": "",
+            "status": "draft",
+            "target_unit_id": "dry_9a0407a761eadbab"
+          }
+        ],
+        "links": [
+          {
+            "dry_unit_id": "dry_9a0407a761eadbab",
+            "generator_unit_id": "gen_9670efa074cb2d03",
+            "wet_unit_id": "wet_3b630d8a9fb3502c"
+          }
+        ],
+        "provenance": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "field_origin_map": [
+              {
+                "confidence": 0.94,
+                "dry_path": "containers.web.image",
+                "source_path": "score.yaml",
+                "transform": "score-to-k8s",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/image"
+              },
+              {
+                "confidence": 0.9,
+                "dry_path": "containers.web.variables.LOG_LEVEL",
+                "source_path": "score.yaml",
+                "transform": "score-to-k8s",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/env[name=LOG_LEVEL]/value"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "service.ports.web.port",
+                "source_path": "score.yaml",
+                "transform": "score-to-k8s",
+                "wet_path": "Service/spec/ports[name=web]/port"
+              }
+            ],
+            "generator_id": "gen_5813cd3820138512",
+            "generator_name": "score-dev",
+            "generator_profile": "scoredev-paas",
+            "input_digest": "sha256:d6046ef3f99c2542355019a1cc5932bd10e494ed8144d6e304625d93d5decd79",
+            "inverse_edit_pointers": [
+              {
+                "confidence": 0.94,
+                "dry_path": "containers.web.image",
+                "edit_hint": "Edit the Score container image in score.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/image"
+              },
+              {
+                "confidence": 0.9,
+                "dry_path": "containers.web.variables.LOG_LEVEL",
+                "edit_hint": "Edit LOG_LEVEL under containers.web.variables in score.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/env[name=LOG_LEVEL]/value"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "service.ports.web.port",
+                "edit_hint": "Edit web service port in score.yaml.",
+                "owner": "app-team",
+                "wet_path": "Service/spec/ports[name=web]/port"
+              }
+            ],
+            "outputs": [
+              {
+                "digest": "\u003cdigest\u003e",
+                "role": "rendered-manifests",
+                "uri": "oci://example.local/platform/score-dev:latest"
+              }
+            ],
+            "provenance_id": "\u003cprovenance_id\u003e",
+            "rendered_at": "\u003ctimestamp\u003e",
+            "rendered_object_lineage": [
+              {
+                "kind": "Application",
+                "name": "score-dev",
+                "namespace": "apps",
+                "source_dry_path": "metadata.name",
+                "source_path": "score.yaml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "score-dev",
+                "namespace": "apps",
+                "source_dry_path": "containers.web.image",
+                "source_path": "score.yaml"
+              },
+              {
+                "kind": "Service",
+                "name": "score-dev",
+                "namespace": "apps",
+                "source_dry_path": "service.ports.web.port",
+                "source_path": "score.yaml"
+              }
+            ],
+            "schema_version": "cub.confighub.io/provenance/v1",
+            "sources": [
+              {
+                "path": "score.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              }
+            ],
+            "version": "0.1.0"
+          }
+        ],
+        "ref": "HEAD",
+        "render_target_path": "\u003crender_target_path\u003e",
+        "render_target_slug": "score-checkout/dev",
+        "schema_version": "cub.confighub.io/change-bundle/v1",
+        "source": "cub-gen",
+        "space": "platform",
+        "summary": {
+          "contracts": 1,
+          "discovered_resources": 1,
+          "dry_inputs": 1,
+          "dry_units": 1,
+          "generator_profiles": [
+            "scoredev-paas"
+          ],
+          "generator_units": 1,
+          "inverse_transform_plans": 1,
+          "links": 1,
+          "provenance_records": 1,
+          "wet_manifest_targets": 3,
+          "wet_units": 1
+        },
+        "target_path": "\u003ctarget_path\u003e",
+        "target_slug": "score-checkout/dev",
+        "wet_manifest_targets": [
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "kind": "Application",
+            "name": "score-dev",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "kind": "Deployment",
+            "name": "score-dev",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "containers.web.image"
+          },
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "kind": "Service",
+            "name": "score-dev",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "service.ports.web.port"
+          }
+        ],
+        "wet_units": [
+          {
+            "id": "wet_3b630d8a9fb3502c",
+            "kind": "wet-unit",
+            "layer": "wet",
+            "name": "score-dev-wet"
+          }
+        ]
+      },
+      "bundle_digest": "\u003cbundle_digest\u003e",
+      "bundle_valid": true,
+      "change_id": "\u003cchange_id\u003e",
+      "component": "score-checkout",
+      "generator_profiles": [
+        "scoredev-paas"
+      ],
+      "repo_id": "score-checkout-dev",
+      "repo_path": "score-dev",
+      "shared_inputs": [
+        "score.yaml#containers.web"
+      ],
+      "target": "dev-us",
+      "variant": "dev",
+      "variant_id": "score-checkout/dev",
+      "variant_inputs": [
+        "score.yaml#metadata.name",
+        "score.yaml#resources"
+      ]
+    },
+    {
+      "bundle": {
+        "bundle_digest": "\u003cbundle_digest\u003e",
+        "change_id": "\u003cchange_id\u003e",
+        "contracts": [
+          {
+            "capabilities": [
+              "render-manifests",
+              "workload-spec",
+              "inverse-score-patch"
+            ],
+            "deterministic": true,
+            "generator_id": "gen_5813cd3820138512",
+            "inputs": [
+              {
+                "name": "input_01",
+                "required": true,
+                "schema_ref": "https://docs.score.dev/schemas/score-v1b1.json"
+              }
+            ],
+            "kind": "score",
+            "name": "score-prod",
+            "output_format": "kubernetes/yaml",
+            "profile": "scoredev-paas",
+            "schema_version": "cub.confighub.io/generator-contract/v1",
+            "source_path": "",
+            "source_ref": "HEAD",
+            "source_repo": "\u003ctarget_path\u003e",
+            "transport": "oci+git",
+            "version": "0.1.0"
+          }
+        ],
+        "digest_algorithm": "sha256",
+        "discovered": [
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "generator_kind": "score",
+            "generator_profile": "scoredev-paas",
+            "inputs": [
+              "score.yaml"
+            ],
+            "resource_body": "kind: Application\nmetadata:\n  name: score-prod\nspec:\n  root: \n",
+            "resource_kind": "Application",
+            "resource_name": "score-prod",
+            "resource_type": "argoproj.io/v1alpha1/Application",
+            "root": ""
+          }
+        ],
+        "dry_inputs": [
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "owner": "app-team",
+            "path": "score.yaml",
+            "profile": "scoredev-paas",
+            "required": true,
+            "role": "score-spec"
+          }
+        ],
+        "dry_units": [
+          {
+            "id": "dry_9a0407a761eadbab",
+            "kind": "dry-unit",
+            "layer": "dry",
+            "name": "score-prod-dry"
+          }
+        ],
+        "generated_at": "\u003ctimestamp\u003e",
+        "generator_units": [
+          {
+            "id": "gen_9670efa074cb2d03",
+            "kind": "generator-unit",
+            "layer": "generator",
+            "name": "score-prod-generator"
+          }
+        ],
+        "inverse_transform_plans": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "created_at": "\u003ctimestamp\u003e",
+            "patches": [
+              {
+                "confidence": 0.9,
+                "dry_path": "containers.web.variables.LOG_LEVEL",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Score variable maps to a single Kubernetes env var.",
+                "requires_review": false,
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/env[name=LOG_LEVEL]/value"
+              }
+            ],
+            "plan_id": "\u003cplan_id\u003e",
+            "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+            "source_kind": "score",
+            "source_ref": "",
+            "status": "draft",
+            "target_unit_id": "dry_9a0407a761eadbab"
+          }
+        ],
+        "links": [
+          {
+            "dry_unit_id": "dry_9a0407a761eadbab",
+            "generator_unit_id": "gen_9670efa074cb2d03",
+            "wet_unit_id": "wet_3b630d8a9fb3502c"
+          }
+        ],
+        "provenance": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "field_origin_map": [
+              {
+                "confidence": 0.94,
+                "dry_path": "containers.web.image",
+                "source_path": "score.yaml",
+                "transform": "score-to-k8s",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/image"
+              },
+              {
+                "confidence": 0.9,
+                "dry_path": "containers.web.variables.LOG_LEVEL",
+                "source_path": "score.yaml",
+                "transform": "score-to-k8s",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/env[name=LOG_LEVEL]/value"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "service.ports.web.port",
+                "source_path": "score.yaml",
+                "transform": "score-to-k8s",
+                "wet_path": "Service/spec/ports[name=web]/port"
+              }
+            ],
+            "generator_id": "gen_5813cd3820138512",
+            "generator_name": "score-prod",
+            "generator_profile": "scoredev-paas",
+            "input_digest": "sha256:d6046ef3f99c2542355019a1cc5932bd10e494ed8144d6e304625d93d5decd79",
+            "inverse_edit_pointers": [
+              {
+                "confidence": 0.94,
+                "dry_path": "containers.web.image",
+                "edit_hint": "Edit the Score container image in score.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/image"
+              },
+              {
+                "confidence": 0.9,
+                "dry_path": "containers.web.variables.LOG_LEVEL",
+                "edit_hint": "Edit LOG_LEVEL under containers.web.variables in score.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/env[name=LOG_LEVEL]/value"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "service.ports.web.port",
+                "edit_hint": "Edit web service port in score.yaml.",
+                "owner": "app-team",
+                "wet_path": "Service/spec/ports[name=web]/port"
+              }
+            ],
+            "outputs": [
+              {
+                "digest": "\u003cdigest\u003e",
+                "role": "rendered-manifests",
+                "uri": "oci://example.local/platform/score-prod:latest"
+              }
+            ],
+            "provenance_id": "\u003cprovenance_id\u003e",
+            "rendered_at": "\u003ctimestamp\u003e",
+            "rendered_object_lineage": [
+              {
+                "kind": "Application",
+                "name": "score-prod",
+                "namespace": "apps",
+                "source_dry_path": "metadata.name",
+                "source_path": "score.yaml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "score-prod",
+                "namespace": "apps",
+                "source_dry_path": "containers.web.image",
+                "source_path": "score.yaml"
+              },
+              {
+                "kind": "Service",
+                "name": "score-prod",
+                "namespace": "apps",
+                "source_dry_path": "service.ports.web.port",
+                "source_path": "score.yaml"
+              }
+            ],
+            "schema_version": "cub.confighub.io/provenance/v1",
+            "sources": [
+              {
+                "path": "score.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              }
+            ],
+            "version": "0.1.0"
+          }
+        ],
+        "ref": "HEAD",
+        "render_target_path": "\u003crender_target_path\u003e",
+        "render_target_slug": "score-checkout/prod",
+        "schema_version": "cub.confighub.io/change-bundle/v1",
+        "source": "cub-gen",
+        "space": "platform",
+        "summary": {
+          "contracts": 1,
+          "discovered_resources": 1,
+          "dry_inputs": 1,
+          "dry_units": 1,
+          "generator_profiles": [
+            "scoredev-paas"
+          ],
+          "generator_units": 1,
+          "inverse_transform_plans": 1,
+          "links": 1,
+          "provenance_records": 1,
+          "wet_manifest_targets": 3,
+          "wet_units": 1
+        },
+        "target_path": "\u003ctarget_path\u003e",
+        "target_slug": "score-checkout/prod",
+        "wet_manifest_targets": [
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "kind": "Application",
+            "name": "score-prod",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "kind": "Deployment",
+            "name": "score-prod",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "containers.web.image"
+          },
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "kind": "Service",
+            "name": "score-prod",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "service.ports.web.port"
+          }
+        ],
+        "wet_units": [
+          {
+            "id": "wet_3b630d8a9fb3502c",
+            "kind": "wet-unit",
+            "layer": "wet",
+            "name": "score-prod-wet"
+          }
+        ]
+      },
+      "bundle_digest": "\u003cbundle_digest\u003e",
+      "bundle_valid": true,
+      "change_id": "\u003cchange_id\u003e",
+      "component": "score-checkout",
+      "generator_profiles": [
+        "scoredev-paas"
+      ],
+      "repo_id": "score-checkout-prod",
+      "repo_path": "score-prod",
+      "shared_inputs": [
+        "score.yaml#containers.web"
+      ],
+      "target": "prod-us",
+      "variant": "prod",
+      "variant_id": "score-checkout/prod",
+      "variant_inputs": [
+        "score.yaml#metadata.name",
+        "score.yaml#resources"
+      ]
+    },
+    {
+      "bundle": {
+        "bundle_digest": "\u003cbundle_digest\u003e",
+        "change_id": "\u003cchange_id\u003e",
+        "contracts": [
+          {
+            "capabilities": [
+              "render-manifests",
+              "workload-spec",
+              "inverse-score-patch"
+            ],
+            "deterministic": true,
+            "generator_id": "gen_5813cd3820138512",
+            "inputs": [
+              {
+                "name": "input_01",
+                "required": true,
+                "schema_ref": "https://docs.score.dev/schemas/score-v1b1.json"
+              }
+            ],
+            "kind": "score",
+            "name": "score-stage",
+            "output_format": "kubernetes/yaml",
+            "profile": "scoredev-paas",
+            "schema_version": "cub.confighub.io/generator-contract/v1",
+            "source_path": "",
+            "source_ref": "HEAD",
+            "source_repo": "\u003ctarget_path\u003e",
+            "transport": "oci+git",
+            "version": "0.1.0"
+          }
+        ],
+        "digest_algorithm": "sha256",
+        "discovered": [
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "generator_kind": "score",
+            "generator_profile": "scoredev-paas",
+            "inputs": [
+              "score.yaml"
+            ],
+            "resource_body": "kind: Application\nmetadata:\n  name: score-stage\nspec:\n  root: \n",
+            "resource_kind": "Application",
+            "resource_name": "score-stage",
+            "resource_type": "argoproj.io/v1alpha1/Application",
+            "root": ""
+          }
+        ],
+        "dry_inputs": [
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "owner": "app-team",
+            "path": "score.yaml",
+            "profile": "scoredev-paas",
+            "required": true,
+            "role": "score-spec"
+          }
+        ],
+        "dry_units": [
+          {
+            "id": "dry_9a0407a761eadbab",
+            "kind": "dry-unit",
+            "layer": "dry",
+            "name": "score-stage-dry"
+          }
+        ],
+        "generated_at": "\u003ctimestamp\u003e",
+        "generator_units": [
+          {
+            "id": "gen_9670efa074cb2d03",
+            "kind": "generator-unit",
+            "layer": "generator",
+            "name": "score-stage-generator"
+          }
+        ],
+        "inverse_transform_plans": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "created_at": "\u003ctimestamp\u003e",
+            "patches": [
+              {
+                "confidence": 0.9,
+                "dry_path": "containers.web.variables.LOG_LEVEL",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Score variable maps to a single Kubernetes env var.",
+                "requires_review": false,
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/env[name=LOG_LEVEL]/value"
+              }
+            ],
+            "plan_id": "\u003cplan_id\u003e",
+            "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+            "source_kind": "score",
+            "source_ref": "",
+            "status": "draft",
+            "target_unit_id": "dry_9a0407a761eadbab"
+          }
+        ],
+        "links": [
+          {
+            "dry_unit_id": "dry_9a0407a761eadbab",
+            "generator_unit_id": "gen_9670efa074cb2d03",
+            "wet_unit_id": "wet_3b630d8a9fb3502c"
+          }
+        ],
+        "provenance": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "field_origin_map": [
+              {
+                "confidence": 0.94,
+                "dry_path": "containers.web.image",
+                "source_path": "score.yaml",
+                "transform": "score-to-k8s",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/image"
+              },
+              {
+                "confidence": 0.9,
+                "dry_path": "containers.web.variables.LOG_LEVEL",
+                "source_path": "score.yaml",
+                "transform": "score-to-k8s",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/env[name=LOG_LEVEL]/value"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "service.ports.web.port",
+                "source_path": "score.yaml",
+                "transform": "score-to-k8s",
+                "wet_path": "Service/spec/ports[name=web]/port"
+              }
+            ],
+            "generator_id": "gen_5813cd3820138512",
+            "generator_name": "score-stage",
+            "generator_profile": "scoredev-paas",
+            "input_digest": "sha256:d6046ef3f99c2542355019a1cc5932bd10e494ed8144d6e304625d93d5decd79",
+            "inverse_edit_pointers": [
+              {
+                "confidence": 0.94,
+                "dry_path": "containers.web.image",
+                "edit_hint": "Edit the Score container image in score.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/image"
+              },
+              {
+                "confidence": 0.9,
+                "dry_path": "containers.web.variables.LOG_LEVEL",
+                "edit_hint": "Edit LOG_LEVEL under containers.web.variables in score.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[name=web]/env[name=LOG_LEVEL]/value"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "service.ports.web.port",
+                "edit_hint": "Edit web service port in score.yaml.",
+                "owner": "app-team",
+                "wet_path": "Service/spec/ports[name=web]/port"
+              }
+            ],
+            "outputs": [
+              {
+                "digest": "\u003cdigest\u003e",
+                "role": "rendered-manifests",
+                "uri": "oci://example.local/platform/score-stage:latest"
+              }
+            ],
+            "provenance_id": "\u003cprovenance_id\u003e",
+            "rendered_at": "\u003ctimestamp\u003e",
+            "rendered_object_lineage": [
+              {
+                "kind": "Application",
+                "name": "score-stage",
+                "namespace": "apps",
+                "source_dry_path": "metadata.name",
+                "source_path": "score.yaml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "score-stage",
+                "namespace": "apps",
+                "source_dry_path": "containers.web.image",
+                "source_path": "score.yaml"
+              },
+              {
+                "kind": "Service",
+                "name": "score-stage",
+                "namespace": "apps",
+                "source_dry_path": "service.ports.web.port",
+                "source_path": "score.yaml"
+              }
+            ],
+            "schema_version": "cub.confighub.io/provenance/v1",
+            "sources": [
+              {
+                "path": "score.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              }
+            ],
+            "version": "0.1.0"
+          }
+        ],
+        "ref": "HEAD",
+        "render_target_path": "\u003crender_target_path\u003e",
+        "render_target_slug": "score-checkout/stage",
+        "schema_version": "cub.confighub.io/change-bundle/v1",
+        "source": "cub-gen",
+        "space": "platform",
+        "summary": {
+          "contracts": 1,
+          "discovered_resources": 1,
+          "dry_inputs": 1,
+          "dry_units": 1,
+          "generator_profiles": [
+            "scoredev-paas"
+          ],
+          "generator_units": 1,
+          "inverse_transform_plans": 1,
+          "links": 1,
+          "provenance_records": 1,
+          "wet_manifest_targets": 3,
+          "wet_units": 1
+        },
+        "target_path": "\u003ctarget_path\u003e",
+        "target_slug": "score-checkout/stage",
+        "wet_manifest_targets": [
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "kind": "Application",
+            "name": "score-stage",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "kind": "Deployment",
+            "name": "score-stage",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "containers.web.image"
+          },
+          {
+            "generator_id": "gen_5813cd3820138512",
+            "kind": "Service",
+            "name": "score-stage",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "service.ports.web.port"
+          }
+        ],
+        "wet_units": [
+          {
+            "id": "wet_3b630d8a9fb3502c",
+            "kind": "wet-unit",
+            "layer": "wet",
+            "name": "score-stage-wet"
+          }
+        ]
+      },
+      "bundle_digest": "\u003cbundle_digest\u003e",
+      "bundle_valid": true,
+      "change_id": "\u003cchange_id\u003e",
+      "component": "score-checkout",
+      "generator_profiles": [
+        "scoredev-paas"
+      ],
+      "repo_id": "score-checkout-stage",
+      "repo_path": "score-stage",
+      "shared_inputs": [
+        "score.yaml#containers.web"
+      ],
+      "target": "stage-us",
+      "variant": "stage",
+      "variant_id": "score-checkout/stage",
+      "variant_inputs": [
+        "score.yaml#metadata.name",
+        "score.yaml#resources"
+      ]
+    },
+    {
+      "bundle": {
+        "bundle_digest": "\u003cbundle_digest\u003e",
+        "change_id": "\u003cchange_id\u003e",
+        "contracts": [
+          {
+            "capabilities": [
+              "render-app-config",
+              "profile-overrides",
+              "inverse-app-config-patch"
+            ],
+            "deterministic": true,
+            "generator_id": "gen_73ed79c3c8b65360",
+            "inputs": [
+              {
+                "name": "input_01",
+                "required": true,
+                "schema_ref": "https://maven.apache.org/xsd/maven-4.0.0.xsd"
+              },
+              {
+                "name": "input_02",
+                "required": true,
+                "schema_ref": "https://json.schemastore.org/spring-configuration-metadata"
+              }
+            ],
+            "kind": "springboot",
+            "name": "spring-dev",
+            "output_format": "kubernetes/yaml",
+            "profile": "springboot-paas",
+            "schema_version": "cub.confighub.io/generator-contract/v1",
+            "source_path": "",
+            "source_ref": "HEAD",
+            "source_repo": "\u003ctarget_path\u003e",
+            "transport": "oci+git",
+            "version": "0.1.0"
+          }
+        ],
+        "digest_algorithm": "sha256",
+        "discovered": [
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "generator_kind": "springboot",
+            "generator_profile": "springboot-paas",
+            "inputs": [
+              "pom.xml",
+              "src/main/resources/application.yaml"
+            ],
+            "resource_body": "kind: Kustomization\nmetadata:\n  name: spring-dev\nspec:\n  root: \n",
+            "resource_kind": "Kustomization",
+            "resource_name": "spring-dev",
+            "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization",
+            "root": ""
+          }
+        ],
+        "dry_inputs": [
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "owner": "app-team",
+            "path": "src/main/resources/application.yaml",
+            "profile": "springboot-paas",
+            "required": true,
+            "role": "app-config-base"
+          },
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "owner": "platform-engineer",
+            "path": "pom.xml",
+            "profile": "springboot-paas",
+            "required": true,
+            "role": "build-config"
+          }
+        ],
+        "dry_units": [
+          {
+            "id": "dry_5b90287a647b6d00",
+            "kind": "dry-unit",
+            "layer": "dry",
+            "name": "spring-dev-dry"
+          }
+        ],
+        "generated_at": "\u003ctimestamp\u003e",
+        "generator_units": [
+          {
+            "id": "gen_14fc080d57edc21b",
+            "kind": "generator-unit",
+            "layer": "generator",
+            "name": "spring-dev-generator"
+          }
+        ],
+        "inverse_transform_plans": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "created_at": "\u003ctimestamp\u003e",
+            "patches": [
+              {
+                "confidence": 0.88,
+                "dry_path": "spring.application.name",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Application identity should be app-editable without platform escalation.",
+                "requires_review": false,
+                "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "server.port",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Application listener port is an app-level configuration concern.",
+                "requires_review": false,
+                "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
+              },
+              {
+                "confidence": 0.78,
+                "dry_path": "spring.datasource.url",
+                "editable_by": "platform-engineer",
+                "op": "replace",
+                "reason": "Database connectivity impacts shared runtime dependencies.",
+                "requires_review": true,
+                "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
+              }
+            ],
+            "plan_id": "\u003cplan_id\u003e",
+            "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+            "source_kind": "springboot",
+            "source_ref": "",
+            "status": "draft",
+            "target_unit_id": "dry_5b90287a647b6d00"
+          }
+        ],
+        "links": [
+          {
+            "dry_unit_id": "dry_5b90287a647b6d00",
+            "generator_unit_id": "gen_14fc080d57edc21b",
+            "wet_unit_id": "wet_24b4f9e96079fa9a"
+          }
+        ],
+        "provenance": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "field_origin_map": [
+              {
+                "confidence": 0.89,
+                "dry_path": "spring.application.name",
+                "source_path": "src/main/resources/application.yaml",
+                "transform": "spring-config-to-manifest",
+                "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
+              },
+              {
+                "confidence": 0.92,
+                "dry_path": "server.port",
+                "source_path": "src/main/resources/application.yaml",
+                "transform": "spring-config-to-manifest",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
+              },
+              {
+                "confidence": 0.78,
+                "dry_path": "spring.datasource.url",
+                "source_path": "src/main/resources/application.yaml",
+                "transform": "spring-config-to-manifest",
+                "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
+              }
+            ],
+            "generator_id": "gen_73ed79c3c8b65360",
+            "generator_name": "spring-dev",
+            "generator_profile": "springboot-paas",
+            "input_digest": "sha256:35a8040feeade7b706eefe2f9df3aea93a39c716e5b88d4a384fc229207f9727",
+            "inverse_edit_pointers": [
+              {
+                "confidence": 0.89,
+                "dry_path": "spring.application.name",
+                "edit_hint": "Edit spring.application.name in src/main/resources/application.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "server.port",
+                "edit_hint": "Edit server.port in src/main/resources/application.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
+              },
+              {
+                "confidence": 0.78,
+                "dry_path": "spring.datasource.url",
+                "edit_hint": "Edit spring.datasource.url in src/main/resources/application.yaml and coordinate with platform ownership rules.",
+                "owner": "platform-engineer",
+                "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
+              }
+            ],
+            "outputs": [
+              {
+                "digest": "\u003cdigest\u003e",
+                "role": "rendered-manifests",
+                "uri": "oci://example.local/platform/spring-dev:latest"
+              }
+            ],
+            "provenance_id": "\u003cprovenance_id\u003e",
+            "rendered_at": "\u003ctimestamp\u003e",
+            "rendered_object_lineage": [
+              {
+                "kind": "Kustomization",
+                "name": "spring-dev",
+                "namespace": "apps",
+                "source_dry_path": "build",
+                "source_path": "pom.xml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "spring-dev",
+                "namespace": "apps",
+                "source_dry_path": "spring.application.name",
+                "source_path": "src/main/resources/application.yaml"
+              },
+              {
+                "kind": "ConfigMap",
+                "name": "spring-dev-config",
+                "namespace": "apps",
+                "source_dry_path": "spring.datasource.url",
+                "source_path": "src/main/resources/application.yaml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "spring-dev",
+                "namespace": "apps",
+                "source_dry_path": "server.port",
+                "source_path": "src/main/resources/application.yaml"
+              }
+            ],
+            "schema_version": "cub.confighub.io/provenance/v1",
+            "sources": [
+              {
+                "path": "pom.xml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "src/main/resources/application.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              }
+            ],
+            "version": "0.1.0"
+          }
+        ],
+        "ref": "HEAD",
+        "render_target_path": "\u003crender_target_path\u003e",
+        "render_target_slug": "spring-checkout/dev",
+        "schema_version": "cub.confighub.io/change-bundle/v1",
+        "source": "cub-gen",
+        "space": "platform",
+        "summary": {
+          "contracts": 1,
+          "discovered_resources": 1,
+          "dry_inputs": 2,
+          "dry_units": 1,
+          "generator_profiles": [
+            "springboot-paas"
+          ],
+          "generator_units": 1,
+          "inverse_transform_plans": 1,
+          "links": 1,
+          "provenance_records": 1,
+          "wet_manifest_targets": 3,
+          "wet_units": 1
+        },
+        "target_path": "\u003ctarget_path\u003e",
+        "target_slug": "spring-checkout/dev",
+        "wet_manifest_targets": [
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "kind": "Kustomization",
+            "name": "spring-dev",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "kind": "Deployment",
+            "name": "spring-dev",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "server.port"
+          },
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "kind": "ConfigMap",
+            "name": "spring-dev-config",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "spring.datasource.url"
+          }
+        ],
+        "wet_units": [
+          {
+            "id": "wet_24b4f9e96079fa9a",
+            "kind": "wet-unit",
+            "layer": "wet",
+            "name": "spring-dev-wet"
+          }
+        ]
+      },
+      "bundle_digest": "\u003cbundle_digest\u003e",
+      "bundle_valid": true,
+      "change_id": "\u003cchange_id\u003e",
+      "component": "spring-checkout",
+      "generator_profiles": [
+        "springboot-paas"
+      ],
+      "repo_id": "spring-checkout-dev",
+      "repo_path": "spring-dev",
+      "shared_inputs": [
+        "pom.xml",
+        "src/main/resources/application.yaml#spring.application.name"
+      ],
+      "target": "dev-us",
+      "variant": "dev",
+      "variant_id": "spring-checkout/dev",
+      "variant_inputs": [
+        "src/main/resources/application.yaml#server.port",
+        "src/main/resources/application.yaml#spring.datasource.url"
+      ]
+    },
+    {
+      "bundle": {
+        "bundle_digest": "\u003cbundle_digest\u003e",
+        "change_id": "\u003cchange_id\u003e",
+        "contracts": [
+          {
+            "capabilities": [
+              "render-app-config",
+              "profile-overrides",
+              "inverse-app-config-patch"
+            ],
+            "deterministic": true,
+            "generator_id": "gen_73ed79c3c8b65360",
+            "inputs": [
+              {
+                "name": "input_01",
+                "required": true,
+                "schema_ref": "https://maven.apache.org/xsd/maven-4.0.0.xsd"
+              },
+              {
+                "name": "input_02",
+                "required": true,
+                "schema_ref": "https://json.schemastore.org/spring-configuration-metadata"
+              }
+            ],
+            "kind": "springboot",
+            "name": "spring-prod",
+            "output_format": "kubernetes/yaml",
+            "profile": "springboot-paas",
+            "schema_version": "cub.confighub.io/generator-contract/v1",
+            "source_path": "",
+            "source_ref": "HEAD",
+            "source_repo": "\u003ctarget_path\u003e",
+            "transport": "oci+git",
+            "version": "0.1.0"
+          }
+        ],
+        "digest_algorithm": "sha256",
+        "discovered": [
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "generator_kind": "springboot",
+            "generator_profile": "springboot-paas",
+            "inputs": [
+              "pom.xml",
+              "src/main/resources/application.yaml"
+            ],
+            "resource_body": "kind: Kustomization\nmetadata:\n  name: spring-prod\nspec:\n  root: \n",
+            "resource_kind": "Kustomization",
+            "resource_name": "spring-prod",
+            "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization",
+            "root": ""
+          }
+        ],
+        "dry_inputs": [
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "owner": "app-team",
+            "path": "src/main/resources/application.yaml",
+            "profile": "springboot-paas",
+            "required": true,
+            "role": "app-config-base"
+          },
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "owner": "platform-engineer",
+            "path": "pom.xml",
+            "profile": "springboot-paas",
+            "required": true,
+            "role": "build-config"
+          }
+        ],
+        "dry_units": [
+          {
+            "id": "dry_5b90287a647b6d00",
+            "kind": "dry-unit",
+            "layer": "dry",
+            "name": "spring-prod-dry"
+          }
+        ],
+        "generated_at": "\u003ctimestamp\u003e",
+        "generator_units": [
+          {
+            "id": "gen_14fc080d57edc21b",
+            "kind": "generator-unit",
+            "layer": "generator",
+            "name": "spring-prod-generator"
+          }
+        ],
+        "inverse_transform_plans": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "created_at": "\u003ctimestamp\u003e",
+            "patches": [
+              {
+                "confidence": 0.88,
+                "dry_path": "spring.application.name",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Application identity should be app-editable without platform escalation.",
+                "requires_review": false,
+                "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "server.port",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Application listener port is an app-level configuration concern.",
+                "requires_review": false,
+                "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
+              },
+              {
+                "confidence": 0.78,
+                "dry_path": "spring.datasource.url",
+                "editable_by": "platform-engineer",
+                "op": "replace",
+                "reason": "Database connectivity impacts shared runtime dependencies.",
+                "requires_review": true,
+                "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
+              }
+            ],
+            "plan_id": "\u003cplan_id\u003e",
+            "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+            "source_kind": "springboot",
+            "source_ref": "",
+            "status": "draft",
+            "target_unit_id": "dry_5b90287a647b6d00"
+          }
+        ],
+        "links": [
+          {
+            "dry_unit_id": "dry_5b90287a647b6d00",
+            "generator_unit_id": "gen_14fc080d57edc21b",
+            "wet_unit_id": "wet_24b4f9e96079fa9a"
+          }
+        ],
+        "provenance": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "field_origin_map": [
+              {
+                "confidence": 0.89,
+                "dry_path": "spring.application.name",
+                "source_path": "src/main/resources/application.yaml",
+                "transform": "spring-config-to-manifest",
+                "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
+              },
+              {
+                "confidence": 0.92,
+                "dry_path": "server.port",
+                "source_path": "src/main/resources/application.yaml",
+                "transform": "spring-config-to-manifest",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
+              },
+              {
+                "confidence": 0.78,
+                "dry_path": "spring.datasource.url",
+                "source_path": "src/main/resources/application.yaml",
+                "transform": "spring-config-to-manifest",
+                "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
+              }
+            ],
+            "generator_id": "gen_73ed79c3c8b65360",
+            "generator_name": "spring-prod",
+            "generator_profile": "springboot-paas",
+            "input_digest": "sha256:35a8040feeade7b706eefe2f9df3aea93a39c716e5b88d4a384fc229207f9727",
+            "inverse_edit_pointers": [
+              {
+                "confidence": 0.89,
+                "dry_path": "spring.application.name",
+                "edit_hint": "Edit spring.application.name in src/main/resources/application.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "server.port",
+                "edit_hint": "Edit server.port in src/main/resources/application.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
+              },
+              {
+                "confidence": 0.78,
+                "dry_path": "spring.datasource.url",
+                "edit_hint": "Edit spring.datasource.url in src/main/resources/application.yaml and coordinate with platform ownership rules.",
+                "owner": "platform-engineer",
+                "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
+              }
+            ],
+            "outputs": [
+              {
+                "digest": "\u003cdigest\u003e",
+                "role": "rendered-manifests",
+                "uri": "oci://example.local/platform/spring-prod:latest"
+              }
+            ],
+            "provenance_id": "\u003cprovenance_id\u003e",
+            "rendered_at": "\u003ctimestamp\u003e",
+            "rendered_object_lineage": [
+              {
+                "kind": "Kustomization",
+                "name": "spring-prod",
+                "namespace": "apps",
+                "source_dry_path": "build",
+                "source_path": "pom.xml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "spring-prod",
+                "namespace": "apps",
+                "source_dry_path": "spring.application.name",
+                "source_path": "src/main/resources/application.yaml"
+              },
+              {
+                "kind": "ConfigMap",
+                "name": "spring-prod-config",
+                "namespace": "apps",
+                "source_dry_path": "spring.datasource.url",
+                "source_path": "src/main/resources/application.yaml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "spring-prod",
+                "namespace": "apps",
+                "source_dry_path": "server.port",
+                "source_path": "src/main/resources/application.yaml"
+              }
+            ],
+            "schema_version": "cub.confighub.io/provenance/v1",
+            "sources": [
+              {
+                "path": "pom.xml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "src/main/resources/application.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              }
+            ],
+            "version": "0.1.0"
+          }
+        ],
+        "ref": "HEAD",
+        "render_target_path": "\u003crender_target_path\u003e",
+        "render_target_slug": "spring-checkout/prod",
+        "schema_version": "cub.confighub.io/change-bundle/v1",
+        "source": "cub-gen",
+        "space": "platform",
+        "summary": {
+          "contracts": 1,
+          "discovered_resources": 1,
+          "dry_inputs": 2,
+          "dry_units": 1,
+          "generator_profiles": [
+            "springboot-paas"
+          ],
+          "generator_units": 1,
+          "inverse_transform_plans": 1,
+          "links": 1,
+          "provenance_records": 1,
+          "wet_manifest_targets": 3,
+          "wet_units": 1
+        },
+        "target_path": "\u003ctarget_path\u003e",
+        "target_slug": "spring-checkout/prod",
+        "wet_manifest_targets": [
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "kind": "Kustomization",
+            "name": "spring-prod",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "kind": "Deployment",
+            "name": "spring-prod",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "server.port"
+          },
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "kind": "ConfigMap",
+            "name": "spring-prod-config",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "spring.datasource.url"
+          }
+        ],
+        "wet_units": [
+          {
+            "id": "wet_24b4f9e96079fa9a",
+            "kind": "wet-unit",
+            "layer": "wet",
+            "name": "spring-prod-wet"
+          }
+        ]
+      },
+      "bundle_digest": "\u003cbundle_digest\u003e",
+      "bundle_valid": true,
+      "change_id": "\u003cchange_id\u003e",
+      "component": "spring-checkout",
+      "generator_profiles": [
+        "springboot-paas"
+      ],
+      "repo_id": "spring-checkout-prod",
+      "repo_path": "spring-prod",
+      "shared_inputs": [
+        "pom.xml",
+        "src/main/resources/application.yaml#spring.application.name"
+      ],
+      "target": "prod-us",
+      "variant": "prod",
+      "variant_id": "spring-checkout/prod",
+      "variant_inputs": [
+        "src/main/resources/application.yaml#server.port",
+        "src/main/resources/application.yaml#spring.datasource.url"
+      ]
+    },
+    {
+      "bundle": {
+        "bundle_digest": "\u003cbundle_digest\u003e",
+        "change_id": "\u003cchange_id\u003e",
+        "contracts": [
+          {
+            "capabilities": [
+              "render-app-config",
+              "profile-overrides",
+              "inverse-app-config-patch"
+            ],
+            "deterministic": true,
+            "generator_id": "gen_73ed79c3c8b65360",
+            "inputs": [
+              {
+                "name": "input_01",
+                "required": true,
+                "schema_ref": "https://maven.apache.org/xsd/maven-4.0.0.xsd"
+              },
+              {
+                "name": "input_02",
+                "required": true,
+                "schema_ref": "https://json.schemastore.org/spring-configuration-metadata"
+              }
+            ],
+            "kind": "springboot",
+            "name": "spring-stage",
+            "output_format": "kubernetes/yaml",
+            "profile": "springboot-paas",
+            "schema_version": "cub.confighub.io/generator-contract/v1",
+            "source_path": "",
+            "source_ref": "HEAD",
+            "source_repo": "\u003ctarget_path\u003e",
+            "transport": "oci+git",
+            "version": "0.1.0"
+          }
+        ],
+        "digest_algorithm": "sha256",
+        "discovered": [
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "generator_kind": "springboot",
+            "generator_profile": "springboot-paas",
+            "inputs": [
+              "pom.xml",
+              "src/main/resources/application.yaml"
+            ],
+            "resource_body": "kind: Kustomization\nmetadata:\n  name: spring-stage\nspec:\n  root: \n",
+            "resource_kind": "Kustomization",
+            "resource_name": "spring-stage",
+            "resource_type": "kustomize.toolkit.fluxcd.io/v1/Kustomization",
+            "root": ""
+          }
+        ],
+        "dry_inputs": [
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "owner": "app-team",
+            "path": "src/main/resources/application.yaml",
+            "profile": "springboot-paas",
+            "required": true,
+            "role": "app-config-base"
+          },
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "owner": "platform-engineer",
+            "path": "pom.xml",
+            "profile": "springboot-paas",
+            "required": true,
+            "role": "build-config"
+          }
+        ],
+        "dry_units": [
+          {
+            "id": "dry_5b90287a647b6d00",
+            "kind": "dry-unit",
+            "layer": "dry",
+            "name": "spring-stage-dry"
+          }
+        ],
+        "generated_at": "\u003ctimestamp\u003e",
+        "generator_units": [
+          {
+            "id": "gen_14fc080d57edc21b",
+            "kind": "generator-unit",
+            "layer": "generator",
+            "name": "spring-stage-generator"
+          }
+        ],
+        "inverse_transform_plans": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "created_at": "\u003ctimestamp\u003e",
+            "patches": [
+              {
+                "confidence": 0.88,
+                "dry_path": "spring.application.name",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Application identity should be app-editable without platform escalation.",
+                "requires_review": false,
+                "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "server.port",
+                "editable_by": "app-team",
+                "op": "replace",
+                "reason": "Application listener port is an app-level configuration concern.",
+                "requires_review": false,
+                "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
+              },
+              {
+                "confidence": 0.78,
+                "dry_path": "spring.datasource.url",
+                "editable_by": "platform-engineer",
+                "op": "replace",
+                "reason": "Database connectivity impacts shared runtime dependencies.",
+                "requires_review": true,
+                "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
+              }
+            ],
+            "plan_id": "\u003cplan_id\u003e",
+            "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+            "source_kind": "springboot",
+            "source_ref": "",
+            "status": "draft",
+            "target_unit_id": "dry_5b90287a647b6d00"
+          }
+        ],
+        "links": [
+          {
+            "dry_unit_id": "dry_5b90287a647b6d00",
+            "generator_unit_id": "gen_14fc080d57edc21b",
+            "wet_unit_id": "wet_24b4f9e96079fa9a"
+          }
+        ],
+        "provenance": [
+          {
+            "change_id": "\u003cchange_id\u003e",
+            "field_origin_map": [
+              {
+                "confidence": 0.89,
+                "dry_path": "spring.application.name",
+                "source_path": "src/main/resources/application.yaml",
+                "transform": "spring-config-to-manifest",
+                "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
+              },
+              {
+                "confidence": 0.92,
+                "dry_path": "server.port",
+                "source_path": "src/main/resources/application.yaml",
+                "transform": "spring-config-to-manifest",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
+              },
+              {
+                "confidence": 0.78,
+                "dry_path": "spring.datasource.url",
+                "source_path": "src/main/resources/application.yaml",
+                "transform": "spring-config-to-manifest",
+                "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
+              }
+            ],
+            "generator_id": "gen_73ed79c3c8b65360",
+            "generator_name": "spring-stage",
+            "generator_profile": "springboot-paas",
+            "input_digest": "sha256:35a8040feeade7b706eefe2f9df3aea93a39c716e5b88d4a384fc229207f9727",
+            "inverse_edit_pointers": [
+              {
+                "confidence": 0.89,
+                "dry_path": "spring.application.name",
+                "edit_hint": "Edit spring.application.name in src/main/resources/application.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/metadata/labels[app.kubernetes.io/name]"
+              },
+              {
+                "confidence": 0.91,
+                "dry_path": "server.port",
+                "edit_hint": "Edit server.port in src/main/resources/application.yaml.",
+                "owner": "app-team",
+                "wet_path": "Deployment/spec/template/spec/containers[0]/ports[0]/containerPort"
+              },
+              {
+                "confidence": 0.78,
+                "dry_path": "spring.datasource.url",
+                "edit_hint": "Edit spring.datasource.url in src/main/resources/application.yaml and coordinate with platform ownership rules.",
+                "owner": "platform-engineer",
+                "wet_path": "ConfigMap/data/application.yaml:spring.datasource.url"
+              }
+            ],
+            "outputs": [
+              {
+                "digest": "\u003cdigest\u003e",
+                "role": "rendered-manifests",
+                "uri": "oci://example.local/platform/spring-stage:latest"
+              }
+            ],
+            "provenance_id": "\u003cprovenance_id\u003e",
+            "rendered_at": "\u003ctimestamp\u003e",
+            "rendered_object_lineage": [
+              {
+                "kind": "Kustomization",
+                "name": "spring-stage",
+                "namespace": "apps",
+                "source_dry_path": "build",
+                "source_path": "pom.xml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "spring-stage",
+                "namespace": "apps",
+                "source_dry_path": "spring.application.name",
+                "source_path": "src/main/resources/application.yaml"
+              },
+              {
+                "kind": "ConfigMap",
+                "name": "spring-stage-config",
+                "namespace": "apps",
+                "source_dry_path": "spring.datasource.url",
+                "source_path": "src/main/resources/application.yaml"
+              },
+              {
+                "kind": "Deployment",
+                "name": "spring-stage",
+                "namespace": "apps",
+                "source_dry_path": "server.port",
+                "source_path": "src/main/resources/application.yaml"
+              }
+            ],
+            "schema_version": "cub.confighub.io/provenance/v1",
+            "sources": [
+              {
+                "path": "pom.xml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              },
+              {
+                "path": "src/main/resources/application.yaml",
+                "revision": "HEAD",
+                "role": "generator-input",
+                "uri": "\u003csource_uri\u003e"
+              }
+            ],
+            "version": "0.1.0"
+          }
+        ],
+        "ref": "HEAD",
+        "render_target_path": "\u003crender_target_path\u003e",
+        "render_target_slug": "spring-checkout/stage",
+        "schema_version": "cub.confighub.io/change-bundle/v1",
+        "source": "cub-gen",
+        "space": "platform",
+        "summary": {
+          "contracts": 1,
+          "discovered_resources": 1,
+          "dry_inputs": 2,
+          "dry_units": 1,
+          "generator_profiles": [
+            "springboot-paas"
+          ],
+          "generator_units": 1,
+          "inverse_transform_plans": 1,
+          "links": 1,
+          "provenance_records": 1,
+          "wet_manifest_targets": 3,
+          "wet_units": 1
+        },
+        "target_path": "\u003ctarget_path\u003e",
+        "target_slug": "spring-checkout/stage",
+        "wet_manifest_targets": [
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "kind": "Kustomization",
+            "name": "spring-stage",
+            "namespace": "apps",
+            "owner": "platform-runtime"
+          },
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "kind": "Deployment",
+            "name": "spring-stage",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "server.port"
+          },
+          {
+            "generator_id": "gen_73ed79c3c8b65360",
+            "kind": "ConfigMap",
+            "name": "spring-stage-config",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path": "spring.datasource.url"
+          }
+        ],
+        "wet_units": [
+          {
+            "id": "wet_24b4f9e96079fa9a",
+            "kind": "wet-unit",
+            "layer": "wet",
+            "name": "spring-stage-wet"
+          }
+        ]
+      },
+      "bundle_digest": "\u003cbundle_digest\u003e",
+      "bundle_valid": true,
+      "change_id": "\u003cchange_id\u003e",
+      "component": "spring-checkout",
+      "generator_profiles": [
+        "springboot-paas"
+      ],
+      "repo_id": "spring-checkout-stage",
+      "repo_path": "spring-stage",
+      "shared_inputs": [
+        "pom.xml",
+        "src/main/resources/application.yaml#spring.application.name"
+      ],
+      "target": "stage-us",
+      "variant": "stage",
+      "variant_id": "spring-checkout/stage",
+      "variant_inputs": [
+        "src/main/resources/application.yaml#server.port",
+        "src/main/resources/application.yaml#spring.datasource.url"
+      ]
+    }
+  ]
+}

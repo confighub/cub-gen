@@ -295,6 +295,27 @@ visible, auditable, and governable."
 where the output is governed. Together they're the internal Heroku that doesn't
 hide the output."
 
+### Pattern 3a: Component Platforms and Argo Generator Layers
+
+OpenChoreo-style component platforms and Argo generator patterns make the same
+point from different directions.
+
+| Pattern | Authoring surface | Generator | WET output | ConfigHub value |
+|---|---|---|---|---|
+| OpenChoreo-style platform | Workload, ReleaseBinding, SecretReference, ComponentType | control-plane renderer | RenderedRelease and Kubernetes resources | route generated-field changes to app, environment, platform, or security source |
+| Argo ApplicationSet | selectors, templates, list/git/cluster inputs | ApplicationSet controller | child Argo Applications | explain why an app exists and which input selected it |
+| Argo app-of-apps | root app plus child app catalog | root Application reconciliation | child Argo Applications | explain child app lifecycle and downstream generator choice |
+
+The common lesson: do not treat these only as "abstractions." They are generator
+layers. If the generation step is explicit and deterministic enough, ConfigHub
+can store the output, `cub-gen` can record provenance, and edits can route to
+the right source layer instead of becoming endless parameter requests.
+
+Worked examples:
+
+1. [OpenChoreo as a Clean Generator](../03-worked-examples/05-openchoreo-generator-worked-example.md)
+2. [Argo ApplicationSet and App-of-Apps as Generators](../03-worked-examples/06-argo-generators-worked-example.md)
+
 ### Pattern 4: App Platforms (No Config Platform-style)
 
 No Config Platform, LaunchDarkly, and similar app platforms produce config that is already

@@ -9,11 +9,13 @@ import (
 
 func TestRegistryHasSpecForAllKinds(t *testing.T) {
 	expected := []model.GeneratorKind{
+		model.GeneratorAppOfApps,
 		model.GeneratorApplicationSet,
 		model.GeneratorBackstage,
 		model.GeneratorC3Agent,
 		model.GeneratorHelm,
 		model.GeneratorNoConfigPlatform,
+		model.GeneratorOpenChoreo,
 		model.GeneratorOpsFlow,
 		model.GeneratorScore,
 		model.GeneratorSpringBoot,
@@ -48,6 +50,7 @@ func TestRegistryHasSpecForAllKinds(t *testing.T) {
 		"HelmRelease",
 		"Kustomization",
 		"Workflow",
+		"Workload",
 	}
 	if got := SupportedResourceKinds(); !reflect.DeepEqual(got, expectedResourceKinds) {
 		t.Fatalf("expected supported resource kinds %+v, got %+v", expectedResourceKinds, got)
@@ -119,6 +122,8 @@ func TestRegistryInputRoleAndOwnerClassification(t *testing.T) {
 		{name: "helm-chart", kind: model.GeneratorHelm, path: "Chart.yaml", expectedRole: "chart", expectedOwner: "platform-engineer"},
 		{name: "applicationset-spec", kind: model.GeneratorApplicationSet, path: "applicationset.yaml", expectedRole: "application-set", expectedOwner: "platform-engineer"},
 		{name: "applicationset-cluster-inventory", kind: model.GeneratorApplicationSet, path: "clusters/prod-eu.yaml", expectedRole: "cluster-inventory", expectedOwner: "platform-engineer"},
+		{name: "app-of-apps-root", kind: model.GeneratorAppOfApps, path: "root-application.yaml", expectedRole: "root-application", expectedOwner: "platform-engineer"},
+		{name: "app-of-apps-child", kind: model.GeneratorAppOfApps, path: "apps/payments-api.yaml", expectedRole: "child-application", expectedOwner: "app-catalog-owner"},
 		{name: "helm-values", kind: model.GeneratorHelm, path: "values-prod.yaml", expectedRole: "values", expectedOwner: "app-team"},
 		{name: "helm-applicationset", kind: model.GeneratorHelm, path: "gitops/argo/applicationset.yaml", expectedRole: "application-set", expectedOwner: "platform-engineer"},
 		{name: "helm-cluster-inventory", kind: model.GeneratorHelm, path: "platform/clusters/prod-eu.yaml", expectedRole: "cluster-inventory", expectedOwner: "platform-engineer"},
@@ -131,6 +136,12 @@ func TestRegistryInputRoleAndOwnerClassification(t *testing.T) {
 		{name: "backstage-app-config", kind: model.GeneratorBackstage, path: "app-config.yaml", expectedRole: "app-config", expectedOwner: "app-team"},
 		{name: "no-config-platform-base", kind: model.GeneratorNoConfigPlatform, path: "no-config-platform.yaml", expectedRole: "provider-config-base", expectedOwner: "app-team"},
 		{name: "no-config-platform-overlay", kind: model.GeneratorNoConfigPlatform, path: "no-config-platform-prod.json", expectedRole: "provider-config-overlay", expectedOwner: "app-team"},
+		{name: "openchoreo-workload", kind: model.GeneratorOpenChoreo, path: "workload-payments-api.yaml", expectedRole: "workload", expectedOwner: "app-team"},
+		{name: "openchoreo-component-type", kind: model.GeneratorOpenChoreo, path: "component-type-web-service.yaml", expectedRole: "component-type", expectedOwner: "platform-engineer"},
+		{name: "openchoreo-release-binding", kind: model.GeneratorOpenChoreo, path: "envs/prod/release-binding-prod.yaml", expectedRole: "release-binding", expectedOwner: "environment-owner"},
+		{name: "openchoreo-secret-reference", kind: model.GeneratorOpenChoreo, path: "secret-reference-payments-db.yaml", expectedRole: "secret-reference", expectedOwner: "security-team"},
+		{name: "openchoreo-rendered-release", kind: model.GeneratorOpenChoreo, path: "rendered/prod/rendered-release-prod.yaml", expectedRole: "rendered-release", expectedOwner: "platform-runtime"},
+		{name: "openchoreo-rendered-manifest", kind: model.GeneratorOpenChoreo, path: "rendered/prod/deployment.yaml", expectedRole: "rendered-manifest", expectedOwner: "platform-runtime"},
 		{name: "ops-base", kind: model.GeneratorOpsFlow, path: "operations.yaml", expectedRole: "operations-base", expectedOwner: "platform-engineer"},
 		{name: "ops-overlay", kind: model.GeneratorOpsFlow, path: "workflow-prod.yml", expectedRole: "operations-overlay", expectedOwner: "platform-engineer"},
 	}
@@ -158,12 +169,16 @@ func TestRegistrySchemaRef(t *testing.T) {
 	}{
 		{name: "helm-chart", kind: model.GeneratorHelm, path: "Chart.yaml", expected: "https://json.schemastore.org/chart"},
 		{name: "applicationset", kind: model.GeneratorApplicationSet, path: "applicationset.yaml", expected: "https://schema.confighub.dev/generators/applicationset-v1"},
+		{name: "app-of-apps-root", kind: model.GeneratorAppOfApps, path: "root-application.yaml", expected: "https://schema.confighub.dev/generators/app-of-apps-root-v1"},
+		{name: "app-of-apps-child", kind: model.GeneratorAppOfApps, path: "apps/payments-api.yaml", expected: "https://schema.confighub.dev/generators/app-of-apps-child-v1"},
 		{name: "score", kind: model.GeneratorScore, path: "score.yaml", expected: "https://docs.score.dev/schemas/score-v1b1.json"},
 		{name: "spring-app", kind: model.GeneratorSpringBoot, path: "application.yaml", expected: "https://json.schemastore.org/spring-configuration-metadata"},
 		{name: "backstage-catalog", kind: model.GeneratorBackstage, path: "catalog-info.yaml", expected: "https://json.schemastore.org/backstage-catalog-info"},
 		{name: "backstage-app-config", kind: model.GeneratorBackstage, path: "app-config.yaml", expected: "https://json.schemastore.org/backstage-app-config"},
 		{name: "no-config-platform-yaml", kind: model.GeneratorNoConfigPlatform, path: "no-config-platform.yaml", expected: "https://schema.confighub.dev/generators/no-config-platform-v1"},
 		{name: "no-config-platform-json", kind: model.GeneratorNoConfigPlatform, path: "no-config-platform-prod.json", expected: "https://schema.confighub.dev/generators/no-config-platform-v1"},
+		{name: "openchoreo-workload", kind: model.GeneratorOpenChoreo, path: "workload-payments-api.yaml", expected: "https://schema.confighub.dev/generators/openchoreo-workload-v1"},
+		{name: "openchoreo-rendered-manifest", kind: model.GeneratorOpenChoreo, path: "rendered/prod/deployment.yaml", expected: "https://schema.confighub.dev/kubernetes/resource-v1"},
 		{name: "ops", kind: model.GeneratorOpsFlow, path: "operations.yaml", expected: "https://schema.confighub.dev/generators/ops-workflow-v1"},
 		{name: "xml-maven", kind: model.GeneratorSpringBoot, path: "pom.xml", expected: "https://maven.apache.org/xsd/maven-4.0.0.xsd"},
 		{name: "default", kind: model.GeneratorSpringBoot, path: "README.md", expected: "https://json-schema.org/draft/2020-12/schema"},
@@ -233,6 +248,26 @@ func TestRegistryWetTargetTemplates(t *testing.T) {
 	}
 	if c3agentLineage[10].Kind != "ConfigMap" || c3agentLineage[10].NameTemplate != "{{name}}-job-template" || c3agentLineage[10].SourceDryPathTemplate != "agent_runtime.image" {
 		t.Fatalf("unexpected c3agent lineage template[10]: %+v", c3agentLineage[10])
+	}
+
+	openChoreo := WetTargetTemplates(model.GeneratorOpenChoreo)
+	if len(openChoreo) != 4 {
+		t.Fatalf("expected 4 openchoreo wet target templates, got %d", len(openChoreo))
+	}
+	if openChoreo[0].Kind != "RenderedRelease" || openChoreo[0].NameTemplate != "{{name}}-prod" {
+		t.Fatalf("unexpected openchoreo template[0]: %+v", openChoreo[0])
+	}
+	openChoreoLineage := RenderedLineageTemplates(model.GeneratorOpenChoreo)
+	if len(openChoreoLineage) != 5 {
+		t.Fatalf("expected 5 openchoreo rendered lineage templates, got %d", len(openChoreoLineage))
+	}
+
+	appOfApps := WetTargetTemplates(model.GeneratorAppOfApps)
+	if len(appOfApps) != 1 {
+		t.Fatalf("expected 1 app-of-apps wet target template, got %d", len(appOfApps))
+	}
+	if appOfApps[0].Kind != "Application" || appOfApps[0].NameTemplate != "{{name}}" || appOfApps[0].SourceDryPathTemplate != "spec.source.path" {
+		t.Fatalf("unexpected app-of-apps template[0]: %+v", appOfApps[0])
 	}
 }
 

@@ -1,0 +1,518 @@
+{
+  "bundle_digest": "\u003cbundle_digest\u003e",
+  "change_id": "\u003cchange_id\u003e",
+  "contracts": [
+    {
+      "capabilities": [
+        "root-application",
+        "child-application-catalog",
+        "observed-expansion",
+        "inverse-app-catalog-patch"
+      ],
+      "deterministic": true,
+      "generator_id": "gen_d78223f487aceee1",
+      "inputs": [
+        {
+          "name": "input_01",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/app-of-apps-child-v1"
+        },
+        {
+          "name": "input_02",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/app-of-apps-child-v1"
+        },
+        {
+          "name": "input_03",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/app-of-apps-child-v1"
+        },
+        {
+          "name": "input_04",
+          "required": true,
+          "schema_ref": "https://schema.confighub.dev/generators/app-of-apps-root-v1"
+        }
+      ],
+      "kind": "app-of-apps",
+      "name": "platform-root",
+      "output_format": "kubernetes/yaml",
+      "profile": "app-of-apps",
+      "schema_version": "cub.confighub.io/generator-contract/v1",
+      "source_path": "",
+      "source_ref": "HEAD",
+      "source_repo": "\u003ctarget_path\u003e",
+      "transport": "oci+git",
+      "version": "0.1.0"
+    }
+  ],
+  "digest_algorithm": "sha256",
+  "discovered": [
+    {
+      "generator_id": "gen_d78223f487aceee1",
+      "generator_kind": "app-of-apps",
+      "generator_profile": "app-of-apps",
+      "inputs": [
+        "apps/catalog-api.yaml",
+        "apps/orders-api.yaml",
+        "apps/payments-api.yaml",
+        "root-application.yaml"
+      ],
+      "resource_body": "kind: Application\nmetadata:\n  name: platform-root\nspec:\n  root: \n",
+      "resource_kind": "Application",
+      "resource_name": "platform-root",
+      "resource_type": "argoproj.io/v1alpha1/Application",
+      "root": ""
+    }
+  ],
+  "dry_inputs": [
+    {
+      "generator_id": "gen_d78223f487aceee1",
+      "owner": "app-catalog-owner",
+      "path": "apps/catalog-api.yaml",
+      "profile": "app-of-apps",
+      "required": true,
+      "role": "child-application"
+    },
+    {
+      "generator_id": "gen_d78223f487aceee1",
+      "owner": "app-catalog-owner",
+      "path": "apps/orders-api.yaml",
+      "profile": "app-of-apps",
+      "required": true,
+      "role": "child-application"
+    },
+    {
+      "generator_id": "gen_d78223f487aceee1",
+      "owner": "app-catalog-owner",
+      "path": "apps/payments-api.yaml",
+      "profile": "app-of-apps",
+      "required": true,
+      "role": "child-application"
+    },
+    {
+      "generator_id": "gen_d78223f487aceee1",
+      "owner": "platform-engineer",
+      "path": "root-application.yaml",
+      "profile": "app-of-apps",
+      "required": true,
+      "role": "root-application"
+    }
+  ],
+  "dry_units": [
+    {
+      "id": "dry_a7fe33c07870e9c7",
+      "kind": "dry-unit",
+      "layer": "dry",
+      "name": "platform-root-dry"
+    }
+  ],
+  "generated_at": "\u003ctimestamp\u003e",
+  "generator_units": [
+    {
+      "id": "gen_82d78427a5673505",
+      "kind": "generator-unit",
+      "layer": "generator",
+      "name": "platform-root-generator"
+    }
+  ],
+  "inverse_transform_plans": [
+    {
+      "change_id": "\u003cchange_id\u003e",
+      "created_at": "\u003ctimestamp\u003e",
+      "patches": [
+        {
+          "confidence": 0.92,
+          "dry_path": "metadata.name",
+          "editable_by": "app-catalog-owner",
+          "op": "replace",
+          "reason": "Child Application identity is owned by the child app catalog.",
+          "requires_review": false,
+          "wet_path": "Application/metadata/name"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.path",
+          "editable_by": "app-catalog-owner",
+          "op": "replace",
+          "reason": "Child Application source path is selected by the child app catalog.",
+          "requires_review": true,
+          "wet_path": "Application/spec/source/path"
+        },
+        {
+          "confidence": 0.88,
+          "dry_path": "spec.source.path",
+          "editable_by": "platform-engineer",
+          "op": "replace",
+          "reason": "The root Application controls which catalog path is expanded.",
+          "requires_review": true,
+          "wet_path": "RootApplication/spec/source/path"
+        }
+      ],
+      "plan_id": "\u003cplan_id\u003e",
+      "schema_version": "cub.confighub.io/inverse-transform-plan/v1",
+      "source_kind": "app-of-apps",
+      "source_ref": "",
+      "status": "draft",
+      "target_unit_id": "dry_a7fe33c07870e9c7"
+    }
+  ],
+  "links": [
+    {
+      "dry_unit_id": "dry_a7fe33c07870e9c7",
+      "generator_unit_id": "gen_82d78427a5673505",
+      "wet_unit_id": "wet_969f79bc8fac994b"
+    }
+  ],
+  "provenance": [
+    {
+      "app_of_apps_analysis": {
+        "child_application_paths": [
+          "apps/catalog-api.yaml",
+          "apps/orders-api.yaml",
+          "apps/payments-api.yaml"
+        ],
+        "generated_applications": [
+          {
+            "destination_namespace": "catalog",
+            "name": "catalog-api",
+            "path": "apps/catalog-api.yaml",
+            "reason": "included by root Application source path apps",
+            "source_path": "deploy/kustomize/prod",
+            "source_repo": "https://github.com/acme/catalog-api"
+          },
+          {
+            "destination_namespace": "orders",
+            "name": "orders-api",
+            "path": "apps/orders-api.yaml",
+            "reason": "included by root Application source path apps",
+            "source_path": "manifests/prod",
+            "source_repo": "https://github.com/acme/orders-api"
+          },
+          {
+            "destination_namespace": "payments",
+            "name": "payments-api",
+            "path": "apps/payments-api.yaml",
+            "reason": "included by root Application source path apps",
+            "source_path": "deploy/helm",
+            "source_repo": "https://github.com/acme/payments-api"
+          }
+        ],
+        "mode": "authoritative",
+        "mode_reason": "Root Application platform-root selects 3 child Application(s) from apps.",
+        "root_application_path": "root-application.yaml",
+        "root_source_path": "apps"
+      },
+      "change_id": "\u003cchange_id\u003e",
+      "field_origin_map": [
+        {
+          "confidence": 0.88,
+          "dry_path": "spec.source.path",
+          "source_path": "root-application.yaml",
+          "transform": "app-of-apps-root-expansion",
+          "wet_path": "RootApplication/spec/source/path"
+        },
+        {
+          "confidence": 0.92,
+          "dry_path": "metadata.name",
+          "source_path": "apps/catalog-api.yaml",
+          "transform": "app-of-apps-catalog",
+          "wet_path": "Application[name=catalog-api]/metadata/name"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.repoURL",
+          "source_path": "apps/catalog-api.yaml",
+          "transform": "app-of-apps-catalog",
+          "wet_path": "Application[name=catalog-api]/spec/source/repoURL"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.path",
+          "source_path": "apps/catalog-api.yaml",
+          "transform": "app-of-apps-catalog",
+          "wet_path": "Application[name=catalog-api]/spec/source/path"
+        },
+        {
+          "confidence": 0.92,
+          "dry_path": "metadata.name",
+          "source_path": "apps/orders-api.yaml",
+          "transform": "app-of-apps-catalog",
+          "wet_path": "Application[name=orders-api]/metadata/name"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.repoURL",
+          "source_path": "apps/orders-api.yaml",
+          "transform": "app-of-apps-catalog",
+          "wet_path": "Application[name=orders-api]/spec/source/repoURL"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.path",
+          "source_path": "apps/orders-api.yaml",
+          "transform": "app-of-apps-catalog",
+          "wet_path": "Application[name=orders-api]/spec/source/path"
+        },
+        {
+          "confidence": 0.92,
+          "dry_path": "metadata.name",
+          "source_path": "apps/payments-api.yaml",
+          "transform": "app-of-apps-catalog",
+          "wet_path": "Application[name=payments-api]/metadata/name"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.repoURL",
+          "source_path": "apps/payments-api.yaml",
+          "transform": "app-of-apps-catalog",
+          "wet_path": "Application[name=payments-api]/spec/source/repoURL"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.path",
+          "source_path": "apps/payments-api.yaml",
+          "transform": "app-of-apps-catalog",
+          "wet_path": "Application[name=payments-api]/spec/source/path"
+        }
+      ],
+      "generator_id": "gen_d78223f487aceee1",
+      "generator_name": "platform-root",
+      "generator_profile": "app-of-apps",
+      "input_digest": "sha256:fb2d95329c8c2d2777992353fd28e7b911067f3eb299ed36e93957c428129b80",
+      "inverse_edit_pointers": [
+        {
+          "confidence": 0.88,
+          "dry_path": "spec.source.path",
+          "edit_hint": "Route: lift-upstream. Edit spec.source.path in root-application.yaml to change the child app catalog.",
+          "owner": "platform-engineer",
+          "route": "lift-upstream",
+          "wet_path": "RootApplication/spec/source/path"
+        },
+        {
+          "confidence": 0.92,
+          "dry_path": "metadata.name",
+          "edit_hint": "Route: apply-here. Edit metadata.name in apps/catalog-api.yaml.",
+          "owner": "app-catalog-owner",
+          "route": "apply-here",
+          "wet_path": "Application[name=catalog-api]/metadata/name"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.repoURL",
+          "edit_hint": "Route: apply-here. Edit spec.source.repoURL in apps/catalog-api.yaml.",
+          "owner": "app-catalog-owner",
+          "route": "apply-here",
+          "wet_path": "Application[name=catalog-api]/spec/source/repoURL"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.path",
+          "edit_hint": "Route: apply-here. Edit spec.source.path in apps/catalog-api.yaml.",
+          "owner": "app-catalog-owner",
+          "route": "apply-here",
+          "wet_path": "Application[name=catalog-api]/spec/source/path"
+        },
+        {
+          "confidence": 0.92,
+          "dry_path": "metadata.name",
+          "edit_hint": "Route: apply-here. Edit metadata.name in apps/orders-api.yaml.",
+          "owner": "app-catalog-owner",
+          "route": "apply-here",
+          "wet_path": "Application[name=orders-api]/metadata/name"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.repoURL",
+          "edit_hint": "Route: apply-here. Edit spec.source.repoURL in apps/orders-api.yaml.",
+          "owner": "app-catalog-owner",
+          "route": "apply-here",
+          "wet_path": "Application[name=orders-api]/spec/source/repoURL"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.path",
+          "edit_hint": "Route: apply-here. Edit spec.source.path in apps/orders-api.yaml.",
+          "owner": "app-catalog-owner",
+          "route": "apply-here",
+          "wet_path": "Application[name=orders-api]/spec/source/path"
+        },
+        {
+          "confidence": 0.92,
+          "dry_path": "metadata.name",
+          "edit_hint": "Route: apply-here. Edit metadata.name in apps/payments-api.yaml.",
+          "owner": "app-catalog-owner",
+          "route": "apply-here",
+          "wet_path": "Application[name=payments-api]/metadata/name"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.repoURL",
+          "edit_hint": "Route: apply-here. Edit spec.source.repoURL in apps/payments-api.yaml.",
+          "owner": "app-catalog-owner",
+          "route": "apply-here",
+          "wet_path": "Application[name=payments-api]/spec/source/repoURL"
+        },
+        {
+          "confidence": 0.9,
+          "dry_path": "spec.source.path",
+          "edit_hint": "Route: apply-here. Edit spec.source.path in apps/payments-api.yaml.",
+          "owner": "app-catalog-owner",
+          "route": "apply-here",
+          "wet_path": "Application[name=payments-api]/spec/source/path"
+        }
+      ],
+      "outputs": [
+        {
+          "digest": "\u003cdigest\u003e",
+          "role": "rendered-manifests",
+          "uri": "oci://example.local/platform/platform-root:latest"
+        }
+      ],
+      "provenance_id": "\u003cprovenance_id\u003e",
+      "rendered_at": "\u003ctimestamp\u003e",
+      "rendered_object_lineage": [
+        {
+          "kind": "Application",
+          "name": "platform-root",
+          "namespace": "argocd",
+          "source_dry_path": "spec.source.path",
+          "source_path": "root-application.yaml"
+        },
+        {
+          "kind": "Application",
+          "name": "catalog-api",
+          "namespace": "argocd",
+          "source_dry_path": "metadata.name",
+          "source_path": "apps/catalog-api.yaml"
+        },
+        {
+          "kind": "Application",
+          "name": "catalog-api",
+          "namespace": "argocd",
+          "source_dry_path": "spec.source.path",
+          "source_path": "apps/catalog-api.yaml"
+        },
+        {
+          "kind": "Application",
+          "name": "orders-api",
+          "namespace": "argocd",
+          "source_dry_path": "metadata.name",
+          "source_path": "apps/orders-api.yaml"
+        },
+        {
+          "kind": "Application",
+          "name": "orders-api",
+          "namespace": "argocd",
+          "source_dry_path": "spec.source.path",
+          "source_path": "apps/orders-api.yaml"
+        },
+        {
+          "kind": "Application",
+          "name": "payments-api",
+          "namespace": "argocd",
+          "source_dry_path": "metadata.name",
+          "source_path": "apps/payments-api.yaml"
+        },
+        {
+          "kind": "Application",
+          "name": "payments-api",
+          "namespace": "argocd",
+          "source_dry_path": "spec.source.path",
+          "source_path": "apps/payments-api.yaml"
+        }
+      ],
+      "schema_version": "cub.confighub.io/provenance/v1",
+      "sources": [
+        {
+          "path": "apps/catalog-api.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "apps/orders-api.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "apps/payments-api.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        },
+        {
+          "path": "root-application.yaml",
+          "revision": "HEAD",
+          "role": "generator-input",
+          "uri": "\u003csource_uri\u003e"
+        }
+      ],
+      "version": "0.1.0"
+    }
+  ],
+  "ref": "HEAD",
+  "render_target_slug": "render-target",
+  "schema_version": "cub.confighub.io/change-bundle/v1",
+  "source": "cub-gen",
+  "space": "platform",
+  "summary": {
+    "contracts": 1,
+    "discovered_resources": 1,
+    "dry_inputs": 4,
+    "dry_units": 1,
+    "generator_profiles": [
+      "app-of-apps"
+    ],
+    "generator_units": 1,
+    "inverse_transform_plans": 1,
+    "links": 1,
+    "provenance_records": 1,
+    "wet_manifest_targets": 4,
+    "wet_units": 1
+  },
+  "target_path": "\u003ctarget_path\u003e",
+  "target_slug": "app-of-apps",
+  "wet_manifest_targets": [
+    {
+      "generator_id": "gen_d78223f487aceee1",
+      "kind": "Application",
+      "name": "platform-root",
+      "namespace": "argocd",
+      "owner": "platform-runtime",
+      "source_dry_path": "spec.source.path"
+    },
+    {
+      "generator_id": "gen_d78223f487aceee1",
+      "kind": "Application",
+      "name": "catalog-api",
+      "namespace": "argocd",
+      "owner": "platform-runtime",
+      "source_dry_path": "metadata.name"
+    },
+    {
+      "generator_id": "gen_d78223f487aceee1",
+      "kind": "Application",
+      "name": "orders-api",
+      "namespace": "argocd",
+      "owner": "platform-runtime",
+      "source_dry_path": "metadata.name"
+    },
+    {
+      "generator_id": "gen_d78223f487aceee1",
+      "kind": "Application",
+      "name": "payments-api",
+      "namespace": "argocd",
+      "owner": "platform-runtime",
+      "source_dry_path": "metadata.name"
+    }
+  ],
+  "wet_units": [
+    {
+      "id": "wet_969f79bc8fac994b",
+      "kind": "wet-unit",
+      "layer": "wet",
+      "name": "platform-root-wet"
+    }
+  ]
+}

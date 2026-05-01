@@ -44,6 +44,16 @@ func TestTopLevelCommandGoldenHelp(t *testing.T) {
 			stderrGolden: filepath.Join("testdata", "parity", "generators-help.stderr.golden.txt"),
 		},
 		{
+			name:         "enrich-help",
+			args:         []string{"enrich", "--help"},
+			stdoutGolden: filepath.Join("testdata", "parity", "enrich-help.stdout.golden.txt"),
+		},
+		{
+			name:         "platform-help",
+			args:         []string{"platform", "--help"},
+			stdoutGolden: filepath.Join("testdata", "parity", "platform-help.stdout.golden.txt"),
+		},
+		{
 			name:         "bridge-help",
 			args:         []string{"bridge", "--help"},
 			stdoutGolden: filepath.Join("testdata", "parity", "bridge-help.stdout.golden.txt"),
@@ -106,6 +116,16 @@ func TestTopLevelCommandErrorModes(t *testing.T) {
 			name: "generators-extra-arg",
 			args: []string{"generators", "extra"},
 			sub:  "usage: cub-gen generators",
+		},
+		{
+			name: "enrich-missing-subcommand",
+			args: []string{"enrich"},
+			sub:  "enrich subcommand required",
+		},
+		{
+			name: "platform-missing-subcommand",
+			args: []string{"platform"},
+			sub:  "platform subcommand required",
 		},
 		{
 			name: "bridge-missing-subcommand",

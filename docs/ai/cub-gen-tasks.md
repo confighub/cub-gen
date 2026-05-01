@@ -162,9 +162,9 @@ The `edit_hint` is plain-English and safe to relay verbatim to the operator.
 
 ### Generator profiles supported today
 
-Run `./cub-gen generators --markdown --details` for the live list. As of v0.2:
-Helm, Score.dev, Spring Boot, Backstage, No-Config-Platform, Ops Workflow,
-C3 Agent, Swamp.
+Run `./cub-gen generators --markdown --details` for the live list. The current
+source tree includes Helm, ApplicationSet, App-of-Apps, Score.dev, Spring Boot,
+Backstage, No-Config-Platform, OpenChoreo, Ops Workflow, C3 Agent, and Swamp.
 
 ## When NOT to use cub-gen
 

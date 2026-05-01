@@ -101,7 +101,8 @@ ConfigHub side (bridge path, intentionally separate):
 Related contract notes:
 
 1. [ApplicationSet Generator Boundary](applicationset-generator-boundary.md)
-2. [Remote Stores And Projection Targets](remote-stores-and-projection-targets.md)
+2. [App-of-Apps Generator Boundary](app-of-apps-generator-boundary.md)
+3. [Remote Stores And Projection Targets](remote-stores-and-projection-targets.md)
 
 Operational rule:
 

@@ -1,18 +1,98 @@
 # Generator Families
 
-Total: 9
+Total: 11
 
 | Kind | Profile | Resource Kind | Resource Type | Capabilities |
 | --- | --- | --- | --- | --- |
+| `app-of-apps` | `app-of-apps` | `Application` | `argoproj.io/v1alpha1/Application` | root-application, child-application-catalog, observed-expansion, inverse-app-catalog-patch |
 | `applicationset` | `applicationset` | `ApplicationSet` | `argoproj.io/v1alpha1/ApplicationSet` | observed-expansion, authoritative-list-expansion, authoritative-clusters-expansion, graceful-degradation |
 | `backstage` | `backstage-idp` | `Component` | `backstage.io/v1alpha1/Component` | catalog-metadata, render-manifests, inverse-catalog-patch |
 | `c3agent` | `c3agent` | `ConfigMap` | `v1/ConfigMap` | fleet-config, agent-orchestration, inverse-fleet-config-patch |
 | `helm` | `helm-paas` | `HelmRelease` | `helm.toolkit.fluxcd.io/v2/HelmRelease` | render-manifests, values-overrides, inverse-values-patch |
 | `no-config-platform` | `no-config-platform` | `ConfigMap` | `v1/ConfigMap` | app-config-only, provider-config, inverse-provider-config-patch |
+| `openchoreo` | `openchoreo` | `Workload` | `openchoreo.dev/v1alpha1/Workload` | platform-crds, rendered-release, generated-resource-ownership, inverse-route-patch, adoption-report |
 | `opsworkflow` | `ops-workflow` | `Workflow` | `argoproj.io/v1alpha1/Workflow` | workflow-plan, governed-execution-intent, inverse-workflow-patch |
 | `score` | `scoredev-paas` | `Application` | `argoproj.io/v1alpha1/Application` | render-manifests, workload-spec, inverse-score-patch |
 | `springboot` | `springboot-paas` | `Kustomization` | `kustomize.toolkit.fluxcd.io/v1/Kustomization` | render-app-config, profile-overrides, inverse-app-config-patch |
 | `swamp` | `swamp` | `Workflow` | `swamp.dev/v1/Workflow` | workflow-automation, model-orchestration, inverse-workflow-patch |
+
+## `app-of-apps`
+
+- Profile: `app-of-apps`
+- Resource: `Application` (`argoproj.io/v1alpha1/Application`)
+- Capabilities: root-application, child-application-catalog, observed-expansion, inverse-app-catalog-patch
+- Default input role: `argo-application`
+- Default owner: `app-catalog-owner`
+- Field-origin transform: `app-of-apps-catalog`
+- Field-origin overlay transform: `app-of-apps-root-expansion`
+
+### Input Role Rules
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `root-application` | root-application.yaml, root-application.yml, root-app.yaml, root-app.yml, app-of-apps.yaml, app-of-apps.yml | - | - | - |
+| `child-application` | - | apps/, applications/ | - | .yaml, .yml |
+
+### Role Owners
+| Role | Owner |
+| --- | --- |
+| `child-application` | `app-catalog-owner` |
+| `root-application` | `platform-engineer` |
+
+### Inverse Patch Templates
+| Key | Editable by | Confidence | Requires review |
+| --- | --- | --- | --- |
+| `child_name` | `app-catalog-owner` | 0.92 | `false` |
+| `root_path` | `platform-engineer` | 0.88 | `true` |
+| `source_path` | `app-catalog-owner` | 0.90 | `true` |
+| `source_repo` | `app-catalog-owner` | 0.90 | `true` |
+
+### Inverse Pointer Templates
+| Key | Owner | Confidence |
+| --- | --- | --- |
+| `child_name` | `app-catalog-owner` | 0.92 |
+| `root_path` | `platform-engineer` | 0.88 |
+| `source_path` | `app-catalog-owner` | 0.90 |
+| `source_repo` | `app-catalog-owner` | 0.90 |
+
+### Field Origin Confidences
+| Key | Confidence |
+| --- | --- |
+| `child_name` | 0.92 |
+| `root_path` | 0.88 |
+| `source_path` | 0.90 |
+| `source_repo` | 0.90 |
+
+### Hint Defaults
+| Key | Value |
+| --- | --- |
+| `child_catalog_path` | `apps` |
+| `root_application_path` | `root-application.yaml` |
+
+### Inverse Patch Reasons
+| Key | Reason |
+| --- | --- |
+| `child_name` | Child Application identity is owned by the child app catalog. |
+| `root_path` | The root Application controls which catalog path is expanded. |
+| `source_path` | Child Application source path is selected by the child app catalog. |
+| `source_repo` | Child Application repo URL is selected by the child app catalog. |
+
+### Inverse Edit Hints
+| Key | Hint |
+| --- | --- |
+| `child_name` | Route: apply-here. Edit metadata.name in {{child_application_path}}. |
+| `root_path` | Route: lift-upstream. Edit spec.source.path in {{root_application_path}} to change the child app catalog. |
+| `source_path` | Route: apply-here. Edit spec.source.path in {{child_application_path}}. |
+| `source_repo` | Route: apply-here. Edit spec.source.repoURL in {{child_application_path}}. |
+
+### WET Targets
+| Kind | Name template | Owner | Namespace | Source DRY path template |
+| --- | --- | --- | --- | --- |
+| `Application` | `{{name}}` | `platform-runtime` | `argocd` | `spec.source.path` |
+
+### Rendered Lineage Templates
+| Kind | Name template | Namespace | Source path hint | Hint fallback | Multi hint | Source DRY path template | Optional |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `Application` | `{{name}}` | `argocd` | `root_application_path` | `-` | `false` | `spec.source.path` | `false` |
 
 ## `applicationset`
 
@@ -397,6 +477,118 @@ Total: 9
 | `ConfigMap` | `{{name}}-provider-config` | `apps` | `base_config_path` | `-` | `false` | `app.environment` | `false` |
 | `Secret` | `{{name}}-provider-credentials` | `apps` | `base_config_path` | `-` | `false` | `credentials.api_key_ref` | `false` |
 | `ConfigMap` | `{{name}}-provider-config` | `apps` | `overlay_config_path` | `-` | `false` | `channels.inbound` | `true` |
+
+## `openchoreo`
+
+- Profile: `openchoreo`
+- Resource: `Workload` (`openchoreo.dev/v1alpha1/Workload`)
+- Capabilities: platform-crds, rendered-release, generated-resource-ownership, inverse-route-patch, adoption-report
+- Default input role: `openchoreo-input`
+- Default owner: `platform-engineer`
+- Field-origin transform: `openchoreo-release-render`
+- Field-origin overlay transform: `openchoreo-environment-binding`
+
+### Input Role Rules
+| Role | Exact basenames | Path prefixes | Prefixes | Extensions |
+| --- | --- | --- | --- | --- |
+| `workload` | - | - | workload- | .yaml, .yml |
+| `workload` | workload.yaml, workload.yml | - | - | - |
+| `component-type` | - | - | component-type- | .yaml, .yml |
+| `component-type` | component-type.yaml, component-type.yml | - | - | - |
+| `release-binding` | - | - | release-binding- | .yaml, .yml |
+| `release-binding` | release-binding.yaml, release-binding.yml | - | - | - |
+| `secret-reference` | - | - | secret-reference- | .yaml, .yml |
+| `secret-reference` | secret-reference.yaml, secret-reference.yml | - | - | - |
+| `rendered-release` | - | - | rendered-release- | .yaml, .yml |
+| `rendered-release` | rendered-release.yaml, rendered-release.yml | - | - | - |
+| `rendered-manifest` | - | rendered/ | - | .yaml, .yml |
+
+### Role Owners
+| Role | Owner |
+| --- | --- |
+| `component-type` | `platform-engineer` |
+| `release-binding` | `environment-owner` |
+| `rendered-manifest` | `platform-runtime` |
+| `rendered-release` | `platform-runtime` |
+| `secret-reference` | `security-team` |
+| `workload` | `app-team` |
+
+### Inverse Patch Templates
+| Key | Editable by | Confidence | Requires review |
+| --- | --- | --- | --- |
+| `env_var` | `environment-owner` | 0.84 | `false` |
+| `image` | `app-team` | 0.88 | `false` |
+| `platform_default` | `platform-engineer` | 0.78 | `true` |
+| `resource_limit` | `platform-engineer` | 0.80 | `true` |
+| `secret_ref` | `security-team` | 0.86 | `true` |
+| `service_port` | `platform-engineer` | 0.82 | `true` |
+
+### Inverse Pointer Templates
+| Key | Owner | Confidence |
+| --- | --- | --- |
+| `env_var` | `environment-owner` | 0.84 |
+| `image` | `app-team` | 0.88 |
+| `platform_default` | `platform-engineer` | 0.78 |
+| `resource_limit` | `platform-engineer` | 0.80 |
+| `secret_ref` | `security-team` | 0.86 |
+| `service_port` | `platform-engineer` | 0.82 |
+
+### Field Origin Confidences
+| Key | Confidence |
+| --- | --- |
+| `env_var` | 0.84 |
+| `image` | 0.88 |
+| `platform_default` | 0.78 |
+| `resource_limit` | 0.80 |
+| `secret_ref` | 0.86 |
+| `service_port` | 0.82 |
+
+### Hint Defaults
+| Key | Value |
+| --- | --- |
+| `component_type_path` | `component-type.yaml` |
+| `release_binding_path` | `release-binding.yaml` |
+| `rendered_manifest_path` | `rendered/deployment.yaml` |
+| `rendered_release_path` | `rendered-release.yaml` |
+| `secret_reference_path` | `secret-reference.yaml` |
+| `workload_path` | `workload.yaml` |
+
+### Inverse Patch Reasons
+| Key | Reason |
+| --- | --- |
+| `env_var` | Environment values flow through the environment/release binding. |
+| `image` | Container image is app-owned Workload intent. |
+| `platform_default` | Platform defaults are owned by the ComponentType or platform policy, not generated Deployment YAML. |
+| `resource_limit` | Resource limits are environment/platform-owned policy defaults. |
+| `secret_ref` | Secret references are security-owned bindings and should not be edited on generated resources. |
+| `service_port` | Service port is constrained by the ComponentType platform contract. |
+
+### Inverse Edit Hints
+| Key | Hint |
+| --- | --- |
+| `env_var` | Route: apply-here. Edit environment binding data in {{release_binding_path}}. |
+| `image` | Route: lift-upstream. Edit spec.containers.main.image in {{workload_path}}. |
+| `platform_default` | Route: block/escalate. Edit the platform default in {{component_type_path}} or platform policy, not the generated Deployment. |
+| `resource_limit` | Route: overlay. Keep this as an environment/platform overlay in {{release_binding_path}} or policy. |
+| `secret_ref` | Route: block/escalate. Edit {{secret_reference_path}} through the security-owned secret flow. |
+| `service_port` | Route: lift-upstream. Edit the service port contract in {{component_type_path}}. |
+
+### WET Targets
+| Kind | Name template | Owner | Namespace | Source DRY path template |
+| --- | --- | --- | --- | --- |
+| `RenderedRelease` | `{{name}}-prod` | `platform-runtime` | `apps` | `spec` |
+| `Deployment` | `{{name}}` | `platform-runtime` | `apps` | `spec.containers.main.image` |
+| `Service` | `{{name}}` | `platform-runtime` | `apps` | `spec.service.port` |
+| `Secret` | `{{name}}-secret-ref` | `security-team` | `apps` | `spec.secretRef` |
+
+### Rendered Lineage Templates
+| Kind | Name template | Namespace | Source path hint | Hint fallback | Multi hint | Source DRY path template | Optional |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `RenderedRelease` | `{{name}}-prod` | `apps` | `rendered_release_path` | `-` | `false` | `spec` | `false` |
+| `Deployment` | `{{name}}` | `apps` | `workload_path` | `-` | `false` | `spec.containers.main.image` | `false` |
+| `Deployment` | `{{name}}` | `apps` | `release_binding_path` | `-` | `false` | `spec.environment.env.LOG_LEVEL` | `false` |
+| `Deployment` | `{{name}}` | `apps` | `secret_reference_path` | `-` | `false` | `spec.secretRef` | `false` |
+| `Service` | `{{name}}` | `apps` | `component_type_path` | `-` | `false` | `spec.service.port` | `false` |
 
 ## `opsworkflow`
 

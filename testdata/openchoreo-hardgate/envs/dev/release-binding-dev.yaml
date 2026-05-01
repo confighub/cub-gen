@@ -1,0 +1,15 @@
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: payments-api-dev
+spec:
+  workloadRef: payments-api
+  environmentName: dev
+  target:
+    namespace: apps-dev
+  environment:
+    env:
+      LOG_LEVEL: debug
+  resources:
+    limits:
+      cpu: "250m"

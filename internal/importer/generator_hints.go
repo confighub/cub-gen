@@ -3,6 +3,7 @@ package importer
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/confighub/cub-gen/internal/model"
@@ -196,6 +197,107 @@ func noConfigPlatformPathHintsFromInputs(inputs []string) noConfigPlatformHints 
 		}
 	}
 	return h
+}
+
+type openChoreoHints struct {
+	WorkloadPath         string
+	ComponentTypePath    string
+	ReleaseBindingPath   string
+	SecretReferencePath  string
+	RenderedReleasePath  string
+	RenderedManifestPath string
+	Variants             []string
+}
+
+func openChoreoPathHintsFromInputs(inputs []string) openChoreoHints {
+	h := openChoreoHints{
+		WorkloadPath:         registry.HintDefault(model.GeneratorOpenChoreo, "workload_path", "workload.yaml"),
+		ComponentTypePath:    registry.HintDefault(model.GeneratorOpenChoreo, "component_type_path", "component-type.yaml"),
+		ReleaseBindingPath:   registry.HintDefault(model.GeneratorOpenChoreo, "release_binding_path", "release-binding.yaml"),
+		SecretReferencePath:  registry.HintDefault(model.GeneratorOpenChoreo, "secret_reference_path", "secret-reference.yaml"),
+		RenderedReleasePath:  registry.HintDefault(model.GeneratorOpenChoreo, "rendered_release_path", "rendered-release.yaml"),
+		RenderedManifestPath: registry.HintDefault(model.GeneratorOpenChoreo, "rendered_manifest_path", "rendered/deployment.yaml"),
+	}
+
+	var variants []string
+	for _, in := range inputs {
+		p := filepath.ToSlash(in)
+		role := registry.InputRole(model.GeneratorOpenChoreo, p)
+		switch role {
+		case "workload":
+			h.WorkloadPath = p
+		case "component-type":
+			h.ComponentTypePath = p
+		case "release-binding":
+			if h.ReleaseBindingPath == "" || p < h.ReleaseBindingPath || strings.Contains(p, "/prod/") {
+				h.ReleaseBindingPath = p
+			}
+			if variant := variantNameFromOpenChoreoPath(p); variant != "" {
+				variants = append(variants, variant)
+			}
+		case "secret-reference":
+			h.SecretReferencePath = p
+		case "rendered-release":
+			if h.RenderedReleasePath == "" || p < h.RenderedReleasePath || strings.Contains(p, "/prod/") {
+				h.RenderedReleasePath = p
+			}
+			if variant := variantNameFromOpenChoreoPath(p); variant != "" {
+				variants = append(variants, variant)
+			}
+		case "rendered-manifest":
+			if strings.Contains(strings.ToLower(filepath.Base(p)), "deployment") || h.RenderedManifestPath == "" {
+				h.RenderedManifestPath = p
+			}
+			if variant := variantNameFromOpenChoreoPath(p); variant != "" {
+				variants = append(variants, variant)
+			}
+		}
+	}
+	h.Variants = uniqueSortedStringSlice(variants)
+	if len(h.Variants) == 0 {
+		h.Variants = []string{"prod"}
+	}
+	return h
+}
+
+func variantNameFromOpenChoreoPath(path string) string {
+	parts := strings.Split(filepath.ToSlash(path), "/")
+	for i, part := range parts {
+		switch part {
+		case "envs", "environments", "rendered":
+			if i+1 < len(parts) && parts[i+1] != "" {
+				return parts[i+1]
+			}
+		}
+	}
+	base := strings.ToLower(filepath.Base(path))
+	for _, suffix := range []string{".yaml", ".yml"} {
+		base = strings.TrimSuffix(base, suffix)
+	}
+	for _, prefix := range []string{"release-binding-", "rendered-release-"} {
+		if strings.HasPrefix(base, prefix) {
+			return strings.TrimPrefix(base, prefix)
+		}
+	}
+	return ""
+}
+
+func uniqueSortedStringSlice(in []string) []string {
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(in))
+	for _, item := range in {
+		item = strings.TrimSpace(item)
+		if item == "" {
+			continue
+		}
+		if _, ok := seen[item]; ok {
+			continue
+		}
+		seen[item] = struct{}{}
+		out = append(out, item)
+	}
+	sort.Strings(out)
+	return out
 }
 
 type c3agentHints struct {

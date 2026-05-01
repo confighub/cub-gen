@@ -40,6 +40,22 @@ If you are unsure, start with `helm-paas` for the platform view or
 For exact proof status, use the generated
 [Example Truth Matrix](../docs/testing/example-truth-matrix.md).
 
+## Worked Examples That Teach The Thesis
+
+Some platform patterns are better introduced as worked examples before they
+become full runnable adapters.
+
+| Pattern | Worked example | What it teaches | Product status |
+|---|---|---|---|
+| OpenChoreo-style component platform | [OpenChoreo as a Clean Generator](../docs/agentic-gitops/03-worked-examples/05-openchoreo-generator-worked-example.md) | Workload + ReleaseBinding + SecretReference + ComponentType -> rendered release | fixture-backed initial adapter |
+| Argo ApplicationSet | [Argo Generators](../docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | selectors, inventory, and templates generate child Applications | bounded support exists |
+| Argo app-of-apps | [Argo Generators](../docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | root app plus child app catalog behaves like a generator | fixture-backed initial adapter |
+| Multi-repo platform estate | [`platform-estate`](../testdata/platform-estate/) | read-only manifest import before rewrites or fanout | fixture-backed graph proof |
+
+These examples are intentionally diagram-heavy. They are meant to help users see
+that `cub-gen` is importing generator systems, not arguing that every team must
+adopt one abstraction.
+
 ## Run Order That Repeats Well
 
 From the repo root:

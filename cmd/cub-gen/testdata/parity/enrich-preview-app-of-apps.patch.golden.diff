@@ -1,0 +1,266 @@
+diff --git a/.cub-gen/enrichment/app-of-apps-platform-root-gen-d78223f4.provenance.json b/.cub-gen/enrichment/app-of-apps-platform-root-gen-d78223f4.provenance.json
+new file mode 100644
+index 0000000..0000000
+--- /dev/null
++++ b/.cub-gen/enrichment/app-of-apps-platform-root-gen-d78223f4.provenance.json
+@@ -0,0 +1,260 @@
++{
++  "schema_version": "cub.confighub.io/enrichment-artifact/v1",
++  "generator": {
++    "id": "gen_d78223f487aceee1",
++    "kind": "app-of-apps",
++    "profile": "app-of-apps",
++    "name": "platform-root",
++    "input_digest": "<input_digest>",
++    "change_id": "<change_id>"
++  },
++  "target": {
++    "space": "platform",
++    "target_slug": "app-of-apps",
++    "render_target_slug": "render-target",
++    "ref": "HEAD"
++  },
++  "counts": {
++    "dry_inputs": 4,
++    "wet_manifest_targets": 4,
++    "field_origins": 10,
++    "inverse_edit_pointers": 10
++  },
++  "proposed_annotations": [
++    {
++      "category": "ownership-label",
++      "key": "cub.confighub.io/owners",
++      "value": "app-catalog-owner,platform-engineer,platform-runtime",
++      "applies_to": "sidecar",
++      "reason": "show who should review source and rendered changes"
++    },
++    {
++      "category": "pr-mr-link",
++      "key": "cub.confighub.io/change-id",
++      "value": "<change_id>",
++      "applies_to": "sidecar",
++      "reason": "let GitHub PR and ConfigHub MR metadata refer to the same change"
++    },
++    {
++      "category": "route-badge",
++      "key": "cub.confighub.io/routes",
++      "value": "apply-here:app-catalog-owner,lift-upstream:platform-engineer",
++      "applies_to": "sidecar",
++      "reason": "show whether generated-resource edits apply here, lift upstream, overlay, or escalate"
++    },
++    {
++      "category": "source-link",
++      "key": "cub.confighub.io/generator-id",
++      "value": "gen_d78223f487aceee1",
++      "applies_to": "sidecar",
++      "reason": "link the sidecar to the detected generator"
++    },
++    {
++      "category": "source-link",
++      "key": "cub.confighub.io/generator-kind",
++      "value": "app-of-apps",
++      "applies_to": "sidecar",
++      "reason": "make the platform generator family visible to tools and reviewers"
++    },
++    {
++      "category": "source-link",
++      "key": "cub.confighub.io/source-paths",
++      "value": "apps/catalog-api.yaml,apps/orders-api.yaml,apps/payments-api.yaml,root-application.yaml",
++      "applies_to": "sidecar",
++      "reason": "show which source files feed the deployable variant"
++    }
++  ],
++  "source_links": [
++    {
++      "path": "apps/catalog-api.yaml",
++      "role": "child-application",
++      "owner": "app-catalog-owner",
++      "uri": "<source_uri>",
++      "required": true
++    },
++    {
++      "path": "apps/orders-api.yaml",
++      "role": "child-application",
++      "owner": "app-catalog-owner",
++      "uri": "<source_uri>",
++      "required": true
++    },
++    {
++      "path": "apps/payments-api.yaml",
++      "role": "child-application",
++      "owner": "app-catalog-owner",
++      "uri": "<source_uri>",
++      "required": true
++    },
++    {
++      "path": "root-application.yaml",
++      "role": "root-application",
++      "owner": "platform-engineer",
++      "uri": "<source_uri>",
++      "required": true
++    }
++  ],
++  "ownership_labels": [
++    {
++      "owner": "app-catalog-owner",
++      "scope": "source",
++      "role": "child-application",
++      "path": "apps/catalog-api.yaml",
++      "label": "cub.confighub.io/owner=app-catalog-owner"
++    },
++    {
++      "owner": "app-catalog-owner",
++      "scope": "source",
++      "role": "child-application",
++      "path": "apps/orders-api.yaml",
++      "label": "cub.confighub.io/owner=app-catalog-owner"
++    },
++    {
++      "owner": "app-catalog-owner",
++      "scope": "source",
++      "role": "child-application",
++      "path": "apps/payments-api.yaml",
++      "label": "cub.confighub.io/owner=app-catalog-owner"
++    },
++    {
++      "owner": "platform-engineer",
++      "scope": "source",
++      "role": "root-application",
++      "path": "root-application.yaml",
++      "label": "cub.confighub.io/owner=platform-engineer"
++    },
++    {
++      "owner": "platform-runtime",
++      "scope": "rendered",
++      "kind": "Application",
++      "name": "catalog-api",
++      "namespace": "argocd",
++      "label": "cub.confighub.io/owner=platform-runtime"
++    },
++    {
++      "owner": "platform-runtime",
++      "scope": "rendered",
++      "kind": "Application",
++      "name": "orders-api",
++      "namespace": "argocd",
++      "label": "cub.confighub.io/owner=platform-runtime"
++    },
++    {
++      "owner": "platform-runtime",
++      "scope": "rendered",
++      "kind": "Application",
++      "name": "payments-api",
++      "namespace": "argocd",
++      "label": "cub.confighub.io/owner=platform-runtime"
++    },
++    {
++      "owner": "platform-runtime",
++      "scope": "rendered",
++      "kind": "Application",
++      "name": "platform-root",
++      "namespace": "argocd",
++      "label": "cub.confighub.io/owner=platform-runtime"
++    }
++  ],
++  "route_badges": [
++    {
++      "wet_path": "Application[name=catalog-api]/metadata/name",
++      "dry_path": "metadata.name",
++      "owner": "app-catalog-owner",
++      "route": "apply-here",
++      "badge": "apply-here:app-catalog-owner",
++      "edit_hint": "Route: apply-here. Edit metadata.name in apps/catalog-api.yaml.",
++      "confidence": 0.92
++    },
++    {
++      "wet_path": "Application[name=catalog-api]/spec/source/path",
++      "dry_path": "spec.source.path",
++      "owner": "app-catalog-owner",
++      "route": "apply-here",
++      "badge": "apply-here:app-catalog-owner",
++      "edit_hint": "Route: apply-here. Edit spec.source.path in apps/catalog-api.yaml.",
++      "confidence": 0.9
++    },
++    {
++      "wet_path": "Application[name=catalog-api]/spec/source/repoURL",
++      "dry_path": "spec.source.repoURL",
++      "owner": "app-catalog-owner",
++      "route": "apply-here",
++      "badge": "apply-here:app-catalog-owner",
++      "edit_hint": "Route: apply-here. Edit spec.source.repoURL in apps/catalog-api.yaml.",
++      "confidence": 0.9
++    },
++    {
++      "wet_path": "Application[name=orders-api]/metadata/name",
++      "dry_path": "metadata.name",
++      "owner": "app-catalog-owner",
++      "route": "apply-here",
++      "badge": "apply-here:app-catalog-owner",
++      "edit_hint": "Route: apply-here. Edit metadata.name in apps/orders-api.yaml.",
++      "confidence": 0.92
++    },
++    {
++      "wet_path": "Application[name=orders-api]/spec/source/path",
++      "dry_path": "spec.source.path",
++      "owner": "app-catalog-owner",
++      "route": "apply-here",
++      "badge": "apply-here:app-catalog-owner",
++      "edit_hint": "Route: apply-here. Edit spec.source.path in apps/orders-api.yaml.",
++      "confidence": 0.9
++    },
++    {
++      "wet_path": "Application[name=orders-api]/spec/source/repoURL",
++      "dry_path": "spec.source.repoURL",
++      "owner": "app-catalog-owner",
++      "route": "apply-here",
++      "badge": "apply-here:app-catalog-owner",
++      "edit_hint": "Route: apply-here. Edit spec.source.repoURL in apps/orders-api.yaml.",
++      "confidence": 0.9
++    },
++    {
++      "wet_path": "Application[name=payments-api]/metadata/name",
++      "dry_path": "metadata.name",
++      "owner": "app-catalog-owner",
++      "route": "apply-here",
++      "badge": "apply-here:app-catalog-owner",
++      "edit_hint": "Route: apply-here. Edit metadata.name in apps/payments-api.yaml.",
++      "confidence": 0.92
++    },
++    {
++      "wet_path": "Application[name=payments-api]/spec/source/path",
++      "dry_path": "spec.source.path",
++      "owner": "app-catalog-owner",
++      "route": "apply-here",
++      "badge": "apply-here:app-catalog-owner",
++      "edit_hint": "Route: apply-here. Edit spec.source.path in apps/payments-api.yaml.",
++      "confidence": 0.9
++    },
++    {
++      "wet_path": "Application[name=payments-api]/spec/source/repoURL",
++      "dry_path": "spec.source.repoURL",
++      "owner": "app-catalog-owner",
++      "route": "apply-here",
++      "badge": "apply-here:app-catalog-owner",
++      "edit_hint": "Route: apply-here. Edit spec.source.repoURL in apps/payments-api.yaml.",
++      "confidence": 0.9
++    },
++    {
++      "wet_path": "RootApplication/spec/source/path",
++      "dry_path": "spec.source.path",
++      "owner": "platform-engineer",
++      "route": "lift-upstream",
++      "badge": "lift-upstream:platform-engineer",
++      "edit_hint": "Route: lift-upstream. Edit spec.source.path in root-application.yaml to change the child app catalog.",
++      "confidence": 0.88
++    }
++  ],
++  "pr_mr_links": [
++    {
++      "change_id": "<change_id>",
++      "link_key": "cub.confighub.io/change-id",
++      "github_pr_state": "not-linked",
++      "confighub_mr_state": "not-linked",
++      "reason": "carry this change_id into GitHub PR and ConfigHub MR metadata to correlate review evidence"
++    }
++  ]
++}

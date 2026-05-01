@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/confighub/cub-gen/internal/applicationset"
+	"github.com/confighub/cub-gen/internal/appofapps"
 	"github.com/confighub/cub-gen/internal/model"
 	"github.com/confighub/cub-gen/internal/registry"
 	"gopkg.in/yaml.v3"
@@ -58,6 +59,10 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 	if err != nil {
 		return model.DetectionResult{}, err
 	}
+	openChoreoDetections, err := detectOpenChoreo(absRepo)
+	if err != nil {
+		return model.DetectionResult{}, err
+	}
 	opsDetections, err := detectOpsWorkflow(absRepo)
 	if err != nil {
 		return model.DetectionResult{}, err
@@ -75,9 +80,17 @@ func ScanRepo(repoPath, ref string) (model.DetectionResult, error) {
 	all = append(all, springDetections...)
 	all = append(all, backstageDetections...)
 	all = append(all, noConfigPlatformDetections...)
+	all = append(all, openChoreoDetections...)
 	all = append(all, opsDetections...)
 	all = append(all, c3agentDetections...)
 	all = append(all, swampDetections...)
+	if len(all) == 0 {
+		appOfAppsDetections, err := detectAppOfApps(absRepo)
+		if err != nil {
+			return model.DetectionResult{}, err
+		}
+		all = append(all, appOfAppsDetections...)
+	}
 	if len(all) == 0 {
 		applicationSetDetections, err := detectApplicationSet(absRepo)
 		if err != nil {
@@ -547,6 +560,45 @@ func existingApplicationSetAuxiliaryInputs(repo string) []string {
 	return uniqueSortedStrings(candidates)
 }
 
+func detectAppOfApps(repo string) ([]model.GeneratorDetection, error) {
+	roots, err := appofapps.FindRoots(repo)
+	if err != nil {
+		return nil, fmt.Errorf("detect app-of-apps: %w", err)
+	}
+
+	detected := make([]model.GeneratorDetection, 0, len(roots))
+	for _, root := range roots {
+		inputs := []string{root.Path}
+		for _, child := range root.ChildApplications {
+			inputs = append(inputs, child.Path)
+		}
+		inputs = uniqueSortedStrings(inputs)
+
+		relRoot := filepath.ToSlash(filepath.Dir(root.Path))
+		if relRoot == "." {
+			relRoot = ""
+		}
+		id := shortID("app-of-apps:" + root.Path)
+		detected = append(detected, model.GeneratorDetection{
+			ID:         "gen_" + id,
+			Kind:       model.GeneratorAppOfApps,
+			Profile:    profileForKind(model.GeneratorAppOfApps),
+			Name:       root.Name,
+			Root:       relRoot,
+			Inputs:     inputs,
+			Confidence: 0.91,
+		})
+	}
+
+	sort.Slice(detected, func(i, j int) bool {
+		if detected[i].Root != detected[j].Root {
+			return detected[i].Root < detected[j].Root
+		}
+		return detected[i].Name < detected[j].Name
+	})
+	return detected, nil
+}
+
 func detectScore(repo string) ([]model.GeneratorDetection, error) {
 	detected := make(map[string]model.GeneratorDetection)
 	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
@@ -838,6 +890,137 @@ func detectNoConfigPlatform(repo string) ([]model.GeneratorDetection, error) {
 		return nil, fmt.Errorf("detect no-config-platform: %w", err)
 	}
 	return mapValuesSorted(detected), nil
+}
+
+type yamlKindMetadata struct {
+	APIVersion string `yaml:"apiVersion"`
+	Kind       string `yaml:"kind"`
+	Metadata   struct {
+		Name string `yaml:"name"`
+	} `yaml:"metadata"`
+}
+
+func detectOpenChoreo(repo string) ([]model.GeneratorDetection, error) {
+	type candidate struct {
+		path string
+		kind string
+		name string
+	}
+
+	candidates := make([]candidate, 0, 8)
+	rendered := make([]string, 0, 4)
+
+	err := filepath.WalkDir(repo, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() && shouldSkipDir(d.Name()) {
+			return filepath.SkipDir
+		}
+		if d.IsDir() {
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(d.Name()))
+		if ext != ".yaml" && ext != ".yml" {
+			return nil
+		}
+
+		rel, err := filepath.Rel(repo, path)
+		if err != nil {
+			return err
+		}
+		rel = filepath.ToSlash(rel)
+
+		doc, ok := parseYAMLKindMetadata(path)
+		if !ok {
+			return nil
+		}
+
+		if isOpenChoreoKind(doc) {
+			candidates = append(candidates, candidate{
+				path: rel,
+				kind: strings.TrimSpace(doc.Kind),
+				name: strings.TrimSpace(doc.Metadata.Name),
+			})
+			return nil
+		}
+
+		if strings.HasPrefix(rel, "rendered/") && isKubernetesRenderedKind(doc.Kind) {
+			rendered = append(rendered, rel)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("detect openchoreo: %w", err)
+	}
+
+	hasWorkload := false
+	name := ""
+	inputs := make([]string, 0, len(candidates)+len(rendered))
+	for _, c := range candidates {
+		inputs = append(inputs, c.path)
+		if strings.EqualFold(c.kind, "Workload") {
+			hasWorkload = true
+			if name == "" && c.name != "" {
+				name = c.name
+			}
+		}
+	}
+	if !hasWorkload {
+		return nil, nil
+	}
+	inputs = append(inputs, rendered...)
+	inputs = uniqueSortedStrings(inputs)
+	if name == "" {
+		name = "openchoreo-workload"
+	}
+
+	return []model.GeneratorDetection{{
+		ID:         "gen_" + shortID("openchoreo:"+name),
+		Kind:       model.GeneratorOpenChoreo,
+		Profile:    profileForKind(model.GeneratorOpenChoreo),
+		Name:       name,
+		Root:       "",
+		Inputs:     inputs,
+		Confidence: 0.88,
+	}}, nil
+}
+
+func parseYAMLKindMetadata(path string) (yamlKindMetadata, bool) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return yamlKindMetadata{}, false
+	}
+	var doc yamlKindMetadata
+	if err := yaml.Unmarshal(b, &doc); err != nil {
+		return yamlKindMetadata{}, false
+	}
+	if strings.TrimSpace(doc.Kind) == "" {
+		return yamlKindMetadata{}, false
+	}
+	return doc, true
+}
+
+func isOpenChoreoKind(doc yamlKindMetadata) bool {
+	apiVersion := strings.ToLower(strings.TrimSpace(doc.APIVersion))
+	if !strings.Contains(apiVersion, "openchoreo") {
+		return false
+	}
+	switch strings.ToLower(strings.TrimSpace(doc.Kind)) {
+	case "workload", "componenttype", "secretreference", "releasebinding", "renderedrelease":
+		return true
+	default:
+		return false
+	}
+}
+
+func isKubernetesRenderedKind(kind string) bool {
+	switch strings.ToLower(strings.TrimSpace(kind)) {
+	case "deployment", "service", "configmap", "secret":
+		return true
+	default:
+		return false
+	}
 }
 
 func detectOpsWorkflow(repo string) ([]model.GeneratorDetection, error) {
