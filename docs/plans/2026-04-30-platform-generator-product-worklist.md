@@ -1,6 +1,6 @@
 # Platform Generator Product Worklist
 
-Status: issues sequenced; first product slices landed
+Status: major product slices landed; remaining work sequenced
 Date: 2026-05-01
 
 This worklist turns the platform-generator manifesto into product work. It
@@ -19,7 +19,6 @@ Open issues checked on 2026-05-01:
 |---|---|---|
 | [#287](https://github.com/confighub/cub-gen/issues/287) | make cub-gen role and value obvious | parent roadmap issue keeping the product story coherent |
 | [#283](https://github.com/confighub/cub-gen/issues/283) | enforce generator route metadata server-side | route ownership must become an authoritative backend decision |
-| [#277](https://github.com/confighub/cub-gen/issues/277) | OpenChoreo adapter | external platform-family proof needs upstream conformance |
 | [#236](https://github.com/confighub/cub-gen/issues/236) | ship cub-gen as `cub gen` plugin | product workflow should feel like one platform, not a sidecar binary |
 | [#213](https://github.com/confighub/cub-gen/issues/213) | GUI provenance trace | click-field-to-source is the core teaching moment |
 | [#212](https://github.com/confighub/cub-gen/issues/212) | GUI regeneration/refresh preview | users need to see generated impact before merge/apply |
@@ -99,9 +98,14 @@ Definition of done:
 
 ### PG-02: OpenChoreo Adapter
 
-Problem: OpenChoreo is a clean candidate generator. This branch can read a
-fixture-backed subset of its CRD shape, but full upstream conformance and
-multi-repo estate import are still open.
+Status: implemented for the fixture-backed v1alpha1 hardgate shape. Broader
+upstream estate validation and multi-repo OpenChoreo import remain follow-on
+adoption work.
+
+Problem: OpenChoreo is a clean candidate generator. `cub-gen` now reads the
+hard platform case from an OpenChoreo-shaped repo: app intent, deployable
+variant bindings, platform contracts, secret references, rendered releases, and
+generated Kubernetes resources with ownership proof.
 
 Quality gate: the adapter is not credible until the README is honest about
 support status ([#288](https://github.com/confighub/cub-gen/issues/288)), the
@@ -119,8 +123,8 @@ Deterministic success criteria:
    RenderedRelease fixtures, `cub-gen gitops import` detects `openchoreo`.
 2. Import emits DRY roles for app intent, variant binding, secret reference,
    component type, rendered release, and generated manifests.
-3. Field-origin map routes env vars, secret refs, image, service port, resource
-   limits, and platform defaults.
+3. Field-origin map routes env vars, mounted files, secret refs, image,
+   service port, resource limits, and platform defaults.
 4. Generated Kubernetes resources can be identified as platform/controller
    owned where applicable.
 5. At least two deployable variants are represented.
@@ -133,7 +137,7 @@ Proof matrix:
 |---|---|
 | unit | CRD parsing and role classification |
 | golden | discover/import/publish OpenChoreo parity outputs |
-| example | worked example fixture with prod override, platform default, generated resources, and secret reference |
+| example | worked example fixture with prod override, platform default, generated resources, mounted-file ConfigMap, and secret reference |
 | route | generated Deployment edit routes to apply-here, overlay, lift-upstream, or block/escalate |
 | degradation | unknown CRD version, missing ComponentType, unresolved SecretReference, or unknown owner degrade explicitly |
 

@@ -8,7 +8,8 @@ It is intentionally small, but it includes the hard parts:
 - environment-owned `ReleaseBinding` for `dev` and `prod`
 - security-owned `SecretReference`
 - controller-owned `RenderedRelease`
-- generated Kubernetes `Deployment` and `Service` resources
+- generated Kubernetes `Deployment`, `Service`, and mounted-file `ConfigMap`
+  resources
 
 Run:
 

@@ -1,8 +1,10 @@
 # OpenChoreo as a Clean Generator
 
-Status: worked example plus fixture-backed hardgate support. `cub-gen` can
-detect and import the OpenChoreo-shaped fixture in `testdata/openchoreo-hardgate`;
-that is not the same as full upstream OpenChoreo conformance.
+Status: worked example plus fixture-backed hardgate support. `cub-gen`
+can detect and import the OpenChoreo-shaped fixture in
+`testdata/openchoreo-hardgate`, including generated Kubernetes resources,
+field-origin routes, and explicit degradation for unsupported shapes. That is
+not the same as full upstream OpenChoreo conformance for every estate shape.
 
 This example uses OpenChoreo to teach the distinction between a brittle platform
 abstraction and a clean platform generator.
@@ -152,12 +154,14 @@ like this. Real OpenChoreo estate support still needs broader upstream
 conformance and repo-shape testing.
 
 | Rendered field | Value | Source object | Source path | Owner | Route |
-|---|---:|---|---|---|---|
-| `Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value` | `error` | `ReleaseBinding/payments-api-prod` | `spec.workloadOverrides.containers.main.env[LOG_LEVEL].value` | app/env owner | lift to variant source |
-| `Deployment/spec/template/spec/containers[name=main]/env[name=DATABASE_PASSWORD]/valueFrom/secretKeyRef/name` | `database-secret` | `Workload/payments-api` | `spec.containers.main.env[DATABASE_PASSWORD].valueFrom.secretKeyRef.name` | app team | lift to app source |
-| `ExternalSecret/spec/data[password]/remoteRef/key` | `secret/data/prod/db` | `SecretReference/database-secret` | `spec.data[password].remoteRef.key` | platform/security | block or route to platform review |
-| `Deployment/spec/template/spec/securityContext` | platform default | `ComponentType/java-service` | renderer template | platform team | block or route to platform source |
-| `ConfigMap/data/LOG_FORMAT` | platform default | `ComponentType/java-service` | standard env block | platform team | block or route to platform source |
+|---|---|---|---|---|---|
+| `Deployment/spec/template/spec/containers[name=main]/image` | `ghcr.io/acme/payments-api:v1.4.2` | `Workload/payments-api` | `spec.containers.main.image` | app team | lift-upstream |
+| `Deployment/spec/template/spec/containers[name=main]/env[name=LOG_LEVEL]/value` | `warn` | `ReleaseBinding/payments-api-prod` | `spec.environment.env.LOG_LEVEL` | environment owner | apply-here |
+| `Deployment/spec/template/spec/containers[name=main]/env[name=DATABASE_URL]/valueFrom/secretKeyRef/name` | `payments-db-url` | `SecretReference/payments-db` | `spec.secretName` | security team | block/escalate |
+| `Service/spec/ports[name=http]/port` | `8080` | `ComponentType/web-service` | `spec.service.port` | platform engineer | lift-upstream |
+| `Deployment/spec/template/spec/containers[name=main]/resources/limits/cpu` | `1000m` | `ReleaseBinding/payments-api-prod` | `spec.resources.limits.cpu` | platform/environment owner | overlay |
+| `ConfigMap/data/LOG_FORMAT` | `json` | `Workload/payments-api` | `spec.containers.main.files.LOG_FORMAT.value` | app team | lift-upstream |
+| `Deployment/spec/template/spec/securityContext/runAsNonRoot` | `true` | `ComponentType/web-service` | `spec.runtime.defaults.securityContext.runAsNonRoot` | platform engineer | block/escalate |
 
 The important bit is not only trace-back. It is routing.
 
@@ -250,12 +254,13 @@ sequenceDiagram
 | Capability | Status in cub-gen today | OpenChoreo-specific status |
 |---|---|---|
 | Generator contract triple | implemented for current generator families | fixture-backed hardgate support; not full upstream conformance |
-| Field-origin and inverse edit pointers | implemented for current generator families | field routes proved by `testdata/openchoreo-hardgate` |
+| Field-origin and inverse edit pointers | implemented for current generator families | image, env, secret ref, mounted file, service port, resource limit, and platform-default routes proved by `testdata/openchoreo-hardgate` |
 | Apply-here / lift-upstream / block-escalate teaching model | strongest in Spring examples | model maps cleanly |
 | PR/MR linkage contract | commands and demos exist | OC wiring needed |
 | Multi-repo platform import | not generic yet | needed for real OC estates |
 | Automatic annotation/enrichment | not generic yet | likely useful after read-only import |
 | Config rewrite/refactor proposals | limited, strongest in Spring onboarding | future OC normalization path |
+| Explicit degradation | implemented for current OC hardgate | unsupported version, missing ComponentType, unresolved SecretReference, and unknown rendered owner fail without guessed lineage |
 
 ## Why This Helps OpenChoreo Users
 

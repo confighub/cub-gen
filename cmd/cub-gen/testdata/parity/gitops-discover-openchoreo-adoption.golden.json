@@ -28,6 +28,14 @@
             "wet_path": "Deployment/spec/template/spec/containers[name=main]/env[name=DATABASE_URL]/valueFrom/secretKeyRef/name"
           },
           {
+            "confidence": 0.83,
+            "dry_path": "spec.containers.main.files.LOG_FORMAT.value",
+            "edit_hint": "Route: lift-upstream. Edit mounted file data in workload-payments-api.yaml.",
+            "owner": "app-team",
+            "route": "lift-upstream",
+            "wet_path": "ConfigMap/data/LOG_FORMAT"
+          },
+          {
             "confidence": 0.88,
             "dry_path": "spec.containers.main.image",
             "edit_hint": "Route: lift-upstream. Edit spec.containers.main.image in workload-payments-api.yaml.",
@@ -65,6 +73,13 @@
         "read_only": true,
         "rendered_targets": [
           {
+            "kind": "ConfigMap",
+            "name": "payments-api-files",
+            "namespace": "apps-dev",
+            "owner": "platform-runtime",
+            "source_dry_path": "spec.containers.main.files.LOG_FORMAT.value"
+          },
+          {
             "kind": "Deployment",
             "name": "payments-api",
             "namespace": "apps-dev",
@@ -91,6 +106,13 @@
             "namespace": "apps-dev",
             "owner": "platform-runtime",
             "source_dry_path": "spec.service.port"
+          },
+          {
+            "kind": "ConfigMap",
+            "name": "payments-api-files",
+            "namespace": "apps-prod",
+            "owner": "platform-runtime",
+            "source_dry_path": "spec.containers.main.files.LOG_FORMAT.value"
           },
           {
             "kind": "Deployment",
@@ -152,6 +174,13 @@
           },
           {
             "owner": "platform-runtime",
+            "path": "rendered/dev/configmap.yaml",
+            "required": true,
+            "role": "rendered-manifest",
+            "schema_ref": "https://schema.confighub.dev/kubernetes/resource-v1"
+          },
+          {
+            "owner": "platform-runtime",
             "path": "rendered/dev/deployment.yaml",
             "required": true,
             "role": "rendered-manifest",
@@ -160,6 +189,13 @@
           {
             "owner": "platform-runtime",
             "path": "rendered/dev/service.yaml",
+            "required": true,
+            "role": "rendered-manifest",
+            "schema_ref": "https://schema.confighub.dev/kubernetes/resource-v1"
+          },
+          {
+            "owner": "platform-runtime",
+            "path": "rendered/prod/configmap.yaml",
             "required": true,
             "role": "rendered-manifest",
             "schema_ref": "https://schema.confighub.dev/kubernetes/resource-v1"
@@ -223,8 +259,8 @@
         "platform-runtime",
         "security-team"
       ],
-      "rendered_target_count": 8,
-      "source_artifact_count": 11
+      "rendered_target_count": 10,
+      "source_artifact_count": 13
     },
     "unsupported_gaps": [
       "Generated Kubernetes resources are modeled as owned outputs; direct edits must be routed, not blindly preserved.",
@@ -240,9 +276,11 @@
         "component-type-web-service.yaml",
         "envs/dev/release-binding-dev.yaml",
         "envs/prod/release-binding-prod.yaml",
+        "rendered/dev/configmap.yaml",
         "rendered/dev/deployment.yaml",
         "rendered/dev/rendered-release-dev.yaml",
         "rendered/dev/service.yaml",
+        "rendered/prod/configmap.yaml",
         "rendered/prod/deployment.yaml",
         "rendered/prod/rendered-release-prod.yaml",
         "rendered/prod/service.yaml",
@@ -268,9 +306,11 @@
         "component-type-web-service.yaml",
         "envs/dev/release-binding-dev.yaml",
         "envs/prod/release-binding-prod.yaml",
+        "rendered/dev/configmap.yaml",
         "rendered/dev/deployment.yaml",
         "rendered/dev/rendered-release-dev.yaml",
         "rendered/dev/service.yaml",
+        "rendered/prod/configmap.yaml",
         "rendered/prod/deployment.yaml",
         "rendered/prod/rendered-release-prod.yaml",
         "rendered/prod/service.yaml",

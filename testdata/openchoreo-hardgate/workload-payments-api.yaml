@@ -9,6 +9,10 @@ spec:
       image: ghcr.io/acme/payments-api:v1.4.2
       env:
         LOG_LEVEL: info
+      files:
+        LOG_FORMAT:
+          value: json
+          mountPath: /etc/payments/log-format
   service:
     port: 8080
   resources:

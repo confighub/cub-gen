@@ -479,6 +479,9 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 		resourcePolicy := registry.InversePatchTemplateFor(g.Kind, "resource_limit", registry.InversePatchTemplate{
 			EditableBy: "platform-engineer", Confidence: 0.80, RequiresReview: true,
 		})
+		mountedFilePolicy := registry.InversePatchTemplateFor(g.Kind, "mounted_file", registry.InversePatchTemplate{
+			EditableBy: "app-team", Confidence: 0.83, RequiresReview: false,
+		})
 		defaultPolicy := registry.InversePatchTemplateFor(g.Kind, "platform_default", registry.InversePatchTemplate{
 			EditableBy: "platform-engineer", Confidence: 0.78, RequiresReview: true,
 		})
@@ -530,6 +533,15 @@ func defaultPatchesForGenerator(detection model.DetectionResult, g model.Generat
 				Confidence:     resourcePolicy.Confidence,
 				RequiresReview: resourcePolicy.RequiresReview,
 				Reason:         registry.InversePatchReason(g.Kind, "resource_limit", "Resource limits are environment/platform-owned policy defaults."),
+			},
+			{
+				Operation:      "replace",
+				DryPath:        "spec.containers.main.files.LOG_FORMAT.value",
+				WetPath:        "ConfigMap/data/LOG_FORMAT",
+				EditableBy:     mountedFilePolicy.EditableBy,
+				Confidence:     mountedFilePolicy.Confidence,
+				RequiresReview: mountedFilePolicy.RequiresReview,
+				Reason:         registry.InversePatchReason(g.Kind, "mounted_file", "Mounted files are app-owned Workload intent unless platform policy says otherwise."),
 			},
 			{
 				Operation:      "replace",

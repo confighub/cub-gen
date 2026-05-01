@@ -491,10 +491,12 @@ Total: 11
 ### Input Role Rules
 | Role | Exact basenames | Path prefixes | Prefixes | Extensions |
 | --- | --- | --- | --- | --- |
-| `workload` | - | - | workload- | .yaml, .yml |
-| `workload` | workload.yaml, workload.yml | - | - | - |
 | `component-type` | - | - | component-type- | .yaml, .yml |
 | `component-type` | component-type.yaml, component-type.yml | - | - | - |
+| `component` | - | - | component- | .yaml, .yml |
+| `component` | component.yaml, component.yml | - | - | - |
+| `workload` | - | - | workload- | .yaml, .yml |
+| `workload` | workload.yaml, workload.yml | - | - | - |
 | `release-binding` | - | - | release-binding- | .yaml, .yml |
 | `release-binding` | release-binding.yaml, release-binding.yml | - | - | - |
 | `secret-reference` | - | - | secret-reference- | .yaml, .yml |
@@ -506,6 +508,7 @@ Total: 11
 ### Role Owners
 | Role | Owner |
 | --- | --- |
+| `component` | `app-team` |
 | `component-type` | `platform-engineer` |
 | `release-binding` | `environment-owner` |
 | `rendered-manifest` | `platform-runtime` |
@@ -518,6 +521,7 @@ Total: 11
 | --- | --- | --- | --- |
 | `env_var` | `environment-owner` | 0.84 | `false` |
 | `image` | `app-team` | 0.88 | `false` |
+| `mounted_file` | `app-team` | 0.83 | `false` |
 | `platform_default` | `platform-engineer` | 0.78 | `true` |
 | `resource_limit` | `platform-engineer` | 0.80 | `true` |
 | `secret_ref` | `security-team` | 0.86 | `true` |
@@ -528,6 +532,7 @@ Total: 11
 | --- | --- | --- |
 | `env_var` | `environment-owner` | 0.84 |
 | `image` | `app-team` | 0.88 |
+| `mounted_file` | `app-team` | 0.83 |
 | `platform_default` | `platform-engineer` | 0.78 |
 | `resource_limit` | `platform-engineer` | 0.80 |
 | `secret_ref` | `security-team` | 0.86 |
@@ -538,6 +543,7 @@ Total: 11
 | --- | --- |
 | `env_var` | 0.84 |
 | `image` | 0.88 |
+| `mounted_file` | 0.83 |
 | `platform_default` | 0.78 |
 | `resource_limit` | 0.80 |
 | `secret_ref` | 0.86 |
@@ -558,6 +564,7 @@ Total: 11
 | --- | --- |
 | `env_var` | Environment values flow through the environment/release binding. |
 | `image` | Container image is app-owned Workload intent. |
+| `mounted_file` | Mounted files are app-owned Workload intent unless platform policy says otherwise. |
 | `platform_default` | Platform defaults are owned by the ComponentType or platform policy, not generated Deployment YAML. |
 | `resource_limit` | Resource limits are environment/platform-owned policy defaults. |
 | `secret_ref` | Secret references are security-owned bindings and should not be edited on generated resources. |
@@ -568,6 +575,7 @@ Total: 11
 | --- | --- |
 | `env_var` | Route: apply-here. Edit environment binding data in {{release_binding_path}}. |
 | `image` | Route: lift-upstream. Edit spec.containers.main.image in {{workload_path}}. |
+| `mounted_file` | Route: lift-upstream. Edit mounted file data in {{workload_path}}. |
 | `platform_default` | Route: block/escalate. Edit the platform default in {{component_type_path}} or platform policy, not the generated Deployment. |
 | `resource_limit` | Route: overlay. Keep this as an environment/platform overlay in {{release_binding_path}} or policy. |
 | `secret_ref` | Route: block/escalate. Edit {{secret_reference_path}} through the security-owned secret flow. |
@@ -579,6 +587,7 @@ Total: 11
 | `RenderedRelease` | `{{name}}-prod` | `platform-runtime` | `apps` | `spec` |
 | `Deployment` | `{{name}}` | `platform-runtime` | `apps` | `spec.containers.main.image` |
 | `Service` | `{{name}}` | `platform-runtime` | `apps` | `spec.service.port` |
+| `ConfigMap` | `{{name}}-files` | `platform-runtime` | `apps` | `spec.containers.main.files.LOG_FORMAT.value` |
 | `Secret` | `{{name}}-secret-ref` | `security-team` | `apps` | `spec.secretRef` |
 
 ### Rendered Lineage Templates
@@ -589,6 +598,7 @@ Total: 11
 | `Deployment` | `{{name}}` | `apps` | `release_binding_path` | `-` | `false` | `spec.environment.env.LOG_LEVEL` | `false` |
 | `Deployment` | `{{name}}` | `apps` | `secret_reference_path` | `-` | `false` | `spec.secretRef` | `false` |
 | `Service` | `{{name}}` | `apps` | `component_type_path` | `-` | `false` | `spec.service.port` | `false` |
+| `ConfigMap` | `{{name}}-files` | `apps` | `workload_path` | `-` | `false` | `spec.containers.main.files.LOG_FORMAT.value` | `false` |
 
 ## `opsworkflow`
 

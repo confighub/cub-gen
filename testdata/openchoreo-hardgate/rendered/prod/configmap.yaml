@@ -1,15 +1,11 @@
 apiVersion: v1
-kind: Service
+kind: ConfigMap
 metadata:
-  name: payments-api
+  name: payments-api-files
   namespace: apps-prod
   ownerReferences:
     - apiVersion: openchoreo.dev/v1alpha1
       kind: RenderedRelease
       name: payments-api-prod
-spec:
-  ports:
-    - name: http
-      port: 8080
-  selector:
-    app.kubernetes.io/name: payments-api
+data:
+  LOG_FORMAT: json

@@ -140,7 +140,7 @@ func TestImportRepoOpenChoreoHardGate(t *testing.T) {
 	if contract.Kind != string(model.GeneratorOpenChoreo) {
 		t.Fatalf("expected OpenChoreo contract, got %+v", contract)
 	}
-	if len(result.WetManifestTargets) != 8 {
+	if len(result.WetManifestTargets) != 10 {
 		t.Fatalf("expected dev+prod rendered target set, got %d: %+v", len(result.WetManifestTargets), result.WetManifestTargets)
 	}
 	if len(result.Provenance) != 1 {
@@ -158,11 +158,21 @@ func TestImportRepoOpenChoreoHardGate(t *testing.T) {
 		"spec.service.port":                                  "lift-upstream",
 		"spec.secretRef":                                     "block/escalate",
 		"spec.resources.limits.cpu":                          "overlay",
+		"spec.containers.main.files.LOG_FORMAT.value":        "lift-upstream",
 		"spec.runtime.defaults.securityContext.runAsNonRoot": "block/escalate",
 	} {
 		if routes[dryPath] != expectedRoute {
 			t.Fatalf("expected route %q for %s, got %q in %+v", expectedRoute, dryPath, routes[dryPath], routes)
 		}
+	}
+
+	if origin, ok := fieldOriginByWetPath(prov.FieldOriginMap, "ConfigMap/data/LOG_FORMAT"); !ok {
+		t.Fatalf("expected mounted file field origin, got %+v", prov.FieldOriginMap)
+	} else if origin.DryPath != "spec.containers.main.files.LOG_FORMAT.value" || origin.SourcePath != "workload-payments-api.yaml" {
+		t.Fatalf("unexpected mounted file field origin: %+v", origin)
+	}
+	if !wetTargetHasKindOwner(result.WetManifestTargets, "ConfigMap", "platform-runtime") {
+		t.Fatalf("expected generated ConfigMap target owned by platform-runtime, got %+v", result.WetManifestTargets)
 	}
 
 	sourceRoles := map[string]string{}

@@ -26,3 +26,11 @@ spec:
           resources:
             limits:
               cpu: "250m"
+          volumeMounts:
+            - name: workload-files
+              mountPath: /etc/payments/log-format
+              subPath: LOG_FORMAT
+      volumes:
+        - name: workload-files
+          configMap:
+            name: payments-api-files

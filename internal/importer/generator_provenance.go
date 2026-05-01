@@ -403,6 +403,13 @@ func fieldOriginsForGenerator(detection model.DetectionResult, g model.Generator
 				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "resource_limit", 0.80),
 			},
 			{
+				DryPath:    "spec.containers.main.files.LOG_FORMAT.value",
+				WetPath:    "ConfigMap/data/LOG_FORMAT",
+				SourcePath: hints.WorkloadPath,
+				Transform:  registry.FieldOriginTransform(g.Kind),
+				Confidence: registry.FieldOriginConfidenceFor(g.Kind, "mounted_file", 0.83),
+			},
+			{
 				DryPath:    "spec.runtime.defaults.securityContext.runAsNonRoot",
 				WetPath:    "Deployment/spec/template/spec/securityContext/runAsNonRoot",
 				SourcePath: hints.ComponentTypePath,
@@ -888,6 +895,9 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 		resourcePolicy := registry.InversePointerTemplateFor(g.Kind, "resource_limit", registry.InversePointerTemplate{
 			Owner: "platform-engineer", Confidence: 0.80,
 		})
+		mountedFilePolicy := registry.InversePointerTemplateFor(g.Kind, "mounted_file", registry.InversePointerTemplate{
+			Owner: "app-team", Confidence: 0.83,
+		})
 		defaultPolicy := registry.InversePointerTemplateFor(g.Kind, "platform_default", registry.InversePointerTemplate{
 			Owner: "platform-engineer", Confidence: 0.78,
 		})
@@ -937,6 +947,14 @@ func inversePointersForGenerator(detection model.DetectionResult, g model.Genera
 				Route:      "overlay",
 				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "resource_limit", "Route: overlay. Keep this as an environment/platform overlay in {{release_binding_path}} or policy."), vars),
 				Confidence: resourcePolicy.Confidence,
+			},
+			{
+				WetPath:    "ConfigMap/data/LOG_FORMAT",
+				DryPath:    "spec.containers.main.files.LOG_FORMAT.value",
+				Owner:      mountedFilePolicy.Owner,
+				Route:      "lift-upstream",
+				EditHint:   renderTargetTemplate(registry.InverseEditHint(g.Kind, "mounted_file", "Route: lift-upstream. Edit mounted file data in {{workload_path}}."), vars),
+				Confidence: mountedFilePolicy.Confidence,
 			},
 			{
 				WetPath:    "Deployment/spec/template/spec/securityContext/runAsNonRoot",
