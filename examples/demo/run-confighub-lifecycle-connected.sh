@@ -15,6 +15,7 @@ SPACE="${SPACE:-}"
 VERIFIER="${VERIFIER:-ci-bot}"
 BRIDGE_INGEST_ENDPOINT="${BRIDGE_INGEST_ENDPOINT:-}"
 BRIDGE_DECISION_ENDPOINT="${BRIDGE_DECISION_ENDPOINT:-}"
+BRIDGE_INGEST_PREFLIGHT_TIMEOUT_SECS="${BRIDGE_INGEST_PREFLIGHT_TIMEOUT_SECS:-5}"
 DECISION_POLL_TIMEOUT_SECS="${DECISION_POLL_TIMEOUT_SECS:-120}"
 DECISION_POLL_INTERVAL_SECS="${DECISION_POLL_INTERVAL_SECS:-3}"
 REQUIRE_TERMINAL_DECISION="${REQUIRE_TERMINAL_DECISION:-1}"
@@ -92,6 +93,97 @@ should_use_fallback() {
       ;;
     *)
       echo "error: unsupported CONNECTED_FALLBACK_MODE=$CONNECTED_FALLBACK_MODE (expected off|auto|changeset)" >&2
+      return 1
+      ;;
+  esac
+}
+
+bridge_ingest_endpoint_path() {
+  if [ -n "$BRIDGE_INGEST_ENDPOINT" ]; then
+    case "$BRIDGE_INGEST_ENDPOINT" in
+      /*) printf '%s' "$BRIDGE_INGEST_ENDPOINT" ;;
+      *) printf '/%s' "$BRIDGE_INGEST_ENDPOINT" ;;
+    esac
+    return 0
+  fi
+  printf '%s' "/api/v1/governed-wet-artifacts:ingest"
+}
+
+bridge_ingest_url() {
+  local base path
+  base="${CONFIGHUB_BASE_URL%/}"
+  path="$(bridge_ingest_endpoint_path)"
+  printf '%s%s' "$base" "$path"
+}
+
+preflight_bridge_ingest_endpoint() {
+  case "$CONNECTED_FALLBACK_MODE" in
+    changeset)
+      echo "[connected] bridge ingest preflight: skipped (CONNECTED_FALLBACK_MODE=changeset)"
+      return 0
+      ;;
+    off|auto) ;;
+    *)
+      echo "error: unsupported CONNECTED_FALLBACK_MODE=$CONNECTED_FALLBACK_MODE (expected off|auto|changeset)" >&2
+      return 1
+      ;;
+  esac
+
+  require_cmd curl
+
+  local url status tmp_body tmp_err body err
+  url="$(bridge_ingest_url)"
+  tmp_body="$(mktemp)"
+  tmp_err="$(mktemp)"
+  status="$(
+    curl -sS \
+      --max-time "$BRIDGE_INGEST_PREFLIGHT_TIMEOUT_SECS" \
+      -o "$tmp_body" \
+      -w "%{http_code}" \
+      -X POST "$url" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $CONFIGHUB_TOKEN" \
+      -H "Idempotency-Key: cub-gen-ingest-preflight" \
+      --data '{"schema_version":"cub.confighub.io/bridge-ingest-preflight/v1","source":"cub-gen-preflight"}' \
+      2>"$tmp_err" || true
+  )"
+  body="$(tr '\n' ' ' < "$tmp_body" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+  err="$(tr '\n' ' ' < "$tmp_err" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+  rm -f "$tmp_body" "$tmp_err"
+
+  case "$status" in
+    200|201|202|400|405|409|415|422)
+      echo "[connected] bridge ingest preflight: endpoint reachable ($status) at $url"
+      return 0
+      ;;
+    404)
+      if [ "$CONNECTED_FALLBACK_MODE" = "auto" ]; then
+        echo "[connected] bridge ingest preflight: endpoint not found at $url; using changeset fallback"
+        CONNECTED_FALLBACK_MODE=changeset
+        export CONNECTED_FALLBACK_MODE
+        return 0
+      fi
+      echo "error: bridge ingest endpoint is not available at $url (status=404)." >&2
+      echo "details: ${body:-Not Found}" >&2
+      echo "remediation: set BRIDGE_INGEST_ENDPOINT to a backend path that exposes ingest, use CONNECTED_FALLBACK_MODE=auto|changeset, or start with ./examples/demo/run-connected-smoke.sh for SaaS-safe connected proof." >&2
+      return 1
+      ;;
+    401|403)
+      echo "error: bridge ingest preflight was rejected at $url (status=$status)." >&2
+      echo "details: ${body:-$err}" >&2
+      echo "remediation: refresh ConfigHub auth with 'cub auth login' or export a CONFIGHUB_TOKEN with bridge ingest permissions." >&2
+      return 1
+      ;;
+    000|"")
+      echo "error: bridge ingest preflight could not reach $url." >&2
+      echo "details: ${err:-curl returned no HTTP status}" >&2
+      echo "remediation: verify CONFIGHUB_BASE_URL, network access, and BRIDGE_INGEST_ENDPOINT; use CONNECTED_FALLBACK_MODE=changeset only when you intentionally want the backend changeset fallback." >&2
+      return 1
+      ;;
+    *)
+      echo "error: bridge ingest preflight failed at $url (status=$status)." >&2
+      echo "details: ${body:-$err}" >&2
+      echo "remediation: ensure the configured backend exposes the bridge ingest endpoint or set CONNECTED_FALLBACK_MODE=auto|changeset for fallback evidence." >&2
       return 1
       ;;
   esac
@@ -220,7 +312,12 @@ run_governed_cycle_connected() {
   fi
   local used_fallback=0
   local bridge_ingest_error=""
-  if ! "${ingest_cmd[@]}" > "$outdir/ingest.json" 2>"$outdir/ingest.error"; then
+  if [ "$CONNECTED_FALLBACK_MODE" = "changeset" ]; then
+    bridge_ingest_error="bridge ingest skipped by CONNECTED_FALLBACK_MODE=changeset"
+    echo "[connected][$phase] using changeset-backed fallback; bridge ingest skipped"
+    run_changeset_fallback "$phase" "$outdir" "$bridge_ingest_error"
+    used_fallback=1
+  elif ! "${ingest_cmd[@]}" > "$outdir/ingest.json" 2>"$outdir/ingest.error"; then
     bridge_ingest_error="$(tr '\n' ' ' < "$outdir/ingest.error" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
     if should_use_fallback "$bridge_ingest_error"; then
       echo "[connected][$phase] bridge ingest unavailable; using changeset-backed fallback"
@@ -330,6 +427,8 @@ summary_line() {
     --argjson attested_valid "$(jq '.valid' "$outdir/attestation-verify.json")" \
     '{phase: $phase, change_id: $change_id, bundle_digest: $bundle_digest, ingest_status: $ingest_status, decision_state: $decision_state, decision_authority: $decision_authority, wet_targets: $wet_targets, inverse_patches: $inverse_patches, attestation_valid: $attested_valid}'
 }
+
+preflight_bridge_ingest_endpoint
 
 echo "[lifecycle][connected] example: $EXAMPLE_SLUG"
 echo "[lifecycle][connected] source: $REPO_PATH"

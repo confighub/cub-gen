@@ -208,9 +208,14 @@ not the release-facing default connected path.
 
 | Mode | Behavior |
 |------|----------|
-| Default (`CONNECTED_FALLBACK_MODE=off`) | Fail fast unless bridge endpoints are reachable |
-| Auto fallback (`CONNECTED_FALLBACK_MODE=auto`) | Fall back to backend `changeset` on 404 |
-| Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`) | Always use backend fallback (troubleshooting) |
+| Default (`CONNECTED_FALLBACK_MODE=off`) | Preflight the bridge ingest endpoint and fail before bundle work if it is unavailable |
+| Auto fallback (`CONNECTED_FALLBACK_MODE=auto`) | Preflight bridge ingest; use backend `changeset` fallback on 404 |
+| Forced fallback (`CONNECTED_FALLBACK_MODE=changeset`) | Skip bridge ingest and always use backend fallback (troubleshooting) |
+
+`run-confighub-lifecycle-connected.sh` probes the configured ingest endpoint
+before it runs discover/import/publish. This keeps SaaS users from doing a long
+successful-looking setup only to hit a final bridge-only 404. Use
+`run-connected-smoke.sh` for the standard SaaS-safe connected proof lane.
 
 CI behavior:
 - `make ci-connected` runs the smaller ConfigHub smoke lane and does not touch bridge endpoints

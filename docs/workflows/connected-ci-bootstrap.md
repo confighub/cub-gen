@@ -83,6 +83,12 @@ This explicitly enables:
 - `ALLOW_FALLBACK_INGEST=1`
 - `ALLOW_STORY_10_SKIP=1`
 
+The deep lifecycle wrapper preflights the bridge ingest endpoint before it
+builds bundles. With the default `CONNECTED_FALLBACK_MODE=off`, a missing
+bridge endpoint fails immediately with remediation. With
+`CONNECTED_FALLBACK_MODE=auto`, a 404 switches to changeset fallback before the
+create/update phases run.
+
 ## 6) PR DRY ownership gate (WET edit blocker)
 
 Use the dedicated workflow:
