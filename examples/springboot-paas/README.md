@@ -292,6 +292,30 @@ field route when `--routes` is provided.
 
 This is a client-side gate. Integrate it into CI/CD to enforce the boundary before mutations reach ConfigHub.
 
+## Normalize preview
+
+`normalize preview` shows how cub-gen turns this example's implicit platform
+rules into a reviewable patch set:
+
+```bash
+cub-gen normalize preview --patch --space platform ./examples/springboot-paas
+```
+
+The preview creates sidecar proposals under `.cub-gen/normalize/`; it does not
+change app code, platform code, rendered YAML, or ConfigHub state.
+
+| Proposal | Why it matters |
+|----------|----------------|
+| route-policy annotation | turns `operational/field-routes.yaml` into ConfigHub Unit metadata for apply-here / lift-upstream / generator-owned decisions |
+| lift-upstream routes | tells reviewers which rendered edits should become source PRs |
+| deployable variants | makes dev/stage/prod profile files visible as Deployable Variants |
+| owner annotations | carries app/platform ownership into reviewable metadata |
+| secret references | replaces literal datasource wiring with an explicit SecretReference proposal |
+
+This is the "clean generator" path in miniature: keep the Component source,
+name the Deployable Variants, route changes to the right layer, and produce
+Proof before anything is applied.
+
 ## Real Kubernetes deployment
 
 Deploy the real app to a Kind cluster and verify via HTTP:
@@ -350,6 +374,7 @@ HTTP-level tests verify both dev profile (optimistic mode, no cache) and prod pr
 | Structural proof (verify.sh) | Real |
 | Lift-upstream Redis bundle | Real (bundle only, no automated PR) |
 | Block/escalate boundary | Real (documented, not server-enforced) |
+| Normalize preview patch set | Real (review-only sidecar proposals) |
 | Refresh-survival preview | Real (client-side simulation) |
 | Generator visibility (explain-field) | Real |
 | Cross-environment comparison | Real (with fixture fallback) |

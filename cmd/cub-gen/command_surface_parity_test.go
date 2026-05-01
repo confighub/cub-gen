@@ -49,6 +49,11 @@ func TestTopLevelCommandGoldenHelp(t *testing.T) {
 			stdoutGolden: filepath.Join("testdata", "parity", "enrich-help.stdout.golden.txt"),
 		},
 		{
+			name:         "normalize-help",
+			args:         []string{"normalize", "--help"},
+			stdoutGolden: filepath.Join("testdata", "parity", "normalize-help.stdout.golden.txt"),
+		},
+		{
 			name:         "platform-help",
 			args:         []string{"platform", "--help"},
 			stdoutGolden: filepath.Join("testdata", "parity", "platform-help.stdout.golden.txt"),
@@ -121,6 +126,11 @@ func TestTopLevelCommandErrorModes(t *testing.T) {
 			name: "enrich-missing-subcommand",
 			args: []string{"enrich"},
 			sub:  "enrich subcommand required",
+		},
+		{
+			name: "normalize-missing-subcommand",
+			args: []string{"normalize"},
+			sub:  "normalize subcommand required",
 		},
 		{
 			name: "platform-missing-subcommand",

@@ -17,6 +17,7 @@ not cluster/runtime ones.
 | Which rendered fields would this DRY path affect? | `change impact` |
 | What evidence bundle and safe next step should I prepare? | `change preview` |
 | How do I add provenance to a PR without editing manifests? | `enrich preview`, then optionally `enrich write` |
+| How do I turn implicit platform rules into reviewable config proposals? | `normalize preview` |
 | How do I see a multi-repo platform estate? | `platform import` |
 | How do I emit one proof bundle per environment or tenant? | `platform fanout` |
 | What evidence bundle should I verify or ship? | `publish -> verify -> attest` |
@@ -201,6 +202,44 @@ cub-gen enrich write --space <space> [--where-resource <expr>] <target-path> [<r
 `enrich write` creates only sidecar files under `.cub-gen/enrichment/`. It does
 not annotate or rewrite app manifests. It refuses to overwrite an existing
 sidecar so provenance updates stay explicit and reviewable.
+
+---
+
+## Normalize
+
+### `normalize preview`
+
+Preview governed config rewrite proposals without applying them.
+
+```
+cub-gen normalize preview --space <space> [--json|--patch] [--where-resource <expr>] <target-path> [<render-target-path>]
+```
+
+Use this after import/enrichment when the generator works but important product
+boundaries are still implicit. The command emits one reviewable patch set under
+`.cub-gen/normalize/`; it does not edit app source, platform source, rendered
+manifests, or ConfigHub Units.
+
+Current proposal types:
+
+| Transform | What it makes explicit |
+|---|---|
+| `add-route-policy-annotation` | ConfigHub Unit route policy annotations from field-route metadata |
+| `lift-generated-patch-to-source` | source files that should receive durable changes instead of generated YAML |
+| `split-env-values-into-variants` | Deployable Variant inventory from environment/profile files |
+| `add-missing-owners` | owner annotations from generator provenance and rendered resources |
+| `replace-implicit-secret-wiring` | explicit secret-reference proposals for literal secret-shaped env values |
+
+Example:
+
+```
+cub-gen normalize preview --patch --space platform ./examples/springboot-paas
+```
+
+The Spring Boot example produces proposals for route enforcement,
+lift-upstream cache changes, dev/stage/prod variants, owner annotations, and a
+datasource SecretReference candidate. Unknown repos degrade to a no-op preview
+with a `NO_KNOWN_PATTERNS` diagnostic.
 
 ---
 

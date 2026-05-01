@@ -179,6 +179,17 @@ To make proof visible in a pull request without editing app manifests:
 under `.cub-gen/enrichment/` and refuses to overwrite existing artifacts; a
 conflict becomes `review-required`.
 
+To propose governed cleanups without touching source or rendered YAML:
+
+```bash
+./cub-gen normalize preview --space platform --patch ./examples/springboot-paas
+```
+
+`normalize preview` emits review-only sidecar proposals under
+`.cub-gen/normalize/`. In the Spring example it proposes route policy
+annotations, lift-upstream source routing, dev/stage/prod Deployable Variants,
+owner annotations, and an explicit datasource SecretReference candidate.
+
 ## Core capabilities
 
 | Capability | Plain English |
@@ -190,6 +201,7 @@ conflict becomes `review-required`.
 | Trace | Map rendered fields back to source files |
 | Explain | Say who owns the field and where to edit it |
 | Enrich | Create PR-friendly sidecar proof with source links, owners, route badges, and PR/MR link metadata |
+| Normalize | Propose reviewable cleanups when platform rules, owners, variants, or secret wiring are implicit |
 | Prove | Produce a reviewable bundle for local review, GitHub PRs, or ConfigHub |
 
 ## First runs
