@@ -1,6 +1,8 @@
 # OpenChoreo as a Clean Generator
 
-Status: worked example, not yet an implemented `cub-gen` adapter.
+Status: worked example plus fixture-backed hardgate support. `cub-gen` can
+detect and import the OpenChoreo-shaped fixture in `testdata/openchoreo-hardgate`;
+that is not the same as full upstream OpenChoreo conformance.
 
 This example uses OpenChoreo to teach the distinction between a brittle platform
 abstraction and a clean platform generator.
@@ -145,8 +147,9 @@ The platform `ComponentType` decides how those inputs become `Deployment`,
 
 ## Field-Origin Map
 
-For this component, an OpenChoreo-aware `cub-gen` adapter would emit a field map
-like this.
+For this component shape, the fixture-backed OpenChoreo path emits field routes
+like this. Real OpenChoreo estate support still needs broader upstream
+conformance and repo-shape testing.
 
 | Rendered field | Value | Source object | Source path | Owner | Route |
 |---|---:|---|---|---|---|
@@ -246,7 +249,7 @@ sequenceDiagram
 
 | Capability | Status in cub-gen today | OpenChoreo-specific status |
 |---|---|---|
-| Generator contract triple | implemented for current generator families | fixture-backed initial adapter |
+| Generator contract triple | implemented for current generator families | fixture-backed hardgate support; not full upstream conformance |
 | Field-origin and inverse edit pointers | implemented for current generator families | field routes proved by `testdata/openchoreo-hardgate` |
 | Apply-here / lift-upstream / block-escalate teaching model | strongest in Spring examples | model maps cleanly |
 | PR/MR linkage contract | commands and demos exist | OC wiring needed |
