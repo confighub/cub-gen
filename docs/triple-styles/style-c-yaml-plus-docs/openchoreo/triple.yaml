@@ -12,16 +12,6 @@ contract:
   default_input_role: "openchoreo-input"
   default_owner: "platform-engineer"
   input_role_rules:
-    - role: "workload"
-      prefixes:
-        - "workload-"
-      extensions:
-        - ".yaml"
-        - ".yml"
-    - role: "workload"
-      exact_basenames:
-        - "workload.yaml"
-        - "workload.yml"
     - role: "component-type"
       prefixes:
         - "component-type-"
@@ -32,6 +22,26 @@ contract:
       exact_basenames:
         - "component-type.yaml"
         - "component-type.yml"
+    - role: "component"
+      prefixes:
+        - "component-"
+      extensions:
+        - ".yaml"
+        - ".yml"
+    - role: "component"
+      exact_basenames:
+        - "component.yaml"
+        - "component.yml"
+    - role: "workload"
+      prefixes:
+        - "workload-"
+      extensions:
+        - ".yaml"
+        - ".yml"
+    - role: "workload"
+      exact_basenames:
+        - "workload.yaml"
+        - "workload.yml"
     - role: "release-binding"
       prefixes:
         - "release-binding-"
@@ -69,6 +79,7 @@ contract:
         - ".yaml"
         - ".yml"
   role_owners:
+    component: "app-team"
     component-type: "platform-engineer"
     release-binding: "environment-owner"
     rendered-manifest: "platform-runtime"
@@ -76,6 +87,7 @@ contract:
     secret-reference: "security-team"
     workload: "app-team"
   role_schema_refs:
+    component: "https://schema.confighub.dev/generators/openchoreo-component-v1"
     component-type: "https://schema.confighub.dev/generators/openchoreo-component-type-v1"
     release-binding: "https://schema.confighub.dev/generators/openchoreo-release-binding-v1"
     rendered-manifest: "https://schema.confighub.dev/kubernetes/resource-v1"
@@ -98,6 +110,11 @@ contract:
       owner: "platform-runtime"
       namespace: "apps"
       source_dry_path_template: "spec.service.port"
+    - kind: "ConfigMap"
+      name_template: "{{name}}-files"
+      owner: "platform-runtime"
+      namespace: "apps"
+      source_dry_path_template: "spec.containers.main.files.LOG_FORMAT.value"
     - kind: "Secret"
       name_template: "{{name}}-secret-ref"
       owner: "security-team"
@@ -109,6 +126,7 @@ provenance:
   field_origin_confidences:
     env_var: 0.84
     image: 0.88
+    mounted_file: 0.83
     platform_default: 0.78
     resource_limit: 0.80
     secret_ref: 0.86
@@ -139,6 +157,11 @@ provenance:
       namespace: "apps"
       source_path_hint: "component_type_path"
       source_dry_path_template: "spec.service.port"
+    - kind: "ConfigMap"
+      name_template: "{{name}}-files"
+      namespace: "apps"
+      source_path_hint: "workload_path"
+      source_dry_path_template: "spec.containers.main.files.LOG_FORMAT.value"
 inverse:
   inverse_patch_templates:
     env_var:
@@ -147,6 +170,9 @@ inverse:
     image:
       editable_by: "app-team"
       confidence: 0.88
+    mounted_file:
+      editable_by: "app-team"
+      confidence: 0.83
     platform_default:
       editable_by: "platform-engineer"
       confidence: 0.78
@@ -170,6 +196,9 @@ inverse:
     image:
       owner: "app-team"
       confidence: 0.88
+    mounted_file:
+      owner: "app-team"
+      confidence: 0.83
     platform_default:
       owner: "platform-engineer"
       confidence: 0.78
@@ -185,6 +214,7 @@ inverse:
   inverse_patch_reasons:
     env_var: "Environment values flow through the environment/release binding."
     image: "Container image is app-owned Workload intent."
+    mounted_file: "Mounted files are app-owned Workload intent unless platform policy says otherwise."
     platform_default: "Platform defaults are owned by the ComponentType or platform policy, not generated Deployment YAML."
     resource_limit: "Resource limits are environment/platform-owned policy defaults."
     secret_ref: "Secret references are security-owned bindings and should not be edited on generated resources."
@@ -192,6 +222,7 @@ inverse:
   inverse_edit_hints:
     env_var: "Route: apply-here. Edit environment binding data in {{release_binding_path}}."
     image: "Route: lift-upstream. Edit spec.containers.main.image in {{workload_path}}."
+    mounted_file: "Route: lift-upstream. Edit mounted file data in {{workload_path}}."
     platform_default: "Route: block/escalate. Edit the platform default in {{component_type_path}} or platform policy, not the generated Deployment."
     resource_limit: "Route: overlay. Keep this as an environment/platform overlay in {{release_binding_path}} or policy."
     secret_ref: "Route: block/escalate. Edit {{secret_reference_path}} through the security-owned secret flow."

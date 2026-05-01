@@ -470,6 +470,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		ResourceType: "openchoreo.dev/v1alpha1/Workload",
 		Capabilities: []string{"platform-crds", "rendered-release", "generated-resource-ownership", "inverse-route-patch", "adoption-report"},
 		RoleSchemaRefs: map[string]string{
+			"component":         "https://schema.confighub.dev/generators/openchoreo-component-v1",
 			"workload":          "https://schema.confighub.dev/generators/openchoreo-workload-v1",
 			"component-type":    "https://schema.confighub.dev/generators/openchoreo-component-type-v1",
 			"release-binding":   "https://schema.confighub.dev/generators/openchoreo-release-binding-v1",
@@ -491,6 +492,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"service_port":     "Service port is constrained by the ComponentType platform contract.",
 			"secret_ref":       "Secret references are security-owned bindings and should not be edited on generated resources.",
 			"resource_limit":   "Resource limits are environment/platform-owned policy defaults.",
+			"mounted_file":     "Mounted files are app-owned Workload intent unless platform policy says otherwise.",
 			"platform_default": "Platform defaults are owned by the ComponentType or platform policy, not generated Deployment YAML.",
 		},
 		InverseEditHints: map[string]string{
@@ -499,6 +501,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"service_port":     "Route: lift-upstream. Edit the service port contract in {{component_type_path}}.",
 			"secret_ref":       "Route: block/escalate. Edit {{secret_reference_path}} through the security-owned secret flow.",
 			"resource_limit":   "Route: overlay. Keep this as an environment/platform overlay in {{release_binding_path}} or policy.",
+			"mounted_file":     "Route: lift-upstream. Edit mounted file data in {{workload_path}}.",
 			"platform_default": "Route: block/escalate. Edit the platform default in {{component_type_path}} or platform policy, not the generated Deployment.",
 		},
 		InversePatchTemplates: map[string]InversePatchTemplate{
@@ -507,6 +510,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"service_port":     {EditableBy: "platform-engineer", Confidence: 0.82, RequiresReview: true},
 			"secret_ref":       {EditableBy: "security-team", Confidence: 0.86, RequiresReview: true},
 			"resource_limit":   {EditableBy: "platform-engineer", Confidence: 0.80, RequiresReview: true},
+			"mounted_file":     {EditableBy: "app-team", Confidence: 0.83, RequiresReview: false},
 			"platform_default": {EditableBy: "platform-engineer", Confidence: 0.78, RequiresReview: true},
 		},
 		InversePointerTemplates: map[string]InversePointerTemplate{
@@ -515,6 +519,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"service_port":     {Owner: "platform-engineer", Confidence: 0.82},
 			"secret_ref":       {Owner: "security-team", Confidence: 0.86},
 			"resource_limit":   {Owner: "platform-engineer", Confidence: 0.80},
+			"mounted_file":     {Owner: "app-team", Confidence: 0.83},
 			"platform_default": {Owner: "platform-engineer", Confidence: 0.78},
 		},
 		FieldOriginConfidences: map[string]float64{
@@ -523,6 +528,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			"service_port":     0.82,
 			"secret_ref":       0.86,
 			"resource_limit":   0.80,
+			"mounted_file":     0.83,
 			"platform_default": 0.78,
 		},
 		RenderedLineageTemplates: []RenderedLineageTemplate{
@@ -531,14 +537,17 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			{Kind: "Deployment", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "release_binding_path", SourceDryPathTemplate: "spec.environment.env.LOG_LEVEL"},
 			{Kind: "Deployment", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "secret_reference_path", SourceDryPathTemplate: "spec.secretRef"},
 			{Kind: "Service", NameTemplate: "{{name}}", Namespace: "apps", SourcePathHint: "component_type_path", SourceDryPathTemplate: "spec.service.port"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-files", Namespace: "apps", SourcePathHint: "workload_path", SourceDryPathTemplate: "spec.containers.main.files.LOG_FORMAT.value"},
 		},
 		FieldOriginTransform:        "openchoreo-release-render",
 		FieldOriginOverlayTransform: "openchoreo-environment-binding",
 		InputRoleRules: []InputRoleRule{
-			{Role: "workload", Prefixes: []string{"workload-"}, Extensions: []string{".yaml", ".yml"}},
-			{Role: "workload", ExactBasenames: []string{"workload.yaml", "workload.yml"}},
 			{Role: "component-type", Prefixes: []string{"component-type-"}, Extensions: []string{".yaml", ".yml"}},
 			{Role: "component-type", ExactBasenames: []string{"component-type.yaml", "component-type.yml"}},
+			{Role: "component", Prefixes: []string{"component-"}, Extensions: []string{".yaml", ".yml"}},
+			{Role: "component", ExactBasenames: []string{"component.yaml", "component.yml"}},
+			{Role: "workload", Prefixes: []string{"workload-"}, Extensions: []string{".yaml", ".yml"}},
+			{Role: "workload", ExactBasenames: []string{"workload.yaml", "workload.yml"}},
 			{Role: "release-binding", Prefixes: []string{"release-binding-"}, Extensions: []string{".yaml", ".yml"}},
 			{Role: "release-binding", ExactBasenames: []string{"release-binding.yaml", "release-binding.yml"}},
 			{Role: "secret-reference", Prefixes: []string{"secret-reference-"}, Extensions: []string{".yaml", ".yml"}},
@@ -549,6 +558,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 		},
 		DefaultInputRole: "openchoreo-input",
 		RoleOwners: map[string]string{
+			"component":         "app-team",
 			"workload":          "app-team",
 			"component-type":    "platform-engineer",
 			"release-binding":   "environment-owner",
@@ -561,6 +571,7 @@ var familySpecs = map[model.GeneratorKind]FamilySpec{
 			{Kind: "RenderedRelease", NameTemplate: "{{name}}-prod", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "spec"},
 			{Kind: "Deployment", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "spec.containers.main.image"},
 			{Kind: "Service", NameTemplate: "{{name}}", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "spec.service.port"},
+			{Kind: "ConfigMap", NameTemplate: "{{name}}-files", Owner: "platform-runtime", Namespace: "apps", SourceDryPathTemplate: "spec.containers.main.files.LOG_FORMAT.value"},
 			{Kind: "Secret", NameTemplate: "{{name}}-secret-ref", Owner: "security-team", Namespace: "apps", SourceDryPathTemplate: "spec.secretRef"},
 		},
 	},

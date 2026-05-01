@@ -911,6 +911,7 @@
         "field_origin_confidences": {
           "env_var": 0.84,
           "image": 0.88,
+          "mounted_file": 0.83,
           "platform_default": 0.78,
           "resource_limit": 0.8,
           "secret_ref": 0.86,
@@ -933,23 +934,6 @@
               ".yml"
             ],
             "prefixes": [
-              "workload-"
-            ],
-            "role": "workload"
-          },
-          {
-            "exact_basenames": [
-              "workload.yaml",
-              "workload.yml"
-            ],
-            "role": "workload"
-          },
-          {
-            "extensions": [
-              ".yaml",
-              ".yml"
-            ],
-            "prefixes": [
               "component-type-"
             ],
             "role": "component-type"
@@ -960,6 +944,40 @@
               "component-type.yml"
             ],
             "role": "component-type"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "component-"
+            ],
+            "role": "component"
+          },
+          {
+            "exact_basenames": [
+              "component.yaml",
+              "component.yml"
+            ],
+            "role": "component"
+          },
+          {
+            "extensions": [
+              ".yaml",
+              ".yml"
+            ],
+            "prefixes": [
+              "workload-"
+            ],
+            "role": "workload"
+          },
+          {
+            "exact_basenames": [
+              "workload.yaml",
+              "workload.yml"
+            ],
+            "role": "workload"
           },
           {
             "extensions": [
@@ -1026,6 +1044,7 @@
         "inverse_edit_hints": {
           "env_var": "Route: apply-here. Edit environment binding data in {{release_binding_path}}.",
           "image": "Route: lift-upstream. Edit spec.containers.main.image in {{workload_path}}.",
+          "mounted_file": "Route: lift-upstream. Edit mounted file data in {{workload_path}}.",
           "platform_default": "Route: block/escalate. Edit the platform default in {{component_type_path}} or platform policy, not the generated Deployment.",
           "resource_limit": "Route: overlay. Keep this as an environment/platform overlay in {{release_binding_path}} or policy.",
           "secret_ref": "Route: block/escalate. Edit {{secret_reference_path}} through the security-owned secret flow.",
@@ -1034,6 +1053,7 @@
         "inverse_patch_reasons": {
           "env_var": "Environment values flow through the environment/release binding.",
           "image": "Container image is app-owned Workload intent.",
+          "mounted_file": "Mounted files are app-owned Workload intent unless platform policy says otherwise.",
           "platform_default": "Platform defaults are owned by the ComponentType or platform policy, not generated Deployment YAML.",
           "resource_limit": "Resource limits are environment/platform-owned policy defaults.",
           "secret_ref": "Secret references are security-owned bindings and should not be edited on generated resources.",
@@ -1047,6 +1067,11 @@
           },
           "image": {
             "confidence": 0.88,
+            "editable_by": "app-team",
+            "requires_review": false
+          },
+          "mounted_file": {
+            "confidence": 0.83,
             "editable_by": "app-team",
             "requires_review": false
           },
@@ -1078,6 +1103,10 @@
           },
           "image": {
             "confidence": 0.88,
+            "owner": "app-team"
+          },
+          "mounted_file": {
+            "confidence": 0.83,
             "owner": "app-team"
           },
           "platform_default": {
@@ -1132,9 +1161,17 @@
             "namespace": "apps",
             "source_dry_path_template": "spec.service.port",
             "source_path_hint": "component_type_path"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-files",
+            "namespace": "apps",
+            "source_dry_path_template": "spec.containers.main.files.LOG_FORMAT.value",
+            "source_path_hint": "workload_path"
           }
         ],
         "role_owners": {
+          "component": "app-team",
           "component-type": "platform-engineer",
           "release-binding": "environment-owner",
           "rendered-manifest": "platform-runtime",
@@ -1163,6 +1200,13 @@
             "namespace": "apps",
             "owner": "platform-runtime",
             "source_dry_path_template": "spec.service.port"
+          },
+          {
+            "kind": "ConfigMap",
+            "name_template": "{{name}}-files",
+            "namespace": "apps",
+            "owner": "platform-runtime",
+            "source_dry_path_template": "spec.containers.main.files.LOG_FORMAT.value"
           },
           {
             "kind": "Secret",

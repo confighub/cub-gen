@@ -10,3 +10,4 @@ spec:
     objects:
       - Deployment/payments-api
       - Service/payments-api
+      - ConfigMap/payments-api-files

@@ -345,11 +345,64 @@ func TestScanRepoOpenChoreoHardGate(t *testing.T) {
 		"envs/prod/release-binding-prod.yaml",
 		"rendered/dev/rendered-release-dev.yaml",
 		"rendered/prod/rendered-release-prod.yaml",
+		"rendered/dev/configmap.yaml",
+		"rendered/prod/configmap.yaml",
 		"rendered/prod/deployment.yaml",
 	} {
 		if !containsSuffix(g.Inputs, expected) {
 			t.Fatalf("expected inputs to contain %q; got %v", expected, g.Inputs)
 		}
+	}
+}
+
+func TestScanRepoOpenChoreoRejectsUnsupportedVersion(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	mustWriteDetectFile(t, filepath.Join(repo, "workload.yaml"), "apiVersion: openchoreo.dev/v9alpha1\nkind: Workload\nmetadata:\n  name: payments-api\n")
+
+	_, err := ScanRepo(repo, "main")
+	if err == nil {
+		t.Fatal("expected unsupported OpenChoreo apiVersion error")
+	}
+	if !strings.Contains(err.Error(), "unsupported_openchoreo_api_version") {
+		t.Fatalf("expected unsupported apiVersion diagnostic, got %q", err.Error())
+	}
+}
+
+func TestScanRepoOpenChoreoRejectsMissingComponentType(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	mustWriteDetectFile(t, filepath.Join(repo, "workload-payments-api.yaml"), `apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: payments-api
+spec:
+  secretRef: payments-db
+`)
+	mustWriteDetectFile(t, filepath.Join(repo, "secret-reference-payments-db.yaml"), `apiVersion: openchoreo.dev/v1alpha1
+kind: SecretReference
+metadata:
+  name: payments-db
+`)
+	mustWriteDetectFile(t, filepath.Join(repo, "envs", "prod", "release-binding-prod.yaml"), `apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: payments-api-prod
+`)
+	mustWriteDetectFile(t, filepath.Join(repo, "rendered", "prod", "rendered-release-prod.yaml"), `apiVersion: openchoreo.dev/v1alpha1
+kind: RenderedRelease
+metadata:
+  name: payments-api-prod
+`)
+
+	_, err := ScanRepo(repo, "main")
+	if err == nil {
+		t.Fatal("expected missing ComponentType error")
+	}
+	if !strings.Contains(err.Error(), "missing_component_type") {
+		t.Fatalf("expected missing ComponentType diagnostic, got %q", err.Error())
 	}
 }
 

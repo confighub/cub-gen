@@ -163,9 +163,10 @@ For an OpenChoreo-shaped platform, start read-only:
 
 That fixture proves the hard case: `Workload`, `ComponentType`,
 `ReleaseBinding`, `SecretReference`, `RenderedRelease`, and generated
-Kubernetes resources. The report names source owners and routes generated
-Deployment edits as `apply-here`, `lift-upstream`, `overlay`, or
-`block/escalate`.
+Kubernetes resources, including a mounted-file `ConfigMap`. The report names
+source owners and routes generated edits as `apply-here`, `lift-upstream`,
+`overlay`, or `block/escalate`; unsupported OC shapes fail explicitly instead
+of inventing lineage.
 
 To make proof visible in a pull request without editing app manifests:
 

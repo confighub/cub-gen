@@ -278,7 +278,7 @@ func renderedLineageForGenerator(detection model.DetectionResult, g model.Genera
 
 func openChoreoWetManifestTargets(g model.GeneratorDetection) []model.WetManifestTarget {
 	hints := openChoreoPathHintsFromInputs(g.Inputs)
-	out := make([]model.WetManifestTarget, 0, len(hints.Variants)*4)
+	out := make([]model.WetManifestTarget, 0, len(hints.Variants)*5)
 	for _, variant := range hints.Variants {
 		namespace := "apps-" + variant
 		out = append(out,
@@ -308,6 +308,14 @@ func openChoreoWetManifestTargets(g model.GeneratorDetection) []model.WetManifes
 			},
 			model.WetManifestTarget{
 				GeneratorID:   g.ID,
+				Kind:          "ConfigMap",
+				Name:          g.Name + "-files",
+				Owner:         "platform-runtime",
+				Namespace:     namespace,
+				SourceDryPath: "spec.containers.main.files.LOG_FORMAT.value",
+			},
+			model.WetManifestTarget{
+				GeneratorID:   g.ID,
 				Kind:          "Secret",
 				Name:          g.Name + "-secret-ref",
 				Owner:         "security-team",
@@ -325,7 +333,7 @@ func openChoreoRenderedLineage(g model.GeneratorDetection) []model.RenderedObjec
 	releaseBindingPathsByVariant := openChoreoRolePathByVariant(g.Inputs, "release-binding")
 	renderedManifestPathsByVariant := openChoreoRolePathByVariant(g.Inputs, "rendered-manifest")
 
-	lineage := make([]model.RenderedObjectLineage, 0, len(hints.Variants)*6)
+	lineage := make([]model.RenderedObjectLineage, 0, len(hints.Variants)*7)
 	for _, variant := range hints.Variants {
 		namespace := "apps-" + variant
 		releasePath := firstNonEmpty(releasePathsByVariant[variant], hints.RenderedReleasePath)
@@ -368,6 +376,13 @@ func openChoreoRenderedLineage(g model.GeneratorDetection) []model.RenderedObjec
 				SourceDryPath: "spec.service.port",
 			},
 			model.RenderedObjectLineage{
+				Kind:          "ConfigMap",
+				Name:          g.Name + "-files",
+				Namespace:     namespace,
+				SourcePath:    hints.WorkloadPath,
+				SourceDryPath: "spec.containers.main.files.LOG_FORMAT.value",
+			},
+			model.RenderedObjectLineage{
 				Kind:          "Deployment",
 				Name:          g.Name,
 				Namespace:     namespace,
@@ -390,7 +405,12 @@ func openChoreoRolePathByVariant(inputs []string, role string) map[string]string
 		if variant == "" {
 			continue
 		}
-		if current := out[variant]; current == "" || p < current {
+		current := out[variant]
+		if role == "rendered-manifest" && strings.Contains(strings.ToLower(filepath.Base(p)), "deployment") {
+			out[variant] = p
+			continue
+		}
+		if current == "" || (!strings.Contains(strings.ToLower(filepath.Base(current)), "deployment") && p < current) {
 			out[variant] = p
 		}
 	}

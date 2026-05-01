@@ -251,15 +251,18 @@ func TestRegistryWetTargetTemplates(t *testing.T) {
 	}
 
 	openChoreo := WetTargetTemplates(model.GeneratorOpenChoreo)
-	if len(openChoreo) != 4 {
-		t.Fatalf("expected 4 openchoreo wet target templates, got %d", len(openChoreo))
+	if len(openChoreo) != 5 {
+		t.Fatalf("expected 5 openchoreo wet target templates, got %d", len(openChoreo))
 	}
 	if openChoreo[0].Kind != "RenderedRelease" || openChoreo[0].NameTemplate != "{{name}}-prod" {
 		t.Fatalf("unexpected openchoreo template[0]: %+v", openChoreo[0])
 	}
+	if openChoreo[3].Kind != "ConfigMap" || openChoreo[3].SourceDryPathTemplate != "spec.containers.main.files.LOG_FORMAT.value" {
+		t.Fatalf("unexpected openchoreo ConfigMap template: %+v", openChoreo[3])
+	}
 	openChoreoLineage := RenderedLineageTemplates(model.GeneratorOpenChoreo)
-	if len(openChoreoLineage) != 5 {
-		t.Fatalf("expected 5 openchoreo rendered lineage templates, got %d", len(openChoreoLineage))
+	if len(openChoreoLineage) != 6 {
+		t.Fatalf("expected 6 openchoreo rendered lineage templates, got %d", len(openChoreoLineage))
 	}
 
 	appOfApps := WetTargetTemplates(model.GeneratorAppOfApps)
