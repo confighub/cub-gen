@@ -3,8 +3,10 @@ package contracts
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/confighub/cub-gen/internal/model"
+	"github.com/confighub/cub-gen/internal/proof"
 )
 
 func TestValidateTripleSetValid(t *testing.T) {
@@ -112,6 +114,35 @@ func TestValidateInverseTransformPlanInvalid(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "inverse_transform_plan schema validation failed") {
 		t.Fatalf("expected inverse plan validation message, got: %v", err)
+	}
+}
+
+func TestValidateProofEvent(t *testing.T) {
+	event := proof.NewEvent(proof.Input{
+		EventType:      proof.EventTypeChangeBundlePublished,
+		EventTime:      time.Date(2026, 3, 6, 0, 0, 0, 0, time.UTC),
+		Source:         "cub-gen",
+		ChangeID:       "chg_123",
+		Space:          "platform",
+		TargetSlug:     "helm",
+		ArtifactKind:   proof.ArtifactKindChangeBundle,
+		ArtifactDigest: "sha256:abc",
+		SummaryCounts: map[string]int{
+			"provenance_records": 1,
+		},
+	})
+
+	if err := ValidateProofEvent(event); err != nil {
+		t.Fatalf("expected valid proof event, got error: %v", err)
+	}
+
+	event.TraceID = ""
+	err := ValidateProofEvent(event)
+	if err == nil {
+		t.Fatal("expected invalid proof event error, got nil")
+	}
+	if !strings.Contains(err.Error(), "proof_event schema validation failed") {
+		t.Fatalf("expected proof_event schema validation message, got: %v", err)
 	}
 }
 

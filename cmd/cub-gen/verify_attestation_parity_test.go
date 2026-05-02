@@ -31,6 +31,7 @@ func TestVerifyAttestationGoldenJSON(t *testing.T) {
 	replaceString(got, "attestation_digest", "<attestation_digest>")
 	replaceString(got, "bundle_digest", "<bundle_digest>")
 	replaceString(got, "change_id", "<change_id>")
+	replaceString(got, "trace_id", "<trace_id>")
 	assertGoldenJSON(t, "testdata/parity/verify-attestation.json.golden.json", got)
 }
 
@@ -116,5 +117,6 @@ func assertVerifyAttestationLinkedGolden(t *testing.T, target, goldenPath string
 	replaceString(got, "attestation_digest", "<attestation_digest>")
 	replaceString(got, "bundle_digest", "<bundle_digest>")
 	replaceString(got, "change_id", "<change_id>")
+	replaceString(got, "trace_id", "<trace_id>")
 	assertGoldenJSON(t, goldenPath, got)
 }

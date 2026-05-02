@@ -34,6 +34,7 @@ Expected output fields (`ChangePreviewResult`):
 - `input.{target_path,render_target_path,target_slug,render_target_slug}`
 - `change_id`
 - `bundle_digest`
+- `trace_id`
 - `detected_profiles[]`
 - `top_edit_recommendation.{owner,wet_path,dry_path,edit_hint,confidence}`
 - `counts.{dry_inputs,wet_targets,inverse_patches}`
@@ -60,6 +61,7 @@ Expected output fields (`ChangeRunResult`):
 - `preview.input.{target_path,render_target_path,target_slug,render_target_slug}`
 - `change_id`
 - `bundle_digest`
+- `trace_id`
 - `decision.{state,authority,source}`
 - `verification.{bundle_valid,attestation_valid}`
 - `promotion_ready` (boolean)
@@ -204,7 +206,9 @@ Compatibility wrappers remain useful for demo packaging and story scripts:
 1. Same input repo+target produces stable output structure.
 2. `change_id` uniqueness is guaranteed per run.
 3. `bundle_digest` and `attestation_digest` are content-addressed and reproducible.
-4. Connected mode must record decision source (`confighub-backend` vs explicit fallback source).
+4. Proof events must carry `trace_id`, artifact digest, and parent digest
+   links where applicable.
+5. Connected mode must record decision source (`confighub-backend` vs explicit fallback source).
 
 ## Non-goals for v1
 

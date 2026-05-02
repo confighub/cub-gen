@@ -102,6 +102,38 @@
       "wet_unit_id": "wet_3b630d8a9fb3502c"
     }
   ],
+  "proof_events": [
+    {
+      "artifact_digest": "\u003cbundle_digest\u003e",
+      "artifact_kind": "change_bundle",
+      "change_id": "\u003cchange_id\u003e",
+      "event_id": "\u003cevent_id\u003e",
+      "event_time": "\u003ctimestamp\u003e",
+      "event_type": "change_bundle.published",
+      "generator_profiles": [
+        "scoredev-paas"
+      ],
+      "render_target_slug": "render-target",
+      "schema_version": "cub.confighub.io/proof-event/v1",
+      "source": "cub-gen",
+      "space": "platform",
+      "summary_counts": {
+        "contracts": 1,
+        "discovered_resources": 1,
+        "dry_inputs": 1,
+        "dry_units": 1,
+        "generator_units": 1,
+        "inverse_transform_plans": 1,
+        "links": 1,
+        "provenance_records": 1,
+        "wet_manifest_targets": 3,
+        "wet_units": 1
+      },
+      "target_path": "\u003ctarget_path\u003e",
+      "target_slug": "score",
+      "trace_id": "\u003ctrace_id\u003e"
+    }
+  ],
   "provenance": [
     {
       "change_id": "\u003cchange_id\u003e",
@@ -221,6 +253,7 @@
   },
   "target_path": "\u003ctarget_path\u003e",
   "target_slug": "score",
+  "trace_id": "\u003ctrace_id\u003e",
   "wet_manifest_targets": [
     {
       "generator_id": "gen_5813cd3820138512",

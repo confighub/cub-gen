@@ -33,6 +33,13 @@ If state is `ATTESTED` or terminal, it must also carry:
 
 1. `attestation_digest` (digest-linked evidence)
 
+The bundle and attestation artifacts also carry `proof_events[]`. These are
+log-safe records for Pilot and validation flows:
+
+1. bundle event: `change_bundle.published`
+2. attestation event: `attestation.verified`
+3. shared join fields: `trace_id`, `change_id`, artifact digest, and parent artifact digest
+
 If state is terminal, it must also carry:
 
 1. `decision_reason`
@@ -68,3 +75,4 @@ The response is validated against the decision-state contract and must return th
 
 1. Contract and transition enforcement: `internal/bridge/decision.go`
 2. End-to-end state/query tests: `internal/bridge/decision_test.go`
+3. Proof-event schema and validation: `internal/proof/event.go`, `internal/contracts/schemas/proof-event.v1.schema.json`

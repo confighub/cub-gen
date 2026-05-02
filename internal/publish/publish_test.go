@@ -8,6 +8,7 @@ import (
 
 	gitopsflow "github.com/confighub/cub-gen/internal/gitops"
 	"github.com/confighub/cub-gen/internal/model"
+	"github.com/confighub/cub-gen/internal/proof"
 )
 
 func TestBuildBundleAtFromHelmImport(t *testing.T) {
@@ -47,6 +48,31 @@ func TestBuildBundleAtFromHelmImport(t *testing.T) {
 	if bundle.ChangeID == "" {
 		t.Fatal("expected non-empty change_id")
 	}
+	if bundle.TraceID != bundle.ChangeID {
+		t.Fatalf("expected trace_id to match change_id, got %q", bundle.TraceID)
+	}
+	if len(bundle.ProofEvents) != 1 {
+		t.Fatalf("expected one proof event, got %d", len(bundle.ProofEvents))
+	}
+	event := bundle.ProofEvents[0]
+	if event.EventType != proof.EventTypeChangeBundlePublished {
+		t.Fatalf("unexpected proof event type: %q", event.EventType)
+	}
+	if event.TraceID != bundle.TraceID {
+		t.Fatalf("expected proof event trace_id %q, got %q", bundle.TraceID, event.TraceID)
+	}
+	if event.ChangeID != bundle.ChangeID {
+		t.Fatalf("expected proof event change_id %q, got %q", bundle.ChangeID, event.ChangeID)
+	}
+	if event.ArtifactKind != proof.ArtifactKindChangeBundle {
+		t.Fatalf("unexpected proof artifact kind: %q", event.ArtifactKind)
+	}
+	if event.ArtifactDigest != bundle.BundleDigest {
+		t.Fatalf("expected proof event artifact digest %q, got %q", bundle.BundleDigest, event.ArtifactDigest)
+	}
+	if event.SummaryCounts["provenance_records"] != len(imported.Provenance) {
+		t.Fatalf("unexpected proof summary counts: %+v", event.SummaryCounts)
+	}
 	if bundle.Summary.DiscoveredResources != len(imported.Discovered) {
 		t.Fatalf("summary discovered mismatch: %d vs %d", bundle.Summary.DiscoveredResources, len(imported.Discovered))
 	}
@@ -75,6 +101,9 @@ func TestBuildBundleAtChangeIDFallbackToInversePlans(t *testing.T) {
 	if bundle.ChangeID != "chg_fallback" {
 		t.Fatalf("expected fallback change id chg_fallback, got %q", bundle.ChangeID)
 	}
+	if bundle.TraceID != "chg_fallback" {
+		t.Fatalf("expected fallback trace id chg_fallback, got %q", bundle.TraceID)
+	}
 }
 
 func TestVerifyBundle(t *testing.T) {
@@ -99,6 +128,20 @@ func TestVerifyBundle(t *testing.T) {
 	missingDigest.BundleDigest = ""
 	if err := VerifyBundle(missingDigest); err == nil || !strings.Contains(err.Error(), "missing bundle_digest") {
 		t.Fatalf("expected missing bundle_digest error, got %v", err)
+	}
+
+	missingProof := bundle
+	missingProof.ProofEvents = nil
+	missingProof.BundleDigest = computeBundleDigest(missingProof)
+	if err := VerifyBundle(missingProof); err == nil || !strings.Contains(err.Error(), "missing proof_events") {
+		t.Fatalf("expected missing proof_events error, got %v", err)
+	}
+
+	tamperedProof := bundle
+	tamperedProof.ProofEvents = append([]proof.Event(nil), bundle.ProofEvents...)
+	tamperedProof.ProofEvents[0].ArtifactDigest = "sha256:wrong"
+	if err := VerifyBundle(tamperedProof); err == nil || !strings.Contains(err.Error(), "artifact_digest mismatch") {
+		t.Fatalf("expected proof artifact digest mismatch, got %v", err)
 	}
 
 	unsupported := bundle

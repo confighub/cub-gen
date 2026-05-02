@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/confighub/cub-gen/internal/model"
+	"github.com/confighub/cub-gen/internal/proof"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 
@@ -17,6 +18,7 @@ const (
 	generatorContractSchemaName = "schemas/generator-contract.v1.schema.json"
 	provenanceSchemaName        = "schemas/provenance.v1.schema.json"
 	inversePlanSchemaName       = "schemas/inverse-transform-plan.v1.schema.json"
+	proofEventSchemaName        = "schemas/proof-event.v1.schema.json"
 )
 
 //go:embed schemas/generator-contract.v1.schema.json
@@ -28,10 +30,14 @@ var provenanceSchemaJSON string
 //go:embed schemas/inverse-transform-plan.v1.schema.json
 var inversePlanSchemaJSON string
 
+//go:embed schemas/proof-event.v1.schema.json
+var proofEventSchemaJSON string
+
 type compiledSchemas struct {
 	generatorContract *jsonschema.Schema
 	provenanceRecord  *jsonschema.Schema
 	inversePlan       *jsonschema.Schema
+	proofEvent        *jsonschema.Schema
 }
 
 var (
@@ -112,6 +118,18 @@ func ValidateInverseTransformPlan(inversePlan model.InverseTransformPlan) error 
 	return validateRecord("inverse_transform_plan", s.inversePlan, inversePlan)
 }
 
+// ValidateProofEvent validates one log-safe proof event.
+func ValidateProofEvent(event proof.Event) error {
+	s, err := loadSchemas()
+	if err != nil {
+		return err
+	}
+	if err := validateRecord("proof_event", s.proofEvent, event); err != nil {
+		return err
+	}
+	return proof.ValidateEvent(event)
+}
+
 func loadSchemas() (compiledSchemas, error) {
 	schemasOnce.Do(func() {
 		schemas, schemasErr = compileSchemas()
@@ -133,6 +151,9 @@ func compileSchemas() (compiledSchemas, error) {
 	if err := compiler.AddResource(inversePlanSchemaName, strings.NewReader(inversePlanSchemaJSON)); err != nil {
 		return compiledSchemas{}, fmt.Errorf("add %s: %w", inversePlanSchemaName, err)
 	}
+	if err := compiler.AddResource(proofEventSchemaName, strings.NewReader(proofEventSchemaJSON)); err != nil {
+		return compiledSchemas{}, fmt.Errorf("add %s: %w", proofEventSchemaName, err)
+	}
 
 	generatorContract, err := compiler.Compile(generatorContractSchemaName)
 	if err != nil {
@@ -146,11 +167,16 @@ func compileSchemas() (compiledSchemas, error) {
 	if err != nil {
 		return compiledSchemas{}, fmt.Errorf("compile %s: %w", inversePlanSchemaName, err)
 	}
+	proofEvent, err := compiler.Compile(proofEventSchemaName)
+	if err != nil {
+		return compiledSchemas{}, fmt.Errorf("compile %s: %w", proofEventSchemaName, err)
+	}
 
 	return compiledSchemas{
 		generatorContract: generatorContract,
 		provenanceRecord:  provenanceRecord,
 		inversePlan:       inversePlan,
+		proofEvent:        proofEvent,
 	}, nil
 }
 

@@ -295,7 +295,14 @@ cub-gen gitops import ... | cub-gen publish --in - --out -
 cub-gen publish --space <space> [--set KEY=VALUE] [--set-string KEY=VALUE] [--set-file KEY=PATH] <target-path> [<render-target-path>]
 ```
 
-Output includes `digest_algorithm` (sha256) and `bundle_digest` for verification.
+Output includes:
+
+| Field | Meaning |
+|---|---|
+| `change_id` | Change lifecycle id |
+| `trace_id` | Log join key; normally the same value as `change_id` |
+| `bundle_digest` | sha256 digest for bundle verification |
+| `proof_events[]` | Log-safe proof records; publish emits `change_bundle.published` |
 
 ## Change Commands
 
@@ -332,12 +339,15 @@ Current scope:
 
 ### `verify`
 
-Verify bundle schema and digest integrity.
+Verify bundle schema, digest integrity, and proof-event linkage.
 
 ```
 cub-gen verify --in <bundle.json>
 cub-gen verify --in -          # stdin
 ```
+
+`--json` output includes `trace_id` and `proof_event_count` so validation jobs
+can log the proof chain without reopening the full bundle.
 
 Non-zero exit on integrity mismatch.
 
@@ -350,9 +360,13 @@ cub-gen attest --in <bundle.json> --verifier <verifier-id>
 cub-gen attest --in - --verifier ci-bot
 ```
 
+The attestation embeds an `attestation.verified` proof event. That event points
+back to the bundle with `parent_event_id` and `parent_artifact_digest`.
+
 ### `verify-attestation`
 
-Verify attestation integrity, optionally linked against a bundle.
+Verify attestation integrity and proof-event linkage, optionally linked against
+a bundle.
 
 ```
 cub-gen verify-attestation --in <attestation.json>

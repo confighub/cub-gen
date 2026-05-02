@@ -10,6 +10,7 @@ import (
 
 	gitopsflow "github.com/confighub/cub-gen/internal/gitops"
 	"github.com/confighub/cub-gen/internal/model"
+	"github.com/confighub/cub-gen/internal/proof"
 )
 
 const (
@@ -33,6 +34,22 @@ type Summary struct {
 	GeneratorProfiles   []string `json:"generator_profiles"`
 }
 
+// Counts returns log-friendly summary counts for proof events.
+func (s Summary) Counts() map[string]int {
+	return map[string]int{
+		"discovered_resources":    s.DiscoveredResources,
+		"dry_units":               s.DryUnits,
+		"wet_units":               s.WetUnits,
+		"generator_units":         s.GeneratorUnits,
+		"links":                   s.Links,
+		"contracts":               s.Contracts,
+		"provenance_records":      s.ProvenanceRecords,
+		"inverse_transform_plans": s.InversePlans,
+		"dry_inputs":              s.DryInputs,
+		"wet_manifest_targets":    s.WetManifestTargets,
+	}
+}
+
 // ChangeBundle is a local bridge artifact that can be uploaded to ConfigHub
 // later without changing cub-gen's local-first behavior.
 type ChangeBundle struct {
@@ -48,7 +65,9 @@ type ChangeBundle struct {
 	RenderTargetPath   string                          `json:"render_target_path,omitempty"`
 	Ref                string                          `json:"ref"`
 	ChangeID           string                          `json:"change_id,omitempty"`
+	TraceID            string                          `json:"trace_id"`
 	Summary            Summary                         `json:"summary"`
+	ProofEvents        []proof.Event                   `json:"proof_events"`
 	Discovered         []gitopsflow.DiscoveredResource `json:"discovered"`
 	DryUnits           []model.UnitRef                 `json:"dry_units"`
 	WetUnits           []model.UnitRef                 `json:"wet_units"`
@@ -111,7 +130,24 @@ func BuildBundleAt(imported gitopsflow.ImportFlowResult, at time.Time) ChangeBun
 		DryInputs:          imported.DryInputs,
 		WetManifestTargets: imported.WetManifestTargets,
 	}
+	bundle.TraceID = proof.TraceID(bundle.ChangeID, bundle.Space, bundle.TargetSlug, bundle.RenderTargetSlug, bundle.Ref)
+	bundle.ProofEvents = []proof.Event{proof.NewEvent(proof.Input{
+		EventType:         proof.EventTypeChangeBundlePublished,
+		EventTime:         at,
+		Source:            changeBundleSource,
+		ChangeID:          bundle.ChangeID,
+		Space:             bundle.Space,
+		TargetSlug:        bundle.TargetSlug,
+		TargetPath:        bundle.TargetPath,
+		RenderTargetSlug:  bundle.RenderTargetSlug,
+		RenderTargetPath:  bundle.RenderTargetPath,
+		Ref:               bundle.Ref,
+		ArtifactKind:      proof.ArtifactKindChangeBundle,
+		SummaryCounts:     bundle.Summary.Counts(),
+		GeneratorProfiles: bundle.Summary.GeneratorProfiles,
+	})}
 	bundle.BundleDigest = computeBundleDigest(bundle)
+	bundle.ProofEvents = proof.SetArtifactDigest(bundle.ProofEvents, proof.ArtifactKindChangeBundle, bundle.BundleDigest)
 	return bundle
 }
 
@@ -139,6 +175,7 @@ func computeBundleDigest(bundle ChangeBundle) string {
 	digestInput := bundle
 	digestInput.BundleDigest = ""
 	digestInput.DigestAlgorithm = ""
+	digestInput.ProofEvents = proof.BlankArtifactDigests(digestInput.ProofEvents)
 
 	b, err := json.Marshal(digestInput)
 	if err != nil {
@@ -165,6 +202,22 @@ func VerifyBundle(bundle ChangeBundle) error {
 	expected := computeBundleDigest(bundle)
 	if bundle.BundleDigest != expected {
 		return fmt.Errorf("bundle digest mismatch: expected %s, got %s", expected, bundle.BundleDigest)
+	}
+	if err := proof.ValidateArtifactEvents(bundle.ProofEvents, proof.Expected{
+		EventType:        proof.EventTypeChangeBundlePublished,
+		EventTime:        bundle.GeneratedAt,
+		Source:           bundle.Source,
+		TraceID:          bundle.TraceID,
+		ChangeID:         bundle.ChangeID,
+		Space:            bundle.Space,
+		TargetSlug:       bundle.TargetSlug,
+		TargetPath:       bundle.TargetPath,
+		RenderTargetSlug: bundle.RenderTargetSlug,
+		RenderTargetPath: bundle.RenderTargetPath,
+		ArtifactKind:     proof.ArtifactKindChangeBundle,
+		ArtifactDigest:   bundle.BundleDigest,
+	}); err != nil {
+		return err
 	}
 	return nil
 }

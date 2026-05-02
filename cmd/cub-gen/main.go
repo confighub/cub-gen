@@ -856,10 +856,12 @@ func runVerify(args []string) error {
 
 	if *jsonOut {
 		return writeJSON(os.Stdout, map[string]any{
-			"valid":            true,
-			"digest_algorithm": bundle.DigestAlgorithm,
-			"bundle_digest":    bundle.BundleDigest,
-			"change_id":        bundle.ChangeID,
+			"valid":             true,
+			"digest_algorithm":  bundle.DigestAlgorithm,
+			"bundle_digest":     bundle.BundleDigest,
+			"change_id":         bundle.ChangeID,
+			"trace_id":          bundle.TraceID,
+			"proof_event_count": len(bundle.ProofEvents),
 		}, *pretty)
 	}
 
@@ -983,6 +985,8 @@ func runVerifyAttestation(args []string) error {
 			"attestation_digest":  rec.AttestationDigest,
 			"bundle_digest":       rec.BundleDigest,
 			"change_id":           rec.ChangeID,
+			"trace_id":            rec.TraceID,
+			"proof_event_count":   len(rec.ProofEvents),
 		}, *pretty)
 	}
 

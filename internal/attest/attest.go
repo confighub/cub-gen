@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/confighub/cub-gen/internal/proof"
 	"github.com/confighub/cub-gen/internal/publish"
 )
 
@@ -19,20 +20,22 @@ const (
 
 // Record is an attestation envelope for a verified change bundle.
 type Record struct {
-	SchemaVersion     string `json:"schema_version"`
-	Source            string `json:"source"`
-	GeneratedAt       string `json:"generated_at"`
-	Status            string `json:"status"`
-	Verifier          string `json:"verifier"`
-	DigestAlgorithm   string `json:"digest_algorithm"`
-	BundleDigest      string `json:"bundle_digest"`
-	ChangeID          string `json:"change_id,omitempty"`
-	Space             string `json:"space,omitempty"`
-	TargetSlug        string `json:"target_slug,omitempty"`
-	TargetPath        string `json:"target_path,omitempty"`
-	RenderTargetSlug  string `json:"render_target_slug,omitempty"`
-	RenderTargetPath  string `json:"render_target_path,omitempty"`
-	AttestationDigest string `json:"attestation_digest"`
+	SchemaVersion     string        `json:"schema_version"`
+	Source            string        `json:"source"`
+	GeneratedAt       string        `json:"generated_at"`
+	Status            string        `json:"status"`
+	Verifier          string        `json:"verifier"`
+	DigestAlgorithm   string        `json:"digest_algorithm"`
+	BundleDigest      string        `json:"bundle_digest"`
+	ChangeID          string        `json:"change_id,omitempty"`
+	Space             string        `json:"space,omitempty"`
+	TargetSlug        string        `json:"target_slug,omitempty"`
+	TargetPath        string        `json:"target_path,omitempty"`
+	RenderTargetSlug  string        `json:"render_target_slug,omitempty"`
+	RenderTargetPath  string        `json:"render_target_path,omitempty"`
+	AttestationDigest string        `json:"attestation_digest"`
+	TraceID           string        `json:"trace_id"`
+	ProofEvents       []proof.Event `json:"proof_events"`
 }
 
 // BuildAt verifies a bundle and emits an attestation record.
@@ -58,8 +61,29 @@ func BuildAt(bundle publish.ChangeBundle, at time.Time, verifier string) (Record
 		TargetPath:       bundle.TargetPath,
 		RenderTargetSlug: bundle.RenderTargetSlug,
 		RenderTargetPath: bundle.RenderTargetPath,
+		TraceID:          bundle.TraceID,
 	}
+	rec.ProofEvents = []proof.Event{proof.NewEvent(proof.Input{
+		EventType:            proof.EventTypeAttestationVerified,
+		EventTime:            at,
+		Source:               attestationSource,
+		ChangeID:             rec.ChangeID,
+		Space:                rec.Space,
+		TargetSlug:           rec.TargetSlug,
+		TargetPath:           rec.TargetPath,
+		RenderTargetSlug:     rec.RenderTargetSlug,
+		RenderTargetPath:     rec.RenderTargetPath,
+		Ref:                  bundle.Ref,
+		ArtifactKind:         proof.ArtifactKindAttestation,
+		ParentEventID:        proof.FindEventID(bundle.ProofEvents, proof.EventTypeChangeBundlePublished),
+		ParentArtifactKind:   proof.ArtifactKindChangeBundle,
+		ParentArtifactDigest: bundle.BundleDigest,
+		SummaryCounts: map[string]int{
+			"verified_bundles": 1,
+		},
+	})}
 	rec.AttestationDigest = computeAttestationDigest(rec)
+	rec.ProofEvents = proof.SetArtifactDigest(rec.ProofEvents, proof.ArtifactKindAttestation, rec.AttestationDigest)
 	return rec, nil
 }
 
@@ -72,6 +96,7 @@ func computeAttestationDigest(rec Record) string {
 	input := rec
 	input.AttestationDigest = ""
 	input.DigestAlgorithm = ""
+	input.ProofEvents = proof.BlankArtifactDigests(input.ProofEvents)
 
 	b, err := json.Marshal(input)
 	if err != nil {
@@ -111,6 +136,24 @@ func VerifyRecord(rec Record) error {
 	if rec.AttestationDigest != expected {
 		return fmt.Errorf("attestation digest mismatch: expected %s, got %s", expected, rec.AttestationDigest)
 	}
+	if err := proof.ValidateArtifactEvents(rec.ProofEvents, proof.Expected{
+		EventType:            proof.EventTypeAttestationVerified,
+		EventTime:            rec.GeneratedAt,
+		Source:               rec.Source,
+		TraceID:              rec.TraceID,
+		ChangeID:             rec.ChangeID,
+		Space:                rec.Space,
+		TargetSlug:           rec.TargetSlug,
+		TargetPath:           rec.TargetPath,
+		RenderTargetSlug:     rec.RenderTargetSlug,
+		RenderTargetPath:     rec.RenderTargetPath,
+		ArtifactKind:         proof.ArtifactKindAttestation,
+		ArtifactDigest:       rec.AttestationDigest,
+		ParentArtifactKind:   proof.ArtifactKindChangeBundle,
+		ParentArtifactDigest: rec.BundleDigest,
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -128,6 +171,25 @@ func VerifyRecordAgainstBundle(rec Record, bundle publish.ChangeBundle) error {
 	}
 	if rec.ChangeID != "" && bundle.ChangeID != "" && rec.ChangeID != bundle.ChangeID {
 		return fmt.Errorf("change_id link mismatch: attestation=%s bundle=%s", rec.ChangeID, bundle.ChangeID)
+	}
+	if err := proof.ValidateArtifactEvents(rec.ProofEvents, proof.Expected{
+		EventType:            proof.EventTypeAttestationVerified,
+		EventTime:            rec.GeneratedAt,
+		Source:               rec.Source,
+		TraceID:              rec.TraceID,
+		ChangeID:             rec.ChangeID,
+		Space:                rec.Space,
+		TargetSlug:           rec.TargetSlug,
+		TargetPath:           rec.TargetPath,
+		RenderTargetSlug:     rec.RenderTargetSlug,
+		RenderTargetPath:     rec.RenderTargetPath,
+		ArtifactKind:         proof.ArtifactKindAttestation,
+		ArtifactDigest:       rec.AttestationDigest,
+		ParentEventID:        proof.FindEventID(bundle.ProofEvents, proof.EventTypeChangeBundlePublished),
+		ParentArtifactKind:   proof.ArtifactKindChangeBundle,
+		ParentArtifactDigest: bundle.BundleDigest,
+	}); err != nil {
+		return err
 	}
 	return nil
 }

@@ -4,6 +4,29 @@
   "change_id": "\u003cchange_id\u003e",
   "digest_algorithm": "sha256",
   "generated_at": "\u003ctimestamp\u003e",
+  "proof_events": [
+    {
+      "artifact_digest": "\u003cattestation_digest\u003e",
+      "artifact_kind": "attestation",
+      "change_id": "\u003cchange_id\u003e",
+      "event_id": "\u003cevent_id\u003e",
+      "event_time": "\u003ctimestamp\u003e",
+      "event_type": "attestation.verified",
+      "parent_artifact_digest": "\u003cbundle_digest\u003e",
+      "parent_artifact_kind": "change_bundle",
+      "parent_event_id": "\u003cparent_event_id\u003e",
+      "render_target_slug": "render-target",
+      "schema_version": "cub.confighub.io/proof-event/v1",
+      "source": "cub-gen",
+      "space": "platform",
+      "summary_counts": {
+        "verified_bundles": 1
+      },
+      "target_path": "\u003ctarget_path\u003e",
+      "target_slug": "helm",
+      "trace_id": "\u003ctrace_id\u003e"
+    }
+  ],
   "render_target_slug": "render-target",
   "schema_version": "cub.confighub.io/attestation/v1",
   "source": "cub-gen",
@@ -11,5 +34,6 @@
   "status": "verified",
   "target_path": "\u003ctarget_path\u003e",
   "target_slug": "helm",
+  "trace_id": "\u003ctrace_id\u003e",
   "verifier": "ci-bot"
 }

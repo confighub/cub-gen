@@ -142,9 +142,11 @@ func assertPublishDirectGolden(t *testing.T, target, golden string) {
 func normalizePublish(m map[string]any) {
 	replaceString(m, "generated_at", "<timestamp>")
 	replaceString(m, "change_id", "<change_id>")
+	replaceString(m, "trace_id", "<trace_id>")
 	replaceString(m, "bundle_digest", "<bundle_digest>")
 	replaceString(m, "target_path", "<target_path>")
 	replaceString(m, "render_target_path", "<render_target_path>")
+	normalizeProofEvents(m, "<bundle_digest>", "")
 
 	for _, item := range asSlice(m["contracts"]) {
 		replaceString(item, "source_repo", "<target_path>")
@@ -164,5 +166,21 @@ func normalizePublish(m map[string]any) {
 		replaceString(item, "plan_id", "<plan_id>")
 		replaceString(item, "change_id", "<change_id>")
 		replaceString(item, "created_at", "<timestamp>")
+	}
+}
+
+func normalizeProofEvents(m map[string]any, artifactDigest, parentArtifactDigest string) {
+	for _, event := range asSlice(m["proof_events"]) {
+		replaceString(event, "event_id", "<event_id>")
+		replaceString(event, "event_time", "<timestamp>")
+		replaceString(event, "trace_id", "<trace_id>")
+		replaceString(event, "change_id", "<change_id>")
+		replaceString(event, "target_path", "<target_path>")
+		replaceString(event, "render_target_path", "<render_target_path>")
+		replaceString(event, "artifact_digest", artifactDigest)
+		replaceString(event, "parent_event_id", "<parent_event_id>")
+		if parentArtifactDigest != "" {
+			replaceString(event, "parent_artifact_digest", parentArtifactDigest)
+		}
 	}
 }

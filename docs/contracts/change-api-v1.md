@@ -32,11 +32,12 @@ Request fields:
 Response:
 
 - `input` (normalized repo identity: `target_path`, `render_target_path`, plus compatibility slugs)
-- `change` (`change_id`, `bundle_digest`, `attestation_digest`)
+- `change` (`change_id`, `trace_id`, `bundle_digest`, `attestation_digest`)
 - `edit_recommendation` (owner, paths, hint, confidence)
 - `verification` (bundle/attestation validity)
 - `decision` and `promotion_ready` when `action=run`
-- `artifacts` references for audit/debug
+- `artifacts` references for audit/debug, including proof-event-capable bundle
+  and attestation artifacts
 
 Schema:
 
@@ -136,6 +137,7 @@ Schema:
   },
   "change": {
     "change_id": "chg_01J...",
+    "trace_id": "chg_01J...",
     "bundle_digest": "sha256:...",
     "attestation_digest": "sha256:..."
   },
