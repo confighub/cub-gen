@@ -76,6 +76,50 @@ func TestPluginModeAliasesRouteToExistingCommands(t *testing.T) {
 	}
 }
 
+func TestPluginModeBundleHelpRoutesToCommandHelp(t *testing.T) {
+	t.Setenv("CUB_PLUGIN", "1")
+
+	tests := []struct {
+		name      string
+		args      []string
+		wantTitle string
+	}{
+		{
+			name:      "bundle help",
+			args:      []string{"bundle", "help"},
+			wantTitle: "cub gen publish: build verifiable evidence",
+		},
+		{
+			name:      "bundle publish help",
+			args:      []string{"bundle", "publish", "help"},
+			wantTitle: "cub gen publish: build verifiable evidence",
+		},
+		{
+			name:      "bundle verify help",
+			args:      []string{"bundle", "verify", "help"},
+			wantTitle: "Usage of verify:",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := runWithCapturedIO(tt.args)
+			if err != nil {
+				t.Fatalf("%s failed: %v\nstdout=%s\nstderr=%s", tt.name, err, stdout, stderr)
+			}
+			if stdout != "" {
+				t.Fatalf("expected empty stdout, got %q", stdout)
+			}
+			if !strings.Contains(stderr, tt.wantTitle) {
+				t.Fatalf("help output missing %q:\n%s", tt.wantTitle, stderr)
+			}
+			if strings.Contains(stderr, "cub-gen ") {
+				t.Fatalf("plugin help leaked standalone invocation:\n%s", stderr)
+			}
+		})
+	}
+}
+
 func TestCubHostDispatchesGenPluginWhenAvailable(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("cub plugin exec uses syscall.Exec")

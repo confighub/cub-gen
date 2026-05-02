@@ -72,19 +72,28 @@ func normalizePluginBundleArgs(args []string) []string {
 		return []string{"publish"}
 	}
 	switch args[1] {
-	case "help", "-h", "--help":
+	case "help":
+		return []string{"publish", "--help"}
+	case "-h", "--help":
 		return append([]string{"publish"}, args[1:]...)
 	case "publish":
-		return append([]string{"publish"}, args[2:]...)
+		return normalizePluginBundleSubcommandArgs("publish", args[2:])
 	case "verify":
-		return append([]string{"verify"}, args[2:]...)
+		return normalizePluginBundleSubcommandArgs("verify", args[2:])
 	case "attest":
-		return append([]string{"attest"}, args[2:]...)
+		return normalizePluginBundleSubcommandArgs("attest", args[2:])
 	case "verify-attestation":
-		return append([]string{"verify-attestation"}, args[2:]...)
+		return normalizePluginBundleSubcommandArgs("verify-attestation", args[2:])
 	default:
 		return append([]string{"publish"}, args[1:]...)
 	}
+}
+
+func normalizePluginBundleSubcommandArgs(command string, args []string) []string {
+	if len(args) == 1 && args[0] == "help" {
+		return []string{command, "--help"}
+	}
+	return append([]string{command}, args...)
 }
 
 func defaultConfigHubBaseURL() string {
