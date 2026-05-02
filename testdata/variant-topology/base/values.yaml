@@ -1,0 +1,6 @@
+replicaCount: 1
+image:
+  repository: ghcr.io/example/checkout-api
+  tag: "${IMAGE_TAG}"
+service:
+  port: 8080

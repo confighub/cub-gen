@@ -6,12 +6,18 @@ This guide is for teams that already have:
 
 - a source repo in GitHub or Git,
 - Helm, Score, Spring Boot, or workflow config as authoring input,
-- Flux or Argo CD handling WET to LIVE reconciliation.
+- Flux or Argo CD reconciling rendered config to the cluster.
 
 `cub-gen` answers repo-side GitOps questions: what this repo renders, where a
 rendered field came from, and what to edit. ConfigHub adds shared governance
 and evidence. [`cub-scout`](https://github.com/confighub/cub-scout) adds
 cluster-side inspection.
+
+The shortest useful question is:
+
+```text
+If this deployed field is wrong, where do I fix it?
+```
 
 ## Start from the setup you already have
 
@@ -28,8 +34,8 @@ cluster-side inspection.
 | Question | Answer |
 |----------|--------|
 | What type of project is this? | Generator detection (Helm, Score, Spring Boot, etc.) |
-| Which files are human-editable intent? | DRY source classification |
-| Which files are rendered output? | WET manifest classification |
+| Which files are the source config? | Human-editable config such as `values.yaml`, `score.yaml`, or `application.yaml` |
+| Which files are rendered config? | Kubernetes manifests or other deployable output |
 | For any deployed field, where do I edit it? | Field-origin tracing + inverse-edit guidance |
 | How do I prove what changed? | Verification, attestation, and evidence bundles |
 
@@ -37,25 +43,29 @@ cluster-side inspection.
 
 | Tool | Starts from | What it answers first |
 |------|-------------|-----------------------|
-| `cub-gen` | Source repo | Which DRY file/path produced this rendered field? |
+| `cub-gen` | Source repo | Which source file/path produced this rendered field? |
 | [`cub-scout`](https://github.com/confighub/cub-scout) | Cluster and controller reality | What is running and where is drift? |
-| ConfigHub | Shared intended/evidence/governance state | What changed, what was approved, and what evidence exists? |
+| ConfigHub | Shared config/evidence/governance state | What changed, what was approved, and what evidence exists? |
 
-## The DRY → WET model
+## Source config to rendered config
 
 ```
-DRY source (what you author)     →  Generator  →  WET manifests (what gets deployed)
-  values.yaml                         Helm           deployment.yaml
-  score.yaml                          Score          service.yaml
-  application.yaml                    Spring Boot    configmap.yaml
+source config you edit      →  Generator  →  rendered config that deploys
+  values.yaml                    Helm          deployment.yaml
+  score.yaml                     Score         service.yaml
+  application.yaml               Spring Boot   configmap.yaml
 ```
 
-- **DRY**: The human-editable source of truth (e.g., `values.yaml`)
-- **WET**: The expanded, hydrated output (e.g., rendered Kubernetes manifests)
-- **Generator**: The tool that transforms DRY to WET (Helm, Score, etc.)
+- **source config**: the file/path a team edits, such as `values.yaml`
+- **rendered config**: the deployable output, such as a Kubernetes Deployment
+- **Generator**: the tool or platform rule that turns source config into
+  rendered config
 
-`cub-gen` traces this transformation so you always know which DRY file to edit
-when you need to change a deployed value.
+Some older docs call this DRY -> WET. The plain meaning is source config ->
+rendered config.
+
+`cub-gen` traces this transformation so you know which source file and path to
+edit when you need to change a deployed value.
 
 ## Prerequisites
 
@@ -85,6 +95,16 @@ go build -o cub-gen ./cmd/cub-gen
 
 ## Use your own repo in 3 commands
 
+If you want the v0.4 release path first, run:
+
+```bash
+./examples/demo/v0.4-quickstart.sh
+```
+
+That prints the Generator, Component, Base/Deployment Variants, Target, one
+field origin, one route decision, and a verified proof bundle without requiring
+a ConfigHub login.
+
 ```bash
 REPO=/path/to/your/repo
 ./cub-gen gitops discover --space platform "$REPO"
@@ -92,6 +112,8 @@ REPO=/path/to/your/repo
   | jq '{profile: .discovered[0].generator_profile, dry_inputs, wet_manifest_targets}'
 ./cub-gen change preview --space platform "$REPO"
 ```
+
+That gives you a local answer before anything is deployed or written back.
 
 Connected smoke first:
 
@@ -118,13 +140,13 @@ endpoints.
 
 The three core repo-first commands are:
 
-### 1. Discover generator roots
+### 1. Discover Generator roots
 
 ```bash
 ./cub-gen gitops discover --space platform ./examples/helm-paas
 ```
 
-This scans the repo and classifies it as a Helm generator (`helm-paas` profile).
+This scans the repo and classifies it as a Helm Generator (`helm-paas` profile).
 
 ### 2. Import with provenance
 
@@ -135,9 +157,9 @@ This scans the repo and classifies it as a Helm generator (`helm-paas` profile).
 
 The import output includes:
 
-- **`generator_profile`** — which generator family was detected
-- **`dry_inputs`** — the human-editable source files (Chart.yaml, values.yaml)
-- **`wet_manifest_targets`** — the rendered deployment artifacts
+- **`generator_profile`** — which Generator family was detected
+- **`dry_inputs`** — source files such as Chart.yaml and values.yaml
+- **`wet_manifest_targets`** — rendered deployment artifacts
 - **`provenance`** — field-origin map and inverse-edit pointers
 
 ### 3. Clean up discover state
@@ -165,7 +187,7 @@ The key value of cub-gen is the provenance trail. Focus on the inverse-edit poin
     }'
 ```
 
-This tells you: for any WET field, where is the DRY source to edit it safely.
+This tells you which source file/path controls a rendered field.
 
 ## Why this matters right after import
 
@@ -183,9 +205,9 @@ That is why the first useful sequence is:
 3. build or verify evidence,
 4. compare that answer with runtime inspection.
 
-## Try other generators
+## Try other Generators
 
-Each generator follows the same three-command flow:
+Each Generator follows the same three-command flow:
 
 === "Score.dev"
 
@@ -245,8 +267,8 @@ Emit an attestation record:
 
 Use ConfigHub GitOps import and [`cub-scout`](https://github.com/confighub/cub-scout)
 first when your first question is "what is running?" rather than "what source
-produced this?" Then come back to `cub-gen` when you want the source-side DRY to
-WET answer for the field or workload you found.
+produced this?" Then come back to `cub-gen` when you want the source-to-rendered
+answer for the field or workload you found.
 
 ## What happens after import? (Day-2)
 
@@ -260,7 +282,7 @@ Import is day 1. The real value shows on day 2:
 
 After import, your next steps are:
 
-1. **Make a governed change**: Edit a DRY file, run `publish`, and see the decision
+1. **Make a governed change**: Edit a source file, run `publish`, and see the decision
 2. **Connect to ConfigHub**: Verify the connected smoke path first, then use the deeper bridge path if your backend exposes it
 3. **Enable promotion**: Use ConfigHub to promote patterns to reusable base config
 
@@ -289,14 +311,14 @@ Or all at once:
 
 What stays unchanged:
 
-- Flux/Argo remains the reconciler for WET &rarr; LIVE
+- Flux/Argo remains the reconciler from rendered config to live cluster state
 - Git/OCI remains the transport path
 - Existing cluster/controller permissions and PR workflow stay in place
 
 What you add:
 
-- `cub-gen gitops discover` to classify generator roots
-- `cub-gen gitops import` to emit DRY/WET contracts + provenance/inverse pointers
+- `cub-gen gitops discover` to classify Generator roots
+- `cub-gen gitops import` to emit source/rendered contracts plus provenance and inverse-edit pointers
 - `cub-gen gitops cleanup` to clear local discover state
 - ConfigHub for shared evidence and governed decisions
 - `cub-scout` for cluster-side inspection after reconciliation
@@ -304,7 +326,7 @@ What you add:
 Current delivery status:
 
 - `gitops discover|import|cleanup` are stable and good for first-run local use
-- `publish`, `verify`, `attest`, and `verify-attestation` are stable across all supported generators
+- `publish`, `verify`, `attest`, and `verify-attestation` are stable across all supported Generators
 - local mode uses file-backed state and artifacts instead of server-side units
 - deeper bridge commands exist, but the recommended connected first run is still the smoke wrappers and example `demo-connected.sh` paths
 
@@ -312,12 +334,12 @@ Current delivery status:
 
 | Term | Meaning in cub-gen |
 |------|-------------------|
-| DRY source | Human-editable app/platform intent (`values.yaml`, `score.yaml`, `application.yaml`) |
-| WET rendered units | Explicit rendered deployment-facing units/manifests |
-| Generator | Tool that transforms DRY to WET (Helm, Score, Spring Boot, etc.) |
-| Provenance | Record of DRY inputs, rendered outputs, field-origin map, inverse-edit pointers |
-| Inverse map | Guidance from changed WET field → where to edit DRY safely |
-| Pre-sync | `cub-gen` stops before WET→LIVE; Flux/Argo own reconciliation |
+| Source config | Human-editable app/platform config (`values.yaml`, `score.yaml`, `application.yaml`) |
+| Rendered config | Explicit deployment-facing units/manifests |
+| Generator | Tool or platform rule that transforms source config to rendered config |
+| Provenance | Record of source inputs, rendered outputs, field-origin map, inverse-edit pointers |
+| Inverse map | Guidance from changed rendered field to the source file/path to edit safely |
+| Pre-sync | `cub-gen` stops before rendered config reaches the live cluster; Flux/Argo own reconciliation |
 | Verification | Cryptographic proof that a bundle is intact |
 | Attestation | Record of who verified a bundle and when |
 | Governance | Policy enforcement (ALLOW/ESCALATE/BLOCK) via ConfigHub decision engine |
@@ -327,6 +349,6 @@ Current delivery status:
 
 - [The ConfigHub Platform](platform.md) — how cub-gen connects to ConfigHub, bridge workers, and Flux/ArgoCD
 - [CLI Reference](cli-reference.md) — full command and flag documentation
-- [Architecture](agentic-gitops/02-design/00-agentic-gitops-design.md) — DRY/WET model, contract triples, governed execution
+- [Architecture](agentic-gitops/02-design/00-agentic-gitops-design.md) — source/rendered model, contract triples, governed execution
 - [Worked Examples](agentic-gitops/03-worked-examples/01-scoredev-dry-wet-unit-worked-example.md) — end-to-end Score.dev walkthrough
 - [Adoption Path & FAQ](agentic-gitops/05-rollout/40-adoption-and-reference.md) — progressive adoption ladder

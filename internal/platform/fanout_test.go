@@ -47,6 +47,9 @@ func TestBuildFanoutEmitsStableBundlesPerVariant(t *testing.T) {
 		if variant.ChangeID == "" {
 			t.Fatalf("variant %s has no change_id", variant.VariantID)
 		}
+		if variant.VariantKind != "deployment" {
+			t.Fatalf("fanout should only emit Deployment Variants, got %+v", variant)
+		}
 		if _, ok := seenChanges[variant.ChangeID]; ok {
 			t.Fatalf("duplicate change_id %s for variant %s", variant.ChangeID, variant.VariantID)
 		}
@@ -82,6 +85,50 @@ func TestBuildFanoutCanFilterByVariantName(t *testing.T) {
 			t.Fatalf("expected only dev variants, got %+v", result.Variants)
 		}
 	}
+}
+
+func TestBuildFanoutReportsInvalidVariantKind(t *testing.T) {
+	manifest, absPath, err := LoadManifest(variantFanoutManifestPath(t))
+	if err != nil {
+		t.Fatalf("load manifest: %v", err)
+	}
+	manifest.Variants[0].VariantKind = "shared"
+	result, err := BuildFanout(absPath, manifest, FanoutOptions{
+		GeneratedAt:   "2026-04-30T12:00:00Z",
+		VariantFilter: "checkout-api/dev",
+	})
+	if err != nil {
+		t.Fatalf("build fanout: %v", err)
+	}
+	if len(result.Variants) != 1 {
+		t.Fatalf("expected one variant, got %+v", result.Variants)
+	}
+	if result.Variants[0].VariantKind != "unknown" {
+		t.Fatalf("invalid variant kind should degrade to unknown, got %+v", result.Variants[0])
+	}
+	assertFanoutDiagnostic(t, result, "invalid_variant_kind", "helm-checkout")
+}
+
+func TestBuildFanoutReportsContradictoryVariantKindAndTarget(t *testing.T) {
+	manifest, absPath, err := LoadManifest(variantFanoutManifestPath(t))
+	if err != nil {
+		t.Fatalf("load manifest: %v", err)
+	}
+	manifest.Variants[0].VariantKind = "base"
+	result, err := BuildFanout(absPath, manifest, FanoutOptions{
+		GeneratedAt:   "2026-04-30T12:00:00Z",
+		VariantFilter: "checkout-api/dev",
+	})
+	if err != nil {
+		t.Fatalf("build fanout: %v", err)
+	}
+	if len(result.Variants) != 1 {
+		t.Fatalf("expected one variant, got %+v", result.Variants)
+	}
+	if result.Variants[0].VariantKind != "unknown" {
+		t.Fatalf("base variant with target should degrade to unknown, got %+v", result.Variants[0])
+	}
+	assertFanoutDiagnostic(t, result, "invalid_variant_kind", "helm-checkout")
 }
 
 func TestBuildFanoutSeparatesSharedAndVariantInputs(t *testing.T) {
@@ -148,4 +195,14 @@ func containsString(values []string, want string) bool {
 		}
 	}
 	return false
+}
+
+func assertFanoutDiagnostic(t *testing.T, result FanoutResult, code, repoID string) {
+	t.Helper()
+	for _, diagnostic := range result.Diagnostics {
+		if diagnostic.Code == code && diagnostic.RepoID == repoID {
+			return
+		}
+	}
+	t.Fatalf("missing diagnostic code=%s repo=%s in %+v", code, repoID, result.Diagnostics)
 }

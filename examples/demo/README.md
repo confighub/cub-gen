@@ -9,8 +9,15 @@ detect → import → publish → verify → attest
                                           → (optional, deep) bridge ingest/query
 ```
 
-If you are new, do not start with "run everything." Start with one concrete
-adoption path that matches what you already run.
+If you are new, do not start with "run everything." Start with the v0.4
+quickstart or one concrete adoption path that matches what you already run.
+
+```bash
+./examples/demo/v0.4-quickstart.sh
+```
+
+That local script prints the Generator, Component, Base/Deployment Variants,
+Target, one field origin, one route decision, and a verified proof bundle.
 
 ## Proof ladder
 
@@ -78,6 +85,9 @@ See also: [Domain POV Matrix](../../docs/workflows/domain-pov-matrix.md) | [Pers
 
 ```bash
 go build -o ./cub-gen ./cmd/cub-gen
+
+# v0.4 release path
+./examples/demo/v0.4-quickstart.sh
 
 # Platform-first first run
 ./examples/demo/start-platform-first.sh

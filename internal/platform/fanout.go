@@ -47,6 +47,7 @@ type FanoutVariant struct {
 	VariantID         string               `json:"variant_id"`
 	Component         string               `json:"component"`
 	Variant           string               `json:"variant"`
+	VariantKind       string               `json:"variant_kind"`
 	Target            string               `json:"target,omitempty"`
 	RepoID            string               `json:"repo_id"`
 	RepoPath          string               `json:"repo_path"`
@@ -117,6 +118,7 @@ func BuildFanout(absManifestPath string, manifest Manifest, opts FanoutOptions) 
 		if target == "" {
 			target = strings.TrimSpace(repo.Target)
 		}
+		variantKind, variantKindInvalid := resolveVariantKind(spec.VariantKind, target)
 		if spec.Component != "" {
 			componentSet[spec.Component] = struct{}{}
 		}
@@ -133,6 +135,15 @@ func BuildFanout(absManifestPath string, manifest Manifest, opts FanoutOptions) 
 			continue
 		}
 		repoPath := normalizeRelPath(repo.Path)
+		if variantKindInvalid {
+			result.Diagnostics = append(result.Diagnostics, Diagnostic{
+				Severity: "warning",
+				Code:     "invalid_variant_kind",
+				RepoID:   repo.ID,
+				Path:     repoPath,
+				Message:  fmt.Sprintf("variant %s variant_kind %q is not supported or is inconsistent with target %q; expected base without a target or deployment with a target", spec.ID, strings.TrimSpace(spec.VariantKind), target),
+			})
+		}
 		absRepo := filepath.Join(baseDir, filepath.FromSlash(repoPath))
 		info, statErr := os.Stat(absRepo)
 		if statErr != nil || !info.IsDir() {
@@ -189,6 +200,7 @@ func BuildFanout(absManifestPath string, manifest Manifest, opts FanoutOptions) 
 			VariantID:         spec.ID,
 			Component:         spec.Component,
 			Variant:           spec.Variant,
+			VariantKind:       variantKind,
 			Target:            target,
 			RepoID:            repo.ID,
 			RepoPath:          repoPath,
@@ -265,11 +277,12 @@ func ResolveFanoutVariants(manifest Manifest) ([]ManifestVariant, error) {
 		}
 		repo := entries[0]
 		variants = append(variants, ManifestVariant{
-			ID:        key,
-			Component: strings.TrimSpace(repo.Component),
-			Variant:   strings.TrimSpace(repo.Variant),
-			Target:    strings.TrimSpace(repo.Target),
-			Repo:      strings.TrimSpace(repo.ID),
+			ID:          key,
+			Component:   strings.TrimSpace(repo.Component),
+			Variant:     strings.TrimSpace(repo.Variant),
+			VariantKind: strings.TrimSpace(repo.VariantKind),
+			Target:      strings.TrimSpace(repo.Target),
+			Repo:        strings.TrimSpace(repo.ID),
 		})
 	}
 	return sortedFanoutVariants(variants), nil
@@ -283,6 +296,7 @@ func normalizeExplicitFanoutVariants(in []ManifestVariant) ([]ManifestVariant, e
 		spec.ID = strings.TrimSpace(spec.ID)
 		spec.Component = strings.TrimSpace(spec.Component)
 		spec.Variant = strings.TrimSpace(spec.Variant)
+		spec.VariantKind = strings.TrimSpace(spec.VariantKind)
 		spec.Target = strings.TrimSpace(spec.Target)
 		spec.Repo = strings.TrimSpace(spec.Repo)
 		if spec.Component == "" {
