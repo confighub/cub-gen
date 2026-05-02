@@ -26,6 +26,13 @@ where a Deployment Variant runs or reconciles. **Connections** are what it is
 wired to. A **Change** is what someone wants to alter. **Proof** shows where it
 came from, who owns it, what changed, and whether the change is allowed.
 
+Today ConfigHub answers "base or deployment?" from Target presence: no Target
+means Base Variant, and Target means Deployment Variant. A Variant is the whole
+config context for that Component, implemented as a space containing units.
+Base Variants may contain placeholders. Newly cloned Deployment Variants may
+also contain placeholders until they are adapted for their Target, and apply
+gates should prevent applying them too early.
+
 An **AI Variant** is a Variant whose delta, wiring, or operation is
 AI-assisted and governed.
 

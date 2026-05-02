@@ -154,9 +154,20 @@ Component family. A **Base Variant** is not deployed. A **Deployment Variant**
 is the concrete deployed copy for one environment, tenant, region, customer, or
 cluster.
 
+In ConfigHub today, the practical discriminator is Target presence: no Target
+means Base Variant, and a Target means Deployment Variant. `cub-gen` exposes
+that as `variant_kind` in platform output so the distinction is easy to query.
+An explicit kind may appear later, but it does not change the model.
+
 `cub-gen` helps explain how a Variant was generated, whether it is a base or a
 deployment when the repo makes that clear, and where a proposed change should
 land.
+
+A Variant is the whole config context for that Component: in ConfigHub terms, a
+space containing units. Base Variants can contain placeholders. Newly cloned
+Deployment Variants can also contain placeholders until they are adapted for
+their Target; apply gates such as `vet-placeholders` should stop them from
+being applied until those placeholders are replaced.
 
 A **Change** is any proposed edit to the source or rendered config. **Proof**
 is the field-origin, owner, route, and decision evidence that makes the change

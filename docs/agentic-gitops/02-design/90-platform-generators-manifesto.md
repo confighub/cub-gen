@@ -37,6 +37,14 @@ The vocabulary should stay small:
 This is the product surface people should understand first. The generator model
 explains how `cub-gen` can produce that surface from existing repos.
 
+In ConfigHub today, Base vs Deployment is determined by Target presence: no
+Target means Base Variant, and Target means Deployment Variant. A Variant is the
+whole config context for a Component, implemented as a space containing units.
+Base Variants may contain placeholders. A newly cloned Deployment Variant may
+also contain placeholders until it has been adapted for its Target; apply gates
+such as `vet-placeholders` should prevent applying it until that adaptation is
+done.
+
 The manifesto is the clean version of what the early `cub-gen` planning docs
 were already reaching for:
 
@@ -130,6 +138,7 @@ ConfigMap payloads for allowed app-owned fields, and has connected/live proof.
 | App-of-apps adapter | fixture-backed initial adapter | broader root/child app catalog analysis |
 | Automatic annotation/enrichment | not generic | generate sidecar provenance and optional PRs for annotations |
 | "Better config" generation | limited to Spring starter scaffolding | propose normalized variants, secret references, ownership metadata, and source lifts |
+| Cloned deployment adaptation | manual/scripted outside ConfigHub today | clone Variant, add Target, detect placeholder gates, propose reviewed adaptation patches |
 | Multi-env/tenant fanout | no one-command fanout | one invocation emits one bundle per env/tenant/app variant |
 | PR/MR magic | contracts, commands, and demos exist | seamless creation/linkage with evidence attached |
 | Server-side policy enforcement | client-side proof is stronger than backend enforcement | ConfigHub rejects/blocks governed writes authoritatively |
