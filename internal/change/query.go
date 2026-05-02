@@ -64,6 +64,7 @@ func QueryContextFromBundle(bundle publish.ChangeBundle) QueryContext {
 		},
 		Change: PreviewSummary{
 			ChangeID:          bundle.ChangeID,
+			TraceID:           bundle.TraceID,
 			BundleDigest:      bundle.BundleDigest,
 			AttestationDigest: "",
 		},

@@ -40,6 +40,9 @@ func TestChangePreviewJSON(t *testing.T) {
 	if changeID, ok := change["change_id"].(string); !ok || !strings.HasPrefix(changeID, "chg_") {
 		t.Fatalf("unexpected change_id: %v", change["change_id"])
 	}
+	if traceID, ok := change["trace_id"].(string); !ok || !strings.HasPrefix(traceID, "chg_") {
+		t.Fatalf("unexpected trace_id: %v", change["trace_id"])
+	}
 	if digest, ok := change["bundle_digest"].(string); !ok || !strings.HasPrefix(digest, "sha256:") {
 		t.Fatalf("unexpected bundle_digest: %v", change["bundle_digest"])
 	}
@@ -128,6 +131,17 @@ func TestChangeRunLocalJSON(t *testing.T) {
 	}
 	if mode, ok := got["mode"].(string); !ok || mode != "local" {
 		t.Fatalf("expected mode=local, got %v", got["mode"])
+	}
+	preview, ok := got["preview"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected preview object, got %T", got["preview"])
+	}
+	change, ok := preview["change"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected preview.change object, got %T", preview["change"])
+	}
+	if traceID, ok := change["trace_id"].(string); !ok || !strings.HasPrefix(traceID, "chg_") {
+		t.Fatalf("unexpected preview change trace_id: %v", change["trace_id"])
 	}
 	decision, ok := got["decision"].(map[string]any)
 	if !ok {
@@ -644,6 +658,9 @@ func TestChangeDiffJSON(t *testing.T) {
 	}
 	if result.Query.AfterRef != secondRef {
 		t.Fatalf("expected after_ref=%s, got %v", secondRef, result.Query.AfterRef)
+	}
+	if result.Before.Change.TraceID == "" || result.After.Change.TraceID == "" {
+		t.Fatalf("expected before/after trace ids, got before=%q after=%q", result.Before.Change.TraceID, result.After.Change.TraceID)
 	}
 
 	if len(result.Diffs) == 0 {
