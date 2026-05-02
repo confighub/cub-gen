@@ -49,6 +49,8 @@ func run(args []string) error {
 		return runAttest(args[1:])
 	case "verify-attestation":
 		return runVerifyAttestation(args[1:])
+	case "proof":
+		return runProof(args[1:])
 	case "change":
 		return runChange(args[1:])
 	case "enrich":
@@ -1065,6 +1067,7 @@ func printUsage(out io.Writer) {
 				"  publish           Build a provenance bundle from a repo or import output",
 				"  verify            Verify a provenance bundle",
 				"  attest            Sign a provenance bundle",
+				"  proof events      Extract loggable proof events from a bundle or attestation",
 			},
 		},
 		helpSection{

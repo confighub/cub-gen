@@ -189,7 +189,9 @@ A **Change** is any proposed edit to the source or rendered config. **Proof**
 is the field-origin, owner, route, and decision evidence that makes the change
 reviewable. Bundle and attestation artifacts also carry `proof_events[]`: small
 JSON records with `trace_id`, `change_id`, artifact digests, and parent digest
-links so Pilot, validation, and attestation logs can join the chain later.
+links so Pilot, validation, and attestation logs can join the chain later. Use
+`cub-gen proof events --in bundle.json --ndjson` when a log pipeline needs just
+those records.
 
 The short version is **repo in, explanation out**.
 

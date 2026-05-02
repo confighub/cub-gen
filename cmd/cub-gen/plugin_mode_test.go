@@ -99,6 +99,11 @@ func TestPluginModeBundleHelpRoutesToCommandHelp(t *testing.T) {
 			args:      []string{"bundle", "verify", "help"},
 			wantTitle: "Usage of verify:",
 		},
+		{
+			name:      "bundle events help",
+			args:      []string{"bundle", "events", "help"},
+			wantTitle: "Usage of proof events:",
+		},
 	}
 
 	for _, tt := range tests {

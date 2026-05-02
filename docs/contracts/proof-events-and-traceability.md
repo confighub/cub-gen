@@ -49,6 +49,20 @@ Schema: [`proof-event.v1.schema.json`](schemas/proof-event.v1.schema.json)
 | `change_bundle.published` | `publish` and `platform fanout` | `change_bundle` | none |
 | `attestation.verified` | `attest` | `attestation` | `change_bundle.published` |
 
+## CLI Extraction
+
+Use `proof events` when a Pilot, CI, validation, or audit step needs proof
+records without carrying the whole bundle payload:
+
+```bash
+cub-gen proof events --in bundle.json
+cub-gen proof events --in attestation.json --bundle bundle.json --ndjson
+```
+
+The command verifies the input first. Bundle input is checked with
+`verify`; attestation input is checked with `verify-attestation`, and the
+optional `--bundle` flag strengthens the parent-link check.
+
 ## Trace Chain
 
 ```mermaid

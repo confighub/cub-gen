@@ -22,6 +22,7 @@ BUILD EVIDENCE:
   publish           Build a provenance bundle from a repo or import output
   verify            Verify a provenance bundle
   attest            Sign a provenance bundle
+  proof events      Extract loggable proof events from a bundle or attestation
 
 ADVANCED CONNECTED:
   change run        Ask ConfigHub for a decision (does not deploy)

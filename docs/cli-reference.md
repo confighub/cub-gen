@@ -373,6 +373,19 @@ cub-gen verify-attestation --in <attestation.json>
 cub-gen verify-attestation --in <attestation.json> --bundle <bundle.json>
 ```
 
+### `proof events`
+
+Verify a bundle or attestation and emit only its loggable proof events.
+
+```
+cub-gen proof events --in <bundle.json>
+cub-gen proof events --in <attestation.json> --bundle <bundle.json> --ndjson
+```
+
+Default output is a small `proof-log/v1` JSON envelope. `--ndjson` emits one
+compact `proof_event/v1` record per line for Pilot, CI, validation, or audit
+logs.
+
 ---
 
 ## Bridge flow (advanced ConfigHub API path)
