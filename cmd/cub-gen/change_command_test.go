@@ -144,6 +144,7 @@ func TestChangeRunLocalJSON(t *testing.T) {
 func TestChangeRunConnectedMissingBaseURL(t *testing.T) {
 	setupAliases(t)
 	t.Setenv("CONFIGHUB_BASE_URL", "")
+	t.Setenv("CUB_SERVER", "")
 
 	_, _, err := runWithCapturedIO([]string{
 		"change", "run",
@@ -155,7 +156,7 @@ func TestChangeRunConnectedMissingBaseURL(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if !strings.Contains(err.Error(), "requires --base-url or CONFIGHUB_BASE_URL") {
+	if !strings.Contains(err.Error(), "requires --base-url, CONFIGHUB_BASE_URL, or CUB_SERVER") {
 		t.Fatalf("unexpected error: %q", err.Error())
 	}
 }

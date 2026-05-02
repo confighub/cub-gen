@@ -348,6 +348,7 @@ func TestBridgeLinkCommandLocalReviewLink(t *testing.T) {
 
 func TestBridgeLinkCommandRequiresTokenForRemote(t *testing.T) {
 	t.Setenv("CONFIGHUB_TOKEN", "")
+	t.Setenv("CUB_TOKEN", "")
 	_, stderr, err := runWithCapturedIO([]string{
 		"bridge", "link",
 		"--change-id", "chg_123",
@@ -361,7 +362,7 @@ func TestBridgeLinkCommandRequiresTokenForRemote(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected missing token error")
 	}
-	if !strings.Contains(err.Error(), "requires --token or CONFIGHUB_TOKEN") {
+	if !strings.Contains(err.Error(), "requires --token, CONFIGHUB_TOKEN, or CUB_TOKEN") {
 		t.Fatalf("expected missing token error, got %v stderr=%s", err, stderr)
 	}
 }

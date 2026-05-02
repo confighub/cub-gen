@@ -11,15 +11,15 @@ For the sequenced roadmap that organizes this issue pack into workstreams, see
 [v0.4 Working Roadmap: Component -> Variant -> Proof](2026-04-30-v0.4-obvious-value-roadmap.md)
 and GitHub release tracker [#302](https://github.com/confighub/cub-gen/issues/302).
 
-## Current Open Roadmap Touchpoints
+## Current Roadmap Touchpoints
 
-Open issues checked on 2026-05-01:
+Open and recently completed issues checked on 2026-05-02:
 
 | Issue | Title | Why it matters for the manifesto |
 |---|---|---|
 | [#287](https://github.com/confighub/cub-gen/issues/287) | make cub-gen role and value obvious | parent roadmap issue keeping the product story coherent |
 | [#283](https://github.com/confighub/cub-gen/issues/283) | mutation apply gates for generator routes | route ownership must become an authoritative apply decision with next actions |
-| [#236](https://github.com/confighub/cub-gen/issues/236) | ship cub-gen as `cub gen` plugin | product workflow should feel like one platform; repo-local readiness is done, external `cub` plugin loader remains |
+| [#236](https://github.com/confighub/cub-gen/issues/236) | ship cub-gen as `cub gen` plugin | product workflow should feel like one platform; plugin proof now works, next release artifact remains |
 | [#213](https://github.com/confighub/cub-gen/issues/213) | GUI provenance trace | click-field-to-source is the core teaching moment |
 | [#212](https://github.com/confighub/cub-gen/issues/212) | GUI regeneration/refresh preview | users need to see generated impact before merge/apply |
 | [#211](https://github.com/confighub/cub-gen/issues/211) | GUI mutation history/activity log | overlay, lift, and block decisions need visible history |

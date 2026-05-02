@@ -47,6 +47,13 @@ brew install confighub/tap/cub-gen
 
 Or download a release artifact from [GitHub release `v0.3.0`](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).
 
+The ConfigHub plugin form is `cub gen`. From source, you can stage it locally:
+
+```bash
+make build-plugin
+CUB_CONFIG="$PWD/.tmp/cub-plugin/config.yaml" cub gen --help
+```
+
 **gen = Generator.** A Generator is a function on config data. It maps source
 config such as `values.yaml`, `score.yaml`, or `application.yaml` to rendered
 config: the manifests or other deployable output that reach your cluster.

@@ -6,9 +6,9 @@ All commands are deterministic: same input produces same output.
 field back to the file you should edit. It is for repo-side GitOps questions,
 not cluster/runtime ones.
 
-The future product surface is `cub gen`; the current shipped command is still
-`cub-gen`. See [`cub gen` Plugin Readiness](cub-gen-plugin.md) for the migration
-and compatibility contract.
+The integrated ConfigHub surface is `cub gen`; the standalone command remains
+`cub-gen` for local scripts. See [`cub gen` Plugin](cub-gen-plugin.md) for the
+plugin install shape and compatibility contract.
 
 ## Start By Question
 

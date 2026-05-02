@@ -59,8 +59,16 @@ func runBridgeIngest(args []string) error {
 	if fs.NArg() != 0 {
 		return errors.New("usage: cub-gen bridge ingest [flags]")
 	}
-	if strings.TrimSpace(*baseURL) == "" {
+	resolvedBaseURL := strings.TrimSpace(*baseURL)
+	if resolvedBaseURL == "" {
+		resolvedBaseURL = defaultConfigHubBaseURL()
+	}
+	if resolvedBaseURL == "" {
 		return errors.New("bridge ingest requires --base-url")
+	}
+	resolvedToken := strings.TrimSpace(*token)
+	if resolvedToken == "" {
+		resolvedToken = defaultConfigHubToken()
 	}
 
 	var bundle publish.ChangeBundle
@@ -69,8 +77,8 @@ func runBridgeIngest(args []string) error {
 	}
 
 	res, err := bridgeflow.IngestBundle(context.Background(), bridgeflow.Client{
-		BaseURL:      strings.TrimSpace(*baseURL),
-		BearerToken:  strings.TrimSpace(*token),
+		BaseURL:      resolvedBaseURL,
+		BearerToken:  resolvedToken,
 		EndpointPath: strings.TrimSpace(*endpoint),
 	}, bundle)
 	if err != nil {
@@ -163,10 +171,10 @@ func runBridgeLink(args []string) error {
 
 	resolvedToken := strings.TrimSpace(*token)
 	if resolvedToken == "" {
-		resolvedToken = strings.TrimSpace(os.Getenv("CONFIGHUB_TOKEN"))
+		resolvedToken = defaultConfigHubToken()
 	}
 	if resolvedToken == "" {
-		return errors.New("bridge link requires --token or CONFIGHUB_TOKEN when --base-url is set")
+		return errors.New("bridge link requires --token, CONFIGHUB_TOKEN, or CUB_TOKEN when --base-url is set")
 	}
 
 	result, err := bridgeflow.SubmitReviewLink(context.Background(), bridgeflow.LinkClient{
@@ -349,16 +357,24 @@ func runBridgeDecisionQuery(args []string) error {
 	if fs.NArg() != 0 {
 		return errors.New("usage: cub-gen bridge decision query [flags]")
 	}
-	if strings.TrimSpace(*baseURL) == "" {
+	resolvedBaseURL := strings.TrimSpace(*baseURL)
+	if resolvedBaseURL == "" {
+		resolvedBaseURL = defaultConfigHubBaseURL()
+	}
+	if resolvedBaseURL == "" {
 		return errors.New("bridge decision query requires --base-url")
+	}
+	resolvedToken := strings.TrimSpace(*token)
+	if resolvedToken == "" {
+		resolvedToken = defaultConfigHubToken()
 	}
 	if strings.TrimSpace(*changeID) == "" {
 		return errors.New("bridge decision query requires --change-id")
 	}
 
 	rec, err := bridgeflow.QueryDecisionByChangeID(context.Background(), bridgeflow.DecisionClient{
-		BaseURL:      strings.TrimSpace(*baseURL),
-		BearerToken:  strings.TrimSpace(*token),
+		BaseURL:      resolvedBaseURL,
+		BearerToken:  resolvedToken,
 		EndpointPath: strings.TrimSpace(*endpoint),
 	}, strings.TrimSpace(*changeID))
 	if err != nil {

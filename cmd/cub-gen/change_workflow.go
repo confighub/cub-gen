@@ -371,15 +371,15 @@ func executeChangeRun(targetSlug, renderTargetSlug string, opts changeRunOptions
 	if runMode == "connected" {
 		resolvedBaseURL := strings.TrimSpace(opts.BaseURL)
 		if resolvedBaseURL == "" {
-			resolvedBaseURL = strings.TrimSpace(os.Getenv("CONFIGHUB_BASE_URL"))
+			resolvedBaseURL = defaultConfigHubBaseURL()
 		}
 		if resolvedBaseURL == "" {
-			return changeRunResult{}, nil, errors.New("change run --mode connected requires --base-url or CONFIGHUB_BASE_URL")
+			return changeRunResult{}, nil, errors.New("change run --mode connected requires --base-url, CONFIGHUB_BASE_URL, or CUB_SERVER")
 		}
 
 		resolvedToken := strings.TrimSpace(opts.Token)
 		if resolvedToken == "" {
-			resolvedToken = strings.TrimSpace(os.Getenv("CONFIGHUB_TOKEN"))
+			resolvedToken = defaultConfigHubToken()
 		}
 
 		ingestRes, err := bridgeflow.IngestBundle(context.Background(), bridgeflow.Client{

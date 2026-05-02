@@ -4,6 +4,8 @@ examples/**/.cub-gen/
 
 # Build artifacts
 /cub-gen
+.goreleaser-dist/
+.tmp/
 *.test
 *.out
 coverage.txt

@@ -83,7 +83,9 @@ brew install confighub/tap/cub-gen
 Or download a release asset from [v0.3.0](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).
 
 If you install with Homebrew, you can run `cub-gen` directly. If you build from
-source in this repo, use `./cub-gen` in the examples below.
+source in this repo, use `./cub-gen` in the examples below. The integrated
+ConfigHub plugin form is `cub gen`; see [cub gen Plugin](cub-gen-plugin.md) for
+the plugin path.
 
 ## Build
 
@@ -91,6 +93,13 @@ source in this repo, use `./cub-gen` in the examples below.
 git clone https://github.com/confighub/cub-gen.git
 cd cub-gen
 go build -o cub-gen ./cmd/cub-gen
+```
+
+To stage the plugin form locally:
+
+```bash
+make build-plugin
+CUB_CONFIG="$PWD/.tmp/cub-plugin/config.yaml" cub gen --help
 ```
 
 ## Use your own repo in 3 commands

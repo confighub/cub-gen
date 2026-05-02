@@ -1,0 +1,63 @@
+version: 2
+
+project_name: cub-gen
+dist: .goreleaser-dist
+
+builds:
+  - id: cub-gen
+    main: ./cmd/cub-gen
+    binary: cub-gen
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+  # Plugin build: same source, compiled as `main` so a release archive can be
+  # extracted by `cub plugin install` into $CUB_CONFIG/plugins/gen/main.
+  - id: cub-gen-plugin
+    main: ./cmd/cub-gen
+    binary: main
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: default
+    ids:
+      - cub-gen
+      - cub-gen-plugin
+    allow_different_binary_count: true
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - README.md
+      - PARITY.md
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
