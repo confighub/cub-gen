@@ -56,9 +56,10 @@ If not, where should the change go?
 It does not deploy. Flux and Argo still reconcile. `cub-gen` sits before them
 and explains the source, owner, and safe edit path for generated config.
 
-The intended command name is `cub gen`, matching `cub gitops`. Today this repo
-still builds `cub-gen`. The plugin migration details are in
-[cub gen Plugin Readiness](docs/cub-gen-plugin.md).
+The integrated ConfigHub command is `cub gen`, matching `cub gitops`. This repo
+still ships the standalone `cub-gen` binary for local scripts, and the same
+binary can now be staged as the `cub gen` plugin. The plugin details are in
+[cub gen Plugin](docs/cub-gen-plugin.md).
 
 ## What You Get
 
@@ -90,6 +91,13 @@ If you prefer building from source:
 git clone https://github.com/confighub/cub-gen.git
 cd cub-gen
 go build -o cub-gen ./cmd/cub-gen
+```
+
+To try the plugin form from source:
+
+```bash
+make build-plugin
+CUB_CONFIG="$PWD/.tmp/cub-plugin/config.yaml" cub gen --help
 ```
 
 ## Use Your Repo in 3 Commands
@@ -392,14 +400,14 @@ controllers running in kind.
 | Status | What is true today |
 |---|---|
 | Latest shipped | `v0.3.0` was released on 2026-04-12 |
-| Strong now | Repo-first CLI is stable; 11 generator families ship on this branch; the main examples have local, connected, and live proof paths |
+| Strong now | Repo-first CLI is stable; 11 generator families ship on this branch; the `cub gen` plugin form works when staged; the main examples have local, connected, and live proof paths |
 | In progress | Working `v0.4` roadmap: make cub-gen's role clear as Component -> Variant -> Base/Deployment -> Target/Connections/Change/Proof |
 | Current release target | GitHub release tracker [#302](https://github.com/confighub/cub-gen/issues/302), topology alignment [#304](https://github.com/confighub/cub-gen/issues/304), flagship quickstart [#307](https://github.com/confighub/cub-gen/issues/307), and the [v0.4 working roadmap](docs/plans/2026-04-30-v0.4-obvious-value-roadmap.md) |
 | Latest release notes | See [docs/releases/v0.3.0.md](docs/releases/v0.3.0.md) |
 | Draft next release notes | See [docs/releases/v0.4-integration-beta.md](docs/releases/v0.4-integration-beta.md) |
 | Previous release notes | See [docs/releases/v0.2-preview.2.md](docs/releases/v0.2-preview.2.md) |
 | Example quality | Flagship example blockers and Helm depth blockers are closed on `main` |
-| CLI/docs follow-on | `#275`, `#219`, `#236`, `#209`-`#213`, `#276`-`#285` |
+| CLI/docs follow-on | `#275`, `#219`, `#209`-`#213`, `#276`-`#285` |
 | Release gate | `v0.3.0` was cut from green `main`; rerun ConfigHub smoke before the next release |
 | Actively tracked | [#302](https://github.com/confighub/cub-gen/issues/302) plus milestone [v0.4: Component -> Variant -> Proof](https://github.com/confighub/cub-gen/milestone/4) |
 

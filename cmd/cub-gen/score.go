@@ -34,7 +34,7 @@ func runScoreValidateWorkload(args []string) error {
 	fs := flag.NewFlagSet("score validate-workload", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	fs.Usage = func() {
-		fmt.Fprintln(fs.Output(), "Usage: cub-gen score validate-workload [flags]")
+		fmt.Fprintln(fs.Output(), pluginHelpLine("Usage: cub-gen score validate-workload [flags]"))
 		fmt.Fprintln(fs.Output())
 		fmt.Fprintln(fs.Output(), "Validate whether a Score workload stays within the approved workload-class contract.")
 		fmt.Fprintln(fs.Output())
@@ -42,7 +42,7 @@ func runScoreValidateWorkload(args []string) error {
 		fmt.Fprintln(fs.Output(), "Approved resource types return ALLOW; unapproved resource types return ESCALATE.")
 		fmt.Fprintln(fs.Output())
 		fmt.Fprintln(fs.Output(), "Examples:")
-		fmt.Fprintln(fs.Output(), "  cub-gen score validate-workload --score ./examples/scoredev-paas/score.yaml --contract ./examples/scoredev-paas/platform/contracts/workload-class.yaml")
+		fmt.Fprintln(fs.Output(), pluginHelpLine("  cub-gen score validate-workload --score ./examples/scoredev-paas/score.yaml --contract ./examples/scoredev-paas/platform/contracts/workload-class.yaml"))
 		fmt.Fprintln(fs.Output())
 		fmt.Fprintln(fs.Output(), "Flags:")
 		fs.PrintDefaults()
@@ -109,12 +109,12 @@ func runScoreValidateWorkload(args []string) error {
 }
 
 func printScoreUsage(out io.Writer) {
-	fmt.Fprintln(out, "Usage: cub-gen score <subcommand> [flags]")
+	fmt.Fprintln(out, pluginHelpLine("Usage: cub-gen score <subcommand> [flags]"))
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Score.dev onboarding and workload-contract checks.")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Subcommands:")
 	fmt.Fprintln(out, "  validate-workload  Check if score.yaml resource types stay within the approved workload class")
 	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Run 'cub-gen score <subcommand> --help' for details.")
+	fmt.Fprintln(out, pluginHelpLine("Run 'cub-gen score <subcommand> --help' for details."))
 }

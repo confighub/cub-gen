@@ -26,6 +26,8 @@ func main() {
 }
 
 func run(args []string) error {
+	args = normalizePluginArgs(args)
+
 	if len(args) == 0 {
 		printUsage(os.Stderr)
 		return errors.New("command required")
@@ -568,7 +570,7 @@ func parseFilterSet(raw string) map[string]struct{} {
 
 func printGeneratorsUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage:")
-	fmt.Fprintln(out, "  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]")
+	fmt.Fprintln(out, pluginHelpLine("  cub-gen generators [--kind KIND] [--profile PROFILE] [--capability CAPABILITY] [--strict-filters] [--json|--markdown] [--details] [--pretty]"))
 	fmt.Fprintln(out, "  (KIND/PROFILE/CAPABILITY support comma-separated values)")
 	fmt.Fprintln(out, "  use --strict-filters to fail on unknown filter values")
 	fmt.Fprintln(out, "  use --details with --json or --markdown to include policy/provenance templates")
@@ -1006,11 +1008,11 @@ type helpSection struct {
 }
 
 func printCommandHelp(out io.Writer, title string, description []string, sections ...helpSection) {
-	fmt.Fprintln(out, title)
+	fmt.Fprintln(out, pluginHelpLine(title))
 	if len(description) > 0 {
 		fmt.Fprintln(out)
 		for _, line := range description {
-			fmt.Fprintln(out, line)
+			fmt.Fprintln(out, pluginHelpLine(line))
 		}
 	}
 	for _, section := range sections {
@@ -1022,7 +1024,7 @@ func printCommandHelp(out io.Writer, title string, description []string, section
 			fmt.Fprintf(out, "%s:\n", section.Title)
 		}
 		for _, line := range section.Lines {
-			fmt.Fprintln(out, line)
+			fmt.Fprintln(out, pluginHelpLine(line))
 		}
 	}
 }

@@ -423,7 +423,7 @@ func writeJSONResponse(w http.ResponseWriter, status int, payload any) {
 
 func printChangeAPIUsage(out io.Writer) {
 	fmt.Fprintln(out, "Usage:")
-	fmt.Fprintln(out, "  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]")
+	fmt.Fprintln(out, pluginHelpLine("  cub-gen change api serve [--listen ADDR] [--space SPACE] [--ref REF] [--verifier NAME]"))
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Repo-first HTTP endpoints:")
 	fmt.Fprintln(out, "  POST /v1/changes")

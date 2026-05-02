@@ -37,8 +37,11 @@ go build ./cmd/cub-gen
 ./cub-gen platform import --json ./testdata/platform-estate/platform.yaml
 ./cub-gen platform import --json ./testdata/variant-topology/platform.yaml
 ./cub-gen platform fanout --json ./testdata/variant-fanout/platform.yaml
+./cub-gen platform adapt --json ./testdata/deployment-adaptation/platform.yaml
 ./cub-gen enrich preview --space platform --json ./testdata/app-of-apps-standalone
 ./cub-gen normalize preview --space platform --patch ./examples/springboot-paas
+make build-plugin
+CUB_CONFIG="$PWD/.tmp/cub-plugin/config.yaml" cub gen --help
 ```
 
 ## Non-negotiable principles
@@ -115,9 +118,9 @@ A change is complete only when:
 - `bridge link`: connect a GitHub PR and ConfigHub MR through one `change_id`.
 - `generators`: list registry-backed supported Generator families.
 
-The intended future product command is `cub gen`; today this repo still builds
-`cub-gen`. Keep `docs/cub-gen-plugin.md` aligned when command-shape claims
-change.
+The integrated product command is `cub gen`; this repo still builds `cub-gen`
+for standalone/local scripts and can stage the same binary as the `gen` plugin.
+Keep `docs/cub-gen-plugin.md` aligned when command-shape claims change.
 
 ## Mandatory local validation
 

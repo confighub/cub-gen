@@ -1,10 +1,10 @@
 ---
 name: cub-gen
 description: Use when working in the cub-gen repo or when explaining cub-gen's source-side role versus ConfigHub cub and cub-scout. Covers generator discovery, Component -> Variant -> Base/Deployment proof, DRY/WET field-origin tracing, inverse-edit routing, platform import/fanout, enrichment/normalization previews, publish/verify/attest bundles, and ConfigHub bridge workflows.
-tier: plugin-candidate
+tier: plugin-ready
 plugin: cub-gen
 canonical_command: cub-gen
-future_command: cub gen
+plugin_command: cub gen
 ---
 
 # cub-gen
@@ -19,7 +19,7 @@ Use this skill when the task is about:
 - platform estate import, variant fanout, enrichment, and normalization previews
 - publish, verify, attest, and verify-attestation bundles
 - ConfigHub bridge workflows for ingest, decisions, PR/MR links, and promotion
-- the future `cub gen` plugin surface
+- the `cub gen` plugin surface
 
 ## Read First
 
@@ -56,21 +56,23 @@ Component
 
 ## Command Status
 
-Today the canonical command is `cub-gen`. The target product surface is
-`cub gen`, but that requires the external `cub` plugin loader/distribution
-mechanism. Do not claim `cub gen --help` works unless you have verified it in
-the user's environment.
+Today the standalone command is `cub-gen`. The integrated ConfigHub product
+surface is `cub gen` when the binary is installed or staged as a `cub` plugin
+named `gen`. Do not claim a user's environment has `cub gen --help` until you
+have verified it there.
 
 Use this mapping when discussing the migration:
 
-| Today | Future plugin surface |
+| Today | Plugin surface |
 |---|---|
 | `cub-gen detect` | `cub gen detect` |
 | `cub-gen generators` | `cub gen generators` |
 | `cub-gen gitops discover` | `cub gen discover` |
 | `cub-gen gitops import` | `cub gen import` or `cub gen render` |
+| `cub-gen gitops cleanup` | `cub gen cleanup` |
 | `cub-gen platform import` | `cub gen platform import` |
 | `cub-gen platform fanout` | `cub gen fanout` |
+| `cub-gen platform adapt` | `cub gen adapt` |
 | `cub-gen enrich preview` | `cub gen enrich preview` |
 | `cub-gen normalize preview` | `cub gen normalize preview` |
 | `cub-gen publish` | `cub gen bundle` |
@@ -79,10 +81,21 @@ Use this mapping when discussing the migration:
 | `cub-gen verify-attestation` | `cub gen bundle verify-attestation` |
 | `cub-gen change preview` | `cub gen preview` |
 | `cub-gen change run` | `cub gen run` |
+| `cub-gen change diff` | `cub gen diff` |
+| `cub-gen change revision-diff` | `cub gen revision-diff` |
+| `cub-gen change impact` | `cub gen impact` |
 | `cub-gen change explain` | `cub gen explain` |
 | `cub-gen bridge ingest` | `cub gen ingest` |
 | `cub-gen bridge link` | `cub gen link` |
+| `cub-gen bridge decision ...` | `cub gen decision ...` |
 | `cub-gen bridge promote ...` | `cub gen promote ...` |
+
+Local plugin proof from this repo:
+
+```bash
+make build-plugin
+CUB_CONFIG="$PWD/.tmp/cub-plugin/config.yaml" cub gen --help
+```
 
 ## Tool Boundaries
 
