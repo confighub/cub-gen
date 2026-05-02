@@ -43,6 +43,7 @@ When `cub gen` ships:
 | `cub-gen gitops import` | `cub gen import` or `cub gen render` | final verb needs product choice |
 | `cub-gen platform import` | `cub gen platform import` | multi-repo estate graph |
 | `cub-gen platform fanout` | `cub gen fanout` | Component to Deployment Variant bundles |
+| `cub-gen platform adapt` | `cub gen adapt` | placeholder adaptation plan for cloned Deployment Variants |
 | `cub-gen enrich preview` | `cub gen enrich preview` | sidecar provenance proposal |
 | `cub-gen normalize preview` | `cub gen normalize preview` | review-only config rewrite proposal |
 | `cub-gen publish` | `cub gen bundle` | evidence bundle creation |

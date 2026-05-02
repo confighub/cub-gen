@@ -1,0 +1,50 @@
+schema_version: cub.confighub.io/platform-import-manifest/v1
+name: checkout-adaptation
+space: platform
+repos:
+  - id: checkout-base
+    role: platform
+    path: base
+    owner: platform-team
+    component: checkout-api
+    variant: base
+  - id: checkout-prod-us
+    role: app
+    path: prod-us
+    owner: app-team
+    component: checkout-api
+    variant: prod-us
+    target: prod-us
+adaptations:
+  - id: checkout-api/prod-us
+    component: checkout-api
+    variant: prod-us
+    base_variant: base
+    repo: checkout-prod-us
+    apply_gate: vet-placeholders
+    context:
+      namespace: checkout-prod-us
+      image_tag: "2026.05.02"
+      database_url: "secretref://checkout-prod-us/db-url"
+    placeholders:
+      - token: "{{NAMESPACE}}"
+        value_from: namespace
+        files:
+          - values.yaml
+        owner: platform-team
+        route: apply-here
+        reason: "Namespace is target-specific deployment config."
+      - token: "{{IMAGE_TAG}}"
+        value_from: image_tag
+        files:
+          - values.yaml
+        owner: app-team
+        route: apply-here
+        reason: "Image tag is an app-owned rollout value for this Deployment Variant."
+      - token: "{{DATABASE_URL}}"
+        value_from: database_url
+        files:
+          - values.yaml
+        owner: platform-team
+        route: lift-upstream
+        reason: "Database wiring should become an explicit connection, not an ad hoc literal."

@@ -14,6 +14,7 @@ START HERE:
   normalize preview  Propose governed rewrite patches for review
   platform import   Read a multi-repo platform estate as a graph
   platform fanout   Emit one proof bundle per Deployment Variant
+  platform adapt    Plan placeholder replacement for a cloned Deployment Variant
   detect            Detect generators in a repo
   generators        List supported generators (Helm, Score, Spring Boot, ...)
 
@@ -30,6 +31,7 @@ FIRST RUNS:
   cub-gen gitops import --space my-space ./examples/helm-paas
   cub-gen platform import --json ./testdata/platform-estate/platform.yaml
   cub-gen platform fanout --variant dev --json ./testdata/variant-fanout/platform.yaml
+  cub-gen platform adapt --json ./testdata/deployment-adaptation/platform.yaml
   cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas
   cub-gen enrich preview --space my-space ./examples/helm-paas
   cub-gen normalize preview --space my-space ./examples/springboot-paas

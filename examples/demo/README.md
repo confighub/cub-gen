@@ -17,7 +17,8 @@ quickstart or one concrete adoption path that matches what you already run.
 ```
 
 That local script prints the Generator, Component, Base/Deployment Variants,
-Target, one field origin, one route decision, and a verified proof bundle.
+Target, one field origin, one route decision, one placeholder adaptation gate,
+and a verified proof bundle.
 
 ## Proof ladder
 

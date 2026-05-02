@@ -20,12 +20,13 @@ const (
 )
 
 type Manifest struct {
-	SchemaVersion string            `json:"schema_version" yaml:"schema_version"`
-	Name          string            `json:"name" yaml:"name"`
-	Space         string            `json:"space,omitempty" yaml:"space,omitempty"`
-	Ref           string            `json:"ref,omitempty" yaml:"ref,omitempty"`
-	Repos         []ManifestRepo    `json:"repos" yaml:"repos"`
-	Variants      []ManifestVariant `json:"variants,omitempty" yaml:"variants,omitempty"`
+	SchemaVersion string               `json:"schema_version" yaml:"schema_version"`
+	Name          string               `json:"name" yaml:"name"`
+	Space         string               `json:"space,omitempty" yaml:"space,omitempty"`
+	Ref           string               `json:"ref,omitempty" yaml:"ref,omitempty"`
+	Repos         []ManifestRepo       `json:"repos" yaml:"repos"`
+	Variants      []ManifestVariant    `json:"variants,omitempty" yaml:"variants,omitempty"`
+	Adaptations   []ManifestAdaptation `json:"adaptations,omitempty" yaml:"adaptations,omitempty"`
 }
 
 type ManifestRepo struct {
@@ -51,6 +52,27 @@ type ManifestVariant struct {
 	HelmSet       []string `json:"helm_set,omitempty" yaml:"helm_set,omitempty"`
 	HelmSetString []string `json:"helm_set_string,omitempty" yaml:"helm_set_string,omitempty"`
 	HelmSetFile   []string `json:"helm_set_file,omitempty" yaml:"helm_set_file,omitempty"`
+}
+
+type ManifestAdaptation struct {
+	ID           string                          `json:"id,omitempty" yaml:"id,omitempty"`
+	Component    string                          `json:"component,omitempty" yaml:"component,omitempty"`
+	Variant      string                          `json:"variant,omitempty" yaml:"variant,omitempty"`
+	Repo         string                          `json:"repo" yaml:"repo"`
+	BaseVariant  string                          `json:"base_variant,omitempty" yaml:"base_variant,omitempty"`
+	ApplyGate    string                          `json:"apply_gate,omitempty" yaml:"apply_gate,omitempty"`
+	Context      map[string]string               `json:"context,omitempty" yaml:"context,omitempty"`
+	Placeholders []ManifestAdaptationPlaceholder `json:"placeholders,omitempty" yaml:"placeholders,omitempty"`
+}
+
+type ManifestAdaptationPlaceholder struct {
+	Token     string   `json:"token" yaml:"token"`
+	Value     string   `json:"value,omitempty" yaml:"value,omitempty"`
+	ValueFrom string   `json:"value_from,omitempty" yaml:"value_from,omitempty"`
+	Files     []string `json:"files,omitempty" yaml:"files,omitempty"`
+	Owner     string   `json:"owner,omitempty" yaml:"owner,omitempty"`
+	Route     string   `json:"route,omitempty" yaml:"route,omitempty"`
+	Reason    string   `json:"reason,omitempty" yaml:"reason,omitempty"`
 }
 
 type ImportOptions struct {

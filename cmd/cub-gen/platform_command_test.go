@@ -52,6 +52,27 @@ func TestPlatformFanoutGolden(t *testing.T) {
 	assertGoldenJSON(t, filepath.Join("testdata", "parity", "platform-fanout.golden.json"), got)
 }
 
+func TestPlatformAdaptCommand(t *testing.T) {
+	manifest, err := filepath.Abs(filepath.Join("..", "..", "testdata", "deployment-adaptation", "platform.yaml"))
+	if err != nil {
+		t.Fatalf("resolve adaptation fixture: %v", err)
+	}
+	stdout, stderr, err := runWithCapturedIO([]string{"platform", "adapt", "--json", manifest})
+	if err != nil {
+		t.Fatalf("platform adapt failed: %v\nstderr=%s", err, stderr)
+	}
+	var plan platformflow.AdaptationResult
+	if err := json.Unmarshal([]byte(stdout), &plan); err != nil {
+		t.Fatalf("parse platform adapt output: %v\n%s", err, stdout)
+	}
+	if plan.Summary.DeploymentCount != 1 || plan.Summary.PlaceholderCount != 3 || plan.Summary.ProposedReplacementCount != 3 {
+		t.Fatalf("unexpected adaptation summary: %+v", plan.Summary)
+	}
+	if len(plan.Deployments) != 1 || plan.Deployments[0].ApplyGate.State != "blocked-before-adaptation" {
+		t.Fatalf("unexpected adaptation deployments: %+v", plan.Deployments)
+	}
+}
+
 func TestChangeExplainCanScopeFanoutBundleByVariant(t *testing.T) {
 	manifest, err := filepath.Abs(filepath.Join("..", "..", "testdata", "variant-fanout", "platform.yaml"))
 	if err != nil {

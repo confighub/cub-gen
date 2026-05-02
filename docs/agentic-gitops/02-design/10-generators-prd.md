@@ -51,6 +51,10 @@ The product must let teams:
 5. adapt newly cloned Deployment Variants with reviewable patches instead of
    one-off manual edits or hidden scripts.
 
+The first local proof for item 5 is `cub-gen platform adapt`: it reads explicit
+placeholder tokens and target context, then emits a dry-run adaptation plan with
+owners, routes, file/line evidence, and apply-gate state.
+
 This is an adoption bridge, not a reconciler replacement. Flux/Argo stay in place.
 
 For the updated teaching version of this thesis, see
