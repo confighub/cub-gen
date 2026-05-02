@@ -102,8 +102,8 @@ If you want the v0.4 release path first, run:
 ```
 
 That prints the Generator, Component, Base/Deployment Variants, Target, one
-field origin, one route decision, and a verified proof bundle without requiring
-a ConfigHub login.
+field origin, one route decision, one placeholder adaptation gate, and a
+verified proof bundle without requiring a ConfigHub login.
 
 ```bash
 REPO=/path/to/your/repo

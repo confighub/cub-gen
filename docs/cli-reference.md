@@ -24,6 +24,7 @@ and compatibility contract.
 | How do I turn implicit platform rules into reviewable config proposals? | `normalize preview` |
 | How do I see a multi-repo platform estate? | `platform import` |
 | How do I emit one proof bundle per environment or tenant? | `platform fanout` |
+| How do I adapt a cloned Deployment Variant before apply? | `platform adapt` |
 | What evidence bundle should I verify or ship? | `publish -> verify -> attest` |
 | How do I use the deeper ConfigHub API flow? | `bridge` |
 
@@ -111,6 +112,38 @@ cub-gen platform fanout --variant dev --json ./testdata/variant-fanout/platform.
 Ambiguous repo metadata is rejected. If two repos claim the same
 `component/variant`, declare the `variants:` list explicitly instead of relying
 on inference.
+
+### `platform adapt`
+
+Read a platform manifest with explicit adaptation data and emit a dry-run plan
+for cloned Deployment Variants that still contain placeholders.
+
+```
+cub-gen platform adapt --json <manifest>
+cub-gen platform adapt --variant <name-or-component/variant> --json <manifest>
+```
+
+Use this after a Variant has been cloned and given a Target, but before it is
+safe to apply. The manifest declares the placeholder tokens, the target context,
+and the owner/route for each proposed replacement. The command emits:
+
+| Output | Meaning |
+|---|---|
+| `deployments[].variant_kind` | `deployment` when the repo has a Target under the current ConfigHub rule |
+| `deployments[].apply_gate` | Gate name, state, reason, and unresolved placeholder count |
+| `deployments[].placeholders` | Token, proposed value, owner, route, file, and line/column evidence |
+| `deployments[].proposals` | Review-only sidecar replacement proposals |
+| `diagnostics` | Missing context, missing files, non-deployment variants, or placeholders not found |
+
+Example:
+
+```
+cub-gen platform adapt --json ./testdata/deployment-adaptation/platform.yaml \
+  | jq '.deployments[] | {id, target, gate: .apply_gate.state}'
+```
+
+This command does not mutate source files, rendered YAML, ConfigHub Units, or
+apply gates. It makes the adaptation function explicit enough to review.
 
 ### `gitops discover`
 

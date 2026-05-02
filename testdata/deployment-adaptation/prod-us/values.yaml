@@ -1,0 +1,7 @@
+image:
+  repository: ghcr.io/acme/checkout-api
+  tag: "{{IMAGE_TAG}}"
+service:
+  namespace: "{{NAMESPACE}}"
+connections:
+  databaseUrl: "{{DATABASE_URL}}"
