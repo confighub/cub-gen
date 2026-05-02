@@ -2,10 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	bridgeflow "github.com/confighub/cub-gen/internal/bridge"
+	"github.com/confighub/cub-gen/internal/publish"
 )
 
 func TestProofEventsFromBundleJSON(t *testing.T) {
@@ -118,5 +122,87 @@ func TestProofEventsRejectsTamperedBundle(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "bundle digest mismatch") {
 		t.Fatalf("expected bundle digest mismatch, got %v", err)
+	}
+}
+
+func TestProofEventsFromDecisionRecord(t *testing.T) {
+	setupAliases(t)
+
+	attJSON, bundleJSON, err := generateAttestationJSON("ci-bot")
+	if err != nil {
+		t.Fatalf("generate attestation: %v", err)
+	}
+
+	var bundle publish.ChangeBundle
+	if err := json.Unmarshal([]byte(bundleJSON), &bundle); err != nil {
+		t.Fatalf("unmarshal bundle: %v", err)
+	}
+	ingestBytes, err := json.Marshal(bridgeflow.IngestResult{
+		StatusCode:     http.StatusCreated,
+		ArtifactID:     "wet_art_123",
+		Status:         "created",
+		ChangeID:       bundle.ChangeID,
+		BundleDigest:   bundle.BundleDigest,
+		IdempotencyKey: bundle.ChangeID + ":" + bundle.BundleDigest,
+	})
+	if err != nil {
+		t.Fatalf("marshal ingest: %v", err)
+	}
+
+	createOut, createErr, err := runWithCapturedIOAndStdin([]string{"bridge", "decision", "create", "--ingest", "-"}, string(ingestBytes))
+	if err != nil {
+		t.Fatalf("decision create returned error: %v\nstderr=%s", err, createErr)
+	}
+
+	attPath := filepath.Join(t.TempDir(), "attestation.json")
+	if err := os.WriteFile(attPath, []byte(attJSON), 0o644); err != nil {
+		t.Fatalf("write attestation: %v", err)
+	}
+	attachOut, attachErr, err := runWithCapturedIOAndStdin([]string{"bridge", "decision", "attach", "--decision", "-", "--attestation", attPath}, createOut)
+	if err != nil {
+		t.Fatalf("decision attach returned error: %v\nstderr=%s", err, attachErr)
+	}
+	applyOut, applyErr, err := runWithCapturedIOAndStdin([]string{
+		"bridge", "decision", "apply",
+		"--decision", "-",
+		"--state", "ALLOW",
+		"--approved-by", "platform-owner",
+		"--reason", "policy checks passed",
+	}, attachOut)
+	if err != nil {
+		t.Fatalf("decision apply returned error: %v\nstderr=%s", err, applyErr)
+	}
+
+	out, stderr, err := runWithCapturedIOAndStdin([]string{"proof", "events", "--in", "-"}, applyOut)
+	if err != nil {
+		t.Fatalf("proof events returned error: %v\nstderr=%s", err, stderr)
+	}
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal proof log: %v\noutput=%s", err, out)
+	}
+	if got["source_artifact_kind"] != "governed_decision" {
+		t.Fatalf("unexpected source artifact kind: %v", got["source_artifact_kind"])
+	}
+	if got["trace_id"] != bundle.ChangeID {
+		t.Fatalf("expected trace id %q, got %v", bundle.ChangeID, got["trace_id"])
+	}
+	if got["event_count"] != float64(3) {
+		t.Fatalf("expected three decision events, got %v", got["event_count"])
+	}
+	events, ok := got["events"].([]any)
+	if !ok || len(events) != 3 {
+		t.Fatalf("expected three event objects, got %v", got["events"])
+	}
+	applied, ok := events[2].(map[string]any)
+	if !ok {
+		t.Fatalf("expected applied event object, got %T", events[2])
+	}
+	if applied["event_type"] != "governed_decision.applied" || applied["decision_state"] != "ALLOW" {
+		t.Fatalf("unexpected applied event: %+v", applied)
 	}
 }

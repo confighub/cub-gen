@@ -57,7 +57,8 @@
       "type": "string",
       "enum": [
         "change_bundle",
-        "attestation"
+        "attestation",
+        "governed_decision"
       ]
     },
     "artifact_digest": {
@@ -87,6 +88,18 @@
       "items": {
         "type": "string"
       }
+    },
+    "route_kind": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "decision_state": {
+      "type": "string"
+    },
+    "decision_reason": {
+      "type": "string"
     }
   },
   "additionalProperties": false

@@ -8,3 +8,4 @@ COMMANDS:
 EXAMPLES:
   cub-gen proof events --in bundle.json
   cub-gen proof events --in attestation.json --bundle bundle.json --ndjson
+  cub-gen proof events --in decision.json --ndjson

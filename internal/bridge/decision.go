@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/confighub/cub-gen/internal/attest"
+	"github.com/confighub/cub-gen/internal/proof"
 )
 
 const (
@@ -43,6 +44,7 @@ const (
 type DecisionRecord struct {
 	SchemaVersion       string        `json:"schema_version"`
 	Source              string        `json:"source"`
+	TraceID             string        `json:"trace_id,omitempty"`
 	ChangeID            string        `json:"change_id"`
 	BundleDigest        string        `json:"bundle_digest"`
 	ArtifactID          string        `json:"artifact_id,omitempty"`
@@ -56,6 +58,7 @@ type DecisionRecord struct {
 	DecisionReason      string        `json:"decision_reason,omitempty"`
 	DecidedAt           string        `json:"decided_at,omitempty"`
 	UpdatedAt           string        `json:"updated_at"`
+	ProofEvents         []proof.Event `json:"proof_events,omitempty"`
 }
 
 // DecisionRequest applies a terminal governed decision.
@@ -94,6 +97,7 @@ func NewDecisionRecord(ingest IngestResult, at time.Time) (DecisionRecord, error
 	rec := DecisionRecord{
 		SchemaVersion:  decisionSchemaVersion,
 		Source:         decisionSource,
+		TraceID:        proof.TraceID(changeID, "", "", "", ""),
 		ChangeID:       changeID,
 		BundleDigest:   bundleDigest,
 		ArtifactID:     strings.TrimSpace(ingest.ArtifactID),
@@ -101,6 +105,15 @@ func NewDecisionRecord(ingest IngestResult, at time.Time) (DecisionRecord, error
 		State:          DecisionStateIngested,
 		UpdatedAt:      at.UTC().Format(time.RFC3339),
 	}
+	rec.ProofEvents = appendDecisionEvent(rec.ProofEvents, decisionEventInput{
+		EventType:            proof.EventTypeDecisionCreated,
+		EventTime:            at,
+		ChangeID:             rec.ChangeID,
+		TraceID:              rec.TraceID,
+		ParentArtifactKind:   proof.ArtifactKindChangeBundle,
+		ParentArtifactDigest: rec.BundleDigest,
+		DecisionState:        string(rec.State),
+	})
 	return rec, ValidateDecisionRecord(rec)
 }
 
@@ -130,6 +143,19 @@ func AttachAttestation(rec DecisionRecord, attestation attest.Record, at time.Ti
 	rec.AttestationVerifier = strings.TrimSpace(attestation.Verifier)
 	rec.AttestedAt = at.UTC().Format(time.RFC3339)
 	rec.UpdatedAt = rec.AttestedAt
+	if strings.TrimSpace(rec.TraceID) == "" {
+		rec.TraceID = proof.TraceID(rec.ChangeID, "", "", "", "")
+	}
+	rec.ProofEvents = appendDecisionEvent(rec.ProofEvents, decisionEventInput{
+		EventType:            proof.EventTypeDecisionAttested,
+		EventTime:            at,
+		ChangeID:             rec.ChangeID,
+		TraceID:              rec.TraceID,
+		ParentEventID:        proof.FindEventID(attestation.ProofEvents, proof.EventTypeAttestationVerified),
+		ParentArtifactKind:   proof.ArtifactKindAttestation,
+		ParentArtifactDigest: rec.AttestationDigest,
+		DecisionState:        string(rec.State),
+	})
 	return rec, ValidateDecisionRecord(rec)
 }
 
@@ -162,6 +188,20 @@ func ApplyDecision(rec DecisionRecord, req DecisionRequest, at time.Time) (Decis
 	rec.DecisionReason = reason
 	rec.DecidedAt = at.UTC().Format(time.RFC3339)
 	rec.UpdatedAt = rec.DecidedAt
+	if strings.TrimSpace(rec.TraceID) == "" {
+		rec.TraceID = proof.TraceID(rec.ChangeID, "", "", "", "")
+	}
+	rec.ProofEvents = appendDecisionEvent(rec.ProofEvents, decisionEventInput{
+		EventType:            proof.EventTypeDecisionApplied,
+		EventTime:            at,
+		ChangeID:             rec.ChangeID,
+		TraceID:              rec.TraceID,
+		ParentEventID:        latestDecisionEventID(rec.ProofEvents),
+		ParentArtifactKind:   proof.ArtifactKindDecision,
+		ParentArtifactDigest: "",
+		DecisionState:        string(rec.State),
+		DecisionReason:       rec.DecisionReason,
+	})
 	return rec, ValidateDecisionRecord(rec)
 }
 
@@ -208,6 +248,9 @@ func ValidateDecisionRecord(rec DecisionRecord) error {
 	}
 	if strings.TrimSpace(rec.UpdatedAt) == "" {
 		return fmt.Errorf("missing updated_at")
+	}
+	if err := validateDecisionProofEvents(rec); err != nil {
+		return err
 	}
 	return nil
 }
@@ -294,4 +337,74 @@ func resolveDecisionEndpoint(client DecisionClient, changeID string) (string, er
 
 func isTerminalDecision(state DecisionState) bool {
 	return state == DecisionStateAllow || state == DecisionStateEscalate || state == DecisionStateBlock
+}
+
+type decisionEventInput struct {
+	EventType            string
+	EventTime            time.Time
+	ChangeID             string
+	TraceID              string
+	ParentEventID        string
+	ParentArtifactKind   string
+	ParentArtifactDigest string
+	DecisionState        string
+	DecisionReason       string
+}
+
+func appendDecisionEvent(events []proof.Event, input decisionEventInput) []proof.Event {
+	traceID := strings.TrimSpace(input.TraceID)
+	if traceID == "" {
+		traceID = proof.TraceID(input.ChangeID, "", "", "", "")
+	}
+	event := proof.NewEvent(proof.Input{
+		EventType:            input.EventType,
+		EventTime:            input.EventTime,
+		Source:               decisionSource,
+		TraceID:              traceID,
+		ChangeID:             input.ChangeID,
+		ArtifactKind:         proof.ArtifactKindDecision,
+		ParentEventID:        input.ParentEventID,
+		ParentArtifactKind:   input.ParentArtifactKind,
+		ParentArtifactDigest: input.ParentArtifactDigest,
+		SummaryCounts: map[string]int{
+			"decision_records": 1,
+		},
+		DecisionState:  input.DecisionState,
+		DecisionReason: input.DecisionReason,
+	})
+	return append(append([]proof.Event(nil), events...), event)
+}
+
+func latestDecisionEventID(events []proof.Event) string {
+	for i := len(events) - 1; i >= 0; i-- {
+		if events[i].ArtifactKind == proof.ArtifactKindDecision {
+			return events[i].EventID
+		}
+	}
+	return ""
+}
+
+func validateDecisionProofEvents(rec DecisionRecord) error {
+	if len(rec.ProofEvents) == 0 {
+		return nil
+	}
+	traceID := strings.TrimSpace(rec.TraceID)
+	if traceID == "" {
+		return fmt.Errorf("proof_events require trace_id")
+	}
+	for i, event := range rec.ProofEvents {
+		if err := proof.ValidateEvent(event); err != nil {
+			return fmt.Errorf("proof_events[%d]: %w", i, err)
+		}
+		if event.ArtifactKind != proof.ArtifactKindDecision {
+			return fmt.Errorf("proof_events[%d]: artifact_kind mismatch: expected %q, got %q", i, proof.ArtifactKindDecision, event.ArtifactKind)
+		}
+		if event.TraceID != traceID {
+			return fmt.Errorf("proof_events[%d]: trace_id mismatch: expected %q, got %q", i, traceID, event.TraceID)
+		}
+		if event.ChangeID != rec.ChangeID {
+			return fmt.Errorf("proof_events[%d]: change_id mismatch: expected %q, got %q", i, rec.ChangeID, event.ChangeID)
+		}
+	}
+	return nil
 }

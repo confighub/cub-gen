@@ -375,11 +375,13 @@ cub-gen verify-attestation --in <attestation.json> --bundle <bundle.json>
 
 ### `proof events`
 
-Verify a bundle or attestation and emit only its loggable proof events.
+Verify a bundle, attestation, or governed decision record and emit only its
+loggable proof events.
 
 ```
 cub-gen proof events --in <bundle.json>
 cub-gen proof events --in <attestation.json> --bundle <bundle.json> --ndjson
+cub-gen proof events --in <decision.json> --ndjson
 ```
 
 Default output is a small `proof-log/v1` JSON envelope. `--ndjson` emits one
@@ -416,6 +418,10 @@ cub-gen bridge decision create --ingest <ingest-result.json>
 cub-gen bridge decision attach --decision <decision.json> --attestation <attestation.json>
 cub-gen bridge decision apply --decision <decision.json> --state ALLOW --approved-by <who> --reason <why>
 ```
+
+Local decision records carry `trace_id` and `proof_events[]`, so the same
+`proof events` command can produce log-safe records for the decision lifecycle:
+created, attestation attached, and terminal decision applied.
 
 ### `bridge link`
 

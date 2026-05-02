@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/confighub/cub-gen/internal/attest"
+	"github.com/confighub/cub-gen/internal/proof"
 )
 
 func TestNewDecisionRecordFromIngest(t *testing.T) {
@@ -40,6 +41,19 @@ func TestNewDecisionRecordFromIngest(t *testing.T) {
 	}
 	if rec.ChangeID != bundle.ChangeID || rec.BundleDigest != bundle.BundleDigest {
 		t.Fatalf("unexpected decision identity linkage: %+v", rec)
+	}
+	if rec.TraceID != bundle.ChangeID {
+		t.Fatalf("expected trace_id %q, got %q", bundle.ChangeID, rec.TraceID)
+	}
+	if len(rec.ProofEvents) != 1 {
+		t.Fatalf("expected one proof event, got %d", len(rec.ProofEvents))
+	}
+	event := rec.ProofEvents[0]
+	if event.EventType != proof.EventTypeDecisionCreated || event.DecisionState != string(DecisionStateIngested) {
+		t.Fatalf("unexpected decision proof event: %+v", event)
+	}
+	if event.ParentArtifactKind != proof.ArtifactKindChangeBundle || event.ParentArtifactDigest != bundle.BundleDigest {
+		t.Fatalf("unexpected decision proof parent: %+v", event)
 	}
 	if rec.UpdatedAt != ts.Format(time.RFC3339) {
 		t.Fatalf("expected updated_at %q, got %q", ts.Format(time.RFC3339), rec.UpdatedAt)
@@ -72,6 +86,12 @@ func TestAttachAttestationAndAllowDecision(t *testing.T) {
 	if attested.AttestationDigest != att.AttestationDigest {
 		t.Fatalf("expected attestation digest %q, got %q", att.AttestationDigest, attested.AttestationDigest)
 	}
+	if len(attested.ProofEvents) != 2 {
+		t.Fatalf("expected two proof events after attestation attach, got %d", len(attested.ProofEvents))
+	}
+	if event := attested.ProofEvents[1]; event.EventType != proof.EventTypeDecisionAttested || event.ParentArtifactDigest != att.AttestationDigest {
+		t.Fatalf("unexpected attested proof event: %+v", event)
+	}
 
 	decided, err := ApplyDecision(attested, DecisionRequest{
 		State:          DecisionStateAllow,
@@ -86,6 +106,12 @@ func TestAttachAttestationAndAllowDecision(t *testing.T) {
 	}
 	if decided.DecidedAt == "" || decided.DecisionReason == "" {
 		t.Fatalf("expected terminal decision fields to be set: %+v", decided)
+	}
+	if len(decided.ProofEvents) != 3 {
+		t.Fatalf("expected three proof events after terminal decision, got %d", len(decided.ProofEvents))
+	}
+	if event := decided.ProofEvents[2]; event.EventType != proof.EventTypeDecisionApplied || event.DecisionState != string(DecisionStateAllow) || event.DecisionReason != "policy checks passed" {
+		t.Fatalf("unexpected applied proof event: %+v", event)
 	}
 }
 

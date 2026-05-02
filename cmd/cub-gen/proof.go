@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/confighub/cub-gen/internal/attest"
+	bridgeflow "github.com/confighub/cub-gen/internal/bridge"
 	"github.com/confighub/cub-gen/internal/proof"
 	"github.com/confighub/cub-gen/internal/publish"
 )
@@ -18,6 +19,7 @@ const (
 	proofLogSchema          = "cub.confighub.io/proof-log/v1"
 	changeBundleSchema      = "cub.confighub.io/change-bundle/v1"
 	attestationRecordSchema = "cub.confighub.io/attestation/v1"
+	decisionRecordSchema    = "cub.confighub.io/governed-decision-state/v1"
 )
 
 type proofLog struct {
@@ -131,6 +133,24 @@ func buildProofLog(inputBytes []byte, bundlePath string) (proofLog, error) {
 			EventCount:           len(rec.ProofEvents),
 			Events:               rec.ProofEvents,
 		}, nil
+	case decisionRecordSchema:
+		var rec bridgeflow.DecisionRecord
+		if err := json.Unmarshal(inputBytes, &rec); err != nil {
+			return proofLog{}, fmt.Errorf("parse decision json: %w", err)
+		}
+		if err := bridgeflow.ValidateDecisionRecord(rec); err != nil {
+			return proofLog{}, err
+		}
+		if len(rec.ProofEvents) == 0 {
+			return proofLog{}, fmt.Errorf("decision record missing proof_events")
+		}
+		return proofLog{
+			SchemaVersion:      proofLogSchema,
+			TraceID:            rec.TraceID,
+			SourceArtifactKind: proof.ArtifactKindDecision,
+			EventCount:         len(rec.ProofEvents),
+			Events:             rec.ProofEvents,
+		}, nil
 	default:
 		return proofLog{}, fmt.Errorf("unsupported proof input schema_version %q", header.SchemaVersion)
 	}
@@ -179,6 +199,7 @@ func printProofUsage(out io.Writer) {
 			Lines: []string{
 				"  cub-gen proof events --in bundle.json",
 				"  cub-gen proof events --in attestation.json --bundle bundle.json --ndjson",
+				"  cub-gen proof events --in decision.json --ndjson",
 			},
 		},
 	)

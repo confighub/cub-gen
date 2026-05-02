@@ -65,6 +65,30 @@ func TestTraceIDFallback(t *testing.T) {
 	}
 }
 
+func TestNewEventSupportsDecisionMetadata(t *testing.T) {
+	event := NewEvent(Input{
+		EventType:      EventTypeDecisionApplied,
+		EventTime:      time.Date(2026, 3, 6, 10, 3, 0, 0, time.UTC),
+		Source:         "cub-gen",
+		TraceID:        "trace_custom",
+		ChangeID:       "chg_123",
+		ArtifactKind:   ArtifactKindDecision,
+		DecisionState:  "ALLOW",
+		DecisionReason: "policy checks passed",
+		RouteKind:      "apply-here",
+		Owner:          "app-team",
+	})
+	if event.TraceID != "trace_custom" {
+		t.Fatalf("expected explicit trace id, got %q", event.TraceID)
+	}
+	if event.DecisionState != "ALLOW" || event.RouteKind != "apply-here" || event.Owner != "app-team" {
+		t.Fatalf("decision metadata was not preserved: %+v", event)
+	}
+	if err := ValidateEvent(event); err != nil {
+		t.Fatalf("ValidateEvent returned error: %v", err)
+	}
+}
+
 func TestValidateArtifactEvents(t *testing.T) {
 	at := time.Date(2026, 3, 6, 10, 0, 0, 0, time.UTC)
 	event := NewEvent(Input{

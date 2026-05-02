@@ -14,9 +14,13 @@ const (
 
 	EventTypeChangeBundlePublished = "change_bundle.published"
 	EventTypeAttestationVerified   = "attestation.verified"
+	EventTypeDecisionCreated       = "governed_decision.created"
+	EventTypeDecisionAttested      = "governed_decision.attested"
+	EventTypeDecisionApplied       = "governed_decision.applied"
 
 	ArtifactKindChangeBundle = "change_bundle"
 	ArtifactKindAttestation  = "attestation"
+	ArtifactKindDecision     = "governed_decision"
 
 	digestAlgorithm = "sha256"
 )
@@ -43,6 +47,10 @@ type Event struct {
 	ParentArtifactDigest string         `json:"parent_artifact_digest,omitempty"`
 	SummaryCounts        map[string]int `json:"summary_counts,omitempty"`
 	GeneratorProfiles    []string       `json:"generator_profiles,omitempty"`
+	RouteKind            string         `json:"route_kind,omitempty"`
+	Owner                string         `json:"owner,omitempty"`
+	DecisionState        string         `json:"decision_state,omitempty"`
+	DecisionReason       string         `json:"decision_reason,omitempty"`
 }
 
 // Input contains the stable fields used to create a proof event.
@@ -50,6 +58,7 @@ type Input struct {
 	EventType            string
 	EventTime            time.Time
 	Source               string
+	TraceID              string
 	ChangeID             string
 	Space                string
 	TargetSlug           string
@@ -64,6 +73,10 @@ type Input struct {
 	ParentArtifactDigest string
 	SummaryCounts        map[string]int
 	GeneratorProfiles    []string
+	RouteKind            string
+	Owner                string
+	DecisionState        string
+	DecisionReason       string
 }
 
 // NewEvent returns a deterministic proof event for a generated artifact.
@@ -75,7 +88,7 @@ func NewEvent(input Input) Event {
 		EventType:            strings.TrimSpace(input.EventType),
 		EventTime:            input.EventTime.UTC().Format(time.RFC3339),
 		Source:               strings.TrimSpace(input.Source),
-		TraceID:              TraceID(input.ChangeID, input.Space, input.TargetSlug, input.RenderTargetSlug, input.Ref),
+		TraceID:              inputTraceID(input),
 		ChangeID:             strings.TrimSpace(input.ChangeID),
 		Space:                strings.TrimSpace(input.Space),
 		TargetSlug:           strings.TrimSpace(input.TargetSlug),
@@ -89,6 +102,10 @@ func NewEvent(input Input) Event {
 		ParentArtifactDigest: strings.TrimSpace(input.ParentArtifactDigest),
 		SummaryCounts:        counts,
 		GeneratorProfiles:    profiles,
+		RouteKind:            strings.TrimSpace(input.RouteKind),
+		Owner:                strings.TrimSpace(input.Owner),
+		DecisionState:        strings.TrimSpace(input.DecisionState),
+		DecisionReason:       strings.TrimSpace(input.DecisionReason),
 	}
 	event.EventID = EventID(event)
 	return event
@@ -108,6 +125,13 @@ func TraceID(changeID, space, targetSlug, renderTargetSlug, ref string) string {
 	}
 	sum := sha256.Sum256([]byte(strings.Join(parts, "|")))
 	return "trace_" + hex.EncodeToString(sum[:])[:16]
+}
+
+func inputTraceID(input Input) string {
+	if traceID := strings.TrimSpace(input.TraceID); traceID != "" {
+		return traceID
+	}
+	return TraceID(input.ChangeID, input.Space, input.TargetSlug, input.RenderTargetSlug, input.Ref)
 }
 
 // EventID returns the deterministic event id. ArtifactDigest is deliberately

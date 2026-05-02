@@ -39,6 +39,10 @@ Every proof event carries:
 | `parent_artifact_digest` | Digest of the parent artifact, such as the bundle an attestation verified |
 | `summary_counts` | Small log-friendly counters |
 | `generator_profiles` | Generator families involved in the proof |
+| `route_kind` | Optional route decision, for mutation apply gate events |
+| `owner` | Optional owner for routed mutation decisions |
+| `decision_state` | Optional governed decision state, such as `ALLOW` |
+| `decision_reason` | Optional short reason for the decision |
 
 Schema: [`proof-event.v1.schema.json`](schemas/proof-event.v1.schema.json)
 
@@ -48,6 +52,9 @@ Schema: [`proof-event.v1.schema.json`](schemas/proof-event.v1.schema.json)
 |---|---|---|---|
 | `change_bundle.published` | `publish` and `platform fanout` | `change_bundle` | none |
 | `attestation.verified` | `attest` | `attestation` | `change_bundle.published` |
+| `governed_decision.created` | `bridge decision create` | `governed_decision` | bundle digest |
+| `governed_decision.attested` | `bridge decision attach` | `governed_decision` | `attestation.verified` |
+| `governed_decision.applied` | `bridge decision apply` | `governed_decision` | previous decision event |
 
 ## CLI Extraction
 
@@ -57,11 +64,14 @@ records without carrying the whole bundle payload:
 ```bash
 cub-gen proof events --in bundle.json
 cub-gen proof events --in attestation.json --bundle bundle.json --ndjson
+cub-gen proof events --in decision.json --ndjson
 ```
 
 The command verifies the input first. Bundle input is checked with
 `verify`; attestation input is checked with `verify-attestation`, and the
-optional `--bundle` flag strengthens the parent-link check.
+optional `--bundle` flag strengthens the parent-link check. Decision input is
+checked against the governed decision-state contract and must carry
+`proof_events[]`.
 
 ## Trace Chain
 
@@ -69,11 +79,14 @@ optional `--bundle` flag strengthens the parent-link check.
 flowchart LR
   source["Source config + Generator"] --> bundle["Change bundle"]
   bundle --> attestation["Attestation"]
+  attestation --> decision["Governed decision"]
   bundle --> logs["Pilot / validation logs"]
   attestation --> logs
+  decision --> logs
 
   bundle -. "trace_id + bundle_digest" .-> logs
   attestation -. "trace_id + attestation_digest + parent bundle_digest" .-> logs
+  decision -. "trace_id + decision_state + parent event/digest" .-> logs
 ```
 
 The important join keys are:
@@ -84,6 +97,7 @@ The important join keys are:
 | Bundle integrity | `artifact_kind=change_bundle`, `artifact_digest=bundle_digest` |
 | Attestation integrity | `artifact_kind=attestation`, `artifact_digest=attestation_digest` |
 | Attestation to bundle | `parent_artifact_kind=change_bundle`, `parent_artifact_digest=bundle_digest` |
+| Decision lifecycle | `artifact_kind=governed_decision`, `decision_state`, `parent_event_id` |
 
 ## Digest Rules
 
