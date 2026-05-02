@@ -144,6 +144,17 @@ func TestVerifyBundle(t *testing.T) {
 		t.Fatalf("expected proof artifact digest mismatch, got %v", err)
 	}
 
+	tamperedTrace := bundle
+	tamperedTrace.TraceID = "trace_custom"
+	tamperedTrace.ProofEvents = append([]proof.Event(nil), bundle.ProofEvents...)
+	tamperedTrace.ProofEvents[0].TraceID = tamperedTrace.TraceID
+	tamperedTrace.ProofEvents[0].EventID = proof.EventID(tamperedTrace.ProofEvents[0])
+	tamperedTrace.BundleDigest = computeBundleDigest(tamperedTrace)
+	tamperedTrace.ProofEvents = proof.SetArtifactDigest(tamperedTrace.ProofEvents, proof.ArtifactKindChangeBundle, tamperedTrace.BundleDigest)
+	if err := VerifyBundle(tamperedTrace); err == nil || !strings.Contains(err.Error(), "trace_id mismatch") {
+		t.Fatalf("expected trace_id mismatch, got %v", err)
+	}
+
 	unsupported := bundle
 	unsupported.DigestAlgorithm = "sha512"
 	if err := VerifyBundle(unsupported); err == nil || !strings.Contains(err.Error(), "unsupported digest_algorithm") {

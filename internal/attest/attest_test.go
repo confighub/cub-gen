@@ -161,3 +161,35 @@ func TestVerifyRecordAgainstBundle(t *testing.T) {
 		t.Fatalf("expected bundle digest link mismatch, got %v", err)
 	}
 }
+
+func TestVerifyRecordAgainstBundleRejectsTraceIDMismatchWithoutChangeID(t *testing.T) {
+	bundle := publish.BuildBundleAt(gitopsflow.ImportFlowResult{
+		Space:            "platform",
+		TargetSlug:       "custom",
+		TargetPath:       "/repo",
+		RenderTargetSlug: "render",
+		RenderTargetPath: "/repo/render",
+		Ref:              "HEAD",
+	}, time.Date(2026, 3, 6, 0, 0, 0, 0, time.UTC))
+	if bundle.ChangeID != "" {
+		t.Fatalf("expected empty change_id fixture, got %q", bundle.ChangeID)
+	}
+
+	rec, err := BuildAt(bundle, time.Date(2026, 3, 6, 1, 0, 0, 0, time.UTC), "ci-bot")
+	if err != nil {
+		t.Fatalf("BuildAt returned error: %v", err)
+	}
+	rec.TraceID = "trace_custom"
+	rec.ProofEvents = append([]proof.Event(nil), rec.ProofEvents...)
+	rec.ProofEvents[0].TraceID = rec.TraceID
+	rec.ProofEvents[0].EventID = proof.EventID(rec.ProofEvents[0])
+	rec.AttestationDigest = computeAttestationDigest(rec)
+	rec.ProofEvents = proof.SetArtifactDigest(rec.ProofEvents, proof.ArtifactKindAttestation, rec.AttestationDigest)
+
+	if err := VerifyRecord(rec); err != nil {
+		t.Fatalf("expected tampered record to remain internally valid, got %v", err)
+	}
+	if err := VerifyRecordAgainstBundle(rec, bundle); err == nil || !strings.Contains(err.Error(), "trace_id link mismatch") {
+		t.Fatalf("expected trace_id link mismatch, got %v", err)
+	}
+}

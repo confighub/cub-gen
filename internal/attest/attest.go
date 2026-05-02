@@ -172,6 +172,9 @@ func VerifyRecordAgainstBundle(rec Record, bundle publish.ChangeBundle) error {
 	if rec.ChangeID != "" && bundle.ChangeID != "" && rec.ChangeID != bundle.ChangeID {
 		return fmt.Errorf("change_id link mismatch: attestation=%s bundle=%s", rec.ChangeID, bundle.ChangeID)
 	}
+	if rec.TraceID != bundle.TraceID {
+		return fmt.Errorf("trace_id link mismatch: attestation=%s bundle=%s", rec.TraceID, bundle.TraceID)
+	}
 	if err := proof.ValidateArtifactEvents(rec.ProofEvents, proof.Expected{
 		EventType:            proof.EventTypeAttestationVerified,
 		EventTime:            rec.GeneratedAt,

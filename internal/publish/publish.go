@@ -203,6 +203,10 @@ func VerifyBundle(bundle ChangeBundle) error {
 	if bundle.BundleDigest != expected {
 		return fmt.Errorf("bundle digest mismatch: expected %s, got %s", expected, bundle.BundleDigest)
 	}
+	expectedTraceID := proof.TraceID(bundle.ChangeID, bundle.Space, bundle.TargetSlug, bundle.RenderTargetSlug, bundle.Ref)
+	if bundle.TraceID != expectedTraceID {
+		return fmt.Errorf("trace_id mismatch: expected %s, got %s", expectedTraceID, bundle.TraceID)
+	}
 	if err := proof.ValidateArtifactEvents(bundle.ProofEvents, proof.Expected{
 		EventType:        proof.EventTypeChangeBundlePublished,
 		EventTime:        bundle.GeneratedAt,
