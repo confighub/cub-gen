@@ -3,5 +3,7 @@
   "bundle_digest": "\u003cbundle_digest\u003e",
   "change_id": "\u003cchange_id\u003e",
   "linked_bundle_check": true,
+  "proof_event_count": 1,
+  "trace_id": "\u003ctrace_id\u003e",
   "valid": true
 }

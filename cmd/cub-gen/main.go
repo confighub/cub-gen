@@ -49,6 +49,8 @@ func run(args []string) error {
 		return runAttest(args[1:])
 	case "verify-attestation":
 		return runVerifyAttestation(args[1:])
+	case "proof":
+		return runProof(args[1:])
 	case "change":
 		return runChange(args[1:])
 	case "enrich":
@@ -856,10 +858,12 @@ func runVerify(args []string) error {
 
 	if *jsonOut {
 		return writeJSON(os.Stdout, map[string]any{
-			"valid":            true,
-			"digest_algorithm": bundle.DigestAlgorithm,
-			"bundle_digest":    bundle.BundleDigest,
-			"change_id":        bundle.ChangeID,
+			"valid":             true,
+			"digest_algorithm":  bundle.DigestAlgorithm,
+			"bundle_digest":     bundle.BundleDigest,
+			"change_id":         bundle.ChangeID,
+			"trace_id":          bundle.TraceID,
+			"proof_event_count": len(bundle.ProofEvents),
 		}, *pretty)
 	}
 
@@ -983,6 +987,8 @@ func runVerifyAttestation(args []string) error {
 			"attestation_digest":  rec.AttestationDigest,
 			"bundle_digest":       rec.BundleDigest,
 			"change_id":           rec.ChangeID,
+			"trace_id":            rec.TraceID,
+			"proof_event_count":   len(rec.ProofEvents),
 		}, *pretty)
 	}
 
@@ -1061,6 +1067,7 @@ func printUsage(out io.Writer) {
 				"  publish           Build a provenance bundle from a repo or import output",
 				"  verify            Verify a provenance bundle",
 				"  attest            Sign a provenance bundle",
+				"  proof events      Extract loggable proof events from a bundle or attestation",
 			},
 		},
 		helpSection{

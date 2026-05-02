@@ -3,7 +3,8 @@
     "change": {
       "attestation_digest": "sha256:REDACTED",
       "bundle_digest": "sha256:REDACTED",
-      "change_id": "chg_REDACTED"
+      "change_id": "chg_REDACTED",
+      "trace_id": "chg_REDACTED"
     },
     "explanation": {
       "confidence": 0.94,
@@ -39,7 +40,8 @@
     "change": {
       "attestation_digest": "sha256:REDACTED",
       "bundle_digest": "sha256:REDACTED",
-      "change_id": "chg_REDACTED"
+      "change_id": "chg_REDACTED",
+      "trace_id": "chg_REDACTED"
     },
     "decision": {
       "authority": "ci-bot",
@@ -77,7 +79,8 @@
     "change": {
       "attestation_digest": "sha256:REDACTED",
       "bundle_digest": "sha256:REDACTED",
-      "change_id": "chg_REDACTED"
+      "change_id": "chg_REDACTED",
+      "trace_id": "chg_REDACTED"
     },
     "decision": {
       "authority": "ci-bot",

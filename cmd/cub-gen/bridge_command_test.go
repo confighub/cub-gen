@@ -152,6 +152,15 @@ func TestBridgeDecisionLifecycleCommands(t *testing.T) {
 	if rec.DecisionReason != "policy checks passed" {
 		t.Fatalf("unexpected decision reason %q", rec.DecisionReason)
 	}
+	if rec.TraceID != bundle.ChangeID {
+		t.Fatalf("expected trace_id %q, got %q", bundle.ChangeID, rec.TraceID)
+	}
+	if len(rec.ProofEvents) != 3 {
+		t.Fatalf("expected three proof events, got %d", len(rec.ProofEvents))
+	}
+	if rec.ProofEvents[2].EventType != "governed_decision.applied" || rec.ProofEvents[2].DecisionState != "ALLOW" {
+		t.Fatalf("unexpected applied proof event: %+v", rec.ProofEvents[2])
+	}
 }
 
 func TestBridgePromoteLifecycleCommands(t *testing.T) {

@@ -25,13 +25,25 @@ Terminal states are `ALLOW | ESCALATE | BLOCK`.
 Every decision record (`cub.confighub.io/governed-decision-state/v1`) must carry:
 
 1. `change_id`
-2. `bundle_digest`
-3. `state`
-4. `updated_at`
+2. `trace_id` (normally the same value as `change_id`)
+3. `bundle_digest`
+4. `state`
+5. `updated_at`
+6. `proof_events[]`
 
 If state is `ATTESTED` or terminal, it must also carry:
 
 1. `attestation_digest` (digest-linked evidence)
+
+The bundle, attestation, and governed decision artifacts carry
+`proof_events[]`. These are log-safe records for Pilot and validation flows:
+
+1. bundle event: `change_bundle.published`
+2. attestation event: `attestation.verified`
+3. decision events: `governed_decision.created`,
+   `governed_decision.attested`, and `governed_decision.applied`
+4. shared join fields: `trace_id`, `change_id`, artifact digest, parent
+   artifact digest, parent event id, and decision state
 
 If state is terminal, it must also carry:
 
@@ -55,6 +67,8 @@ Disallowed:
 1. Any terminal decision without attestation linkage.
 2. Any terminal decision without explicit authority.
 3. Any direct `INGESTED -> ALLOW|ESCALATE|BLOCK`.
+4. Any locally produced decision proof event that cannot be joined by
+   `trace_id` and `change_id`.
 
 ## Query by `change_id`
 
@@ -68,3 +82,4 @@ The response is validated against the decision-state contract and must return th
 
 1. Contract and transition enforcement: `internal/bridge/decision.go`
 2. End-to-end state/query tests: `internal/bridge/decision_test.go`
+3. Proof-event schema and validation: `internal/proof/event.go`, `internal/contracts/schemas/proof-event.v1.schema.json`

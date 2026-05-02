@@ -32,6 +32,7 @@ type PreviewInput struct {
 
 type PreviewSummary struct {
 	ChangeID          string `json:"change_id"`
+	TraceID           string `json:"trace_id"`
 	BundleDigest      string `json:"bundle_digest"`
 	AttestationDigest string `json:"attestation_digest"`
 }
@@ -202,6 +203,7 @@ func BuildPreviewResult(
 		},
 		Change: PreviewSummary{
 			ChangeID:          bundle.ChangeID,
+			TraceID:           bundle.TraceID,
 			BundleDigest:      bundle.BundleDigest,
 			AttestationDigest: attestationRecord.AttestationDigest,
 		},
@@ -313,12 +315,12 @@ func BuildDiffResult(targetSlug, renderTargetSlug string, opts DiffOptions) (Dif
 			MatchCount:    len(diffs),
 		},
 		Before: DiffSnapshot{
-			Change:             PreviewSummary{ChangeID: beforeBundle.ChangeID, BundleDigest: beforeBundle.BundleDigest, AttestationDigest: beforePreview.Change.AttestationDigest},
+			Change:             PreviewSummary{ChangeID: beforeBundle.ChangeID, TraceID: beforeBundle.TraceID, BundleDigest: beforeBundle.BundleDigest, AttestationDigest: beforePreview.Change.AttestationDigest},
 			GeneratorProfiles:  discoveredProfiles(beforeImported.Discovered),
 			DiscoveredResource: len(beforeImported.Discovered),
 		},
 		After: DiffSnapshot{
-			Change:             PreviewSummary{ChangeID: afterBundle.ChangeID, BundleDigest: afterBundle.BundleDigest, AttestationDigest: afterPreview.Change.AttestationDigest},
+			Change:             PreviewSummary{ChangeID: afterBundle.ChangeID, TraceID: afterBundle.TraceID, BundleDigest: afterBundle.BundleDigest, AttestationDigest: afterPreview.Change.AttestationDigest},
 			GeneratorProfiles:  discoveredProfiles(afterImported.Discovered),
 			DiscoveredResource: len(afterImported.Discovered),
 		},

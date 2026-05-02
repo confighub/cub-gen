@@ -7,6 +7,7 @@ import (
 	"time"
 
 	gitopsflow "github.com/confighub/cub-gen/internal/gitops"
+	"github.com/confighub/cub-gen/internal/proof"
 	"github.com/confighub/cub-gen/internal/publish"
 )
 
@@ -49,6 +50,31 @@ func TestBuildAt(t *testing.T) {
 	}
 	if !strings.HasPrefix(rec.AttestationDigest, "sha256:") {
 		t.Fatalf("expected attestation digest sha256 prefix, got %q", rec.AttestationDigest)
+	}
+	if rec.TraceID != bundle.TraceID {
+		t.Fatalf("expected trace_id %q, got %q", bundle.TraceID, rec.TraceID)
+	}
+	if len(rec.ProofEvents) != 1 {
+		t.Fatalf("expected one proof event, got %d", len(rec.ProofEvents))
+	}
+	event := rec.ProofEvents[0]
+	if event.EventType != proof.EventTypeAttestationVerified {
+		t.Fatalf("unexpected proof event type: %q", event.EventType)
+	}
+	if event.TraceID != rec.TraceID {
+		t.Fatalf("expected proof event trace_id %q, got %q", rec.TraceID, event.TraceID)
+	}
+	if event.ArtifactKind != proof.ArtifactKindAttestation {
+		t.Fatalf("unexpected proof artifact kind: %q", event.ArtifactKind)
+	}
+	if event.ArtifactDigest != rec.AttestationDigest {
+		t.Fatalf("expected proof event artifact digest %q, got %q", rec.AttestationDigest, event.ArtifactDigest)
+	}
+	if event.ParentArtifactDigest != bundle.BundleDigest {
+		t.Fatalf("expected parent artifact digest %q, got %q", bundle.BundleDigest, event.ParentArtifactDigest)
+	}
+	if event.ParentEventID != bundle.ProofEvents[0].EventID {
+		t.Fatalf("expected parent event id %q, got %q", bundle.ProofEvents[0].EventID, event.ParentEventID)
 	}
 
 	again, err := BuildAt(bundle, time.Date(2026, 3, 6, 1, 0, 0, 0, time.UTC), "ci-bot")
@@ -94,6 +120,23 @@ func TestVerifyRecord(t *testing.T) {
 	if err := VerifyRecord(missingDigest); err == nil || !strings.Contains(err.Error(), "missing attestation_digest") {
 		t.Fatalf("expected missing attestation digest error, got %v", err)
 	}
+
+	missingProof := rec
+	missingProof.ProofEvents = nil
+	missingProof.AttestationDigest = computeAttestationDigest(missingProof)
+	if err := VerifyRecord(missingProof); err == nil || !strings.Contains(err.Error(), "missing proof_events") {
+		t.Fatalf("expected missing proof_events error, got %v", err)
+	}
+
+	tamperedProof := rec
+	tamperedProof.ProofEvents = append([]proof.Event(nil), rec.ProofEvents...)
+	tamperedProof.ProofEvents[0].ParentArtifactDigest = "sha256:wrong"
+	tamperedProof.ProofEvents[0].EventID = proof.EventID(tamperedProof.ProofEvents[0])
+	tamperedProof.AttestationDigest = computeAttestationDigest(tamperedProof)
+	tamperedProof.ProofEvents = proof.SetArtifactDigest(tamperedProof.ProofEvents, proof.ArtifactKindAttestation, tamperedProof.AttestationDigest)
+	if err := VerifyRecord(tamperedProof); err == nil || !strings.Contains(err.Error(), "parent_artifact_digest mismatch") {
+		t.Fatalf("expected parent artifact digest mismatch, got %v", err)
+	}
 }
 
 func TestVerifyRecordAgainstBundle(t *testing.T) {
@@ -116,5 +159,37 @@ func TestVerifyRecordAgainstBundle(t *testing.T) {
 	mismatched := publish.BuildBundleAt(imported, time.Date(2026, 3, 6, 2, 0, 0, 0, time.UTC))
 	if err := VerifyRecordAgainstBundle(rec, mismatched); err == nil || !strings.Contains(err.Error(), "bundle digest link mismatch") {
 		t.Fatalf("expected bundle digest link mismatch, got %v", err)
+	}
+}
+
+func TestVerifyRecordAgainstBundleRejectsTraceIDMismatchWithoutChangeID(t *testing.T) {
+	bundle := publish.BuildBundleAt(gitopsflow.ImportFlowResult{
+		Space:            "platform",
+		TargetSlug:       "custom",
+		TargetPath:       "/repo",
+		RenderTargetSlug: "render",
+		RenderTargetPath: "/repo/render",
+		Ref:              "HEAD",
+	}, time.Date(2026, 3, 6, 0, 0, 0, 0, time.UTC))
+	if bundle.ChangeID != "" {
+		t.Fatalf("expected empty change_id fixture, got %q", bundle.ChangeID)
+	}
+
+	rec, err := BuildAt(bundle, time.Date(2026, 3, 6, 1, 0, 0, 0, time.UTC), "ci-bot")
+	if err != nil {
+		t.Fatalf("BuildAt returned error: %v", err)
+	}
+	rec.TraceID = "trace_custom"
+	rec.ProofEvents = append([]proof.Event(nil), rec.ProofEvents...)
+	rec.ProofEvents[0].TraceID = rec.TraceID
+	rec.ProofEvents[0].EventID = proof.EventID(rec.ProofEvents[0])
+	rec.AttestationDigest = computeAttestationDigest(rec)
+	rec.ProofEvents = proof.SetArtifactDigest(rec.ProofEvents, proof.ArtifactKindAttestation, rec.AttestationDigest)
+
+	if err := VerifyRecord(rec); err != nil {
+		t.Fatalf("expected tampered record to remain internally valid, got %v", err)
+	}
+	if err := VerifyRecordAgainstBundle(rec, bundle); err == nil || !strings.Contains(err.Error(), "trace_id link mismatch") {
+		t.Fatalf("expected trace_id link mismatch, got %v", err)
 	}
 }

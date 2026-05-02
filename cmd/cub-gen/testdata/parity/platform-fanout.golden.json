@@ -148,6 +148,39 @@
             "wet_unit_id": "wet_b4595877225309fc"
           }
         ],
+        "proof_events": [
+          {
+            "artifact_digest": "\u003cbundle_digest\u003e",
+            "artifact_kind": "change_bundle",
+            "change_id": "\u003cchange_id\u003e",
+            "event_id": "\u003cevent_id\u003e",
+            "event_time": "\u003ctimestamp\u003e",
+            "event_type": "change_bundle.published",
+            "generator_profiles": [
+              "helm-paas"
+            ],
+            "render_target_path": "\u003crender_target_path\u003e",
+            "render_target_slug": "checkout-api/dev",
+            "schema_version": "cub.confighub.io/proof-event/v1",
+            "source": "cub-gen",
+            "space": "platform",
+            "summary_counts": {
+              "contracts": 1,
+              "discovered_resources": 1,
+              "dry_inputs": 4,
+              "dry_units": 1,
+              "generator_units": 1,
+              "inverse_transform_plans": 1,
+              "links": 1,
+              "provenance_records": 1,
+              "wet_manifest_targets": 3,
+              "wet_units": 1
+            },
+            "target_path": "\u003ctarget_path\u003e",
+            "target_slug": "checkout-api/dev",
+            "trace_id": "\u003ctrace_id\u003e"
+          }
+        ],
         "provenance": [
           {
             "change_id": "\u003cchange_id\u003e",
@@ -281,6 +314,7 @@
         },
         "target_path": "\u003ctarget_path\u003e",
         "target_slug": "checkout-api/dev",
+        "trace_id": "\u003ctrace_id\u003e",
         "wet_manifest_targets": [
           {
             "generator_id": "gen_635643e45fbf3410",
@@ -472,6 +506,39 @@
             "wet_unit_id": "wet_b4595877225309fc"
           }
         ],
+        "proof_events": [
+          {
+            "artifact_digest": "\u003cbundle_digest\u003e",
+            "artifact_kind": "change_bundle",
+            "change_id": "\u003cchange_id\u003e",
+            "event_id": "\u003cevent_id\u003e",
+            "event_time": "\u003ctimestamp\u003e",
+            "event_type": "change_bundle.published",
+            "generator_profiles": [
+              "helm-paas"
+            ],
+            "render_target_path": "\u003crender_target_path\u003e",
+            "render_target_slug": "checkout-api/prod",
+            "schema_version": "cub.confighub.io/proof-event/v1",
+            "source": "cub-gen",
+            "space": "platform",
+            "summary_counts": {
+              "contracts": 1,
+              "discovered_resources": 1,
+              "dry_inputs": 4,
+              "dry_units": 1,
+              "generator_units": 1,
+              "inverse_transform_plans": 1,
+              "links": 1,
+              "provenance_records": 1,
+              "wet_manifest_targets": 3,
+              "wet_units": 1
+            },
+            "target_path": "\u003ctarget_path\u003e",
+            "target_slug": "checkout-api/prod",
+            "trace_id": "\u003ctrace_id\u003e"
+          }
+        ],
         "provenance": [
           {
             "change_id": "\u003cchange_id\u003e",
@@ -605,6 +672,7 @@
         },
         "target_path": "\u003ctarget_path\u003e",
         "target_slug": "checkout-api/prod",
+        "trace_id": "\u003ctrace_id\u003e",
         "wet_manifest_targets": [
           {
             "generator_id": "gen_635643e45fbf3410",
@@ -796,6 +864,39 @@
             "wet_unit_id": "wet_b4595877225309fc"
           }
         ],
+        "proof_events": [
+          {
+            "artifact_digest": "\u003cbundle_digest\u003e",
+            "artifact_kind": "change_bundle",
+            "change_id": "\u003cchange_id\u003e",
+            "event_id": "\u003cevent_id\u003e",
+            "event_time": "\u003ctimestamp\u003e",
+            "event_type": "change_bundle.published",
+            "generator_profiles": [
+              "helm-paas"
+            ],
+            "render_target_path": "\u003crender_target_path\u003e",
+            "render_target_slug": "checkout-api/stage",
+            "schema_version": "cub.confighub.io/proof-event/v1",
+            "source": "cub-gen",
+            "space": "platform",
+            "summary_counts": {
+              "contracts": 1,
+              "discovered_resources": 1,
+              "dry_inputs": 4,
+              "dry_units": 1,
+              "generator_units": 1,
+              "inverse_transform_plans": 1,
+              "links": 1,
+              "provenance_records": 1,
+              "wet_manifest_targets": 3,
+              "wet_units": 1
+            },
+            "target_path": "\u003ctarget_path\u003e",
+            "target_slug": "checkout-api/stage",
+            "trace_id": "\u003ctrace_id\u003e"
+          }
+        ],
         "provenance": [
           {
             "change_id": "\u003cchange_id\u003e",
@@ -929,6 +1030,7 @@
         },
         "target_path": "\u003ctarget_path\u003e",
         "target_slug": "checkout-api/stage",
+        "trace_id": "\u003ctrace_id\u003e",
         "wet_manifest_targets": [
           {
             "generator_id": "gen_635643e45fbf3410",
@@ -1090,6 +1192,39 @@
             "wet_unit_id": "wet_3b630d8a9fb3502c"
           }
         ],
+        "proof_events": [
+          {
+            "artifact_digest": "\u003cbundle_digest\u003e",
+            "artifact_kind": "change_bundle",
+            "change_id": "\u003cchange_id\u003e",
+            "event_id": "\u003cevent_id\u003e",
+            "event_time": "\u003ctimestamp\u003e",
+            "event_type": "change_bundle.published",
+            "generator_profiles": [
+              "scoredev-paas"
+            ],
+            "render_target_path": "\u003crender_target_path\u003e",
+            "render_target_slug": "score-checkout/dev",
+            "schema_version": "cub.confighub.io/proof-event/v1",
+            "source": "cub-gen",
+            "space": "platform",
+            "summary_counts": {
+              "contracts": 1,
+              "discovered_resources": 1,
+              "dry_inputs": 1,
+              "dry_units": 1,
+              "generator_units": 1,
+              "inverse_transform_plans": 1,
+              "links": 1,
+              "provenance_records": 1,
+              "wet_manifest_targets": 3,
+              "wet_units": 1
+            },
+            "target_path": "\u003ctarget_path\u003e",
+            "target_slug": "score-checkout/dev",
+            "trace_id": "\u003ctrace_id\u003e"
+          }
+        ],
         "provenance": [
           {
             "change_id": "\u003cchange_id\u003e",
@@ -1210,6 +1345,7 @@
         },
         "target_path": "\u003ctarget_path\u003e",
         "target_slug": "score-checkout/dev",
+        "trace_id": "\u003ctrace_id\u003e",
         "wet_manifest_targets": [
           {
             "generator_id": "gen_5813cd3820138512",
@@ -1370,6 +1506,39 @@
             "wet_unit_id": "wet_3b630d8a9fb3502c"
           }
         ],
+        "proof_events": [
+          {
+            "artifact_digest": "\u003cbundle_digest\u003e",
+            "artifact_kind": "change_bundle",
+            "change_id": "\u003cchange_id\u003e",
+            "event_id": "\u003cevent_id\u003e",
+            "event_time": "\u003ctimestamp\u003e",
+            "event_type": "change_bundle.published",
+            "generator_profiles": [
+              "scoredev-paas"
+            ],
+            "render_target_path": "\u003crender_target_path\u003e",
+            "render_target_slug": "score-checkout/prod",
+            "schema_version": "cub.confighub.io/proof-event/v1",
+            "source": "cub-gen",
+            "space": "platform",
+            "summary_counts": {
+              "contracts": 1,
+              "discovered_resources": 1,
+              "dry_inputs": 1,
+              "dry_units": 1,
+              "generator_units": 1,
+              "inverse_transform_plans": 1,
+              "links": 1,
+              "provenance_records": 1,
+              "wet_manifest_targets": 3,
+              "wet_units": 1
+            },
+            "target_path": "\u003ctarget_path\u003e",
+            "target_slug": "score-checkout/prod",
+            "trace_id": "\u003ctrace_id\u003e"
+          }
+        ],
         "provenance": [
           {
             "change_id": "\u003cchange_id\u003e",
@@ -1490,6 +1659,7 @@
         },
         "target_path": "\u003ctarget_path\u003e",
         "target_slug": "score-checkout/prod",
+        "trace_id": "\u003ctrace_id\u003e",
         "wet_manifest_targets": [
           {
             "generator_id": "gen_5813cd3820138512",
@@ -1650,6 +1820,39 @@
             "wet_unit_id": "wet_3b630d8a9fb3502c"
           }
         ],
+        "proof_events": [
+          {
+            "artifact_digest": "\u003cbundle_digest\u003e",
+            "artifact_kind": "change_bundle",
+            "change_id": "\u003cchange_id\u003e",
+            "event_id": "\u003cevent_id\u003e",
+            "event_time": "\u003ctimestamp\u003e",
+            "event_type": "change_bundle.published",
+            "generator_profiles": [
+              "scoredev-paas"
+            ],
+            "render_target_path": "\u003crender_target_path\u003e",
+            "render_target_slug": "score-checkout/stage",
+            "schema_version": "cub.confighub.io/proof-event/v1",
+            "source": "cub-gen",
+            "space": "platform",
+            "summary_counts": {
+              "contracts": 1,
+              "discovered_resources": 1,
+              "dry_inputs": 1,
+              "dry_units": 1,
+              "generator_units": 1,
+              "inverse_transform_plans": 1,
+              "links": 1,
+              "provenance_records": 1,
+              "wet_manifest_targets": 3,
+              "wet_units": 1
+            },
+            "target_path": "\u003ctarget_path\u003e",
+            "target_slug": "score-checkout/stage",
+            "trace_id": "\u003ctrace_id\u003e"
+          }
+        ],
         "provenance": [
           {
             "change_id": "\u003cchange_id\u003e",
@@ -1770,6 +1973,7 @@
         },
         "target_path": "\u003ctarget_path\u003e",
         "target_slug": "score-checkout/stage",
+        "trace_id": "\u003ctrace_id\u003e",
         "wet_manifest_targets": [
           {
             "generator_id": "gen_5813cd3820138512",
@@ -1962,6 +2166,39 @@
             "wet_unit_id": "wet_24b4f9e96079fa9a"
           }
         ],
+        "proof_events": [
+          {
+            "artifact_digest": "\u003cbundle_digest\u003e",
+            "artifact_kind": "change_bundle",
+            "change_id": "\u003cchange_id\u003e",
+            "event_id": "\u003cevent_id\u003e",
+            "event_time": "\u003ctimestamp\u003e",
+            "event_type": "change_bundle.published",
+            "generator_profiles": [
+              "springboot-paas"
+            ],
+            "render_target_path": "\u003crender_target_path\u003e",
+            "render_target_slug": "spring-checkout/dev",
+            "schema_version": "cub.confighub.io/proof-event/v1",
+            "source": "cub-gen",
+            "space": "platform",
+            "summary_counts": {
+              "contracts": 1,
+              "discovered_resources": 1,
+              "dry_inputs": 2,
+              "dry_units": 1,
+              "generator_units": 1,
+              "inverse_transform_plans": 1,
+              "links": 1,
+              "provenance_records": 1,
+              "wet_manifest_targets": 3,
+              "wet_units": 1
+            },
+            "target_path": "\u003ctarget_path\u003e",
+            "target_slug": "spring-checkout/dev",
+            "trace_id": "\u003ctrace_id\u003e"
+          }
+        ],
         "provenance": [
           {
             "change_id": "\u003cchange_id\u003e",
@@ -2095,6 +2332,7 @@
         },
         "target_path": "\u003ctarget_path\u003e",
         "target_slug": "spring-checkout/dev",
+        "trace_id": "\u003ctrace_id\u003e",
         "wet_manifest_targets": [
           {
             "generator_id": "gen_73ed79c3c8b65360",
@@ -2288,6 +2526,39 @@
             "wet_unit_id": "wet_24b4f9e96079fa9a"
           }
         ],
+        "proof_events": [
+          {
+            "artifact_digest": "\u003cbundle_digest\u003e",
+            "artifact_kind": "change_bundle",
+            "change_id": "\u003cchange_id\u003e",
+            "event_id": "\u003cevent_id\u003e",
+            "event_time": "\u003ctimestamp\u003e",
+            "event_type": "change_bundle.published",
+            "generator_profiles": [
+              "springboot-paas"
+            ],
+            "render_target_path": "\u003crender_target_path\u003e",
+            "render_target_slug": "spring-checkout/prod",
+            "schema_version": "cub.confighub.io/proof-event/v1",
+            "source": "cub-gen",
+            "space": "platform",
+            "summary_counts": {
+              "contracts": 1,
+              "discovered_resources": 1,
+              "dry_inputs": 2,
+              "dry_units": 1,
+              "generator_units": 1,
+              "inverse_transform_plans": 1,
+              "links": 1,
+              "provenance_records": 1,
+              "wet_manifest_targets": 3,
+              "wet_units": 1
+            },
+            "target_path": "\u003ctarget_path\u003e",
+            "target_slug": "spring-checkout/prod",
+            "trace_id": "\u003ctrace_id\u003e"
+          }
+        ],
         "provenance": [
           {
             "change_id": "\u003cchange_id\u003e",
@@ -2421,6 +2692,7 @@
         },
         "target_path": "\u003ctarget_path\u003e",
         "target_slug": "spring-checkout/prod",
+        "trace_id": "\u003ctrace_id\u003e",
         "wet_manifest_targets": [
           {
             "generator_id": "gen_73ed79c3c8b65360",
@@ -2614,6 +2886,39 @@
             "wet_unit_id": "wet_24b4f9e96079fa9a"
           }
         ],
+        "proof_events": [
+          {
+            "artifact_digest": "\u003cbundle_digest\u003e",
+            "artifact_kind": "change_bundle",
+            "change_id": "\u003cchange_id\u003e",
+            "event_id": "\u003cevent_id\u003e",
+            "event_time": "\u003ctimestamp\u003e",
+            "event_type": "change_bundle.published",
+            "generator_profiles": [
+              "springboot-paas"
+            ],
+            "render_target_path": "\u003crender_target_path\u003e",
+            "render_target_slug": "spring-checkout/stage",
+            "schema_version": "cub.confighub.io/proof-event/v1",
+            "source": "cub-gen",
+            "space": "platform",
+            "summary_counts": {
+              "contracts": 1,
+              "discovered_resources": 1,
+              "dry_inputs": 2,
+              "dry_units": 1,
+              "generator_units": 1,
+              "inverse_transform_plans": 1,
+              "links": 1,
+              "provenance_records": 1,
+              "wet_manifest_targets": 3,
+              "wet_units": 1
+            },
+            "target_path": "\u003ctarget_path\u003e",
+            "target_slug": "spring-checkout/stage",
+            "trace_id": "\u003ctrace_id\u003e"
+          }
+        ],
         "provenance": [
           {
             "change_id": "\u003cchange_id\u003e",
@@ -2747,6 +3052,7 @@
         },
         "target_path": "\u003ctarget_path\u003e",
         "target_slug": "spring-checkout/stage",
+        "trace_id": "\u003ctrace_id\u003e",
         "wet_manifest_targets": [
           {
             "generator_id": "gen_73ed79c3c8b65360",

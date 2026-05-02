@@ -51,6 +51,7 @@ func TestVerifyGoldenJSON(t *testing.T) {
 	}
 	replaceString(got, "bundle_digest", "<bundle_digest>")
 	replaceString(got, "change_id", "<change_id>")
+	replaceString(got, "trace_id", "<trace_id>")
 	assertGoldenJSON(t, "testdata/parity/verify.json.golden.json", got)
 }
 

@@ -41,6 +41,10 @@ func TestChangeAPIHTTPRunLifecycleGolden(t *testing.T) {
 	if !strings.HasPrefix(changeID, "chg_") {
 		t.Fatalf("expected change_id prefix chg_, got %q", changeID)
 	}
+	traceID := nestedString(t, postResp, "change", "trace_id")
+	if traceID != changeID {
+		t.Fatalf("expected trace_id to match change_id, got trace_id=%q change_id=%q", traceID, changeID)
+	}
 
 	status, getResp := mustJSONRequest(t, http.MethodGet, srv.URL+"/v1/changes/"+changeID, nil)
 	if status != http.StatusOK {
@@ -188,6 +192,9 @@ func normalizeChangeAPIHTTPRunSnapshot(snapshot map[string]any) {
 		if change, ok := obj["change"].(map[string]any); ok {
 			if id, ok := change["change_id"].(string); ok && strings.HasPrefix(id, "chg_") {
 				change["change_id"] = "chg_REDACTED"
+			}
+			if id, ok := change["trace_id"].(string); ok && strings.HasPrefix(id, "chg_") {
+				change["trace_id"] = "chg_REDACTED"
 			}
 			if digest, ok := change["bundle_digest"].(string); ok && strings.HasPrefix(digest, "sha256:") {
 				change["bundle_digest"] = "sha256:REDACTED"

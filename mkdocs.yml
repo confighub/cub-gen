@@ -134,6 +134,7 @@ nav:
       - "App-of-Apps Boundary": contracts/app-of-apps-generator-boundary.md
       - "Remote Stores & Projection Targets": contracts/remote-stores-and-projection-targets.md
       - "Decision & Attestation State": contracts/decision-and-attestation-state.md
+      - "Proof Events & Traceability": contracts/proof-events-and-traceability.md
       - "PR/MR Linkage & Promotion": contracts/pr-mr-linkage-and-dry-promotion.md
       - "Checkpoint Schemas": agentic-gitops/04-schemas/00-gitops-checkpoint-schemas.md
       - "Command Parity": parity.md

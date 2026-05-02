@@ -55,6 +55,8 @@ func normalizePluginArgs(args []string) []string {
 		return prependPluginCommand("bridge", args)
 	case "bundle":
 		return normalizePluginBundleArgs(args)
+	case "proof":
+		return normalizePluginProofArgs(args)
 	default:
 		return args
 	}
@@ -84,6 +86,11 @@ func normalizePluginBundleArgs(args []string) []string {
 		return normalizePluginBundleSubcommandArgs("attest", args[2:])
 	case "verify-attestation":
 		return normalizePluginBundleSubcommandArgs("verify-attestation", args[2:])
+	case "events":
+		if len(args) == 3 && args[2] == "help" {
+			return []string{"proof", "events", "--help"}
+		}
+		return append([]string{"proof", "events"}, args[2:]...)
 	default:
 		return append([]string{"publish"}, args[1:]...)
 	}
@@ -94,6 +101,16 @@ func normalizePluginBundleSubcommandArgs(command string, args []string) []string
 		return []string{command, "--help"}
 	}
 	return append([]string{command}, args...)
+}
+
+func normalizePluginProofArgs(args []string) []string {
+	if len(args) == 2 && args[1] == "help" {
+		return []string{"proof", "--help"}
+	}
+	if len(args) >= 3 && args[1] == "events" && args[2] == "help" {
+		return append([]string{"proof", "events", "--help"}, args[3:]...)
+	}
+	return args
 }
 
 func defaultConfigHubBaseURL() string {

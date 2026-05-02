@@ -98,6 +98,7 @@ shorter aliases for the front-door `cub gen ...` shape.
 | `cub-gen verify` | `cub gen bundle verify` |
 | `cub-gen attest` | `cub gen bundle attest` |
 | `cub-gen verify-attestation` | `cub gen bundle verify-attestation` |
+| `cub-gen proof events` | `cub gen bundle events` or `cub gen proof events` |
 | `cub-gen change preview` | `cub gen preview` |
 | `cub-gen change run` | `cub gen run` |
 | `cub-gen change diff` | `cub gen diff` |

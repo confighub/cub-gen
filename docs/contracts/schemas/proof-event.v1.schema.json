@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cub.confighub.io/proof-event/v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_id",
+    "event_type",
+    "event_time",
+    "source",
+    "trace_id",
+    "artifact_kind"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cub.confighub.io/proof-event/v1"
+    },
+    "event_id": {
+      "type": "string",
+      "pattern": "^evt_[a-f0-9]{24}$"
+    },
+    "event_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "change_id": {
+      "type": "string"
+    },
+    "space": {
+      "type": "string"
+    },
+    "target_slug": {
+      "type": "string"
+    },
+    "target_path": {
+      "type": "string"
+    },
+    "render_target_slug": {
+      "type": "string"
+    },
+    "render_target_path": {
+      "type": "string"
+    },
+    "artifact_kind": {
+      "type": "string",
+      "enum": [
+        "change_bundle",
+        "attestation",
+        "governed_decision"
+      ]
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^sha256:"
+    },
+    "parent_event_id": {
+      "type": "string",
+      "pattern": "^evt_[a-f0-9]{24}$"
+    },
+    "parent_artifact_kind": {
+      "type": "string"
+    },
+    "parent_artifact_digest": {
+      "type": "string",
+      "pattern": "^sha256:"
+    },
+    "summary_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "generator_profiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "route_kind": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "decision_state": {
+      "type": "string"
+    },
+    "decision_reason": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

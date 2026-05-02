@@ -39,6 +39,11 @@ func TestTopLevelCommandGoldenHelp(t *testing.T) {
 			stderrGolden: filepath.Join("testdata", "parity", "verify-attestation-help.stderr.golden.txt"),
 		},
 		{
+			name:         "proof-help",
+			args:         []string{"proof", "--help"},
+			stdoutGolden: filepath.Join("testdata", "parity", "proof-help.stdout.golden.txt"),
+		},
+		{
 			name:         "generators-help",
 			args:         []string{"generators", "--help"},
 			stderrGolden: filepath.Join("testdata", "parity", "generators-help.stderr.golden.txt"),
@@ -116,6 +121,16 @@ func TestTopLevelCommandErrorModes(t *testing.T) {
 			name: "verify-attestation-extra-arg",
 			args: []string{"verify-attestation", "extra"},
 			sub:  "usage: cub-gen verify-attestation",
+		},
+		{
+			name: "proof-missing-subcommand",
+			args: []string{"proof"},
+			sub:  "proof subcommand required",
+		},
+		{
+			name: "proof-events-extra-arg",
+			args: []string{"proof", "events", "extra"},
+			sub:  "usage: cub-gen proof events",
 		},
 		{
 			name: "generators-extra-arg",

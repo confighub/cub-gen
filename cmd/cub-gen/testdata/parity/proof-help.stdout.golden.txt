@@ -1,0 +1,11 @@
+cub-gen proof: extract loggable proof records
+
+Proof events are JSON records that can be copied into Pilot, CI, validation, or audit logs.
+
+COMMANDS:
+  events    Verify a bundle or attestation and emit its proof_events
+
+EXAMPLES:
+  cub-gen proof events --in bundle.json
+  cub-gen proof events --in attestation.json --bundle bundle.json --ndjson
+  cub-gen proof events --in decision.json --ndjson

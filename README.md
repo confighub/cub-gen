@@ -187,7 +187,11 @@ being applied until those placeholders are replaced.
 
 A **Change** is any proposed edit to the source or rendered config. **Proof**
 is the field-origin, owner, route, and decision evidence that makes the change
-reviewable.
+reviewable. Bundle, attestation, and governed decision artifacts also carry
+`proof_events[]`: small JSON records with `trace_id`, `change_id`, artifact
+digests, parent links, and decision state so Pilot, validation, and attestation
+logs can join the chain later. Use `cub-gen proof events --in bundle.json --ndjson`
+when a log pipeline needs just those records.
 
 The short version is **repo in, explanation out**.
 
@@ -392,6 +396,7 @@ controllers running in kind.
 - [Example Truth Matrix](docs/testing/example-truth-matrix.md) - generated status for examples
 - [v0.4 Working Roadmap](docs/plans/2026-04-30-v0.4-obvious-value-roadmap.md) - sequenced plan to make cub-gen obvious
 - [Platform Generators Manifesto](docs/agentic-gitops/02-design/90-platform-generators-manifesto.md) - the plain-English thesis
+- [Proof Events and Traceability](docs/contracts/proof-events-and-traceability.md) - loggable proof-event contract
 - [OpenChoreo Worked Example](docs/agentic-gitops/03-worked-examples/05-openchoreo-generator-worked-example.md) - OpenChoreo mapped as a generator
 - [Argo Generators Worked Example](docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) - ApplicationSet and app-of-apps
 
