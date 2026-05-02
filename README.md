@@ -13,9 +13,17 @@ Component produced which Variants, which Variants are deployable, where those
 Deployment Variants deploy, what they connect to, and which source field owns
 each rendered field.
 
+It supports the ConfigHub Component model directly: a Component is the reusable
+app, service, or platform thing, and Variants are the concrete base or
+deployment contexts produced from it.
+
 When someone changes generated config, `cub-gen` can route the edit: apply it
 here, lift it back to the source file, or block/escalate it because the platform
 owns that field.
+
+A **mutation apply gate** is the decision point for that route. It records the
+field, owner, route, decision, next action, and proof so ConfigHub can show why
+a change may apply here, must move upstream, or should be blocked.
 
 Short version: `cub-gen` turns the app/platform repos people already have into
 explicit, governed functions on config data. It does this without pretending
