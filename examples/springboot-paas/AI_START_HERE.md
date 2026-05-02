@@ -6,7 +6,7 @@ Use this example when the question is not just "what rendered this field?" but
 ## What this proves
 
 - Spring config provenance and ownership from `application*.yaml` plus platform policy
-- a local `ALLOW` path and a local `BLOCKED` path for mutation routing
+- local `ALLOW`, `ESCALATE`, and `BLOCK` paths for mutation routing
 - direct embedded ConfigHub payload mutation for an app-owned field
 - a deeper connected ConfigHub walkthrough
 - a real standalone live-cluster app proof
@@ -78,7 +78,7 @@ Success looks like:
 ## What to verify after each major step
 
 - Repo-only preview: the explain output and import JSON agree on the source/config boundary.
-- Local route proof: `feature.inventory.reservationMode` is allowed and `spring.datasource.url` is blocked; artifacts land under `.tmp/springboot-governed-routes/...`.
+- Local route proof: `feature.inventory.reservationMode` is `apply-here/ALLOW`, `spring.cache.type` is `lift-upstream/ESCALATE`, and `spring.datasource.url` is `block/escalate/BLOCK`; artifacts land under `.tmp/springboot-governed-routes/...`.
 - Local apply-here proof: the reservation mode changes in the embedded payload and the datasource mutation is rejected; artifacts land under `.tmp/springboot-embedded-config/...`.
 - Connected smoke: ConfigHub auth/context is valid and the smoke summaries include a non-empty `change_id`.
 - Deep connected walkthrough: a terminal connected decision state is returned for the same `change_id`.
@@ -93,7 +93,7 @@ Success looks like:
 ## Trust order when outputs disagree
 
 1. Trust the generator explain/import output for ownership and field routing.
-2. Trust `springboot validate-mutation` and embedded-config mutation results for local route enforcement.
+2. Trust `gate mutation` and embedded-config mutation results for local route enforcement.
 3. Trust the connected backend decision output for connected decision state.
 4. Trust live HTTP and kubectl checks for runtime truth.
 

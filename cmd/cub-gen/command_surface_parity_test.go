@@ -44,6 +44,11 @@ func TestTopLevelCommandGoldenHelp(t *testing.T) {
 			stdoutGolden: filepath.Join("testdata", "parity", "proof-help.stdout.golden.txt"),
 		},
 		{
+			name:         "gate-help",
+			args:         []string{"gate", "--help"},
+			stdoutGolden: filepath.Join("testdata", "parity", "gate-help.stdout.golden.txt"),
+		},
+		{
 			name:         "generators-help",
 			args:         []string{"generators", "--help"},
 			stderrGolden: filepath.Join("testdata", "parity", "generators-help.stderr.golden.txt"),
@@ -131,6 +136,16 @@ func TestTopLevelCommandErrorModes(t *testing.T) {
 			name: "proof-events-extra-arg",
 			args: []string{"proof", "events", "extra"},
 			sub:  "usage: cub-gen proof events",
+		},
+		{
+			name: "gate-missing-subcommand",
+			args: []string{"gate"},
+			sub:  "gate subcommand required",
+		},
+		{
+			name: "gate-mutation-missing-source",
+			args: []string{"gate", "mutation", "Deployment/spec/replicas"},
+			sub:  "gate mutation requires exactly one of --policy, --routes, or --bundle",
 		},
 		{
 			name: "generators-extra-arg",

@@ -1,0 +1,69 @@
+{
+  "change_id": "chg_49442e92b2c2f14a",
+  "decision": {
+    "reason": "route lift-upstream blocks direct rendered mutation and asks for a source change",
+    "state": "ESCALATE"
+  },
+  "decision_digest": "sha256:2e54749977f092a3fecffccf78adb8bc819a222d3bc52e5ab7225fcc4b217bdb",
+  "gate": {
+    "name": "generator-route",
+    "version": "v1"
+  },
+  "kind": "MutationApplyGateDecision",
+  "mutation": {
+    "attempted_layer": "rendered-config",
+    "origin": "confighub-initiative",
+    "rendered_field": "spring.cache.type"
+  },
+  "next_actions": [
+    {
+      "description": "Cache adoption changes the app contract and should update upstream app inputs.",
+      "files": [
+        "../../examples/springboot-paas/operational/field-routes.yaml"
+      ],
+      "kind": "create-or-link-github-pr",
+      "owner": "app-team"
+    }
+  ],
+  "proof": {
+    "confidence": 0.94,
+    "generator": "springboot",
+    "matched_rule": "spring.cache.*",
+    "original_route": "lift-upstream",
+    "owner": "app-team",
+    "source": "../../examples/springboot-paas/operational/field-routes.yaml",
+    "source_field": "spring.cache.*",
+    "source_file": "../../examples/springboot-paas/operational/field-routes.yaml"
+  },
+  "proof_events": [
+    {
+      "artifact_digest": "sha256:2e54749977f092a3fecffccf78adb8bc819a222d3bc52e5ab7225fcc4b217bdb",
+      "artifact_kind": "mutation_apply_gate",
+      "change_id": "chg_49442e92b2c2f14a",
+      "decision_reason": "route lift-upstream blocks direct rendered mutation and asks for a source change",
+      "decision_state": "ESCALATE",
+      "event_id": "evt_481fdbb1adb70985319b0269",
+      "event_time": "2026-05-02T12:00:00Z",
+      "event_type": "mutation_apply_gate.evaluated",
+      "generator_profiles": [
+        "springboot"
+      ],
+      "owner": "app-team",
+      "route_kind": "lift-upstream",
+      "schema_version": "cub.confighub.io/proof-event/v1",
+      "source": "cub-gen",
+      "summary_counts": {
+        "mutation_apply_gate_decisions": 1
+      },
+      "trace_id": "chg_49442e92b2c2f14a"
+    }
+  ],
+  "route": {
+    "direct_rendered_mutation": "blocked",
+    "kind": "lift-upstream",
+    "reason": "Cache adoption changes the app contract and should update upstream app inputs."
+  },
+  "schema_version": "cub.confighub.io/mutation-apply-gate-decision/v1",
+  "subject": {},
+  "trace_id": "chg_49442e92b2c2f14a"
+}

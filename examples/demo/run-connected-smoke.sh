@@ -30,12 +30,30 @@ run_example() {
   ./cub-gen attest --in "$example_out/bundle.json" --verifier "$VERIFIER" > "$example_out/attestation.json"
   ./cub-gen verify-attestation --json --in "$example_out/attestation.json" --bundle "$example_out/bundle.json" > "$example_out/attestation-verify.json"
 
+  if [ "$example" = "springboot-paas" ]; then
+    ./cub-gen gate mutation \
+      --routes ./examples/springboot-paas/operational/field-routes.yaml \
+      --json \
+      --space "$SPACE" \
+      --component inventory-api \
+      --variant inventory-api-prod \
+      --target prod \
+      --change-id "$(jq -r '.change_id // ""' "$example_out/bundle.json")" \
+      --at 2026-05-02T12:00:00Z \
+      feature.inventory.reservationMode > "$example_out/mutation-gate.json"
+  else
+    printf '{}\n' > "$example_out/mutation-gate.json"
+  fi
+
   jq -n \
     --arg example "$example" \
     --arg space "$SPACE" \
     --arg generator_profile "$(jq -r '.summary.generator_profiles[0] // ""' "$example_out/bundle.json")" \
     --arg change_id "$(jq -r '.change_id // ""' "$example_out/bundle.json")" \
     --arg bundle_digest "$(jq -r '.bundle_digest // ""' "$example_out/bundle.json")" \
+    --arg gate_route_kind "$(jq -r '.route.kind // ""' "$example_out/mutation-gate.json")" \
+    --arg gate_decision_state "$(jq -r '.decision.state // ""' "$example_out/mutation-gate.json")" \
+    --arg gate_decision_digest "$(jq -r '.decision_digest // ""' "$example_out/mutation-gate.json")" \
     --argjson dry_inputs "$(jq '.summary.dry_inputs // 0' "$example_out/bundle.json")" \
     --argjson wet_targets "$(jq '.summary.wet_manifest_targets // 0' "$example_out/bundle.json")" \
     --argjson verify_valid "$(jq '.valid // false' "$example_out/verify.json")" \
@@ -47,6 +65,9 @@ run_example() {
       generator_profile: $generator_profile,
       change_id: $change_id,
       bundle_digest: $bundle_digest,
+      gate_route_kind: $gate_route_kind,
+      gate_decision_state: $gate_decision_state,
+      gate_decision_digest: $gate_decision_digest,
       dry_inputs: $dry_inputs,
       wet_targets: $wet_targets,
       verify_valid: $verify_valid,
@@ -55,6 +76,9 @@ run_example() {
     }' > "$example_out/summary.json"
 
   jq -e '.change_id != "" and .verify_valid == true and .attestation_valid == true and .linked_bundle_check == true' "$example_out/summary.json" >/dev/null
+  if [ "$example" = "springboot-paas" ]; then
+    jq -e '.gate_route_kind == "apply-here" and .gate_decision_state == "ALLOW" and (.gate_decision_digest | startswith("sha256:"))' "$example_out/summary.json" >/dev/null
+  fi
 }
 
 echo "[connected-smoke] preflight (requires ConfigHub auth login or CONFIGHUB_* env)"

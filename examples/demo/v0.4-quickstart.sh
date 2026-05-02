@@ -58,15 +58,27 @@ jq -r '
 echo
 echo "[v0.4] 3. Change route proof"
 ALLOW="$OUT_DIR/spring-allow.json"
+LIFT="$OUT_DIR/spring-lift.json"
 BLOCK="$OUT_DIR/spring-block.json"
-./cub-gen springboot validate-mutation \
+./cub-gen gate mutation \
   --routes ./examples/springboot-paas/operational/field-routes.yaml \
-  --json feature.inventory.reservationMode >"$ALLOW"
+  --json \
+  --at 2026-05-02T12:00:00Z \
+  feature.inventory.reservationMode >"$ALLOW"
+
+./cub-gen gate mutation \
+  --routes ./examples/springboot-paas/operational/field-routes.yaml \
+  --json \
+  --at 2026-05-02T12:00:00Z \
+  spring.cache.type >"$LIFT"
 
 set +e
-./cub-gen springboot validate-mutation \
+./cub-gen gate mutation \
   --routes ./examples/springboot-paas/operational/field-routes.yaml \
-  --json spring.datasource.url >"$BLOCK" 2>"$OUT_DIR/spring-block.err"
+  --json \
+  --enforce \
+  --at 2026-05-02T12:00:00Z \
+  spring.datasource.url >"$BLOCK" 2>"$OUT_DIR/spring-block.err"
 block_status=$?
 set -e
 
@@ -75,13 +87,17 @@ if [[ "$block_status" -eq 0 ]]; then
   exit 1
 fi
 
-jq -e '.allowed == true and .action == "mutable-in-ch"' "$ALLOW" >/dev/null
-jq -e '.allowed == false and .action == "generator-owned"' "$BLOCK" >/dev/null
+jq -e '.route.kind == "apply-here" and .decision.state == "ALLOW" and (.proof_events | length) == 1' "$ALLOW" >/dev/null
+jq -e '.route.kind == "lift-upstream" and .decision.state == "ESCALATE" and (.proof_events | length) == 1' "$LIFT" >/dev/null
+jq -e '.route.kind == "block/escalate" and .decision.state == "BLOCK" and (.proof_events | length) == 1' "$BLOCK" >/dev/null
 jq -r '
-  "Apply here: " + .field_path + " action=" + .action + " owner=" + .owner + " reason=" + .reason
+  "Apply here: " + .mutation.rendered_field + " route=" + .route.kind + " decision=" + .decision.state + " owner=" + .proof.owner
 ' "$ALLOW"
 jq -r '
-  "Block/escalate: " + .field_path + " action=" + .action + " owner=" + .owner + " reason=" + .reason
+  "Lift upstream: " + .mutation.rendered_field + " route=" + .route.kind + " decision=" + .decision.state + " next=" + .next_actions[0].kind
+' "$LIFT"
+jq -r '
+  "Block/escalate: " + .mutation.rendered_field + " route=" + .route.kind + " decision=" + .decision.state + " owner=" + .proof.owner
 ' "$BLOCK"
 
 echo
