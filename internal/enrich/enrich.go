@@ -531,7 +531,7 @@ func buildProposedAnnotations(record generatorIndexRecord, prov model.Provenance
 			Key:       "cub.confighub.io/source-paths",
 			Value:     joinSourcePaths(sources),
 			AppliesTo: "sidecar",
-			Reason:    "show which source files feed the deployable variant",
+			Reason:    "show which source files feed the Deployment Variant",
 		})
 	}
 	if len(owners) > 0 {

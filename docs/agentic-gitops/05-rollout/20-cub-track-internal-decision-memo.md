@@ -188,7 +188,7 @@ Typical unit:
 
 Combined result:
 
-1. app intent and agent behavior are linked in one audit path.
+1. app source config and agent behavior are linked in one audit path.
 
 ## Practical Boundary by Component
 

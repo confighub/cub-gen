@@ -74,7 +74,7 @@ Evidence:
 
 1. Canonical boundary doc: `docs/contracts/canonical-triple-and-storage-boundary.md`.
 2. Boundary remains explicit:
-   - Git: DRY source intent + linkage receipts.
+   - Git: DRY source config + linkage receipts.
    - ConfigHub: WET governance state + policy/attestation authority.
    - Flux/Argo: WET -> LIVE reconciliation.
 

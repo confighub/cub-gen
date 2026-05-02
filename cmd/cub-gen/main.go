@@ -1047,7 +1047,7 @@ func printUsage(out io.Writer) {
 				"  enrich preview    Propose sidecar proof metadata for PR review",
 				"  normalize preview  Propose governed rewrite patches for review",
 				"  platform import   Read a multi-repo platform estate as a graph",
-				"  platform fanout   Emit one proof bundle per deployable variant",
+				"  platform fanout   Emit one proof bundle per Deployment Variant",
 				"  detect            Detect generators in a repo",
 				"  generators        List supported generators (Helm, Score, Spring Boot, ...)",
 			},

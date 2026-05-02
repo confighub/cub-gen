@@ -583,13 +583,13 @@ func buildVariantProposal(root string) (Proposal, bool, error) {
 		Owner:      "app-team",
 		Risk:       RiskLow,
 		Review:     "Review the generated variant inventory before wiring it into platform import or fanout.",
-		Why:        "profile files already encode deployable variants; making the variants explicit lets ConfigHub reason about dev, stage, and prod separately.",
+		Why:        "profile files already encode Deployment Variants; making the variants explicit lets ConfigHub reason about dev, stage, and prod separately.",
 		RenderedImpact: []RenderedImpact{{
-			ResourceType: "Deployable Variant",
+			ResourceType: "Deployment Variant",
 			ResourceName: component,
 			Path:         "variants[*]",
 			Action:       "make-variant-boundaries-visible",
-			Explanation:  "each profile gets a concrete deployable variant with its source inputs and rendered proof path",
+			Explanation:  "each profile gets a concrete Deployment Variant with its source inputs and rendered proof path",
 		}},
 		Patch: Patch{
 			Path:        ".cub-gen/normalize/deployable-variants.yaml",

@@ -290,7 +290,7 @@ Examples:
 - patching a downstream YAML instead of the platform policy that should own it
 - hotfixing a live object that gets silently reverted by reconciliation
 
-This is how app intent and operational truth drift apart.
+This is how app source config and operational truth drift apart.
 
 ### Problem 3: too many version axes
 
@@ -395,7 +395,7 @@ A platform team naturally wants to own:
 
 That gives us a simple model:
 
-1. The app author writes app intent.
+1. The app author writes app source config.
 2. The platform defines the contract, defaults, and guardrails.
 3. A generator or platform control plane combines both into deployable
    operational state.
@@ -404,14 +404,14 @@ That gives us a simple model:
 This is what we mean by the app platform model.
 
 It is not "developers stop owning apps."
-It is "developers own app intent, while the platform owns how that intent is
+It is "developers own app source config, while the platform owns how that config is
 made safe and operable."
 
 This model lines up with current industry practice:
 
 - Spring itself expects separate operational concerns such as probes,
   graceful shutdown, and externalized config
-- platform frameworks expect app intent to be smaller and more stable than the
+- platform frameworks expect app source config to be smaller and more stable than the
   rendered deployment bundle
 - AI workflows make it even more valuable to separate proposal from authority
 
@@ -532,7 +532,7 @@ shared platform contract.
 In practice, this helps explain:
 
 - why some changes are direct app mutations
-- why some changes must be lifted upstream into app intent
+- why some changes must be lifted upstream into app source config
 - why some changes are generator-owned or platform-owned and should be blocked
 
 We should treat this as an experimental refinement, not as a breaking rename.

@@ -402,8 +402,8 @@ See: `e2e-live-reconcile-*.sh` and `e2e-connected-governed-reconcile-helm.sh` fo
 | Status | What is true today |
 |--------|--------------------|
 | Strong now | Story scripts exist for stories 1-13; Flux and Argo live reconcile proofs exist; connected lifecycle and PR/MR flow scripts are in the demo surface |
-| In progress | Working `v0.4` roadmap: make cub-gen's role obvious as Component -> Deployable Variant -> Target/Connections/Change/Proof |
-| Actively tracked | [#287](https://github.com/confighub/cub-gen/issues/287) plus milestone [v0.4: Component -> Deployable Variant -> Proof](https://github.com/confighub/cub-gen/milestone/4) |
+| In progress | Working `v0.4` roadmap: make cub-gen's role obvious as Component -> Variant -> Base/Deployment -> Target/Connections/Change/Proof |
+| Actively tracked | [#302](https://github.com/confighub/cub-gen/issues/302) plus milestone [v0.4: Component -> Variant -> Proof](https://github.com/confighub/cub-gen/milestone/4) |
 
 For the per-example truth behind those claims, use the generated [Example Truth Matrix](../../docs/testing/example-truth-matrix.md). It is derived from the example catalog, connected runners, source-side tests, and live proof scripts.
 

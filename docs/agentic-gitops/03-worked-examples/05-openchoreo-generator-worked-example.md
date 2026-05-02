@@ -26,7 +26,7 @@ The answer is not "make a perfect abstraction." The answer is to recognize when
 the platform is really a generator:
 
 ```text
-app intent + environment context + platform contract -> deployable config
+app source config + environment context + platform contract -> deployable config
 ```
 
 If that function is deterministic and ownership boundaries are visible, a
@@ -41,7 +41,7 @@ already named.
 ```mermaid
 flowchart LR
   subgraph DRY["OpenChoreo source objects"]
-    W["Workload<br/>app-owned runtime intent"]
+    W["Workload<br/>app-owned runtime config"]
     RB["ReleaseBinding<br/>environment variant overrides"]
     SR["SecretReference<br/>platform/security secret pointer"]
     CT["ComponentType<br/>platform renderer contract"]
@@ -81,10 +81,10 @@ flowchart LR
 
 | OpenChoreo object | Role in the generator | cub-gen classification | Typical owner |
 |---|---|---|---|
-| `Workload` | Describes what the component consumes | DRY app intent | app team |
+| `Workload` | Describes what the component consumes | DRY app source config | app team |
 | `ReleaseBinding` | Binds a release to an environment with overrides | DRY variant input | environment owner or app team |
 | `SecretReference` | Points at external secret material without storing values | DRY platform/security reference | platform or security |
-| `ComponentType` | Defines how app intent becomes Kubernetes resources | generator contract / platform template | platform team |
+| `ComponentType` | Defines how app source config becomes Kubernetes resources | generator contract / platform template | platform team |
 | `RenderedRelease` | Final rendered component release for an environment | WET output bundle | platform runtime |
 | `Deployment`, `ConfigMap`, `ExternalSecret` | Kubernetes-facing resources | WET targets | platform runtime |
 | live `Secret`, pods, services | Runtime state | LIVE state | reconciler / cluster |

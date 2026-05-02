@@ -14,20 +14,23 @@ User-facing doctrine:
 
 ```text
 Component
-  -> Deployable Variant
-      -> Target
-      -> Connections
-      -> Proof
+  -> Variant
+      -> Base Variant
+      -> Deployment Variant
+          -> Target
+          -> Connections
+          -> Proof
 ```
 
-A Component is the reusable base. A Deployable Variant is a concrete deployable
-copy or context of that Component. An AI Variant is a Deployable Variant whose
+A Component is the reusable base. A Variant is a member of that Component
+family. A Base Variant is not deployed. A Deployment Variant is the concrete
+deployed copy or context of that Component. An AI Variant is a Variant whose
 delta, wiring, or operation is AI-assisted and governed. Generator contracts
 are the implementation mechanism that lets the product derive variants, targets,
 connections, changes, and proof from existing repos.
 
-Plain-English thesis: many app platforms are generators. They take app intent,
-environment context, and platform contracts, then produce deployable config. The
+Plain-English thesis: many app platforms are generators. They take app source
+config, environment context, and platform contracts, then produce deployable config. The
 product does not need to replace those platforms first. It needs to import them,
 record their generator contract, and route changes to the right source layer.
 
@@ -97,7 +100,7 @@ No contract triple, no governed import.
 2. As a Spring Boot team, I can keep framework config as DRY input and get explicit WET manifests with field-origin mapping for critical ops fields.
 3. As a Score.dev user, I can preserve my workload abstraction and still get governed dry/wet lineage in ConfigHub.
 4. As an app-config platform user (for example feature-flag/runtime config repos), I can import literal WET config into the same governance model.
-5. As an ops engineer, I can trace a production config field to source intent quickly enough for incident response.
+5. As an ops engineer, I can trace a production config field to source config quickly enough for incident response.
 6. As a platform lead, I can onboard mixed Git teams with a single cognitive-simple path: detect -> import -> explain -> evaluate.
 7. As a CI-centric platform team, I can call ConfigHub mutation/query APIs from existing pipelines and avoid repo/file-path scripting.
 8. As a platform owner, I can evolve labels and taxonomy (app/service/target) without repo surgery and without breaking operational queries.

@@ -137,7 +137,7 @@ field origins, ownership boundaries, and evidence artifacts over plain app confi
 
 | Existing provider-config model | cub-gen concept | Why it matters |
 |------|------|------|
-| `no-config-platform*.yaml` | DRY app intent | Teams keep editing familiar provider config files. |
+| `no-config-platform*.yaml` | DRY app source config | Teams keep editing familiar provider config files. |
 | Rendered provider payloads | WET targets with provenance | Every live-impacting field can be traced back to source. |
 | Optional future `platform/` rules | Governance layer | You can add policy later without replacing authoring workflow. |
 | Provider sync/runtime | LIVE state | Runtime remains external; cub-gen focuses on safe config change flow. |

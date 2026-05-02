@@ -80,7 +80,7 @@ Local CLI that runs against any Git repo. No backend required.
 | `gitops discover` | Scans repo, classifies generator roots |
 | `gitops import` | Emits DRY/WET classification with provenance and inverse-edit guidance |
 | `gitops cleanup` | Removes local discover state |
-| `platform import` | Reads a multi-repo estate as Components, Deployable Variants, Targets, and diagnostics |
+| `platform import` | Reads a multi-repo estate as Components, Variants, Deployment Variants, Targets, and diagnostics |
 | `platform fanout` | Emits one ConfigHub-ready change bundle per deployable environment, tenant, region, or cluster variant |
 | `publish` | Produces a deterministic change bundle (JSON envelope with SHA-256 digest) |
 | `verify` | Validates bundle schema and digest integrity |
@@ -182,7 +182,7 @@ connected walkthrough or a bridge-only capability gap.
 # Build a change bundle from your repo
 ./cub-gen publish --space platform ./examples/helm-paas > bundle.json
 
-# Or build one bundle per deployable variant from a platform manifest
+# Or build one bundle per Deployment Variant from a platform manifest
 ./cub-gen platform fanout --json --out fanout.json \
   ./testdata/variant-fanout/platform.yaml
 

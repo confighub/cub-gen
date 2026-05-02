@@ -56,7 +56,7 @@ acme-platform-gitops/
 
 Two repos are common in practice:
 
-1. app intent repo (developer-facing DRY),
+1. app source config repo (developer-facing DRY),
 2. GitOps deploy repo (controller-facing WET contract).
 
 ---

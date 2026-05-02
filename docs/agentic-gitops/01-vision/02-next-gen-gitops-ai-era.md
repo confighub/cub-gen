@@ -63,7 +63,7 @@ Typical unit:
 
 Combined result:
 
-1. app intent and agent behavior are linked in one audit path.
+1. app source config and agent behavior are linked in one audit path.
 
 ## LIVE-Origin Change Path (Kargo-Style, Governed)
 
