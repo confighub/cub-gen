@@ -58,7 +58,8 @@
       "enum": [
         "change_bundle",
         "attestation",
-        "governed_decision"
+        "governed_decision",
+        "mutation_apply_gate"
       ]
     },
     "artifact_digest": {

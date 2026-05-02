@@ -76,6 +76,7 @@ It adds what those layers do not provide by default:
 - ownership-aware edit routing (`who should edit this?`)
 - multi-repo platform graphs (`which Components and Variants exist, and which Variants deploy?`)
 - PR-friendly proof sidecars (`enrich preview` / `enrich write`)
+- mutation apply gates (`apply-here`, `lift-upstream`, `block/escalate`)
 - governed safety decisions before deploy (`ALLOW/ESCALATE/BLOCK`)
 
 ---

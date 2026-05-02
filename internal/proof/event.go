@@ -17,10 +17,12 @@ const (
 	EventTypeDecisionCreated       = "governed_decision.created"
 	EventTypeDecisionAttested      = "governed_decision.attested"
 	EventTypeDecisionApplied       = "governed_decision.applied"
+	EventTypeMutationGateEvaluated = "mutation_apply_gate.evaluated"
 
 	ArtifactKindChangeBundle = "change_bundle"
 	ArtifactKindAttestation  = "attestation"
 	ArtifactKindDecision     = "governed_decision"
+	ArtifactKindMutationGate = "mutation_apply_gate"
 
 	digestAlgorithm = "sha256"
 )

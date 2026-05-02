@@ -120,7 +120,7 @@ Once those are clear, then expand into the broader module and lifecycle surface.
 | `../helm-paas/demo-governed-change.sh` | [`helm-paas`](../helm-paas/) | App-team ALLOW path vs platform-contract BLOCK path with the real PR ownership gate |
 | `../helm-paas/demo-layered-trace.sh` | [`helm-paas`](../helm-paas/) | Cluster labels -> ApplicationSet selector -> values overlay proof plus blocked customer security weakening |
 | `start-app-first.sh` | [`springboot-paas`](../springboot-paas/) + [`live-reconcile`](../live-reconcile/) follow-on | Opinionated app-first starter path |
-| `../springboot-paas/demo-governed-routes.sh` | [`springboot-paas`](../springboot-paas/) | App-owned field ALLOW versus platform-owned field BLOCKED with `springboot validate-mutation` |
+| `../springboot-paas/demo-governed-routes.sh` | [`springboot-paas`](../springboot-paas/) | App-owned ALLOW, source-change ESCALATE, and platform-owned BLOCK with `gate mutation` |
 | `../springboot-paas/demo-embedded-config-mutation.sh` | [`springboot-paas`](../springboot-paas/) | Direct embedded `application.yaml` mutation in the ConfigHub payload plus blocked datasource proof |
 | `start-score-first.sh` | [`scoredev-paas`](../scoredev-paas/) | Opinionated Score-first starter path with local governance and standalone runtime proof |
 | `../scoredev-paas/demo-governed-workload.sh` | [`scoredev-paas`](../scoredev-paas/) | App-owned image change ALLOW versus unapproved resource type ESCALATE with `score validate-workload` |

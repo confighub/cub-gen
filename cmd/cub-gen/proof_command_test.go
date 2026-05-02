@@ -206,3 +206,52 @@ func TestProofEventsFromDecisionRecord(t *testing.T) {
 		t.Fatalf("unexpected applied event: %+v", applied)
 	}
 }
+
+func TestProofEventsFromMutationGateDecision(t *testing.T) {
+	setupAliases(t)
+
+	routesPath := filepath.Join("..", "..", "examples", "springboot-paas", "operational", "field-routes.yaml")
+	decisionJSON, decisionErr, err := runWithCapturedIO([]string{
+		"gate", "mutation",
+		"--routes", routesPath,
+		"--json",
+		"--at", "2026-05-02T12:00:00Z",
+		"feature.inventory.reservationMode",
+	})
+	if err != nil {
+		t.Fatalf("gate mutation returned error: %v\nstderr=%s", err, decisionErr)
+	}
+
+	out, stderr, err := runWithCapturedIOAndStdin([]string{"proof", "events", "--in", "-"}, decisionJSON)
+	if err != nil {
+		t.Fatalf("proof events returned error: %v\nstderr=%s", err, stderr)
+	}
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("unmarshal proof log: %v\noutput=%s", err, out)
+	}
+	if got["source_artifact_kind"] != "mutation_apply_gate" {
+		t.Fatalf("unexpected source artifact kind: %v", got["source_artifact_kind"])
+	}
+	if got["source_artifact_digest"] == "" {
+		t.Fatalf("expected source_artifact_digest in proof log")
+	}
+	events, ok := got["events"].([]any)
+	if !ok || len(events) != 1 {
+		t.Fatalf("expected one event object, got %v", got["events"])
+	}
+	event, ok := events[0].(map[string]any)
+	if !ok {
+		t.Fatalf("expected event object, got %T", events[0])
+	}
+	if event["event_type"] != "mutation_apply_gate.evaluated" || event["decision_state"] != "ALLOW" || event["route_kind"] != "apply-here" {
+		t.Fatalf("unexpected gate event: %+v", event)
+	}
+	if event["artifact_digest"] != got["source_artifact_digest"] {
+		t.Fatalf("expected event digest to match source digest")
+	}
+}

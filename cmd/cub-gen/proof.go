@@ -11,6 +11,7 @@ import (
 
 	"github.com/confighub/cub-gen/internal/attest"
 	bridgeflow "github.com/confighub/cub-gen/internal/bridge"
+	"github.com/confighub/cub-gen/internal/mutationgate"
 	"github.com/confighub/cub-gen/internal/proof"
 	"github.com/confighub/cub-gen/internal/publish"
 )
@@ -20,6 +21,7 @@ const (
 	changeBundleSchema      = "cub.confighub.io/change-bundle/v1"
 	attestationRecordSchema = "cub.confighub.io/attestation/v1"
 	decisionRecordSchema    = "cub.confighub.io/governed-decision-state/v1"
+	mutationGateSchema      = mutationgate.SchemaVersion
 )
 
 type proofLog struct {
@@ -51,7 +53,7 @@ func runProof(args []string) error {
 func runProofEvents(args []string) error {
 	fs := flag.NewFlagSet("proof events", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
-	in := fs.String("in", "-", "Bundle or attestation JSON input path, or '-' for stdin")
+	in := fs.String("in", "-", "Evidence artifact JSON input path, or '-' for stdin")
 	bundlePath := fs.String("bundle", "", "Optional bundle JSON path when input is an attestation")
 	ndjson := fs.Bool("ndjson", false, "Emit one compact proof event per line")
 	pretty := fs.Bool("pretty", true, "Pretty-print JSON output")
@@ -151,6 +153,22 @@ func buildProofLog(inputBytes []byte, bundlePath string) (proofLog, error) {
 			EventCount:         len(rec.ProofEvents),
 			Events:             rec.ProofEvents,
 		}, nil
+	case mutationGateSchema:
+		var decision mutationgate.Decision
+		if err := json.Unmarshal(inputBytes, &decision); err != nil {
+			return proofLog{}, fmt.Errorf("parse mutation apply gate decision json: %w", err)
+		}
+		if err := mutationgate.ValidateDecisionRecord(decision); err != nil {
+			return proofLog{}, err
+		}
+		return proofLog{
+			SchemaVersion:        proofLogSchema,
+			TraceID:              decision.TraceID,
+			SourceArtifactKind:   proof.ArtifactKindMutationGate,
+			SourceArtifactDigest: decision.DecisionDigest,
+			EventCount:           len(decision.ProofEvents),
+			Events:               decision.ProofEvents,
+		}, nil
 	default:
 		return proofLog{}, fmt.Errorf("unsupported proof input schema_version %q", header.SchemaVersion)
 	}
@@ -191,7 +209,7 @@ func printProofUsage(out io.Writer) {
 		helpSection{
 			Title: "COMMANDS",
 			Lines: []string{
-				"  events    Verify a bundle or attestation and emit its proof_events",
+				"  events    Verify an evidence artifact and emit its proof_events",
 			},
 		},
 		helpSection{
@@ -200,6 +218,7 @@ func printProofUsage(out io.Writer) {
 				"  cub-gen proof events --in bundle.json",
 				"  cub-gen proof events --in attestation.json --bundle bundle.json --ndjson",
 				"  cub-gen proof events --in decision.json --ndjson",
+				"  cub-gen proof events --in mutation-gate-decision.json --ndjson",
 			},
 		},
 	)

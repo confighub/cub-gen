@@ -23,12 +23,13 @@ The app is `inventory-api`, a Spring Boot 3.3.2 service (Java 21) deployed acros
 | Source-side provenance and ownership | Real | `./examples/springboot-paas/demo-local.sh` |
 | Deep connected bridge path | Real | `./examples/springboot-paas/demo-connected.sh` |
 | Standalone live-cluster app proof | Real | `./bin/create-cluster && ./bin/build-image && ./bin/install-worker && ./verify-e2e.sh` |
-| Governed route proof (`ALLOW` + `BLOCKED`) | Real but client-side | `./examples/springboot-paas/demo-governed-routes.sh` |
+| Governed route proof (`ALLOW` / `ESCALATE` / `BLOCK`) | Real local mutation gate | `./examples/springboot-paas/demo-governed-routes.sh` |
 | Direct embedded ConfigHub payload mutation | Real but client-side | `./examples/springboot-paas/demo-embedded-config-mutation.sh` |
 
 The strongest caveat is enforcement depth, not demo truth. The ownership
-boundary is real and documented, but server-side rejection in ConfigHub is not
-implemented yet.
+boundary is real and documented. ConfigHub can show this decision through
+Initiatives/apply gates; non-bypassable core write-path rejection is later
+hardening if needed.
 
 ## AI-first bundle
 
@@ -222,19 +223,21 @@ This is the **block/escalate** path. The field `spring.datasource.*` is platform
 ./block-escalate.sh --render-attempt  # the dry-run: what would happen
 ```
 
-### Enforcement via validate-mutation
+### Enforcement via mutation apply gate
 
-Use `cub-gen springboot validate-mutation` to enforce field routes directly, or
-run the example-owned wrapper first:
+Use `cub-gen gate mutation` to evaluate the same route model that ConfigHub can
+show on an Initiative/apply gate: route, decision, owner, next action, and
+proof event. Run the example-owned wrapper first:
 
 ```bash
 ./examples/springboot-paas/demo-governed-routes.sh
 ```
 
-That wrapper proves both sides of the route boundary:
+That wrapper proves all three main route outcomes:
 
-- `feature.inventory.reservationMode` returns `ALLOWED`
-- `spring.datasource.url` returns `BLOCKED`
+- `feature.inventory.reservationMode` returns `route.kind=apply-here` and `decision.state=ALLOW`
+- `spring.cache.type` returns `route.kind=lift-upstream` and `decision.state=ESCALATE`
+- `spring.datasource.url` returns `route.kind=block/escalate` and `decision.state=BLOCK`
 
 For the stronger direct payload path, use:
 
@@ -254,17 +257,29 @@ If you want the raw commands underneath it:
 
 ```bash
 # Allowed: app-owned field
-cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml \
+cub-gen gate mutation --routes ./operational/field-routes.yaml --json \
   feature.inventory.reservationMode
-# ALLOWED (exit 0)
+# route.kind=apply-here, decision.state=ALLOW
 
 # Blocked: platform-owned field
-cub-gen springboot validate-mutation --routes ./operational/field-routes.yaml \
+cub-gen gate mutation --routes ./operational/field-routes.yaml --json --enforce \
   spring.datasource.url
-# BLOCKED (exit 1)
+# route.kind=block/escalate, decision.state=BLOCK, exit non-zero with --enforce
+
+# Source change required
+cub-gen gate mutation --routes ./operational/field-routes.yaml --json \
+  spring.cache.type
+# route.kind=lift-upstream, decision.state=ESCALATE
 ```
 
-This command reads `field-routes.yaml` and rejects mutations to fields with `defaultAction: generator-owned` (platform-owned) or `defaultAction: lift-upstream` (requires source change).
+This command reads `field-routes.yaml` and rejects or escalates mutations to
+fields with `defaultAction: generator-owned` (platform-owned) or
+`defaultAction: lift-upstream` (requires source change). The JSON carries
+`decision_digest` and `proof_events[]`, so it can be logged with:
+
+```bash
+cub-gen proof events --in mutation-gate-decision.json --ndjson
+```
 
 Direct embedded payload edits use the companion command:
 
@@ -279,18 +294,21 @@ cub-gen springboot set-embedded-config \
 It edits `ConfigMap.data["application.yaml"]` in-place, after validating the
 field route when `--routes` is provided.
 
-**What is now enforced:**
+**What is now enforced locally:**
 - Field routes are read from `operational/field-routes.yaml`
-- Mutations to `spring.datasource.*` and `securityContext.*` are blocked (exit 1)
-- Mutations to `spring.cache.*` are blocked (lift-upstream: requires source change)
-- Mutations to `feature.{app}.*` are allowed (exit 0)
+- Mutations to `spring.datasource.*` and `securityContext.*` return `BLOCK`
+- Mutations to `spring.cache.*` return `ESCALATE` with `lift-upstream`
+- Mutations to `feature.{app}.*` return `ALLOW`
+- The decision is digest-backed and carries a loggable proof event
 
 **What is NOT yet enforced:**
-- Server-side rejection in ConfigHub (this is client-side validation)
-- Automatic rejection during `cub unit apply`
-- Worker-side enforcement at deploy time
+- Non-bypassable ConfigHub core write-path rejection
+- Automatic source PR creation for `lift-upstream`
+- Worker-side deploy-time enforcement
 
-This is a client-side gate. Integrate it into CI/CD to enforce the boundary before mutations reach ConfigHub.
+For v0.4, this is the cub-gen side of the mutation apply gate. In ConfigHub, an
+Initiative/MR can show the same route/decision/proof object and use an apply
+gate to stop governed flows before apply.
 
 ## Normalize preview
 

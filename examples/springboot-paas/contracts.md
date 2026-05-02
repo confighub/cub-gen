@@ -53,14 +53,17 @@ mutates:
 expects:
   stdout_contains:
     - "[spring-routes] success"
-    - "ALLOWED"
-    - "BLOCKED"
+    - "allowed field"
+    - "lift-upstream field"
+    - "blocked field"
   files_exist:
-    - ".tmp/springboot-governed-routes/<run>/allow.txt"
-    - ".tmp/springboot-governed-routes/<run>/block.txt"
+    - ".tmp/springboot-governed-routes/<run>/allow.json"
+    - ".tmp/springboot-governed-routes/<run>/lift.json"
+    - ".tmp/springboot-governed-routes/<run>/block.json"
 inspect_with:
-  - cat .tmp/springboot-governed-routes/<run>/allow.txt
-  - cat .tmp/springboot-governed-routes/<run>/block.txt
+  - jq '{route: .route.kind, decision: .decision.state}' .tmp/springboot-governed-routes/<run>/allow.json
+  - jq '{route: .route.kind, decision: .decision.state}' .tmp/springboot-governed-routes/<run>/lift.json
+  - jq '{route: .route.kind, decision: .decision.state}' .tmp/springboot-governed-routes/<run>/block.json
 ```
 
 ## Local embedded payload proof

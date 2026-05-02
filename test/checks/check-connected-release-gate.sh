@@ -49,6 +49,13 @@ forbid_make_dep "test-live-reconcile-argo"
 forbid_make_dep "check-story-evidence"
 forbid_make_dep "check-flow-evidence"
 
+if ! grep -q "gate mutation" examples/demo/run-connected-smoke.sh; then
+  fail "connected smoke must record one mutation apply gate decision"
+fi
+if ! grep -q "gate_decision_digest" examples/demo/run-connected-smoke.sh; then
+  fail "connected smoke summary must expose the mutation gate decision digest"
+fi
+
 assert_jq "$tmp_json" '.summary.generator_fixtures == 8' "expected eight first-class generator fixtures"
 assert_jq "$tmp_json" '.summary.connected_release_gated == 2' "expected exactly two flagship examples in the connected smoke lane"
 assert_jq "$tmp_json" '[.rows[] | select(.connected_release_gated)] | map(.example) | sort == ["helm-paas", "springboot-paas"]' "connected smoke lane should cover helm-paas and springboot-paas"

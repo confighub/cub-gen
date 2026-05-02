@@ -55,6 +55,7 @@ Schema: [`proof-event.v1.schema.json`](schemas/proof-event.v1.schema.json)
 | `governed_decision.created` | `bridge decision create` | `governed_decision` | bundle digest |
 | `governed_decision.attested` | `bridge decision attach` | `governed_decision` | `attestation.verified` |
 | `governed_decision.applied` | `bridge decision apply` | `governed_decision` | previous decision event |
+| `mutation_apply_gate.evaluated` | `gate mutation` | `mutation_apply_gate` | none |
 
 ## CLI Extraction
 
@@ -65,28 +66,34 @@ records without carrying the whole bundle payload:
 cub-gen proof events --in bundle.json
 cub-gen proof events --in attestation.json --bundle bundle.json --ndjson
 cub-gen proof events --in decision.json --ndjson
+cub-gen proof events --in mutation-gate-decision.json --ndjson
 ```
 
 The command verifies the input first. Bundle input is checked with
 `verify`; attestation input is checked with `verify-attestation`, and the
 optional `--bundle` flag strengthens the parent-link check. Decision input is
 checked against the governed decision-state contract and must carry
-`proof_events[]`.
+`proof_events[]`. Mutation gate input is checked against the
+`mutation-apply-gate-decision/v1` contract, including the decision digest and
+the embedded `mutation_apply_gate.evaluated` event.
 
 ## Trace Chain
 
 ```mermaid
 flowchart LR
   source["Source config + Generator"] --> bundle["Change bundle"]
+  source --> gate["Mutation apply gate decision"]
   bundle --> attestation["Attestation"]
   attestation --> decision["Governed decision"]
   bundle --> logs["Pilot / validation logs"]
   attestation --> logs
   decision --> logs
+  gate --> logs
 
   bundle -. "trace_id + bundle_digest" .-> logs
   attestation -. "trace_id + attestation_digest + parent bundle_digest" .-> logs
   decision -. "trace_id + decision_state + parent event/digest" .-> logs
+  gate -. "trace_id + route_kind + decision_state + decision_digest" .-> logs
 ```
 
 The important join keys are:
@@ -98,6 +105,7 @@ The important join keys are:
 | Attestation integrity | `artifact_kind=attestation`, `artifact_digest=attestation_digest` |
 | Attestation to bundle | `parent_artifact_kind=change_bundle`, `parent_artifact_digest=bundle_digest` |
 | Decision lifecycle | `artifact_kind=governed_decision`, `decision_state`, `parent_event_id` |
+| Mutation apply gate | `artifact_kind=mutation_apply_gate`, `route_kind`, `decision_state`, `artifact_digest=decision_digest` |
 
 ## Digest Rules
 

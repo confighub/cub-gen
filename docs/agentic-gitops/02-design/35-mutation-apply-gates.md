@@ -521,6 +521,14 @@ Mutation apply gates for Generator route decisions.
 7. Treat missing proof as `ESCALATE`, not allow.
 8. Emit optional MR-PR link intent, but do not require automatic PR creation.
 
+Current cub-gen implementation: `gate mutation` emits this decision object from
+Spring `field-routes.yaml`, route-policy files, or published cub-gen bundles.
+It includes `decision_digest` plus `proof_events[]`, so Pilot, validation, and
+attestation tooling can log or extract the gate proof with `proof events`.
+ConfigHub Initiatives/apply gates can display the same object as the v0.4 UI
+surface; non-bypassable core write-path enforcement is a later hardening step
+if needed.
+
 ### Proof Matrix
 
 | Proof | Required for #283 MVP |
@@ -532,7 +540,7 @@ Mutation apply gates for Generator route decisions.
 | example | OpenChoreo rendered Deployment edit routes to CR/source/owner |
 | degradation | missing proof escalates to review-required |
 | docs | this spec plus Spring caveat update |
-| connected | one ConfigHub/Initiative gate smoke if Functions/apply gates support it |
+| connected | connected smoke records one mutation apply gate decision; ConfigHub Initiative/apply-gate display is the intended UI surface |
 
 ### Later Scope
 

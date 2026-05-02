@@ -18,7 +18,7 @@ Open and recently completed issues checked on 2026-05-02:
 | Issue | Title | Why it matters for the manifesto |
 |---|---|---|
 | [#287](https://github.com/confighub/cub-gen/issues/287) | make cub-gen role and value obvious | parent roadmap issue keeping the product story coherent |
-| [#283](https://github.com/confighub/cub-gen/issues/283) | mutation apply gates for generator routes | route ownership must become an authoritative apply decision with next actions |
+| [#283](https://github.com/confighub/cub-gen/issues/283) | mutation apply gates for generator routes | route ownership now has a cub-gen decision object with next actions, digest, and proof events for ConfigHub Initiative/apply-gate display |
 | [#236](https://github.com/confighub/cub-gen/issues/236) | ship cub-gen as `cub gen` plugin | product workflow should feel like one platform; plugin proof now works, next release artifact remains |
 | [#213](https://github.com/confighub/cub-gen/issues/213) | GUI provenance trace | click-field-to-source is the core teaching moment |
 | [#212](https://github.com/confighub/cub-gen/issues/212) | GUI regeneration/refresh preview | users need to see generated impact before merge/apply |
@@ -322,6 +322,14 @@ clear apply gate that returns both a route decision and a policy decision.
 The first useful version can run as an Initiative/apply gate. Later hardening
 can move the same contract into the direct ConfigHub write path.
 
+Status: cub-gen slice landed via `gate mutation`. The command evaluates route
+proof from Spring field routes, route policy files, or published bundles and
+emits a `MutationApplyGateDecision` with `route.kind`, `decision.state`, next
+actions, optional PR/MR link intent, `decision_digest`, and `proof_events[]`.
+Connected smoke now records one gate decision. ConfigHub can show this in the
+Initiatives/apply-gate GUI without requiring cub-gen to change ConfigHub core
+write paths.
+
 Deterministic success criteria:
 
 1. ConfigHub evaluates proposed mutations using route metadata from imported
@@ -338,7 +346,7 @@ Proof matrix:
 | Proof | Required |
 |---|---|
 | unit | route + decision evaluation |
-| integration | Initiative/apply gate blocks a routed mutation before apply |
+| integration | connected smoke records a mutation apply gate decision; ConfigHub Initiative/apply-gate display is the intended UI surface |
 | example | Spring Boot apply-here, lift-upstream, and datasource block |
 | example | Helm and OpenChoreo route matrices |
 | degradation | missing provenance downgrades to review-required, not allow |
@@ -346,7 +354,8 @@ Proof matrix:
 Definition of done:
 
 1. gate decision state is authoritative for the governed Initiative/apply flow,
-2. client-side validation remains a convenience, not the only gate,
+2. client-side validation remains a convenience; ConfigHub Initiatives/apply
+   gates are the first governed UI surface,
 3. direct rendered mutations for lift-upstream fields are blocked with next
    action instructions,
 4. docs update Spring caveat,

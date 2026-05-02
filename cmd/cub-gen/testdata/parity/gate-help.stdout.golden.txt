@@ -1,0 +1,10 @@
+cub-gen gate: decide whether a proposed mutation may apply
+
+Mutation apply gates answer: if this deployed field is wrong, where do I fix it?
+
+COMMANDS:
+  mutation    Return route.kind, decision.state, next actions, and proof_events
+
+EXAMPLES:
+  cub-gen gate mutation --routes ./examples/springboot-paas/operational/field-routes.yaml feature.inventory.reservationMode
+  cub-gen gate mutation --bundle bundle.json Deployment/spec/template/spec/containers[0]/image

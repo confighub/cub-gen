@@ -20,6 +20,7 @@ plugin install shape and compatibility contract.
 | Which DRY file/path should I edit for a rendered field? | `change explain` |
 | Which rendered fields would this DRY path affect? | `change impact` |
 | What evidence bundle and safe next step should I prepare? | `change preview` |
+| Can this rendered-field change apply here, or should it move upstream? | `gate mutation` |
 | How do I add provenance to a PR without editing manifests? | `enrich preview`, then optionally `enrich write` |
 | How do I turn implicit platform rules into reviewable config proposals? | `normalize preview` |
 | How do I see a multi-repo platform estate? | `platform import` |
@@ -459,6 +460,68 @@ cub-gen bridge promote merge --flow <flow.json> --by <who>
 
 ---
 
+## Mutation Gates
+
+### `gate mutation`
+
+Decide whether a proposed rendered-field mutation may apply in the current
+layer, should become an overlay, should be lifted upstream to source config, or
+must be blocked/escalated.
+
+```bash
+cub-gen gate mutation [--policy <route-policy.json>] [--routes <field-routes.yaml>] [--bundle <bundle.json>] <rendered-field>
+```
+
+Exactly one proof source is required:
+
+| Proof source | Use when |
+|---|---|
+| `--policy` | You already have a `generator-route-policy/v1` JSON/YAML file or ConfigHub Unit annotation |
+| `--routes` | You are using the Spring example's `field-routes.yaml` |
+| `--bundle` | You have a `cub-gen publish` change bundle with inverse edit pointers |
+
+The output separates route from gate decision:
+
+| Output | Meaning |
+|---|---|
+| `route.kind` | `apply-here`, `overlay`, `lift-upstream`, `block/escalate`, or `review-required` |
+| `decision.state` | `ALLOW`, `ESCALATE`, or `BLOCK` |
+| `next_actions[]` | The plain next step: apply mutation, create/link source PR, review overlay, request owner review, or enrich proof |
+| `decision_digest` | Stable digest for the gate decision artifact |
+| `proof_events[]` | Loggable proof record for Pilot, validation, and later attestation |
+
+Examples:
+
+```bash
+./cub-gen gate mutation \
+  --routes ./examples/springboot-paas/operational/field-routes.yaml \
+  --json \
+  feature.inventory.reservationMode
+
+./cub-gen publish --space platform ./testdata/openchoreo-hardgate > bundle.json
+./cub-gen gate mutation \
+  --bundle bundle.json \
+  --json \
+  'Deployment/spec/template/spec/containers[name=main]/image'
+```
+
+Use `--enforce` when a script should return non-zero for any decision other
+than `ALLOW`. The command still writes the decision JSON first, so CI can keep
+the proof artifact.
+
+`gate mutation` is the cub-gen side of the #283 mutation apply gate design. In
+ConfigHub, the same decision object can be shown on an Initiative/MR apply gate:
+route, decision, owner, next action, optional PR/MR link, and proof event. It
+does not require cub-gen to modify ConfigHub core write paths.
+
+Proof extraction works on gate decisions too:
+
+```bash
+./cub-gen proof events --in mutation-gate-decision.json --ndjson
+```
+
+---
+
 ## Generator helper commands
 
 These helper groups are narrower than the main repo-first flow. Use them when a
@@ -490,6 +553,15 @@ Output:
 ### `springboot validate-mutation`
 
 Check whether a Spring field path stays inside the app-owned route map.
+
+For new flows, prefer the general mutation gate:
+
+```bash
+cub-gen gate mutation --routes <field-routes.yaml> <field-path>
+```
+
+`springboot validate-mutation` remains for older Spring example scripts and
+returns the legacy `ALLOWED` / `BLOCKED` shape.
 
 ```bash
 cub-gen springboot validate-mutation --routes <field-routes.yaml> <field-path>
@@ -523,7 +595,8 @@ Typical example path:
 ```
 
 Use `--routes` when you want the command to enforce the same app-owned versus
-platform-owned boundary as `validate-mutation` before writing the file.
+platform-owned boundary before writing the file. For route/decision/proof JSON,
+use `gate mutation`.
 
 ### `springboot init`
 

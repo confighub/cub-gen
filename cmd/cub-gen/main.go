@@ -51,6 +51,8 @@ func run(args []string) error {
 		return runVerifyAttestation(args[1:])
 	case "proof":
 		return runProof(args[1:])
+	case "gate":
+		return runGate(args[1:])
 	case "change":
 		return runChange(args[1:])
 	case "enrich":
@@ -1052,6 +1054,7 @@ func printUsage(out io.Writer) {
 				"  change explain    Find the DRY file/path to edit for a rendered field",
 				"  change impact     See which rendered fields a DRY path can affect",
 				"  change preview    Preview a safe repo change",
+				"  gate mutation     Decide apply-here, lift-upstream, or block/escalate",
 				"  enrich preview    Propose sidecar proof metadata for PR review",
 				"  normalize preview  Propose governed rewrite patches for review",
 				"  platform import   Read a multi-repo platform estate as a graph",
@@ -1067,7 +1070,7 @@ func printUsage(out io.Writer) {
 				"  publish           Build a provenance bundle from a repo or import output",
 				"  verify            Verify a provenance bundle",
 				"  attest            Sign a provenance bundle",
-				"  proof events      Extract loggable proof events from a bundle or attestation",
+				"  proof events      Extract loggable proof events from evidence artifacts",
 			},
 		},
 		helpSection{
@@ -1085,6 +1088,7 @@ func printUsage(out io.Writer) {
 				"  cub-gen platform fanout --variant dev --json ./testdata/variant-fanout/platform.yaml",
 				"  cub-gen platform adapt --json ./testdata/deployment-adaptation/platform.yaml",
 				"  cub-gen change explain --space my-space --owner app-team ./examples/scoredev-paas",
+				"  cub-gen gate mutation --routes ./examples/springboot-paas/operational/field-routes.yaml feature.inventory.reservationMode",
 				"  cub-gen enrich preview --space my-space ./examples/helm-paas",
 				"  cub-gen normalize preview --space my-space ./examples/springboot-paas",
 				"  cub-gen publish --space my-space ./examples/helm-paas | cub-gen verify --in -",
