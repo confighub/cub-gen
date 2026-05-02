@@ -101,7 +101,8 @@ For the v0.4 release path, start with the local proof script:
 ```
 
 It prints the Generator, Component, Base/Deployment Variants, Target, one field
-origin, one route decision, and a verified proof bundle.
+origin, one route decision, one placeholder adaptation gate, and a verified
+proof bundle.
 
 ```bash
 REPO=/path/to/your/repo
@@ -125,6 +126,13 @@ For a component with dev/stage/prod or tenant variants:
 
 ./cub-gen platform fanout --variant dev --json ./testdata/variant-fanout/platform.yaml \
   | jq '.variants[] | {variant_id, change_id, profiles: .generator_profiles}'
+```
+
+For a cloned Deployment Variant that has a Target but still has placeholders:
+
+```bash
+./cub-gen platform adapt --json ./testdata/deployment-adaptation/platform.yaml \
+  | jq '.deployments[] | {id, target, gate: .apply_gate.state, placeholders: .apply_gate.unresolved_count}'
 ```
 
 ## Mental Model
@@ -248,6 +256,7 @@ owner annotations, and an explicit datasource SecretReference candidate.
 | Render/import | Produce or read the deployable config |
 | Platform graph | Read several app/platform repos as Components, Variants, Deployment Variants, Targets, Generators, and diagnostics |
 | Variant fanout | Emit one ConfigHub-ready proof bundle per deployment environment, tenant, region, or cluster variant |
+| Deployment adaptation | Plan placeholder replacement for a cloned Deployment Variant before apply |
 | Trace | Map rendered fields back to source files |
 | Explain | Say who owns the field and where to edit it |
 | Enrich | Create PR-friendly sidecar proof with source links, owners, route badges, and PR/MR link metadata |
@@ -275,6 +284,7 @@ These run locally and do not require a login:
 | Spring Boot services | [springboot-paas](examples/springboot-paas/) | Should I edit app config or platform config? |
 | Multi-repo platform | [platform-estate fixture](testdata/platform-estate/) | Which Components, Variants, Deployment Variants, Generators, and gaps exist before any rewrite? |
 | Base/deployment topology | [variant-topology fixture](testdata/variant-topology/) | Which Variants are reusable bases, and which are deployments with Targets? |
+| Cloned deployment adaptation | [deployment-adaptation fixture](testdata/deployment-adaptation/) | Which placeholders still block apply, and what reviewed replacements are proposed? |
 | Multi-env or tenant variants | [variant-fanout fixture](testdata/variant-fanout/) | Can I produce one governed proof bundle for every Deployment Variant? |
 | A running cluster first | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 

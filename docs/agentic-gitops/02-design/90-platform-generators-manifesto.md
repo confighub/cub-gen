@@ -138,7 +138,7 @@ ConfigMap payloads for allowed app-owned fields, and has connected/live proof.
 | App-of-apps adapter | fixture-backed initial adapter | broader root/child app catalog analysis |
 | Automatic annotation/enrichment | not generic | generate sidecar provenance and optional PRs for annotations |
 | "Better config" generation | limited to Spring starter scaffolding | propose normalized variants, secret references, ownership metadata, and source lifts |
-| Cloned deployment adaptation | manual/scripted outside ConfigHub today | clone Variant, add Target, detect placeholder gates, propose reviewed adaptation patches |
+| Cloned deployment adaptation | first `platform adapt` dry-run proof | wire reviewed adaptation patches into ConfigHub UI/apply-gate flows |
 | Multi-env/tenant fanout | no one-command fanout | one invocation emits one bundle per env/tenant/app variant |
 | PR/MR magic | contracts, commands, and demos exist | seamless creation/linkage with evidence attached |
 | Server-side policy enforcement | client-side proof is stronger than backend enforcement | ConfigHub rejects/blocks governed writes authoritatively |

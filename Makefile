@@ -24,7 +24,7 @@ test-change-api-http:
 	./examples/demo/change-api-http-e2e.sh
 
 test-v04-quickstart:
-	SKIP_BUILD=1 ./examples/demo/v0.4-quickstart.sh
+	./examples/demo/v0.4-quickstart.sh
 
 test-connected-smoke:
 	SKIP_BUILD=1 ./examples/demo/run-connected-smoke.sh

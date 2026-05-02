@@ -85,7 +85,22 @@ jq -r '
 ' "$BLOCK"
 
 echo
-echo "[v0.4] 4. Proof bundle"
+echo "[v0.4] 4. Deployment adaptation gate"
+ADAPT="$OUT_DIR/deployment-adapt.json"
+./cub-gen platform adapt --json ./testdata/deployment-adaptation/platform.yaml >"$ADAPT"
+
+jq -e '.deployments[] | select(.id == "checkout-api/prod-us" and .variant_kind == "deployment" and .target == "prod-us")' "$ADAPT" >/dev/null
+jq -e '.deployments[0].apply_gate.state == "blocked-before-adaptation"' "$ADAPT" >/dev/null
+jq -e '.summary.placeholder_count == 3 and .summary.proposed_replacement_count == 3' "$ADAPT" >/dev/null
+
+jq -r '
+  .deployments[0] as $deployment |
+  "Apply gate: " + $deployment.apply_gate.name + " state=" + $deployment.apply_gate.state + " unresolved=" + ($deployment.apply_gate.unresolved_count | tostring),
+  ($deployment.placeholders[] | "Adapt: " + .token + " -> " + .value + " route=" + .route + " owner=" + .owner)
+' "$ADAPT"
+
+echo
+echo "[v0.4] 5. Proof bundle"
 BUNDLE="$OUT_DIR/helm-bundle.json"
 VERIFY="$OUT_DIR/helm-verify.txt"
 ./cub-gen publish --space platform --pretty ./examples/helm-paas >"$BUNDLE"

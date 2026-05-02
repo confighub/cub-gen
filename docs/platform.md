@@ -82,6 +82,7 @@ Local CLI that runs against any Git repo. No backend required.
 | `gitops cleanup` | Removes local discover state |
 | `platform import` | Reads a multi-repo estate as Components, Variants, Deployment Variants, Targets, and diagnostics |
 | `platform fanout` | Emits one ConfigHub-ready change bundle per deployable environment, tenant, region, or cluster variant |
+| `platform adapt` | Plans placeholder replacement for a cloned Deployment Variant before apply |
 | `publish` | Produces a deterministic change bundle (JSON envelope with SHA-256 digest) |
 | `verify` | Validates bundle schema and digest integrity |
 | `attest` | Emits an attestation record from a verified bundle |
