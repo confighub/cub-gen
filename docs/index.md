@@ -87,19 +87,22 @@ AI-assisted changes make this gap wider because more changes happen faster.
 
 cub-gen adds the import/provenance layer that answers these questions while keeping Flux/Argo as reconciler.
 
-## Three Import Paths
+## Import And Adapt Paths
 
-ConfigHub now has three complementary import stories:
+ConfigHub now has three complementary import stories, plus a deployment
+adaptation preview:
 
 - `cub gitops import` imports existing ArgoCD/Flux application resources from a cluster or worker target into ConfigHub.
 - `cub-gen gitops import` reads source-side Generators such as Helm, Score.dev, Spring Boot, and workflow config, then emits provenance, inverse-edit guidance, and evidence.
 - `cub-gen platform import` reads a local multi-repo manifest and emits a read-only Component -> Variant -> Target graph before rewrites.
+- `cub-gen platform adapt` reads explicit placeholder/context data for a cloned Deployment Variant and emits a review-only adaptation plan before apply.
 
 Use them for different jobs:
 
 - brownfield GitOps app onboarding -> ConfigHub GitOps import
 - source-to-runtime traceability and governed edits -> `cub-gen`
 - platform-estate discovery across apps, platform contracts, envs, and rendered repos -> `cub-gen platform import`
+- cloned deployment adaptation before `vet-placeholders` clears -> `cub-gen platform adapt`
 
 ## What cub-gen is not
 
@@ -286,6 +289,7 @@ For the active sequence, see the
 
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
 - Platform graph command (`platform import`) emits read-only multi-repo Component/Variant graphs with diagnostics
+- Platform adaptation command (`platform adapt`) plans placeholder replacement for cloned Deployment Variants without writing hidden changes
 - Enrichment commands (`enrich preview`, `enrich write`) produce sidecar proof without manifest rewrites
 - Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 11 Generators
 - Generator catalog (`generators`) with filtering, details, and markdown output
