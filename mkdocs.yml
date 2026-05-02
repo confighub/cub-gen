@@ -120,6 +120,7 @@ nav:
       - "Generator Naming": agentic-gitops/02-design/11-confighub-generator-naming-concepts.md
       - "Field-Origin Maps": agentic-gitops/02-design/20-field-origin-maps-and-editing.md
       - "App Model & Contracts": agentic-gitops/02-design/30-app-model-and-contracts.md
+      - "Mutation Apply Gates": agentic-gitops/02-design/35-mutation-apply-gates.md
       - "Governed Execution": agentic-gitops/02-design/40-governed-execution.md
       - "Dual Approval (PR + MR)": agentic-gitops/02-design/50-dual-approval-gitops-gh-pr-and-ch-mr.md
       - "Storage Boundary": agentic-gitops/02-design/60-stored-in-git-vs-confighub.md

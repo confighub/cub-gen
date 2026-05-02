@@ -11,15 +11,15 @@ For the sequenced roadmap that organizes this issue pack into workstreams, see
 [v0.4 Working Roadmap: Component -> Variant -> Proof](2026-04-30-v0.4-obvious-value-roadmap.md)
 and GitHub release tracker [#302](https://github.com/confighub/cub-gen/issues/302).
 
-## Current Open Roadmap Touchpoints
+## Current Roadmap Touchpoints
 
-Open issues checked on 2026-05-01:
+Open and recently completed issues checked on 2026-05-02:
 
 | Issue | Title | Why it matters for the manifesto |
 |---|---|---|
 | [#287](https://github.com/confighub/cub-gen/issues/287) | make cub-gen role and value obvious | parent roadmap issue keeping the product story coherent |
-| [#283](https://github.com/confighub/cub-gen/issues/283) | enforce generator route metadata server-side | route ownership must become an authoritative backend decision |
-| [#236](https://github.com/confighub/cub-gen/issues/236) | ship cub-gen as `cub gen` plugin | product workflow should feel like one platform; local plugin proof now works, release artifact remains |
+| [#283](https://github.com/confighub/cub-gen/issues/283) | mutation apply gates for generator routes | route ownership must become an authoritative apply decision with next actions |
+| [#236](https://github.com/confighub/cub-gen/issues/236) | ship cub-gen as `cub gen` plugin | product workflow should feel like one platform; plugin proof now works, next release artifact remains |
 | [#213](https://github.com/confighub/cub-gen/issues/213) | GUI provenance trace | click-field-to-source is the core teaching moment |
 | [#212](https://github.com/confighub/cub-gen/issues/212) | GUI regeneration/refresh preview | users need to see generated impact before merge/apply |
 | [#211](https://github.com/confighub/cub-gen/issues/211) | GUI mutation history/activity log | overlay, lift, and block decisions need visible history |
@@ -50,7 +50,7 @@ GitHub issues created on 2026-04-30:
 | PG-05 | [#280](https://github.com/confighub/cub-gen/issues/280) | provenance enrichment proposals |
 | PG-06 | [#281](https://github.com/confighub/cub-gen/issues/281) | governed config rewrite proposals |
 | PG-07 | [#282](https://github.com/confighub/cub-gen/issues/282) | GitHub PR to ConfigHub MR linkage |
-| PG-08 | [#283](https://github.com/confighub/cub-gen/issues/283) | server-side route enforcement |
+| PG-08 | [#283](https://github.com/confighub/cub-gen/issues/283) | mutation apply gates |
 | PG-09 | [#284](https://github.com/confighub/cub-gen/issues/284) | platform generator teaching-pack QA |
 | Spring-platform follow-up | [#285](https://github.com/confighub/cub-gen/issues/285) | cross-repo docs consistency; `confighub/examples` has issues disabled |
 | OC-QA-01 | [#288](https://github.com/confighub/cub-gen/issues/288) | make README OpenChoreo claims honest and explicit |
@@ -315,34 +315,43 @@ Definition of done:
 3. linked evidence includes DRY inputs and WET impact,
 4. no deploy happens without ConfigHub decision gate.
 
-### PG-08: Server-Side Route Enforcement
+### PG-08: Mutation Apply Gates
 
-Problem: Spring proves client-side route validation, but backend enforcement is
-still thinner than the model wants.
+Problem: Spring proves client-side route validation, but ConfigHub needs a
+clear apply gate that returns both a route decision and a policy decision.
+The first useful version can run as an Initiative/apply gate. Later hardening
+can move the same contract into the direct ConfigHub write path.
 
 Deterministic success criteria:
 
-1. ConfigHub rejects or escalates mutations to generator-owned fields using
-   route metadata from imported provenance.
-2. App-owned fields can still be mutated through approved apply-here paths.
-3. Lift-upstream fields produce source proposal instructions, not direct WET
-   mutation.
+1. ConfigHub evaluates proposed mutations using route metadata from imported
+   provenance.
+2. Every decision returns both `route.kind` and `decision.state`.
+3. App-owned fields can still be mutated through approved apply-here paths.
+4. Lift-upstream fields block direct rendered mutation and produce source
+   proposal instructions.
+5. Block/escalate fields reject or require owner review.
+6. Optional MR-PR linkage intent can be emitted under one `change_id`.
 
 Proof matrix:
 
 | Proof | Required |
 |---|---|
-| unit | route policy evaluation |
-| integration | ConfigHub mutation endpoint rejects blocked field |
-| example | Spring Boot apply-here and datasource block against backend |
+| unit | route + decision evaluation |
+| integration | Initiative/apply gate blocks a routed mutation before apply |
+| example | Spring Boot apply-here, lift-upstream, and datasource block |
+| example | Helm and OpenChoreo route matrices |
 | degradation | missing provenance downgrades to review-required, not allow |
 
 Definition of done:
 
-1. backend decision state is authoritative,
+1. gate decision state is authoritative for the governed Initiative/apply flow,
 2. client-side validation remains a convenience, not the only gate,
-3. docs update Spring caveat,
-4. connected smoke includes one backend route decision.
+3. direct rendered mutations for lift-upstream fields are blocked with next
+   action instructions,
+4. docs update Spring caveat,
+5. connected smoke includes one mutation apply gate decision,
+6. any future write-path enforcement reuses the same decision contract.
 
 ### PG-09: Platform Generator Teaching Pack
 
