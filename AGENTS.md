@@ -35,6 +35,7 @@ go build ./cmd/cub-gen
 ./cub-gen gitops import --space platform ./examples/scoredev-paas
 ./cub-gen change explain --space platform --owner app-team ./examples/springboot-paas
 ./cub-gen platform import --json ./testdata/platform-estate/platform.yaml
+./cub-gen platform import --json ./testdata/variant-topology/platform.yaml
 ./cub-gen platform fanout --json ./testdata/variant-fanout/platform.yaml
 ./cub-gen enrich preview --space platform --json ./testdata/app-of-apps-standalone
 ./cub-gen normalize preview --space platform --patch ./examples/springboot-paas

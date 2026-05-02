@@ -196,6 +196,7 @@ nav:
           - "App/Deployment Concepts": testing/app-deployment-concepts.md
       - "Contract Drift Checklist": testing/contract-drift-checklist.md
       - "Release Notes (v0.3.0)": releases/v0.3.0.md
+      - "Draft Release Notes (v0.4 Integration Beta)": releases/v0.4-integration-beta.md
       - "Archived Release Plan (v0.2-preview.2)": releases/v0.2-preview.2-plan.md
       - "Archived Ship Checklist (v0.2-preview.2)": releases/v0.2-preview.2-ship-checklist.md
       - "Release Notes (v0.2-preview.2)": releases/v0.2-preview.2.md

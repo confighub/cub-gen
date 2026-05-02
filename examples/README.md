@@ -53,6 +53,7 @@ become full runnable adapters.
 | Argo ApplicationSet | [Argo Generators](../docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | selectors, inventory, and templates generate child Applications | bounded support exists |
 | Argo app-of-apps | [Argo Generators](../docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | root app plus child app catalog behaves like a generator | fixture-backed initial adapter |
 | Multi-repo platform estate | [`platform-estate`](../testdata/platform-estate/) | read-only manifest import before rewrites or fanout | fixture-backed graph proof |
+| Base/Deployment Variants | [`variant-topology`](../testdata/variant-topology/) | Component -> Variant -> Base or Deployment, with Target only on Deployment | fixture-backed topology proof |
 
 These examples are intentionally diagram-heavy. They are meant to help users see
 that `cub-gen` is importing generator systems, not arguing that every team must

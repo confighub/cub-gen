@@ -24,6 +24,7 @@
       "owner": "app-team",
       "component": "catalog-api",
       "variant": "dev",
+      "variant_kind": "deployment",
       "target": "dev-us",
       "exists": true,
       "generator_count": 1
@@ -44,6 +45,7 @@
       "owner": "app-team",
       "component": "ghost-api",
       "variant": "dev",
+      "variant_kind": "deployment",
       "target": "dev-us",
       "exists": false,
       "generator_count": 0
@@ -54,6 +56,7 @@
       "path": "apps/orders-api",
       "component": "orders-api",
       "variant": "dev",
+      "variant_kind": "deployment",
       "target": "dev-us",
       "exists": true,
       "generator_count": 1
@@ -100,6 +103,7 @@
       "id": "catalog-api/dev",
       "name": "dev",
       "component": "catalog-api",
+      "variant_kind": "deployment",
       "target": "dev-us",
       "owner": "app-team",
       "repo_id": "catalog-api"
@@ -108,6 +112,7 @@
       "id": "ghost-api/dev",
       "name": "dev",
       "component": "ghost-api",
+      "variant_kind": "deployment",
       "target": "dev-us",
       "owner": "app-team",
       "repo_id": "ghost-api"
@@ -116,6 +121,7 @@
       "id": "orders-api/dev",
       "name": "dev",
       "component": "orders-api",
+      "variant_kind": "deployment",
       "target": "dev-us",
       "repo_id": "orders-api"
     }

@@ -334,7 +334,8 @@
       "variant_inputs": [
         "--set image.tag=dev",
         "--set replicaCount=1"
-      ]
+      ],
+      "variant_kind": "deployment"
     },
     {
       "bundle": {
@@ -657,7 +658,8 @@
       "variant_inputs": [
         "--set image.tag=prod",
         "--set replicaCount=4"
-      ]
+      ],
+      "variant_kind": "deployment"
     },
     {
       "bundle": {
@@ -980,7 +982,8 @@
       "variant_inputs": [
         "--set image.tag=stage",
         "--set replicaCount=2"
-      ]
+      ],
+      "variant_kind": "deployment"
     },
     {
       "bundle": {
@@ -1259,7 +1262,8 @@
       "variant_inputs": [
         "score.yaml#metadata.name",
         "score.yaml#resources"
-      ]
+      ],
+      "variant_kind": "deployment"
     },
     {
       "bundle": {
@@ -1538,7 +1542,8 @@
       "variant_inputs": [
         "score.yaml#metadata.name",
         "score.yaml#resources"
-      ]
+      ],
+      "variant_kind": "deployment"
     },
     {
       "bundle": {
@@ -1817,7 +1822,8 @@
       "variant_inputs": [
         "score.yaml#metadata.name",
         "score.yaml#resources"
-      ]
+      ],
+      "variant_kind": "deployment"
     },
     {
       "bundle": {
@@ -2142,7 +2148,8 @@
       "variant_inputs": [
         "src/main/resources/application.yaml#server.port",
         "src/main/resources/application.yaml#spring.datasource.url"
-      ]
+      ],
+      "variant_kind": "deployment"
     },
     {
       "bundle": {
@@ -2467,7 +2474,8 @@
       "variant_inputs": [
         "src/main/resources/application.yaml#server.port",
         "src/main/resources/application.yaml#spring.datasource.url"
-      ]
+      ],
+      "variant_kind": "deployment"
     },
     {
       "bundle": {
@@ -2792,7 +2800,8 @@
       "variant_inputs": [
         "src/main/resources/application.yaml#server.port",
         "src/main/resources/application.yaml#spring.datasource.url"
-      ]
+      ],
+      "variant_kind": "deployment"
     }
   ]
 }

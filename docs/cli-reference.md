@@ -59,7 +59,7 @@ The manifest names app, platform, environment, and rendered repos. The command
 imports each existing local repo read-only and emits:
 
 - `repos`: manifest entries with owner, role, component, variant, and target metadata
-- `components` and `variants`: the small product model users should see first
+- `components` and `variants`: the small product model users should see first, including whether a Variant is `base` or `deployment`
 - `generators`: detected generator families per repo
 - `dry_inputs` and `wet_targets`: source inputs and rendered targets from each generator
 - `connections`: repo -> generator -> input/target and component -> variant -> target links
@@ -69,6 +69,7 @@ Example:
 
 ```
 cub-gen platform import --json ./testdata/platform-estate/platform.yaml
+cub-gen platform import --json ./testdata/variant-topology/platform.yaml
 ```
 
 This command does not rewrite repos, deploy, or contact ConfigHub. Use it before

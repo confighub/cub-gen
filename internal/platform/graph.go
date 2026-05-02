@@ -29,19 +29,21 @@ type Manifest struct {
 }
 
 type ManifestRepo struct {
-	ID        string `json:"id" yaml:"id"`
-	Role      string `json:"role" yaml:"role"`
-	Path      string `json:"path" yaml:"path"`
-	Owner     string `json:"owner,omitempty" yaml:"owner,omitempty"`
-	Component string `json:"component,omitempty" yaml:"component,omitempty"`
-	Variant   string `json:"variant,omitempty" yaml:"variant,omitempty"`
-	Target    string `json:"target,omitempty" yaml:"target,omitempty"`
+	ID          string `json:"id" yaml:"id"`
+	Role        string `json:"role" yaml:"role"`
+	Path        string `json:"path" yaml:"path"`
+	Owner       string `json:"owner,omitempty" yaml:"owner,omitempty"`
+	Component   string `json:"component,omitempty" yaml:"component,omitempty"`
+	Variant     string `json:"variant,omitempty" yaml:"variant,omitempty"`
+	VariantKind string `json:"variant_kind,omitempty" yaml:"variant_kind,omitempty"`
+	Target      string `json:"target,omitempty" yaml:"target,omitempty"`
 }
 
 type ManifestVariant struct {
 	ID            string   `json:"id,omitempty" yaml:"id,omitempty"`
 	Component     string   `json:"component" yaml:"component"`
 	Variant       string   `json:"variant" yaml:"variant"`
+	VariantKind   string   `json:"variant_kind,omitempty" yaml:"variant_kind,omitempty"`
 	Target        string   `json:"target,omitempty" yaml:"target,omitempty"`
 	Repo          string   `json:"repo" yaml:"repo"`
 	SharedInputs  []string `json:"shared_inputs,omitempty" yaml:"shared_inputs,omitempty"`
@@ -93,6 +95,7 @@ type RepoNode struct {
 	Owner          string `json:"owner,omitempty"`
 	Component      string `json:"component,omitempty"`
 	Variant        string `json:"variant,omitempty"`
+	VariantKind    string `json:"variant_kind,omitempty"`
 	Target         string `json:"target,omitempty"`
 	Exists         bool   `json:"exists"`
 	GeneratorCount int    `json:"generator_count"`
@@ -106,12 +109,13 @@ type ComponentNode struct {
 }
 
 type VariantNode struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Component string `json:"component"`
-	Target    string `json:"target,omitempty"`
-	Owner     string `json:"owner,omitempty"`
-	RepoID    string `json:"repo_id"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Component   string `json:"component"`
+	VariantKind string `json:"variant_kind"`
+	Target      string `json:"target,omitempty"`
+	Owner       string `json:"owner,omitempty"`
+	RepoID      string `json:"repo_id"`
 }
 
 type TargetNode struct {
@@ -237,14 +241,30 @@ func BuildGraph(absManifestPath string, manifest Manifest, opts ImportOptions) (
 
 	repos := normalizeRepos(manifest.Repos)
 	for _, repo := range repos {
+		variantName := strings.TrimSpace(repo.Variant)
+		variantKind := ""
+		variantKindInvalid := false
+		if variantName != "" {
+			variantKind, variantKindInvalid = resolveVariantKind(repo.VariantKind, repo.Target)
+		}
 		repoNode := RepoNode{
-			ID:        repo.ID,
-			Role:      normalizeToken(repo.Role, "repo"),
-			Path:      normalizeRelPath(repo.Path),
-			Owner:     strings.TrimSpace(repo.Owner),
-			Component: strings.TrimSpace(repo.Component),
-			Variant:   strings.TrimSpace(repo.Variant),
-			Target:    strings.TrimSpace(repo.Target),
+			ID:          repo.ID,
+			Role:        normalizeToken(repo.Role, "repo"),
+			Path:        normalizeRelPath(repo.Path),
+			Owner:       strings.TrimSpace(repo.Owner),
+			Component:   strings.TrimSpace(repo.Component),
+			Variant:     variantName,
+			VariantKind: variantKind,
+			Target:      strings.TrimSpace(repo.Target),
+		}
+		if variantKindInvalid {
+			graph.Diagnostics = append(graph.Diagnostics, Diagnostic{
+				Severity: "warning",
+				Code:     "invalid_variant_kind",
+				RepoID:   repoNode.ID,
+				Path:     repoNode.Path,
+				Message:  fmt.Sprintf("repo variant_kind %q is not supported or is inconsistent with target %q; expected base without a target or deployment with a target", strings.TrimSpace(repo.VariantKind), repoNode.Target),
+			})
 		}
 		if repoNode.Owner == "" {
 			graph.Diagnostics = append(graph.Diagnostics, Diagnostic{
@@ -286,12 +306,13 @@ func BuildGraph(absManifestPath string, manifest Manifest, opts ImportOptions) (
 			} else {
 				variantID := repoNode.Component + "/" + repoNode.Variant
 				variantByID[variantID] = VariantNode{
-					ID:        variantID,
-					Name:      repoNode.Variant,
-					Component: repoNode.Component,
-					Target:    repoNode.Target,
-					Owner:     repoNode.Owner,
-					RepoID:    repoNode.ID,
+					ID:          variantID,
+					Name:        repoNode.Variant,
+					Component:   repoNode.Component,
+					VariantKind: repoNode.VariantKind,
+					Target:      repoNode.Target,
+					Owner:       repoNode.Owner,
+					RepoID:      repoNode.ID,
 				}
 				graph.Connections = append(graph.Connections, Connection{
 					FromType: "component",
@@ -592,6 +613,34 @@ func targetOwnerRank(role string) int {
 	default:
 		return 0
 	}
+}
+
+func inferVariantKind(explicitKind, target string) string {
+	kind, _ := resolveVariantKind(explicitKind, target)
+	return kind
+}
+
+func resolveVariantKind(explicitKind, target string) (string, bool) {
+	clean := normalizeToken(explicitKind, "")
+	hasTarget := strings.TrimSpace(target) != ""
+	switch clean {
+	case "base":
+		if hasTarget {
+			return "unknown", true
+		}
+		return clean, false
+	case "deployment":
+		if !hasTarget {
+			return "unknown", true
+		}
+		return clean, false
+	case "":
+		if !hasTarget {
+			return "base", false
+		}
+		return "deployment", false
+	}
+	return "unknown", true
 }
 
 func normalizeRelPath(path string) string {
