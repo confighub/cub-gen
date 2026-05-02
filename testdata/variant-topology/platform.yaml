@@ -1,0 +1,18 @@
+schema_version: cub.confighub.io/platform-import-manifest/v1
+name: checkout-variant-topology
+space: platform
+ref: HEAD
+repos:
+  - id: checkout-base
+    role: platform
+    path: base
+    owner: platform-team
+    component: checkout-api
+    variant: base
+  - id: checkout-prod-us
+    role: app
+    path: prod-us
+    owner: app-team
+    component: checkout-api
+    variant: prod-us
+    target: prod-us

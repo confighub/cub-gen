@@ -29,6 +29,14 @@ delta, wiring, or operation is AI-assisted and governed. Generator contracts
 are the implementation mechanism that lets the product derive variants, targets,
 connections, changes, and proof from existing repos.
 
+Current ConfigHub behavior derives Base vs Deployment from Target presence: no
+Target means Base Variant, and Target means Deployment Variant. A Variant is a
+space containing units, and the units in that space are the total config for
+that Variant. Base Variants may contain placeholders. Newly cloned Deployment
+Variants may also contain placeholders until adapted for their Target; apply
+gates such as `vet-placeholders` should prevent apply until adaptation is
+complete.
+
 Plain-English thesis: many app platforms are generators. They take app source
 config, environment context, and platform contracts, then produce deployable config. The
 product does not need to replace those platforms first. It needs to import them,
@@ -40,6 +48,8 @@ The product must let teams:
 2. convert them into DRY/WET + generator contracts,
 3. run AI-assisted changes through ConfigHub MR governance,
 4. promote reusable app changes into platform base DRY safely.
+5. adapt newly cloned Deployment Variants with reviewable patches instead of
+   one-off manual edits or hidden scripts.
 
 This is an adoption bridge, not a reconciler replacement. Flux/Argo stay in place.
 

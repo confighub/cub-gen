@@ -94,6 +94,15 @@ go build -o cub-gen ./cmd/cub-gen
 
 ## Use Your Repo in 3 Commands
 
+For the v0.4 release path, start with the local proof script:
+
+```bash
+./examples/demo/v0.4-quickstart.sh
+```
+
+It prints the Generator, Component, Base/Deployment Variants, Target, one field
+origin, one route decision, and a verified proof bundle.
+
 ```bash
 REPO=/path/to/your/repo
 ./cub-gen gitops discover --space platform "$REPO"
@@ -145,9 +154,20 @@ Component family. A **Base Variant** is not deployed. A **Deployment Variant**
 is the concrete deployed copy for one environment, tenant, region, customer, or
 cluster.
 
+In ConfigHub today, the practical discriminator is Target presence: no Target
+means Base Variant, and a Target means Deployment Variant. `cub-gen` exposes
+that as `variant_kind` in platform output so the distinction is easy to query.
+An explicit kind may appear later, but it does not change the model.
+
 `cub-gen` helps explain how a Variant was generated, whether it is a base or a
 deployment when the repo makes that clear, and where a proposed change should
 land.
+
+A Variant is the whole config context for that Component: in ConfigHub terms, a
+space containing units. Base Variants can contain placeholders. Newly cloned
+Deployment Variants can also contain placeholders until they are adapted for
+their Target; apply gates such as `vet-placeholders` should stop them from
+being applied until those placeholders are replaced.
 
 A **Change** is any proposed edit to the source or rendered config. **Proof**
 is the field-origin, owner, route, and decision evidence that makes the change
@@ -254,6 +274,7 @@ These run locally and do not require a login:
 | Score.dev | [scoredev-paas](examples/scoredev-paas/) | Which `score.yaml` field produced this runtime value? |
 | Spring Boot services | [springboot-paas](examples/springboot-paas/) | Should I edit app config or platform config? |
 | Multi-repo platform | [platform-estate fixture](testdata/platform-estate/) | Which Components, Variants, Deployment Variants, Generators, and gaps exist before any rewrite? |
+| Base/deployment topology | [variant-topology fixture](testdata/variant-topology/) | Which Variants are reusable bases, and which are deployments with Targets? |
 | Multi-env or tenant variants | [variant-fanout fixture](testdata/variant-fanout/) | Can I produce one governed proof bundle for every Deployment Variant? |
 | A running cluster first | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 
@@ -363,8 +384,9 @@ controllers running in kind.
 | Latest shipped | `v0.3.0` was released on 2026-04-12 |
 | Strong now | Repo-first CLI is stable; 11 generator families ship on this branch; the main examples have local, connected, and live proof paths |
 | In progress | Working `v0.4` roadmap: make cub-gen's role clear as Component -> Variant -> Base/Deployment -> Target/Connections/Change/Proof |
-| Current release target | GitHub release tracker [#302](https://github.com/confighub/cub-gen/issues/302), topology alignment [#304](https://github.com/confighub/cub-gen/issues/304), and the [v0.4 working roadmap](docs/plans/2026-04-30-v0.4-obvious-value-roadmap.md) |
+| Current release target | GitHub release tracker [#302](https://github.com/confighub/cub-gen/issues/302), topology alignment [#304](https://github.com/confighub/cub-gen/issues/304), flagship quickstart [#307](https://github.com/confighub/cub-gen/issues/307), and the [v0.4 working roadmap](docs/plans/2026-04-30-v0.4-obvious-value-roadmap.md) |
 | Latest release notes | See [docs/releases/v0.3.0.md](docs/releases/v0.3.0.md) |
+| Draft next release notes | See [docs/releases/v0.4-integration-beta.md](docs/releases/v0.4-integration-beta.md) |
 | Previous release notes | See [docs/releases/v0.2-preview.2.md](docs/releases/v0.2-preview.2.md) |
 | Example quality | Flagship example blockers and Helm depth blockers are closed on `main` |
 | CLI/docs follow-on | `#275`, `#219`, `#236`, `#209`-`#213`, `#276`-`#285` |

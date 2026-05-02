@@ -3,8 +3,8 @@
 **Start from a repo, see what it renders, and know what to edit.**
 
 `cub-gen` is the repo-side traceability CLI for GitOps config. It detects which
-generators your repo uses, renders them locally, and records provenance so
-every deployed field traces back to a source file, line, and owner.
+Generators your repo uses, renders them locally, and records provenance so
+every deployed field traces back to a source file, path, and owner.
 
 The user model is intentionally small:
 
@@ -26,6 +26,13 @@ where a Deployment Variant runs or reconciles. **Connections** are what it is
 wired to. A **Change** is what someone wants to alter. **Proof** shows where it
 came from, who owns it, what changed, and whether the change is allowed.
 
+Today ConfigHub answers "base or deployment?" from Target presence: no Target
+means Base Variant, and Target means Deployment Variant. A Variant is the whole
+config context for that Component, implemented as a space containing units.
+Base Variants may contain placeholders. Newly cloned Deployment Variants may
+also contain placeholders until they are adapted for their Target, and apply
+gates should prevent applying them too early.
+
 An **AI Variant** is a Variant whose delta, wiring, or operation is
 AI-assisted and governed.
 
@@ -40,11 +47,11 @@ brew install confighub/tap/cub-gen
 
 Or download a release artifact from [GitHub release `v0.3.0`](https://github.com/confighub/cub-gen/releases/tag/v0.3.0).
 
-**gen = generator.** This is the implementation explanation. A generator is a
-function that maps DRY source (`values.yaml`, `score.yaml`, `application.yaml`)
-to WET rendered output (the manifests that reach your cluster).
+**gen = Generator.** A Generator is a function on config data. It maps source
+config such as `values.yaml`, `score.yaml`, or `application.yaml` to rendered
+config: the manifests or other deployable output that reach your cluster.
 
-Many app platforms are generators in this sense. A Spring platform, Score.dev,
+Many app platforms are Generators in this sense. A Spring platform, Score.dev,
 Helm platform, OpenChoreo-style component model, Argo ApplicationSet,
 app-of-apps catalog, or app-config manager all take source config plus
 environment/platform context and produce deployable config. `cub-gen` starts by
@@ -85,7 +92,7 @@ cub-gen adds the import/provenance layer that answers these questions while keep
 ConfigHub now has three complementary import stories:
 
 - `cub gitops import` imports existing ArgoCD/Flux application resources from a cluster or worker target into ConfigHub.
-- `cub-gen gitops import` reads source-side generators such as Helm, Score.dev, Spring Boot, and workflow config, then emits provenance, inverse-edit guidance, and evidence.
+- `cub-gen gitops import` reads source-side Generators such as Helm, Score.dev, Spring Boot, and workflow config, then emits provenance, inverse-edit guidance, and evidence.
 - `cub-gen platform import` reads a local multi-repo manifest and emits a read-only Component -> Variant -> Target graph before rewrites.
 
 Use them for different jobs:
@@ -96,18 +103,23 @@ Use them for different jobs:
 
 ## What cub-gen is not
 
-- Not a Kubernetes reconciler — Flux/Argo still own WET→LIVE
+- Not a Kubernetes reconciler -- Flux/Argo still reconcile rendered config to the live cluster
 - Not a Flux/Argo replacement
 - Not an OCI replacement
 
-DRY→WET is a one-way deterministic transform. There is no automatic LIVE→DRY path. But there is an outer loop: observe live state → decide what to change → edit DRY → re-render WET → reconcile to LIVE. cub-gen makes that outer loop safe by tracing every field back to its source and gating changes through governed decisions. See [Two loops, not a triangle](platform.md#two-loops-not-a-triangle).
+Source config -> rendered config is a one-way deterministic transform. There is
+no automatic live-cluster -> source-config path. There is an outer loop: observe
+live state, decide what to change, edit the source config, re-render, and let
+Flux or Argo reconcile. cub-gen makes that loop safer by tracing every field
+back to its source and gating changes through governed decisions. See [Two
+loops, not a triangle](platform.md#two-loops-not-a-triangle).
 
 ---
 
-## Supported generators
+## Supported Generators
 
-| Generator | Profile | DRY source | Status |
-|-----------|---------|------------|--------|
+| Generator | Profile | Source config | Status |
+|-----------|---------|---------------|--------|
 | Helm | `helm-paas` | `Chart.yaml` + `values.yaml` | Stable |
 | ApplicationSet | `applicationset` | `applicationset.yaml` + pinned inventory | v0.2 preview |
 | App-of-apps | `app-of-apps` | root `Application` + child app catalog | v0.4 fixture-backed |
@@ -133,13 +145,13 @@ ConfigHub backend OSS is available today:
 
 - [confighubai/confighub](https://github.com/confighubai/confighub)
 
-1. **DRY** app source config lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.)
-2. **cub-gen** classifies DRY inputs + WET targets and emits provenance with field-origin tracing
+1. App source config lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.)
+2. **cub-gen** classifies source inputs and rendered targets, then emits provenance with field-origin tracing
 3. **cub-gen enrich** can write reviewable sidecar proof under `.cub-gen/enrichment/`
 4. **cub-gen publish** produces ConfigHub-ready change bundles with digest verification
 5. **ConfigHub** ingests bundles, enforces governed decision state, manages units with revision history
 6. **Bridge workers** connect ConfigHub to clusters via HTTP/2 SSE
-7. **Flux/Argo** continue to reconcile WET to LIVE — unchanged
+7. **Flux/Argo** continue to reconcile rendered config to the live cluster -- unchanged
 
 This is why the import surfaces both exist:
 
@@ -153,8 +165,8 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 ## Three invariants (never waived)
 
 1. **Nothing implicit ever deploys** — every deployed artifact is explicit, diffable, traceable
-2. **Nothing observed silently overwrites intent** — cluster changes produce governed proposals, not silent overwrites
-3. **Configuration is data, not code** — output from generators is literal values, queryable and diffable
+2. **Nothing observed silently overwrites source config** — cluster changes produce governed proposals, not silent overwrites
+3. **Configuration is data, not code** — output from Generators is literal values, queryable and diffable
 
 ---
 
@@ -195,7 +207,7 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
 -   **Add Your Generator**
 
-    If your platform has its own framework or layered generator chain, start
+    If your platform has its own framework or layered Generator chain, start
     with the user-facing onboarding path.
 
     [Platform Generators Manifesto](agentic-gitops/02-design/90-platform-generators-manifesto.md) · [Custom Generator Onboarding](workflows/custom-generator-onboarding.md)
@@ -215,7 +227,7 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
 -   **Explore the architecture**
 
-    DRY/WET model, field-origin maps, governed execution, contract triples.
+    Source/rendered model, field-origin maps, governed execution, contract triples.
 
     [Architecture](agentic-gitops/02-design/00-agentic-gitops-design.md)
 
@@ -239,11 +251,11 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 
 | Term | Meaning |
 |------|---------|
-| **DRY source** | Human-editable app/platform intent (`values.yaml`, `score.yaml`, `application.yaml`) |
-| **WET rendered units** | Explicit rendered deployment-facing units/manifests |
-| **Provenance** | Record of DRY inputs, rendered outputs, field-origin map, inverse-edit pointers |
-| **Inverse map** | Guidance from changed WET field to where to edit DRY safely |
-| **Pre-sync** | cub-gen stops before WET-to-LIVE; Flux/Argo own reconciliation |
+| **Source config** | Human-editable app/platform config (`values.yaml`, `score.yaml`, `application.yaml`) |
+| **Rendered config** | Explicit deployment-facing units/manifests |
+| **Provenance** | Record of source inputs, rendered outputs, field-origin map, inverse-edit pointers |
+| **Inverse map** | Guidance from changed rendered field to the source file/path to edit safely |
+| **Pre-sync** | cub-gen stops before rendered config reaches the live cluster; Flux/Argo own reconciliation |
 | **Contract triple** | GeneratorContract + ProvenanceRecord + InverseTransformPlan |
 
 ---
@@ -257,7 +269,7 @@ Component -> Variant -> Base/Deployment -> Target/Connections/Change/Proof.
 
 - repo-first CLI and contract coverage remain green,
 - the shipped release includes a first-class standalone `applicationset`
-  generator family,
+  Generator family,
 - flagship Helm, Score, Spring, and Swamp examples carry explicit
   `AI_START_HERE.md`, `prompts.md`, and `contracts.md` bundles,
 - connected release status is backed by the repo's `ConfigHub Smoke` lane,
@@ -275,6 +287,6 @@ For the active sequence, see the
 - Core flow commands (`discover`, `import`, `cleanup`) frozen and golden-tested
 - Platform graph command (`platform import`) emits read-only multi-repo Component/Variant graphs with diagnostics
 - Enrichment commands (`enrich preview`, `enrich write`) produce sidecar proof without manifest rewrites
-- Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 11 generators
+- Bridge artifacts (`publish`, `verify`, `attest`, `verify-attestation`) symmetric across all 11 Generators
 - Generator catalog (`generators`) with filtering, details, and markdown output
 - Local-first: works standalone, connects to [ConfigHub](platform.md) for governed execution
