@@ -9,8 +9,9 @@ settings, and secret references. They return deployable Kubernetes config.
 
 `cub-gen` makes those functions explicit so ConfigHub can reason about inputs,
 outputs, provenance, ownership, and inverse edit paths. It can show which
-Component produced which Deployable Variants, where each variant deploys, what
-it connects to, and which source field owns each rendered field.
+Component produced which Variants, which Variants are deployable, where those
+Deployment Variants deploy, what they connect to, and which source field owns
+each rendered field.
 
 When someone changes generated config, `cub-gen` can route the edit: apply it
 here, lift it back to the source file, or block/escalate it because the platform
@@ -68,7 +69,7 @@ still builds `cub-gen`. The plugin migration details are in
 | Who owns the field? | App, environment, platform, security, or workflow owner |
 | Where should the edit go? | Apply here, lift upstream, or block/escalate |
 | What changed? | A reviewable before/after bundle |
-| Which variants need proof? | One governed bundle per environment, tenant, or region |
+| Which variants need proof? | One governed bundle per Deployment Variant: environment, tenant, or region |
 | How do I prove it? | Field-origin map, edit hint, proof bundle, and optional ConfigHub decision |
 
 The output is useful locally, in GitHub PRs, and in connected ConfigHub flows.
@@ -130,15 +131,22 @@ The simple product model is:
 
 ```text
 Component
-  -> Deployable Variant
-      -> Target
-      -> Connections
-      -> Proof
+  -> Variant
+      -> Base Variant
+      -> Deployment Variant
+          -> Target
+          -> Connections
+          -> Change
+          -> Proof
 ```
 
-A **Component** is the reusable thing. A **Deployable Variant** is the concrete
-copy of it for one environment, tenant, region, customer, or cluster. `cub-gen`
-helps explain how that variant was generated and where a proposed change should
+A **Component** is the reusable thing. A **Variant** is a member of that
+Component family. A **Base Variant** is not deployed. A **Deployment Variant**
+is the concrete deployed copy for one environment, tenant, region, customer, or
+cluster.
+
+`cub-gen` helps explain how a Variant was generated, whether it is a base or a
+deployment when the repo makes that clear, and where a proposed change should
 land.
 
 A **Change** is any proposed edit to the source or rendered config. **Proof**
@@ -209,7 +217,7 @@ To propose reviewable cleanup patches without touching source or rendered YAML:
 
 `normalize preview` emits review-only sidecar proposals under
 `.cub-gen/normalize/`. In the Spring example it proposes route policy
-annotations, lift-upstream source routing, dev/stage/prod Deployable Variants,
+annotations, lift-upstream source routing, dev/stage/prod Deployment Variants,
 owner annotations, and an explicit datasource SecretReference candidate.
 
 ## Core capabilities
@@ -218,8 +226,8 @@ owner annotations, and an explicit datasource SecretReference candidate.
 |---|---|
 | Detect | Find the generator style used by the repo |
 | Render/import | Produce or read the deployable config |
-| Platform graph | Read several app/platform repos as Components, Deployable Variants, Targets, Generators, and diagnostics |
-| Variant fanout | Emit one ConfigHub-ready proof bundle per environment, tenant, region, or cluster variant |
+| Platform graph | Read several app/platform repos as Components, Variants, Deployment Variants, Targets, Generators, and diagnostics |
+| Variant fanout | Emit one ConfigHub-ready proof bundle per deployment environment, tenant, region, or cluster variant |
 | Trace | Map rendered fields back to source files |
 | Explain | Say who owns the field and where to edit it |
 | Enrich | Create PR-friendly sidecar proof with source links, owners, route badges, and PR/MR link metadata |
@@ -245,8 +253,8 @@ These run locally and do not require a login:
 | Argo app-of-apps | [app-of-apps fixture](testdata/app-of-apps-standalone/) + [Argo worked example](docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | Which root app path or child Application catalog entry owns this app? |
 | Score.dev | [scoredev-paas](examples/scoredev-paas/) | Which `score.yaml` field produced this runtime value? |
 | Spring Boot services | [springboot-paas](examples/springboot-paas/) | Should I edit app config or platform config? |
-| Multi-repo platform | [platform-estate fixture](testdata/platform-estate/) | Which Components, Deployable Variants, Generators, and gaps exist before any rewrite? |
-| Multi-env or tenant variants | [variant-fanout fixture](testdata/variant-fanout/) | Can I produce one governed proof bundle for every deployable variant? |
+| Multi-repo platform | [platform-estate fixture](testdata/platform-estate/) | Which Components, Variants, Deployment Variants, Generators, and gaps exist before any rewrite? |
+| Multi-env or tenant variants | [variant-fanout fixture](testdata/variant-fanout/) | Can I produce one governed proof bundle for every Deployment Variant? |
 | A running cluster first | ConfigHub GitOps import + [cub-scout](https://github.com/confighub/cub-scout) + then `cub-gen` | What is running, and what source produced it? |
 
 ## Supported Inputs
@@ -354,14 +362,14 @@ controllers running in kind.
 |---|---|
 | Latest shipped | `v0.3.0` was released on 2026-04-12 |
 | Strong now | Repo-first CLI is stable; 11 generator families ship on this branch; the main examples have local, connected, and live proof paths |
-| In progress | Working `v0.4` roadmap: make cub-gen's role clear as Component -> Deployable Variant -> Target/Connections/Change/Proof |
-| Current release target | [v0.4 working roadmap](docs/plans/2026-04-30-v0.4-obvious-value-roadmap.md) and GitHub parent issue [#287](https://github.com/confighub/cub-gen/issues/287) |
+| In progress | Working `v0.4` roadmap: make cub-gen's role clear as Component -> Variant -> Base/Deployment -> Target/Connections/Change/Proof |
+| Current release target | GitHub release tracker [#302](https://github.com/confighub/cub-gen/issues/302), topology alignment [#304](https://github.com/confighub/cub-gen/issues/304), and the [v0.4 working roadmap](docs/plans/2026-04-30-v0.4-obvious-value-roadmap.md) |
 | Latest release notes | See [docs/releases/v0.3.0.md](docs/releases/v0.3.0.md) |
 | Previous release notes | See [docs/releases/v0.2-preview.2.md](docs/releases/v0.2-preview.2.md) |
 | Example quality | Flagship example blockers and Helm depth blockers are closed on `main` |
 | CLI/docs follow-on | `#275`, `#219`, `#236`, `#209`-`#213`, `#276`-`#285` |
 | Release gate | `v0.3.0` was cut from green `main`; rerun ConfigHub smoke before the next release |
-| Actively tracked | [#287](https://github.com/confighub/cub-gen/issues/287) plus milestone [v0.4: Component -> Deployable Variant -> Proof](https://github.com/confighub/cub-gen/milestone/4) |
+| Actively tracked | [#302](https://github.com/confighub/cub-gen/issues/302) plus milestone [v0.4: Component -> Variant -> Proof](https://github.com/confighub/cub-gen/milestone/4) |
 
 For exact per-example counts and classifications, use the generated
 [Example Truth Matrix](docs/testing/example-truth-matrix.md). It is built from

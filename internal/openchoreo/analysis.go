@@ -228,7 +228,7 @@ func (a *Analysis) finalize() {
 	if a.HasWorkload() && !a.hasRole("release-binding") {
 		a.Diagnostics = append(a.Diagnostics, Diagnostic{
 			Code:    "missing_release_binding",
-			Message: "OpenChoreo Workload found but no ReleaseBinding was found; deployable variants are unknown",
+			Message: "OpenChoreo Workload found but no ReleaseBinding was found; Deployment Variants are unknown",
 		})
 	}
 	if a.HasWorkload() && !a.hasRole("rendered-release") {

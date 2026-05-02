@@ -34,7 +34,7 @@ No controller replacement is required.
 
 | Concept | Flux/Argo dry/wet pipeline | Score.dev equivalent |
 |---|---|---|
-| DRY authoring input | Kustomization/Application source intent | `score.yaml` + environment parameters |
+| DRY authoring input | Kustomization/Application source config | `score.yaml` + environment parameters |
 | Renderer | Flux/Argo renderer worker | Score->K8s generator + controller renderer worker |
 | WET deployment contract | Fully rendered manifests | Fully rendered manifests from Score intent |
 | Reconciler | FluxCD or ArgoCD | FluxCD or ArgoCD (unchanged) |

@@ -174,7 +174,7 @@ If you are already a ConfigHub user, the framing is slightly different:
 
 | Existing Score concept | cub-gen concept | Why it matters |
 |------|------|------|
-| `score.yaml` | DRY app intent | Teams keep writing one high-level workload spec. |
+| `score.yaml` | DRY app source config | Teams keep writing one high-level workload spec. |
 | Score-to-K8s expansion | WET targets with lineage | Rendered manifests stop being opaque. |
 | Platform contracts/policies | Governance layer | Rules run before deploy, not as after-the-fact review. |
 | Flux/Argo deployment loop | LIVE state | Runtime remains unchanged while visibility improves. |

@@ -4,9 +4,10 @@ This fixture proves the v0.4 spine:
 
 ```text
 Component
-  -> Deployable Variant
-      -> Target
-      -> Proof bundle
+  -> Variant
+      -> Deployment Variant
+          -> Target
+          -> Proof bundle
 ```
 
 `platform.yaml` declares three Components:

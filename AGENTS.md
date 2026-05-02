@@ -11,11 +11,13 @@ The product model is:
 
 ```text
 Component
-  -> Deployable Variant
-      -> Target
-      -> Connections
-      -> Change
-      -> Proof
+  -> Variant
+      -> Base Variant
+      -> Deployment Variant
+          -> Target
+          -> Connections
+          -> Change
+          -> Proof
 ```
 
 Keep this simple. Do not explain cub-gen first as DRY/WET, generator contracts,
@@ -56,8 +58,13 @@ Use these terms:
 
 - **Generator**: a function on config data.
 - **Component**: the reusable app/service/platform thing.
-- **Deployable Variant**: a concrete deployable copy for an environment, tenant,
-  region, customer, or cluster.
+- **Variant**: a member of a Component family.
+- **Base Variant**: a Variant that is not deployed and has no Target/live
+  address.
+- **Deployment Variant**: a Variant that is deployed to a Target and has live
+  addressable config/resources.
+- **Deployable Variant**: only use this as plain English for Deployment Variant,
+  not as the whole ConfigHub Variant model.
 - **Change**: a proposed edit to source or rendered config.
 - **Proof**: field origin, owner, route, and decision evidence.
 
@@ -97,9 +104,9 @@ A change is complete only when:
 
 - `gitops discover/import`: repo-first detection and import with `cub gitops`
   command-shape parity.
-- `platform import`: read several app/platform repos as Components, Deployable
-  Variants, Targets, Generators, and diagnostics.
-- `platform fanout`: emit one proof bundle per declared deployable variant.
+- `platform import`: read several app/platform repos as Components, Variants,
+  Deployment Variants, Targets, Generators, and diagnostics.
+- `platform fanout`: emit one proof bundle per declared Deployment Variant.
 - `enrich preview/write`: create sidecar provenance proof without manifest
   rewrites.
 - `normalize preview`: propose reviewable cleanup patches without touching

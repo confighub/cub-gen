@@ -88,8 +88,8 @@ func printPlatformUsage(out io.Writer) {
 		out,
 		"cub-gen platform: import estates and emit variant bundles without deploying",
 		[]string{
-			"Use platform import when app intent, platform contracts, environment bindings, and rendered output live in separate repos.",
-			"The command reads a manifest, imports each local repo, and emits Components, Deployable Variants, Targets, generator inputs, WET targets, connections, and diagnostics.",
+			"Use platform import when app source config, platform contracts, environment bindings, and rendered output live in separate repos.",
+			"The command reads a manifest, imports each local repo, and emits Components, Variants, Deployment Variants, Targets, generator inputs, WET targets, connections, and diagnostics.",
 			"Use platform fanout when the same Component has dev/stage/prod or tenant variants and each needs its own governed ConfigHub bundle.",
 		},
 		helpSection{

@@ -308,12 +308,12 @@ change app code, platform code, rendered YAML, or ConfigHub state.
 |----------|----------------|
 | route-policy annotation | turns `operational/field-routes.yaml` into ConfigHub Unit metadata for apply-here / lift-upstream / generator-owned decisions |
 | lift-upstream routes | tells reviewers which rendered edits should become source PRs |
-| deployable variants | makes dev/stage/prod profile files visible as Deployable Variants |
+| deployment variants | makes dev/stage/prod profile files visible as Deployment Variants |
 | owner annotations | carries app/platform ownership into reviewable metadata |
 | secret references | replaces literal datasource wiring with an explicit SecretReference proposal |
 
 This is the "clean generator" path in miniature: keep the Component source,
-name the Deployable Variants, route changes to the right layer, and produce
+name the Deployment Variants, route changes to the right layer, and produce
 Proof before anything is applied.
 
 ## Real Kubernetes deployment

@@ -125,7 +125,7 @@ func printNormalizeUsage(out io.Writer) {
 			Lines: []string{
 				"  - add-route-policy-annotation: turn field-route metadata into ConfigHub Unit route policy annotations",
 				"  - lift-generated-patch-to-source: show where rendered edits should become source PRs",
-				"  - split-env-values-into-variants: expose environment/profile files as Deployable Variants",
+				"  - split-env-values-into-variants: expose environment/profile files as Deployment Variants",
 				"  - add-missing-owners: propose owner labels from generator provenance",
 				"  - replace-implicit-secret-wiring: propose explicit SecretReference records for literal secret-shaped env values",
 			},

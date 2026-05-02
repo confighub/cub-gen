@@ -8,8 +8,8 @@ combines the current open roadmap items with the gaps exposed by the
 OpenChoreo, ApplicationSet, and app-of-apps discussion.
 
 For the sequenced roadmap that organizes this issue pack into workstreams, see
-[v0.4 Working Roadmap: Component -> Deployable Variant -> Proof](2026-04-30-v0.4-obvious-value-roadmap.md)
-and GitHub parent issue [#287](https://github.com/confighub/cub-gen/issues/287).
+[v0.4 Working Roadmap: Component -> Variant -> Proof](2026-04-30-v0.4-obvious-value-roadmap.md)
+and GitHub release tracker [#302](https://github.com/confighub/cub-gen/issues/302).
 
 ## Current Open Roadmap Touchpoints
 
@@ -62,12 +62,12 @@ GitHub issues created on 2026-04-30:
 ### PG-01: Generic Platform Import Graph
 
 Problem: `cub-gen` import is still repo/generator oriented. Platform estates
-often spread app intent, platform contracts, environment bindings, and rendered
+often spread app source config, platform contracts, environment bindings, and rendered
 output across multiple repos.
 
 Status: landed in PR #286 via `cub-gen platform import --json <manifest>`.
 The command reads a local manifest, imports each existing repo read-only, emits
-Components, Deployable Variants, Targets, generator inputs, WET targets, and
+Components, Variants, Deployment Variants, Targets, generator inputs, WET targets, and
 connections, and reports missing repo, missing owner, and unsupported generator
 diagnostics explicitly.
 
@@ -103,7 +103,7 @@ upstream estate validation and multi-repo OpenChoreo import remain follow-on
 adoption work.
 
 Problem: OpenChoreo is a clean candidate generator. `cub-gen` now reads the
-hard platform case from an OpenChoreo-shaped repo: app intent, deployable
+hard platform case from an OpenChoreo-shaped repo: app source config, deployable
 variant bindings, platform contracts, secret references, rendered releases, and
 generated Kubernetes resources with ownership proof.
 
@@ -121,13 +121,13 @@ Deterministic success criteria:
 
 1. Given Workload, ReleaseBinding, SecretReference, ComponentType, and
    RenderedRelease fixtures, `cub-gen gitops import` detects `openchoreo`.
-2. Import emits DRY roles for app intent, variant binding, secret reference,
+2. Import emits DRY roles for app source config, variant binding, secret reference,
    component type, rendered release, and generated manifests.
 3. Field-origin map routes env vars, mounted files, secret refs, image,
    service port, resource limits, and platform defaults.
 4. Generated Kubernetes resources can be identified as platform/controller
    owned where applicable.
-5. At least two deployable variants are represented.
+5. At least two Deployment Variants are represented.
 6. `gitops discover --adoption-report` emits a read-only platform adoption
    report before any rewrite.
 
@@ -253,7 +253,7 @@ Problem: `springboot init` scaffolds starter material, but there is no general
 
 Status: implemented by `cub-gen normalize preview`. The Spring Boot example now
 produces one review-only patch set with route policy annotations,
-lift-upstream source routing, Deployable Variant inventory, owner annotations,
+lift-upstream source routing, Deployment Variant inventory, owner annotations,
 and explicit secret-reference proposals.
 
 Deterministic success criteria:

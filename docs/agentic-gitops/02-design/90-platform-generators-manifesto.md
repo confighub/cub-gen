@@ -11,10 +11,13 @@ Start with the user model, not the implementation model:
 
 ```text
 Component
-  -> Deployable Variant
-      -> Target
-      -> Connections
-      -> Proof
+  -> Variant
+      -> Base Variant
+      -> Deployment Variant
+          -> Target
+          -> Connections
+          -> Change
+          -> Proof
 ```
 
 The vocabulary should stay small:
@@ -22,8 +25,10 @@ The vocabulary should stay small:
 | Term | Plain-English meaning |
 |---|---|
 | Component | reusable app, service, workflow, or platform base |
-| Deployable Variant | concrete deployable copy/context of a Component: env, region, tenant, customer, cluster |
-| AI Variant | Deployable Variant whose delta, wiring, or operation is AI-assisted and governed |
+| Variant | member of a Component family |
+| Base Variant | non-deployed Variant with no Target/live address |
+| Deployment Variant | deployable Variant for an environment, region, tenant, customer, or cluster |
+| AI Variant | Variant whose delta, wiring, or operation is AI-assisted and governed |
 | Target | place the variant runs or reconciles |
 | Connection | dependency, secret, database, API, service binding, or platform contract the variant is wired to |
 | Change | requested alteration to source, rendered config, wiring, or operation |
@@ -36,7 +41,7 @@ The manifesto is the clean version of what the early `cub-gen` planning docs
 were already reaching for:
 
 1. Import existing platform and app repos, not replace them.
-2. Model them as generators from source intent to deployable config.
+2. Model them as generators from source config to deployable config.
 3. Preserve provenance and inverse edit paths.
 4. Route changes as apply-here, lift-upstream, or block/escalate.
 5. Link GitHub PRs and ConfigHub MRs with one `change_id`.
@@ -50,7 +55,7 @@ to govern the generator boundary.
 Many "platform abstractions" are actually generators:
 
 ```text
-source intent + environment context + platform contract -> deployable config
+source config + environment context + platform contract -> deployable config
 ```
 
 That matters because a generator can be inspected. A bad abstraction hides
@@ -159,7 +164,7 @@ The goal is not a perfect abstraction. The goal is a governed escape path.
 | Platform style | Generator input | WET output | Notes |
 |---|---|---|---|
 | Helm platform | chart, values, overlays, invocation args | Kubernetes manifests | broadest adoption, hardest provenance |
-| Score.dev | `score.yaml` plus platform contracts | Kubernetes manifests | clean app intent |
+| Score.dev | `score.yaml` plus platform contracts | Kubernetes manifests | clean app source config |
 | Spring Boot platform | `application*.yaml`, build metadata, platform policy | Deployment, Service, ConfigMap | strongest route teaching |
 | OpenChoreo | Workload, ReleaseBinding, SecretReference, ComponentType | RenderedRelease and K8s resources | fixture-backed initial adapter; not full upstream conformance |
 | Argo ApplicationSet | selectors, list/git/cluster generators, template | Argo Applications | already partially supported |

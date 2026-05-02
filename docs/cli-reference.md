@@ -49,7 +49,7 @@ paths.
 ### `platform import`
 
 Read a local manifest for a multi-repo platform estate and emit one stable
-Component/Deployable Variant graph.
+Component/Variant graph.
 
 ```
 cub-gen platform import --json <manifest>
@@ -78,7 +78,7 @@ to understand the estate shape.
 ### `platform fanout`
 
 Read the same platform manifest and emit one ConfigHub-ready change bundle per
-Deployable Variant.
+Deployment Variant.
 
 ```
 cub-gen platform fanout --json <manifest>
@@ -230,7 +230,7 @@ Current proposal types:
 |---|---|
 | `add-route-policy-annotation` | ConfigHub Unit route policy annotations from field-route metadata |
 | `lift-generated-patch-to-source` | source files that should receive durable changes instead of generated YAML |
-| `split-env-values-into-variants` | Deployable Variant inventory from environment/profile files |
+| `split-env-values-into-variants` | Deployment Variant inventory from environment/profile files |
 | `add-missing-owners` | owner annotations from generator provenance and rendered resources |
 | `replace-implicit-secret-wiring` | explicit secret-reference proposals for literal secret-shaped env values |
 
@@ -528,7 +528,7 @@ Current status: explicit variant fanout plus generator-specific overlays.
 What works today:
 
 - One `gitops import` / `publish` invocation works on one repo path pair.
-- `platform fanout` reads a platform manifest and emits one ConfigHub-ready bundle per declared deployable variant.
+- `platform fanout` reads a platform manifest and emits one ConfigHub-ready bundle per declared Deployment Variant.
 - `platform fanout --variant dev` scopes output to one environment name across Components; `--variant checkout-api/prod` scopes to one concrete variant.
 - `change explain --change-id ID --bundle fanout.json --variant checkout-api/prod` can explain a selected variant bundle from fanout output.
 - Supported generators can pick up overlay files that already live in that repo, such as Helm `values-prod.yaml`, Spring `application-dev.yaml`, and generator-specific overlay files.

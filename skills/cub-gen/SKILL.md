@@ -1,6 +1,6 @@
 ---
 name: cub-gen
-description: Use when working in the cub-gen repo or when explaining cub-gen's source-side role versus ConfigHub cub and cub-scout. Covers generator discovery, Component -> Deployable Variant proof, DRY/WET field-origin tracing, inverse-edit routing, platform import/fanout, enrichment/normalization previews, publish/verify/attest bundles, and ConfigHub bridge workflows.
+description: Use when working in the cub-gen repo or when explaining cub-gen's source-side role versus ConfigHub cub and cub-scout. Covers generator discovery, Component -> Variant -> Base/Deployment proof, DRY/WET field-origin tracing, inverse-edit routing, platform import/fanout, enrichment/normalization previews, publish/verify/attest bundles, and ConfigHub bridge workflows.
 tier: plugin-candidate
 plugin: cub-gen
 canonical_command: cub-gen
@@ -14,7 +14,7 @@ Use this skill when the task is about:
 - what `cub-gen` does today
 - how `cub-gen` differs from `cub`, `cub gitops`, and `cub-scout`
 - generator detection and supported generator families
-- Component, Deployable Variant, Target, Connection, Change, and Proof mapping
+- Component, Variant, Base Variant, Deployment Variant, Target, Connection, Change, and Proof mapping
 - field-origin tracing, confidence scores, and inverse-edit guidance
 - platform estate import, variant fanout, enrichment, and normalization previews
 - publish, verify, attest, and verify-attestation bundles
@@ -36,7 +36,7 @@ When the user wants you to use `cub-gen` against a real source repo, prefer
 ## Product Value In One Breath
 
 `cub-gen` is the repo-side traceability and governed-change tool. It starts
-from source/config repos, maps source intent to rendered deployable config,
+from source/config repos, maps source config to rendered deployable config,
 records field-level provenance with confidence scores, and emits inverse-edit
 hints so app, platform, environment, and security owners know where a change
 belongs.
@@ -45,11 +45,13 @@ The user model should stay small:
 
 ```text
 Component
-  -> Deployable Variant
-      -> Target
-      -> Connections
-      -> Change
-      -> Proof
+  -> Variant
+      -> Base Variant
+      -> Deployment Variant
+          -> Target
+          -> Connections
+          -> Change
+          -> Proof
 ```
 
 ## Command Status

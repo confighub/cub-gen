@@ -182,7 +182,7 @@ Score's abstraction is an environment-agnostic workload spec:
 
 Good fit:
 
-- Spring teams describe app intent and dependencies without owning raw manifests
+- Spring teams describe app source config and dependencies without owning raw manifests
 - strong alignment with DRY intent feeding rendered WET output
 
 Important boundary:
@@ -283,7 +283,7 @@ Less relevant to `cub-gen`'s core differentiation:
 | Tool | Primary layer | Main abstraction | Best fit for Spring teams | Relevance to `cub-gen` |
 | --- | --- | --- | --- | --- |
 | Backstage | Portal and scaffolding | Catalog entities and templates | Golden paths, repo generation, ownership, docs | Strong complement |
-| Score | Workload spec | `score.yaml` | Environment-agnostic app intent | Strong complement |
+| Score | Workload spec | `score.yaml` | Environment-agnostic app source config | Strong complement |
 | Kratix | Platform framework | Promise plus workflows | Self-service APIs with built-in governance | Strong conceptual peer |
 | Crossplane | Control plane framework | XRD/XR plus composition | Kubernetes-native custom APIs across app and infra | Adjacent peer |
 | Humanitec PO | Orchestration layer | Manifest plus module and rule orchestration | Keep existing Terraform/OpenTofu and CI/CD | Useful comparator |
@@ -316,7 +316,7 @@ Its value is less in the manual YAML examples and more in showing what an opinio
 
 ## Implications for `cub-gen`
 
-### 1. Keep Spring Boot as app intent, not the platform runtime contract
+### 1. Keep Spring Boot as app source config, not the platform runtime contract
 
 The Spring docs reinforce the direction already present in `examples/springboot-paas`:
 

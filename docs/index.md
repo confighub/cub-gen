@@ -10,19 +10,23 @@ The user model is intentionally small:
 
 ```text
 Component
-  -> Deployable Variant
-      -> Target
-      -> Connections
-      -> Proof
+  -> Variant
+      -> Base Variant
+      -> Deployment Variant
+          -> Target
+          -> Connections
+          -> Change
+          -> Proof
 ```
 
-A **Component** is the reusable base. A **Deployable Variant** is a concrete
-copy or context of that Component. A **Target** is where it runs or reconciles.
-**Connections** are what it is wired to. A **Change** is what someone wants to
-alter. **Proof** shows where it came from, who owns it, what changed, and
-whether the change is allowed.
+A **Component** is the reusable base. A **Variant** is a member of that
+Component family. A **Base Variant** is not deployed. A **Deployment Variant**
+is the concrete deployed copy or context of that Component. A **Target** is
+where a Deployment Variant runs or reconciles. **Connections** are what it is
+wired to. A **Change** is what someone wants to alter. **Proof** shows where it
+came from, who owns it, what changed, and whether the change is allowed.
 
-An **AI Variant** is a Deployable Variant whose delta, wiring, or operation is
+An **AI Variant** is a Variant whose delta, wiring, or operation is
 AI-assisted and governed.
 
 `cub-gen` exists to make those variants explainable before Flux, Argo, or a
@@ -42,7 +46,7 @@ to WET rendered output (the manifests that reach your cluster).
 
 Many app platforms are generators in this sense. A Spring platform, Score.dev,
 Helm platform, OpenChoreo-style component model, Argo ApplicationSet,
-app-of-apps catalog, or app-config manager all take source intent plus
+app-of-apps catalog, or app-config manager all take source config plus
 environment/platform context and produce deployable config. `cub-gen` starts by
 importing and explaining that shape, not by replacing the platform.
 
@@ -56,7 +60,7 @@ It adds what those layers do not provide by default:
 
 - source-to-live field traceability (`which file/path controls this field?`)
 - ownership-aware edit routing (`who should edit this?`)
-- multi-repo platform graphs (`which Components and Deployable Variants exist?`)
+- multi-repo platform graphs (`which Components and Variants exist, and which Variants deploy?`)
 - PR-friendly proof sidecars (`enrich preview` / `enrich write`)
 - governed safety decisions before deploy (`ALLOW/ESCALATE/BLOCK`)
 
@@ -82,7 +86,7 @@ ConfigHub now has three complementary import stories:
 
 - `cub gitops import` imports existing ArgoCD/Flux application resources from a cluster or worker target into ConfigHub.
 - `cub-gen gitops import` reads source-side generators such as Helm, Score.dev, Spring Boot, and workflow config, then emits provenance, inverse-edit guidance, and evidence.
-- `cub-gen platform import` reads a local multi-repo manifest and emits a read-only Component -> Deployable Variant -> Target graph before rewrites.
+- `cub-gen platform import` reads a local multi-repo manifest and emits a read-only Component -> Variant -> Target graph before rewrites.
 
 Use them for different jobs:
 
@@ -129,7 +133,7 @@ ConfigHub backend OSS is available today:
 
 - [confighubai/confighub](https://github.com/confighubai/confighub)
 
-1. **DRY** app intent lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.)
+1. **DRY** app source config lives in Git (`Chart.yaml`, `score.yaml`, `application.yaml`, etc.)
 2. **cub-gen** classifies DRY inputs + WET targets and emits provenance with field-origin tracing
 3. **cub-gen enrich** can write reviewable sidecar proof under `.cub-gen/enrichment/`
 4. **cub-gen publish** produces ConfigHub-ready change bundles with digest verification
@@ -249,7 +253,7 @@ Teams can start with cub-gen locally today and connect to ConfigHub when they ne
 **Latest shipped:** `v0.3.0` (2026-04-12)
 
 **Current target:** working `v0.4` roadmap: make `cub-gen`'s role obvious as
-Component -> Deployable Variant -> Target/Connections/Change/Proof.
+Component -> Variant -> Base/Deployment -> Target/Connections/Change/Proof.
 
 - repo-first CLI and contract coverage remain green,
 - the shipped release includes a first-class standalone `applicationset`

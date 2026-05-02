@@ -67,7 +67,7 @@ index 0000000..0000000
 +      "key": "cub.confighub.io/source-paths",
 +      "value": "apps/catalog-api.yaml,apps/orders-api.yaml,apps/payments-api.yaml,root-application.yaml",
 +      "applies_to": "sidecar",
-+      "reason": "show which source files feed the deployable variant"
++      "reason": "show which source files feed the Deployment Variant"
 +    }
 +  ],
 +  "source_links": [

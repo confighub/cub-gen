@@ -270,7 +270,7 @@ Proof commands for the bounded support:
 
 | Thesis | ApplicationSet | App-of-apps |
 |---|---|---|
-| platform inputs are source intent | selector, template, list, cluster inventory | root app and child app catalog |
+| platform inputs are source config | selector, template, list, cluster inventory | root app and child app catalog |
 | generator produces deployable config | child `Application` objects | child `Application` objects |
 | downstream generators still matter | Helm/Kustomize below each child app | Helm/Kustomize below each child app |
 | trace-back is necessary but not enough | selector/template owner decides route | child catalog owner decides route |
