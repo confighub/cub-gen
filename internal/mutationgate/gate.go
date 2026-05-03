@@ -50,17 +50,18 @@ type Mutation struct {
 }
 
 type Rule struct {
-	ResourceType string  `json:"resource_type,omitempty" yaml:"resource_type,omitempty"`
-	ResourceName string  `json:"resource_name,omitempty" yaml:"resource_name,omitempty"`
-	Path         string  `json:"path,omitempty" yaml:"path,omitempty"`
-	WetPath      string  `json:"wet_path,omitempty" yaml:"wet_path,omitempty"`
-	Route        string  `json:"route" yaml:"route"`
-	Owner        string  `json:"owner,omitempty" yaml:"owner,omitempty"`
-	SourcePath   string  `json:"source_path,omitempty" yaml:"source_path,omitempty"`
-	SourceField  string  `json:"source_field,omitempty" yaml:"source_field,omitempty"`
-	Generator    string  `json:"generator,omitempty" yaml:"generator,omitempty"`
-	ProposalHint string  `json:"proposal_hint,omitempty" yaml:"proposal_hint,omitempty"`
-	Confidence   float64 `json:"confidence,omitempty" yaml:"confidence,omitempty"`
+	ResourceType  string   `json:"resource_type,omitempty" yaml:"resource_type,omitempty"`
+	ResourceName  string   `json:"resource_name,omitempty" yaml:"resource_name,omitempty"`
+	Path          string   `json:"path,omitempty" yaml:"path,omitempty"`
+	WetPath       string   `json:"wet_path,omitempty" yaml:"wet_path,omitempty"`
+	Route         string   `json:"route" yaml:"route"`
+	Owner         string   `json:"owner,omitempty" yaml:"owner,omitempty"`
+	SourcePath    string   `json:"source_path,omitempty" yaml:"source_path,omitempty"`
+	SourceField   string   `json:"source_field,omitempty" yaml:"source_field,omitempty"`
+	Generator     string   `json:"generator,omitempty" yaml:"generator,omitempty"`
+	ProposalHint  string   `json:"proposal_hint,omitempty" yaml:"proposal_hint,omitempty"`
+	ProposalFiles []string `json:"proposal_files,omitempty" yaml:"proposal_files,omitempty"`
+	Confidence    float64  `json:"confidence,omitempty" yaml:"confidence,omitempty"`
 }
 
 type Policy struct {
@@ -145,15 +146,16 @@ func PolicyFromSpringRoutes(routes springboot.FieldRoutes, sourcePath string) Po
 			continue
 		}
 		out.Routes = append(out.Routes, Rule{
-			Path:         strings.TrimSpace(route.Match),
-			WetPath:      strings.TrimSpace(route.Match),
-			Route:        routeForSpringAction(route.DefaultAction),
-			Owner:        strings.TrimSpace(route.Owner),
-			SourcePath:   strings.TrimSpace(sourcePath),
-			SourceField:  strings.TrimSpace(route.Match),
-			Generator:    "springboot",
-			ProposalHint: strings.TrimSpace(route.Reason),
-			Confidence:   0.94,
+			Path:          strings.TrimSpace(route.Match),
+			WetPath:       strings.TrimSpace(route.Match),
+			Route:         routeForSpringAction(route.DefaultAction),
+			Owner:         strings.TrimSpace(route.Owner),
+			SourcePath:    firstNonEmpty(route.SourcePath, sourcePath),
+			SourceField:   firstNonEmpty(route.SourceField, route.Match),
+			Generator:     "springboot",
+			ProposalHint:  strings.TrimSpace(route.Reason),
+			ProposalFiles: uniqueStrings(route.ProposalFiles),
+			Confidence:    0.94,
 		})
 	}
 	sortRules(out.Routes)
@@ -515,7 +517,10 @@ func nextActions(routeKind string, rule Rule, req Request) []NextAction {
 			Owner:       owner,
 		}}
 	case RouteLiftUpstream:
-		files := uniqueStrings(append(req.SourceFiles, rule.SourcePath))
+		files := uniqueStrings(append(append([]string{}, req.SourceFiles...), rule.ProposalFiles...))
+		if len(files) == 0 && strings.TrimSpace(rule.SourcePath) != "" {
+			files = []string{strings.TrimSpace(rule.SourcePath)}
+		}
 		return []NextAction{{
 			Kind:        "create-or-link-github-pr",
 			Description: firstNonEmpty(rule.ProposalHint, "create or link a source PR before accepting this as a durable change"),

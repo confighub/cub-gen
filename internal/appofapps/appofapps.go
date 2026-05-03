@@ -176,11 +176,6 @@ func ParseApplicationFile(repo, path string) (Application, error) {
 	}, nil
 }
 
-func IsApplicationFile(repo, path string) bool {
-	_, err := ParseApplicationFile(repo, path)
-	return err == nil
-}
-
 func findRoot(repo, rootPath string) (Root, error) {
 	roots, err := FindRoots(repo)
 	if err != nil {

@@ -54,6 +54,9 @@ func TestEvaluateSpringRoutes(t *testing.T) {
 	if len(lift.NextActions) != 1 || lift.NextActions[0].Kind != "create-or-link-github-pr" {
 		t.Fatalf("unexpected lift-upstream next actions: %+v", lift.NextActions)
 	}
+	if !sameStrings(lift.NextActions[0].Files, []string{"pom.xml", "src/main/resources/application.yaml"}) {
+		t.Fatalf("lift-upstream should point at source proposal files, got %+v", lift.NextActions[0].Files)
+	}
 	if err := ValidateDecisionRecord(lift); err != nil {
 		t.Fatalf("lift decision should be valid proof: %v", err)
 	}
@@ -98,6 +101,18 @@ func TestEvaluateMissingRouteRequiresReview(t *testing.T) {
 	if decision.Route.Kind != RouteReview || decision.Decision.State != DecisionEscalate {
 		t.Fatalf("expected review-required/ESCALATE, got route=%s state=%s", decision.Route.Kind, decision.Decision.State)
 	}
+}
+
+func sameStrings(got, want []string) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	for i := range got {
+		if got[i] != want[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func TestPolicyFromBundleOpenChoreoRoute(t *testing.T) {

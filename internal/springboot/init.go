@@ -222,25 +222,36 @@ routes:
     owner: app-team
     defaultAction: mutable-in-ch
     reason: Per-deployment feature tuning is safe to keep in ConfigHub.
+    sourcePath: src/main/resources/application-prod.yaml
+    sourceField: feature.%s.*
 
   # App-owned cache config: requires source change
   - match: spring.cache.*
     owner: app-team
     defaultAction: lift-upstream
     reason: Cache adoption changes the app contract and should update upstream app inputs.
+    sourcePath: src/main/resources/application.yaml
+    sourceField: spring.cache.*
+    proposalFiles:
+      - pom.xml
+      - src/main/resources/application.yaml
 
   # Platform-owned datasource: blocked from app changes
   - match: spring.datasource.*
     owner: platform-engineering
     defaultAction: generator-owned
     reason: Datasource connectivity is part of the managed platform boundary.
+    sourcePath: platform/base/runtime-policy.yaml
+    sourceField: spring.datasource.*
 
   # Platform-owned security: blocked from app changes
   - match: securityContext.*
     owner: platform-engineering
     defaultAction: generator-owned
     reason: Runtime hardening must remain platform-controlled.
-`, appName, appPrefix)
+    sourcePath: platform/base/runtime-policy.yaml
+    sourceField: securityContext.*
+`, appName, appPrefix, appPrefix)
 }
 
 func confighubUnitContent(appName, env, namespace string) string {

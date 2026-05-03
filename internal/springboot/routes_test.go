@@ -1,7 +1,6 @@
 package springboot
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -41,20 +40,5 @@ func TestMatchRoute(t *testing.T) {
 				t.Fatalf("matchRoute(%q, %q) = %v, want %v", tt.pattern, tt.field, got, tt.expected)
 			}
 		})
-	}
-}
-
-func TestIsMutationBlockedMatchesWrappedError(t *testing.T) {
-	t.Parallel()
-
-	err := fmt.Errorf("wrapped: %w", &MutationBlockedError{
-		FieldPath: "spring.datasource.url",
-		Owner:     "platform-team",
-		Action:    ActionLiftUpstream,
-		Reason:    "managed by platform",
-		Rule:      "spring.datasource.*",
-	})
-	if !IsMutationBlocked(err) {
-		t.Fatal("expected wrapped MutationBlockedError to be detected")
 	}
 }

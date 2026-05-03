@@ -490,6 +490,11 @@ The output separates route from gate decision:
 | `decision_digest` | Stable digest for the gate decision artifact |
 | `proof_events[]` | Loggable proof record for Pilot, validation, and later attestation |
 
+For `lift-upstream`, route metadata should name the source files the user
+actually needs to change. In the Spring example, `spring.cache.type` points to
+`pom.xml` and `src/main/resources/application.yaml`, not the rendered ConfigMap
+or the route policy file.
+
 Examples:
 
 ```bash

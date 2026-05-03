@@ -24,6 +24,7 @@ The app is `inventory-api`, a Spring Boot 3.3.2 service (Java 21) deployed acros
 | Deep connected bridge path | Real | `./examples/springboot-paas/demo-connected.sh` |
 | Standalone live-cluster app proof | Real | `./bin/create-cluster && ./bin/build-image && ./bin/install-worker && ./verify-e2e.sh` |
 | Governed route proof (`ALLOW` / `ESCALATE` / `BLOCK`) | Real local mutation gate | `./examples/springboot-paas/demo-governed-routes.sh` |
+| Initiative GUI proof | Real local gate card for current ConfigHub Initiative UI | `./examples/springboot-paas/demo-initiative-gui.sh` |
 | Direct embedded ConfigHub payload mutation | Real but client-side | `./examples/springboot-paas/demo-embedded-config-mutation.sh` |
 
 The strongest caveat is enforcement depth, not demo truth. The ownership
@@ -131,6 +132,9 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 # Governed route proof
 ./examples/springboot-paas/demo-governed-routes.sh
+
+# ConfigHub Initiative GUI proof
+./examples/springboot-paas/demo-initiative-gui.sh
 
 # Direct embedded payload mutation proof
 ./examples/springboot-paas/demo-embedded-config-mutation.sh
@@ -309,6 +313,12 @@ field route when `--routes` is provided.
 For v0.4, this is the cub-gen side of the mutation apply gate. In ConfigHub, an
 Initiative/MR can show the same route/decision/proof object and use an apply
 gate to stop governed flows before apply.
+
+For a concrete GUI card, run
+[`demo-initiative-gui.sh`](./demo-initiative-gui.sh) and read
+[`docs/initiative-gui.md`](./docs/initiative-gui.md). It shows the three review
+outcomes Brian and Jesper are likely to ask about: app-owned `ALLOW`,
+source-owned `ESCALATE`, and platform-owned `BLOCK`.
 
 ## Normalize preview
 

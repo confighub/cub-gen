@@ -250,29 +250,6 @@ func parseExampleArray(path string) (map[string]struct{}, error) {
 	return nil, fmt.Errorf("examples array not found in %s", path)
 }
 
-func makeTargetDependencies(path, target string) ([]string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("open makefile: %w", err)
-	}
-	defer file.Close()
-
-	prefix := target + ":"
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if !strings.HasPrefix(line, prefix) {
-			continue
-		}
-		fields := strings.Fields(strings.TrimSpace(strings.TrimPrefix(line, prefix)))
-		return fields, nil
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("scan makefile: %w", err)
-	}
-	return nil, fmt.Errorf("target not found in makefile: %s", target)
-}
-
 func parseReadmeSectionExamples(path, heading string, stopPrefixes ...string) (map[string]struct{}, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -374,19 +351,6 @@ func hasAIFirstBundle(root, slug string) bool {
 	return fileExists(filepath.Join(exampleDir, "AI_START_HERE.md")) &&
 		fileExists(filepath.Join(exampleDir, "prompts.md")) &&
 		fileExists(filepath.Join(exampleDir, "contracts.md"))
-}
-
-func hasAll(values []string, wanted ...string) bool {
-	set := map[string]struct{}{}
-	for _, value := range values {
-		set[value] = struct{}{}
-	}
-	for _, value := range wanted {
-		if _, ok := set[value]; !ok {
-			return false
-		}
-	}
-	return true
 }
 
 func uniqueStrings(values []string) []string {

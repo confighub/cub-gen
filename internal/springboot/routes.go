@@ -1,7 +1,6 @@
 package springboot
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -26,6 +25,9 @@ type FieldRoute struct {
 	Owner         string      `yaml:"owner"`
 	DefaultAction RouteAction `yaml:"defaultAction"`
 	Reason        string      `yaml:"reason"`
+	SourcePath    string      `yaml:"sourcePath"`
+	SourceField   string      `yaml:"sourceField"`
+	ProposalFiles []string    `yaml:"proposalFiles"`
 }
 
 // FieldRoutes is the root structure of field-routes.yaml.
@@ -108,45 +110,4 @@ func matchRoute(pattern, fieldPath string) bool {
 		return false
 	}
 	return matched
-}
-
-// EnforceMutation validates a mutation and returns an error if blocked.
-// This is the enforcement entry point.
-func EnforceMutation(opts ValidateMutationOptions) error {
-	result, err := ValidateMutation(opts)
-	if err != nil {
-		return err
-	}
-
-	if !result.Allowed {
-		return &MutationBlockedError{
-			FieldPath: result.FieldPath,
-			Owner:     result.Owner,
-			Action:    result.Action,
-			Reason:    result.Reason,
-			Rule:      result.MatchedRule,
-		}
-	}
-
-	return nil
-}
-
-// MutationBlockedError indicates a mutation was blocked by field routes.
-type MutationBlockedError struct {
-	FieldPath string
-	Owner     string
-	Action    RouteAction
-	Reason    string
-	Rule      string
-}
-
-func (e *MutationBlockedError) Error() string {
-	return fmt.Sprintf("mutation blocked: field %q is %s-owned (action=%s, rule=%s): %s",
-		e.FieldPath, e.Owner, e.Action, e.Rule, e.Reason)
-}
-
-// IsMutationBlocked returns true if the error is a MutationBlockedError.
-func IsMutationBlocked(err error) bool {
-	var blocked *MutationBlockedError
-	return errors.As(err, &blocked)
 }
