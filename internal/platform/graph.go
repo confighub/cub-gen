@@ -637,11 +637,6 @@ func targetOwnerRank(role string) int {
 	}
 }
 
-func inferVariantKind(explicitKind, target string) string {
-	kind, _ := resolveVariantKind(explicitKind, target)
-	return kind
-}
-
 func resolveVariantKind(explicitKind, target string) (string, bool) {
 	clean := normalizeToken(explicitKind, "")
 	hasTarget := strings.TrimSpace(target) != ""

@@ -4,7 +4,7 @@
     "reason": "route lift-upstream blocks direct rendered mutation and asks for a source change",
     "state": "ESCALATE"
   },
-  "decision_digest": "sha256:2e54749977f092a3fecffccf78adb8bc819a222d3bc52e5ab7225fcc4b217bdb",
+  "decision_digest": "sha256:fff6480de8f0d2022364e6e0941be758e42e3e8b6cf41c37b4deb2704a213433",
   "gate": {
     "name": "generator-route",
     "version": "v1"
@@ -19,7 +19,8 @@
     {
       "description": "Cache adoption changes the app contract and should update upstream app inputs.",
       "files": [
-        "../../examples/springboot-paas/operational/field-routes.yaml"
+        "pom.xml",
+        "src/main/resources/application.yaml"
       ],
       "kind": "create-or-link-github-pr",
       "owner": "app-team"
@@ -33,11 +34,11 @@
     "owner": "app-team",
     "source": "../../examples/springboot-paas/operational/field-routes.yaml",
     "source_field": "spring.cache.*",
-    "source_file": "../../examples/springboot-paas/operational/field-routes.yaml"
+    "source_file": "src/main/resources/application.yaml"
   },
   "proof_events": [
     {
-      "artifact_digest": "sha256:2e54749977f092a3fecffccf78adb8bc819a222d3bc52e5ab7225fcc4b217bdb",
+      "artifact_digest": "sha256:fff6480de8f0d2022364e6e0941be758e42e3e8b6cf41c37b4deb2704a213433",
       "artifact_kind": "mutation_apply_gate",
       "change_id": "chg_49442e92b2c2f14a",
       "decision_reason": "route lift-upstream blocks direct rendered mutation and asks for a source change",
