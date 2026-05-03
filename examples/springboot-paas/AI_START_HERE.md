@@ -8,6 +8,8 @@ Use this example when the question is not just "what rendered this field?" but
 - Spring config provenance and ownership from `application*.yaml` plus platform policy
 - local `ALLOW`, `ESCALATE`, and `BLOCK` paths for mutation routing
 - direct embedded ConfigHub payload mutation for an app-owned field
+- live ConfigHub Initiative evidence using current Space, Unit, ChangeSet,
+  Filter, and View primitives
 - a deeper connected ConfigHub walkthrough
 - a real standalone live-cluster app proof
 
@@ -28,6 +30,7 @@ Use this example when the question is not just "what rendered this field?" but
 | `gitops import --json` | `application*.yaml`, `pom.xml`, `platform/`, `gitops/` | stdout JSON only | no |
 | `demo-governed-routes.sh` | field-routes contract | `.tmp/springboot-governed-routes/<run>/...` | no repo/backend/live mutation |
 | `demo-embedded-config-mutation.sh` | payload yaml + field routes | `.tmp/springboot-embedded-config/<run>/...` | scratch clone only |
+| `demo-initiative-live.sh` | repo + ConfigHub auth/context | `.tmp/springboot-initiative-live/<run>/...` | backend evidence only |
 | `run-connected-smoke.sh` | repo + ConfigHub auth/context | `.tmp/connected-smoke/<run>/...` | backend evidence only |
 | `demo-connected.sh` | repo + ConfigHub auth/context | temporary connected lifecycle artifacts unless `OUTPUT_DIR` is set | backend evidence only |
 | live-cluster proof | repo + cluster helpers | cluster objects, image build artifacts, worker install state | yes, live cluster |
@@ -70,9 +73,11 @@ Success looks like:
    `./examples/springboot-paas/demo-embedded-config-mutation.sh`
 5. Connected environment check:
    `cub auth login && ./examples/demo/run-connected-smoke.sh`
-6. Deep connected walkthrough:
+6. Live Initiative evidence in ConfigHub:
+   `cub auth login && ./examples/springboot-paas/demo-initiative-live.sh`
+7. Deep connected walkthrough:
    `cub auth login && ./examples/springboot-paas/demo-connected.sh`
-7. Live-cluster proof:
+8. Live-cluster proof:
    `./bin/create-cluster && ./bin/build-image && ./bin/install-worker && ./verify-e2e.sh`
 
 ## What to verify after each major step
@@ -81,12 +86,15 @@ Success looks like:
 - Local route proof: `feature.inventory.reservationMode` is `apply-here/ALLOW`, `spring.cache.type` is `lift-upstream/ESCALATE`, and `spring.datasource.url` is `block/escalate/BLOCK`; artifacts land under `.tmp/springboot-governed-routes/...`.
 - Local apply-here proof: the reservation mode changes in the embedded payload and the datasource mutation is rejected; artifacts land under `.tmp/springboot-embedded-config/...`.
 - Connected smoke: ConfigHub auth/context is valid and the smoke summaries include a non-empty `change_id`.
+- Live Initiative evidence: a `springboot-initiative-live` space exists, the run summary reports at least five Units and three ChangeSets, and the Initiative View is labeled `initiative=true`.
 - Deep connected walkthrough: a terminal connected decision state is returned for the same `change_id`.
 - Live-cluster proof: `verify-e2e.sh` succeeds and `inventory-api` is reachable on the kind cluster.
 
 ## GUI checkpoints
 
 - ConfigHub GUI: inspect the change referenced by `change_id` after smoke or deep connected mode.
+- ConfigHub Initiative evidence: open the `springboot-initiative-live` space,
+  inspect the run-specific Initiative View, and open the compact card Unit.
 - Spring payload helpers: compare and refresh-preview outputs should show the app-owned override preserved.
 - Live runtime: inspect `inventory-api` health and cluster objects after `verify-e2e.sh`.
 
@@ -100,4 +108,6 @@ Success looks like:
 ## Cleanup
 
 - Remove local proof artifacts with `rm -rf .tmp/springboot-governed-routes .tmp/springboot-embedded-config .tmp/connected-smoke`
+- Delete live Initiative evidence with
+  `SPACE=springboot-initiative-live ./examples/springboot-paas/demo-initiative-live.sh --cleanup`
 - Tear down clusters and workers with the same helper scripts used for the live path

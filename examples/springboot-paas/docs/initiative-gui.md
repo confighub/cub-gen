@@ -47,6 +47,8 @@ The Initiative should show five panels:
 
 ## Run It
 
+Local card only:
+
 ```bash
 ./examples/springboot-paas/demo-initiative-gui.sh
 ```
@@ -59,6 +61,37 @@ The script writes:
 | `.tmp/springboot-initiative-gui/02-escalate-redis-cache.json` | Redis cache request, `ESCALATE` and create/link PR |
 | `.tmp/springboot-initiative-gui/03-block-datasource.json` | Platform-owned datasource edit, `BLOCK` |
 | `.tmp/springboot-initiative-gui/initiative-card.json` | Compact GUI card for all three cases |
+
+Live ConfigHub evidence:
+
+```bash
+cub auth login
+./examples/springboot-paas/demo-initiative-live.sh
+```
+
+That script writes a local summary and creates live ConfigHub objects:
+
+| Object | Meaning |
+|---|---|
+| Space `springboot-initiative-live` | Isolated demo surface for this proof |
+| Rendered Unit `inventory-api-prod` | The Kubernetes config being reviewed |
+| Unit `initiative-card-<run>` | ConfigMap containing the compact gate card JSON |
+| Three decision Units | One `MutationApplyGateDecision` ConfigMap per route outcome |
+| Three ChangeSets | Review objects with decision, route, owner, next action, and digest metadata |
+| View `inventory-api-appconfig-gates-<run>` | Current UI Initiative surface, labeled `initiative=true` |
+
+Inspect the latest run with the commands printed by the script:
+
+```bash
+cub view get --space springboot-initiative-live -o json <initiative-view>
+cub unit get --space springboot-initiative-live -o json <card-unit>
+cub changeset get --space springboot-initiative-live -o json <redis-changeset>
+```
+
+In the current ConfigHub UI, open the `springboot-initiative-live` space, then
+open the run-specific View/Initiative and the compact card Unit. This is real
+backend evidence, not a screenshot mock. First-class rendering of the five
+panels above is still a ConfigHub UI/backend integration step.
 
 ## What The User Sees
 
@@ -101,8 +134,10 @@ cub unit get --space inventory-api-prod inventory-api \
   -o jq='.Unit.ApplyGates'
 ```
 
-The exact Trigger/Function wiring belongs to ConfigHub. The cub-gen contract is
-the stable decision object and proof event that the Initiative displays.
+The live script uses current ConfigHub primitives today: Space, Unit, ChangeSet,
+Filter, and View. The exact Trigger/Function/ApplyGate wiring belongs to the
+native ConfigHub integration. The cub-gen contract is the stable decision object
+and proof event that the Initiative displays.
 
 ## Do Not Claim
 

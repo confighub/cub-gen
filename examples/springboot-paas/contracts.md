@@ -133,6 +133,38 @@ inspect_with:
   - jq '{phase, change_id, decision_state, attestation_valid}' .tmp/springboot-connected/update/summary.json
 ```
 
+## Live ConfigHub Initiative evidence
+
+```yaml
+id: spring_initiative_live
+command: ./examples/springboot-paas/demo-initiative-live.sh
+mutates:
+  repo: false
+  backend: true
+  live: false
+expects:
+  files_exist:
+    - ".tmp/springboot-initiative-live/<run>/live-summary.json"
+  backend_objects:
+    - "Space springboot-initiative-live"
+    - "one Initiative-labeled View"
+    - "one rendered inventory-api Unit"
+    - "one compact gate-card Unit"
+    - "three mutation apply gate decision Units"
+    - "three ChangeSets"
+  decisions:
+    - "feature.inventory.reservationMode -> apply-here -> ALLOW"
+    - "spring.cache.type -> lift-upstream -> ESCALATE"
+    - "spring.datasource.url -> block/escalate -> BLOCK"
+inspect_with:
+  - jq '{space: .confighub.space, view: .confighub.initiative_view, card_unit: .confighub.card_unit, unit_hits: .run.unit_hits, changeset_hits: .run.changeset_hits}' .tmp/springboot-initiative-live/<run>/live-summary.json
+  - cub view get --space springboot-initiative-live -o json <initiative-view>
+  - cub unit get --space springboot-initiative-live -o json <card-unit>
+  - cub changeset get --space springboot-initiative-live -o json <redis-changeset>
+cleanup:
+  - SPACE=springboot-initiative-live ./examples/springboot-paas/demo-initiative-live.sh --cleanup
+```
+
 ## Live standalone app proof
 
 ```yaml

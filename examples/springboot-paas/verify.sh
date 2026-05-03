@@ -32,6 +32,7 @@ required_files=(
   "$ROOT_DIR/block-escalate.sh"
   "$ROOT_DIR/block-escalate-verify.sh"
   "$ROOT_DIR/demo-initiative-gui.sh"
+  "$ROOT_DIR/demo-initiative-live.sh"
   "$ROOT_DIR/docs/initiative-gui.md"
   "$ROOT_DIR/lift-upstream.sh"
   "$ROOT_DIR/lift-upstream-verify.sh"

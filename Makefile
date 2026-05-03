@@ -1,4 +1,4 @@
-.PHONY: build build-plugin plugin-smoke test test-parity test-contracts test-bridge-symmetry test-examples test-change-api-http test-v04-quickstart test-initiative-gui test-connected-smoke test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-flow-a-git-pr-to-mr test-flow-b-mr-to-git-pr test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo lint-dual-mode check-story-status check-story-evidence check-flow-evidence check-ai-only-scope check-docs-entrypoints check-platform-teaching-pack check-example-truth-matrix check-connected-release-gate check-connected-ingest-preflight check-springboot-worker-ready-guard check-no-legacy-provider-terms check-connected-auth-contract check-registry-discoverability update-goldens sync-triple-styles ci ci-local ci-connected ci-connected-deep ci-connected-troubleshoot docs docs-serve
+.PHONY: build build-plugin plugin-smoke test test-parity test-contracts test-bridge-symmetry test-examples test-change-api-http test-v04-quickstart test-initiative-gui test-initiative-live test-connected-smoke test-connected-entrypoints test-connected-lifecycles test-phase-3-stories test-phase-4-stories test-flow-a-git-pr-to-mr test-flow-b-mr-to-git-pr test-connected-governed-reconcile-helm test-live-reconcile-flux test-live-reconcile-argo lint-dual-mode check-story-status check-story-evidence check-flow-evidence check-ai-only-scope check-docs-entrypoints check-platform-teaching-pack check-example-truth-matrix check-connected-release-gate check-connected-ingest-preflight check-springboot-worker-ready-guard check-no-legacy-provider-terms check-connected-auth-contract check-registry-discoverability update-goldens sync-triple-styles ci ci-local ci-connected ci-connected-deep ci-connected-troubleshoot docs docs-serve
 
 PARITY_TEST_PATTERN := ^(TestGitOpsParity|TestPublishGolden|TestVerifyGolden|TestAttestGolden|TestVerifyAttestationGolden|TestTopLevelCommand|TestGeneratorsGolden)
 BRIDGE_SYMMETRY_PATTERN := ^(TestBridgeSymmetryMatrix|TestExamplesPathModeBridgeFlow)$
@@ -36,6 +36,9 @@ test-v04-quickstart:
 test-initiative-gui:
 	./examples/springboot-paas/demo-initiative-gui.sh
 	jq -e '.scenarios[1].next_actions[0].files == ["pom.xml", "src/main/resources/application.yaml"] and .scenarios[1].source_file == "src/main/resources/application.yaml" and .scenarios[0].decision == "ALLOW" and .scenarios[2].decision == "BLOCK"' .tmp/springboot-initiative-gui/initiative-card.json
+
+test-initiative-live:
+	./examples/springboot-paas/demo-initiative-live.sh
 
 test-connected-smoke:
 	SKIP_BUILD=1 ./examples/demo/run-connected-smoke.sh
