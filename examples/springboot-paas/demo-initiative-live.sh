@@ -95,6 +95,14 @@ mkdir -p "$OUT_DIR"
 
 echo "[spring-initiative-live] connected context"
 print_connected_context
+"$CUB" context get -o json > "$OUT_DIR/context.json"
+ORG_ID="$(jq -r '.coordinate.organizationID // empty' "$OUT_DIR/context.json")"
+ORG_NAME="$(jq -r '.metadata.organizationName // empty' "$OUT_DIR/context.json")"
+UI_BASE_URL="${CONFIGHUB_BASE_URL%/}"
+UI_ORG_QUERY=""
+if [ -n "$ORG_ID" ]; then
+  UI_ORG_QUERY="?org=${ORG_ID}"
+fi
 echo "[spring-initiative-live] output: $OUT_DIR"
 
 echo "[spring-initiative-live] generate local gate cards"
@@ -310,17 +318,36 @@ if [ "$unit_hits" -lt 5 ] || [ "$changeset_hits" -lt 3 ]; then
   exit 1
 fi
 
+SPACE_ID="$(jq -r '.Space.SpaceID // .SpaceID // empty' "$OUT_DIR/space.json")"
+CARD_UNIT_ID="$(jq -r '.Unit.UnitID // .UnitID // empty' "$OUT_DIR/unit-card.json")"
+VIEW_ID="$(jq -r '.View.ViewID // .ViewID // empty' "$OUT_DIR/view.json")"
+SPACE_URL=""
+CARD_UNIT_URL=""
+if [ -n "$SPACE_ID" ]; then
+  SPACE_URL="${UI_BASE_URL}/spaces/${SPACE_ID}${UI_ORG_QUERY}"
+fi
+if [ -n "$SPACE_ID" ] && [ -n "$CARD_UNIT_ID" ]; then
+  CARD_UNIT_URL="${UI_BASE_URL}/units/${SPACE_ID}/${CARD_UNIT_ID}${UI_ORG_QUERY}"
+fi
+
 jq -n \
   --arg schema_version "cub.confighub.io/springboot-initiative-live/v1" \
   --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   --arg base_url "$CONFIGHUB_BASE_URL" \
+  --arg organization_id "$ORG_ID" \
+  --arg organization_name "$ORG_NAME" \
   --arg space "$SPACE" \
+  --arg space_id "$SPACE_ID" \
   --arg run_id "$RUN_ID" \
   --arg initiative "$INITIATIVE_LABEL" \
   --arg view "$VIEW_SLUG" \
+  --arg view_id "$VIEW_ID" \
   --arg filter "$FILTER_SLUG" \
   --arg card_unit "$CARD_UNIT" \
+  --arg card_unit_id "$CARD_UNIT_ID" \
   --arg rendered_unit "$RENDERED_UNIT" \
+  --arg space_url "$SPACE_URL" \
+  --arg card_unit_url "$CARD_UNIT_URL" \
   --arg local_card "$CARD_DIR/initiative-card.json" \
   --arg unit_query "$OUT_DIR/unit-query.json" \
   --arg changeset_query "$OUT_DIR/changeset-query.json" \
@@ -332,11 +359,18 @@ jq -n \
     generated_at: $generated_at,
     confighub: {
       base_url: $base_url,
+      organization_id: $organization_id,
+      organization_name: $organization_name,
       space: $space,
+      space_id: $space_id,
       initiative_view: $view,
+      initiative_view_id: $view_id,
       filter: $filter,
       card_unit: $card_unit,
-      rendered_unit: $rendered_unit
+      card_unit_id: $card_unit_id,
+      rendered_unit: $rendered_unit,
+      space_url: $space_url,
+      card_unit_url: $card_unit_url
     },
     run: {
       run_id: $run_id,
@@ -364,6 +398,7 @@ cat <<EOF
 
 Live ConfigHub Initiative evidence is ready.
 
+Organization:   ${ORG_NAME:-unknown} (${ORG_ID:-unknown})
 Space:          $SPACE
 Initiative view:$VIEW_SLUG
 Card unit:      $CARD_UNIT
@@ -377,8 +412,8 @@ Inspect with:
   cub changeset get --space $SPACE -o json $REDIS_CHANGESET_SLUG
 
 Open in the current UI:
-  cub space get --web $SPACE
-  cub unit get --space $SPACE --web $CARD_UNIT
+  ${SPACE_URL:-run: cub space get --web $SPACE}
+  ${CARD_UNIT_URL:-run: cub unit get --space $SPACE --web $CARD_UNIT}
   Then open Views/Initiatives in the $SPACE space and select $VIEW_SLUG.
 
 Cleanup:

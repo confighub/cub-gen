@@ -95,6 +95,11 @@ panels above is still a post-v0.4 ConfigHub integration step. The cub-gen part
 is finished when the decision object, proof events, ChangeSets, and compact card
 Unit are present and traceable in ConfigHub.
 
+The live script prints the ConfigHub organization name/id and org-qualified UI
+links. Use those links, or switch the ConfigHub org selector to the printed org,
+before opening the Space or Unit. Otherwise the same object URL can look empty
+or inaccessible in the wrong org.
+
 ## What The User Sees
 
 | Proposed edit | Route | Decision | Why |
