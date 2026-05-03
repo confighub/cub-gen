@@ -91,7 +91,9 @@ cub changeset get --space springboot-initiative-live -o json <redis-changeset>
 In the current ConfigHub UI, open the `springboot-initiative-live` space, then
 open the run-specific View/Initiative and the compact card Unit. This is real
 backend evidence, not a screenshot mock. First-class rendering of the five
-panels above is still a ConfigHub UI/backend integration step.
+panels above is still a post-v0.4 ConfigHub integration step. The cub-gen part
+is finished when the decision object, proof events, ChangeSets, and compact card
+Unit are present and traceable in ConfigHub.
 
 ## What The User Sees
 
@@ -136,8 +138,8 @@ cub unit get --space inventory-api-prod inventory-api \
 
 The live script uses current ConfigHub primitives today: Space, Unit, ChangeSet,
 Filter, and View. The exact Trigger/Function/ApplyGate wiring belongs to the
-native ConfigHub integration. The cub-gen contract is the stable decision object
-and proof event that the Initiative displays.
+native ConfigHub integration. The cub-gen contract is the stable decision
+object, next action, digest, and proof event that the Initiative displays.
 
 ## Do Not Claim
 

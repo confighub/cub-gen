@@ -13,12 +13,14 @@ and GitHub release tracker [#302](https://github.com/confighub/cub-gen/issues/30
 
 ## Current Roadmap Touchpoints
 
-Open and recently completed issues checked on 2026-05-02:
+Open and recently completed issues checked on 2026-05-03:
 
 | Issue | Title | Why it matters for the manifesto |
 |---|---|---|
-| [#287](https://github.com/confighub/cub-gen/issues/287) | make cub-gen role and value obvious | parent roadmap issue keeping the product story coherent |
+| [#302](https://github.com/confighub/cub-gen/issues/302) | v0.4 integration beta tracker | active release tracker for the Component -> Variant -> Proof release |
+| [#287](https://github.com/confighub/cub-gen/issues/287) | make cub-gen role and value obvious | historical parent roadmap issue keeping the product story coherent |
 | [#283](https://github.com/confighub/cub-gen/issues/283) | mutation apply gates for generator routes | route ownership now has a cub-gen decision object with next actions, digest, and proof events for ConfigHub Initiative/apply-gate display |
+| [#320](https://github.com/confighub/cub-gen/issues/320) | connect mutation apply gates to ConfigHub Function/Trigger/ApplyGate flow | post-v0.4 native ConfigHub integration; cub-gen already supplies the stable payload and live current-object evidence |
 | [#236](https://github.com/confighub/cub-gen/issues/236) | ship cub-gen as `cub gen` plugin | product workflow should feel like one platform; plugin proof now works, next release artifact remains |
 | [#213](https://github.com/confighub/cub-gen/issues/213) | GUI provenance trace | click-field-to-source is the core teaching moment |
 | [#212](https://github.com/confighub/cub-gen/issues/212) | GUI regeneration/refresh preview | users need to see generated impact before merge/apply |

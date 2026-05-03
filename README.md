@@ -25,6 +25,11 @@ A **mutation apply gate** is the decision point for that route. It records the
 field, owner, route, decision, next action, and proof so ConfigHub can show why
 a change may apply here, must move upstream, or should be blocked.
 
+Today `cub-gen` can publish that evidence into ConfigHub using current objects:
+Space, Unit, ChangeSet, Filter, and View. The first-class ConfigHub
+Function/Trigger/ApplyGate wiring and native Initiative card are the next
+integration step; `cub-gen` owns the deterministic decision and proof payload.
+
 Short version: `cub-gen` turns the app/platform repos people already have into
 explicit, governed functions on config data. It does this without pretending
 Kubernetes stopped being Kubernetes.
