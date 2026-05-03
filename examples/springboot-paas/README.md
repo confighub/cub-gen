@@ -25,6 +25,7 @@ The app is `inventory-api`, a Spring Boot 3.3.2 service (Java 21) deployed acros
 | Standalone live-cluster app proof | Real | `./bin/create-cluster && ./bin/build-image && ./bin/install-worker && ./verify-e2e.sh` |
 | Governed route proof (`ALLOW` / `ESCALATE` / `BLOCK`) | Real local mutation gate | `./examples/springboot-paas/demo-governed-routes.sh` |
 | Initiative GUI proof | Real local gate card for current ConfigHub Initiative UI | `./examples/springboot-paas/demo-initiative-gui.sh` |
+| Live ConfigHub Initiative evidence | Real backend objects in current ConfigHub UI | `./examples/springboot-paas/demo-initiative-live.sh` |
 | Direct embedded ConfigHub payload mutation | Real but client-side | `./examples/springboot-paas/demo-embedded-config-mutation.sh` |
 
 The strongest caveat is enforcement depth, not demo truth. The ownership
@@ -135,6 +136,10 @@ go build -o ./cub-gen ./cmd/cub-gen
 
 # ConfigHub Initiative GUI proof
 ./examples/springboot-paas/demo-initiative-gui.sh
+
+# Live ConfigHub Initiative evidence
+cub auth login
+./examples/springboot-paas/demo-initiative-live.sh
 
 # Direct embedded payload mutation proof
 ./examples/springboot-paas/demo-embedded-config-mutation.sh
@@ -319,6 +324,13 @@ For a concrete GUI card, run
 [`docs/initiative-gui.md`](./docs/initiative-gui.md). It shows the three review
 outcomes Brian and Jesper are likely to ask about: app-owned `ALLOW`,
 source-owned `ESCALATE`, and platform-owned `BLOCK`.
+
+To put the same evidence into a real ConfigHub account, run
+[`demo-initiative-live.sh`](./demo-initiative-live.sh). It creates a live Space,
+an Initiative-labeled View, a compact gate-card Unit, three decision Units, and
+three ChangeSets with route, owner, next action, and digest metadata. The
+current UI can show those objects today; first-class card rendering in the
+Initiative panel is the next ConfigHub UI/backend integration.
 
 ## Normalize preview
 
