@@ -169,6 +169,24 @@
       "tracking_issues": []
     },
     {
+      "example": "kubara",
+      "generator_fixture": false,
+      "source_chain_verified": false,
+      "connected_mode_present": true,
+      "connected_release_gated": false,
+      "real_live_proof": "none",
+      "ai_first_surface": "none",
+      "proof_commands": [
+        "./examples/kubara/demo-connected.sh"
+      ],
+      "proof_refs": {
+        "connected_mode": [
+          "./examples/kubara/demo-connected.sh"
+        ]
+      },
+      "tracking_issues": []
+    },
+    {
       "example": "live-reconcile",
       "generator_fixture": false,
       "source_chain_verified": false,
@@ -196,6 +214,29 @@
       "notes": [
         "Runtime harness for WET-\u003eLIVE proof; source-side generator proof lives in paired examples."
       ]
+    },
+    {
+      "example": "openchoreo",
+      "generator_fixture": true,
+      "generator_kind": "openchoreo",
+      "source_chain_verified": true,
+      "connected_mode_present": true,
+      "connected_release_gated": false,
+      "real_live_proof": "none",
+      "ai_first_surface": "none",
+      "proof_commands": [
+        "./examples/openchoreo/demo-connected.sh",
+        "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+      ],
+      "proof_refs": {
+        "source_chain": [
+          "go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v"
+        ],
+        "connected_mode": [
+          "./examples/openchoreo/demo-connected.sh"
+        ]
+      },
+      "tracking_issues": []
     },
     {
       "example": "ops-workflow",
@@ -362,19 +403,19 @@
     }
   ],
   "summary": {
-    "featured_examples": 12,
-    "generator_fixtures": 8,
-    "source_chain_verified": 8,
-    "connected_mode_present": 12,
+    "featured_examples": 14,
+    "generator_fixtures": 9,
+    "source_chain_verified": 9,
+    "connected_mode_present": 14,
     "connected_release_gated": 2,
     "real_live_proof": {
-      "none": 8,
+      "none": 10,
       "paired-harness": 1,
       "standalone": 3
     },
     "ai_first_surface": {
       "explicit": 7,
-      "none": 3,
+      "none": 5,
       "partial": 2
     }
   }

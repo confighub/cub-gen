@@ -77,6 +77,7 @@ func Collect(root string) (Matrix, error) {
 	fixtures := map[string]FamilyFixture{}
 	for _, fixture := range BridgeSymmetryMatrix() {
 		fixtures[filepath.Base(fixture.RepoSuffix)] = fixture
+		fixtures[fixture.Name] = fixture
 	}
 
 	connectedSmokeExamples, err := parseExampleArray(filepath.Join(root, "examples", "demo", "run-connected-smoke.sh"))

@@ -16,13 +16,13 @@ func TestCollect(t *testing.T) {
 	if matrix.SchemaVersion != schemaVersion {
 		t.Fatalf("unexpected schema version: %s", matrix.SchemaVersion)
 	}
-	if got, want := matrix.Summary.FeaturedExamples, 12; got != want {
+	if got, want := matrix.Summary.FeaturedExamples, 14; got != want {
 		t.Fatalf("featured examples = %d, want %d", got, want)
 	}
-	if got, want := matrix.Summary.GeneratorFixtures, 8; got != want {
+	if got, want := matrix.Summary.GeneratorFixtures, 9; got != want {
 		t.Fatalf("generator fixtures = %d, want %d", got, want)
 	}
-	if got, want := matrix.Summary.SourceChainVerified, 8; got != want {
+	if got, want := matrix.Summary.SourceChainVerified, 9; got != want {
 		t.Fatalf("source-chain verified = %d, want %d", got, want)
 	}
 	if got, want := matrix.Summary.ConnectedReleaseGated, 2; got != want {
@@ -72,5 +72,15 @@ func TestCollect(t *testing.T) {
 	ops := rows["ops-workflow"]
 	if ops.AIFirstSurface != AIFirstPartial {
 		t.Fatalf("ops-workflow ai_first_surface = %q, want %q", ops.AIFirstSurface, AIFirstPartial)
+	}
+
+	openChoreo := rows["openchoreo"]
+	if !openChoreo.SourceChainVerified || openChoreo.GeneratorKind != "openchoreo" {
+		t.Fatalf("openchoreo should be source-chain verified via the hardgate fixture: %+v", openChoreo)
+	}
+
+	kubara := rows["kubara"]
+	if kubara.GeneratorFixture {
+		t.Fatal("kubara is a pattern wrapper, not a private Kubara conformance fixture")
 	}
 }

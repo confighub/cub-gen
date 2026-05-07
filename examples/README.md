@@ -20,6 +20,8 @@ the stack you already run.
 | Helm plus Argo/Flux platform repos | [`helm-paas`](./helm-paas/) | `./examples/demo/start-platform-first.sh` | you can trace one rendered field back to chart or values ownership |
 | Spring Boot app repos | [`springboot-paas`](./springboot-paas/) | `./examples/demo/start-app-first.sh` | you can tell which config changes are app-owned, lift-upstream, or blocked |
 | Score.dev workloads | [`scoredev-paas`](./scoredev-paas/) | `./examples/demo/start-score-first.sh` | you can trace `score.yaml` intent to rendered runtime fields |
+| OpenChoreo-style platforms | [`openchoreo`](./openchoreo/) | `./examples/openchoreo/demo-local.sh` | you can trace Workload/ReleaseBinding/ComponentType/SecretReference to rendered resources |
+| Kubara-like app-config platforms | [`kubara`](./kubara/) | `./examples/kubara/demo-local.sh` | you can see app config, platform graph, and Base/Deployment Variant proof |
 | Real GitOps runtime proof | [`live-reconcile`](./live-reconcile/) | `RECONCILER=both ./examples/live-reconcile/demo-local.sh` | you see WET output survive Flux or Argo reconciliation on kind |
 
 If you are unsure, start with `helm-paas` for the platform view or
@@ -49,7 +51,8 @@ become full runnable adapters.
 
 | Pattern | Worked example | What it teaches | Product status |
 |---|---|---|---|
-| OpenChoreo-style component platform | [OpenChoreo as a Clean Generator](../docs/agentic-gitops/03-worked-examples/05-openchoreo-generator-worked-example.md) | Workload + ReleaseBinding + SecretReference + ComponentType -> rendered release | fixture-backed hardgate; not full upstream conformance |
+| OpenChoreo-style component platform | [`openchoreo`](./openchoreo/) and [OpenChoreo as a Clean Generator](../docs/agentic-gitops/03-worked-examples/05-openchoreo-generator-worked-example.md) | Workload + ReleaseBinding + SecretReference + ComponentType -> rendered release | fixture-backed hardgate; not full upstream conformance |
+| Kubara-like app-config platform | [`kubara`](./kubara/) | app config + shared platform machinery + variants -> governed config data | pattern wrapper; not actual Kubara conformance |
 | Argo ApplicationSet | [Argo Generators](../docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | selectors, inventory, and templates generate child Applications | bounded support exists |
 | Argo app-of-apps | [Argo Generators](../docs/agentic-gitops/03-worked-examples/06-argo-generators-worked-example.md) | root app plus child app catalog behaves like a generator | fixture-backed initial adapter |
 | Multi-repo platform estate | [`platform-estate`](../testdata/platform-estate/) | read-only manifest import before rewrites or fanout | fixture-backed graph proof |
@@ -87,6 +90,9 @@ path for each flagship example.
 - [`springboot-paas`](./springboot-paas/) — Spring Boot app/team vs platform
   ownership
 - [`scoredev-paas`](./scoredev-paas/) — Score intent to rendered manifests
+- [`openchoreo`](./openchoreo/) — OpenChoreo-shaped Workload, bindings,
+  component type, secret reference, rendered release, and generated resources
+- [`kubara`](./kubara/) — Kubara-like app config manager/platform pattern
 - [`live-reconcile`](./live-reconcile/) — Flux and Argo runtime proof harness
 
 ### Workflow and automation

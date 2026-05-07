@@ -4,13 +4,13 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 
 ## Summary
 
-- Featured examples: `12`
-- Generator fixtures: `8`
-- Source-chain verified: `8`
-- Connected mode present: `12`
+- Featured examples: `14`
+- Generator fixtures: `9`
+- Source-chain verified: `9`
+- Connected mode present: `14`
 - Connected smoke gated: `2`
-- Real live proof: `none=8`, `paired-harness=1`, `standalone=3`
-- AI-first surface: `none=3`, `partial=2`, `explicit=7`
+- Real live proof: `none=10`, `paired-harness=1`, `standalone=3`
+- AI-first surface: `none=5`, `partial=2`, `explicit=7`
 
 ## Matrix
 
@@ -22,7 +22,9 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 | `confighub-actions` | no | no | yes | no | `none` | `partial` |  |
 | `helm-paas` | yes | yes | yes | yes | `paired-harness` | `explicit` | [#238](https://github.com/confighub/cub-gen/issues/238), [#239](https://github.com/confighub/cub-gen/issues/239), [#240](https://github.com/confighub/cub-gen/issues/240), [#241](https://github.com/confighub/cub-gen/issues/241), [#242](https://github.com/confighub/cub-gen/issues/242) |
 | `just-apps-no-platform-config` | yes | yes | yes | no | `none` | `none` |  |
+| `kubara` | no | no | yes | no | `none` | `none` |  |
 | `live-reconcile` | no | no | yes | no | `standalone` | `none` |  |
+| `openchoreo` | yes | yes | yes | no | `none` | `none` |  |
 | `ops-workflow` | yes | yes | yes | no | `none` | `partial` |  |
 | `scoredev-paas` | yes | yes | yes | no | `standalone` | `explicit` |  |
 | `springboot-paas` | yes | yes | yes | yes | `standalone` | `explicit` |  |
@@ -80,6 +82,14 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Real live: --
 - AI-first: --
 
+### `kubara`
+
+- Source chain: --
+- Connected mode: `./examples/kubara/demo-connected.sh`
+- Connected smoke lane: --
+- Real live: --
+- AI-first: --
+
 ### `live-reconcile`
 
 - Source chain: --
@@ -88,6 +98,14 @@ Generated from repo structure, source-side tests, the connected smoke lane, and 
 - Real live: `./examples/demo/e2e-live-reconcile-flux.sh`, `./examples/demo/e2e-live-reconcile-argo.sh`, `./examples/demo/e2e-connected-governed-reconcile-helm.sh`
 - AI-first: --
 - Notes: Runtime harness for WET->LIVE proof; source-side generator proof lives in paired examples.
+
+### `openchoreo`
+
+- Source chain: `go test ./cmd/cub-gen -run '^(TestExamplesPathModeDiscoverAndImport|TestExamplesPathModeBridgeFlow)$' -count=1 -v`
+- Connected mode: `./examples/openchoreo/demo-connected.sh`
+- Connected smoke lane: --
+- Real live: --
+- AI-first: --
 
 ### `ops-workflow`
 
