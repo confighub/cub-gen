@@ -16,6 +16,37 @@ These map to the three mutation routes every platform team needs:
 
 The app is `inventory-api`, a Spring Boot 3.3.2 service (Java 21) deployed across `dev`, `stage`, and `prod`.
 
+## Why ConfigHub is the write API for config
+
+A platform team runs many services with Argo CD or Flux, and Git holds all of
+their config. Git gives you a read API for a YAML file, not a write API for a
+structured field. So every config change goes clone, branch, edit, commit,
+push, review, merge and sync, and CI and Helm become the answer to every
+change. When everything is in Git, nobody can say what is actually in it.
+
+ConfigHub is the write API that platforms are missing: one field changes
+through one call, and `cub-gen` decides whether the change belongs here,
+upstream in the source, or nowhere because the platform owns the field. This
+example shows four parts of that claim.
+
+| Claim | Shown by |
+|-------|----------|
+| Config has a write API: change one field without Git, CI or Helm | `./examples/springboot-paas/demo-embedded-config-mutation.sh` |
+| You can see what differs across environments, and which differences were made in ConfigHub | `./examples/springboot-paas/confighub-compare.sh` |
+| Every field has a route: apply here, lift upstream, or block | `./examples/springboot-paas/demo-governed-routes.sh` |
+| A regeneration does not erase an intentional change | `./examples/springboot-paas/confighub-refresh-preview.sh prod` |
+
+`confighub-compare.sh` and `confighub-refresh-preview.sh` read ConfigHub when
+you are signed in, and fall back to the local fixtures when you are not. After
+a change on a `mutable-in-ch` field such as
+`feature.inventory.reservationMode`, the comparison marks it with `*`, and the
+refresh preview reports it as `PRESERVE`: it survives the next render.
+
+The ConfigHub GUI does not yet show route badges, a side-by-side comparison, a
+mutation history, a refresh preview or a field's provenance; those are
+tracked in #209 to #213. This section replaces the former
+`incubator/platform-write-api` example in `confighub/examples`.
+
 ## What this proves today
 
 | Slice | Status | How to prove it now |
