@@ -16,6 +16,35 @@ These map to the three mutation routes every platform team needs:
 
 The app is `inventory-api`, a Spring Boot 3.3.2 service (Java 21) deployed across `dev`, `stage`, and `prod`.
 
+## Why ConfigHub is the write API for config
+
+A platform team runs many services with Argo CD or Flux, and Git holds all of
+their config. Git gives you a read API for a YAML file, not a write API for a
+structured field. So every config change goes clone, branch, edit, commit,
+push, review, merge and sync, and CI and Helm become the answer to every
+change. When everything is in Git, nobody can say what is actually in it.
+
+ConfigHub is the write API that platforms are missing: one field changes
+through one call, and `cub-gen` decides whether the change belongs here,
+upstream in the source, or nowhere because the platform owns the field. This
+example shows four parts of that claim, and says which part runs where.
+
+| Claim | Shown by |
+|-------|----------|
+| One field changes through one ConfigHub call, without Git, CI or Helm | After `./examples/springboot-paas/confighub-setup.sh`, run `cub function do --space inventory-api-prod -- set-env inventory-api 'FEATURE_INVENTORY_RESERVATIONMODE=optimistic'`. This needs a ConfigHub account. `demo-embedded-config-mutation.sh` makes the same field edit on the payload file in a local clone, without calling ConfigHub. |
+| You can see which values differ from each environment's upstream default | `./examples/springboot-paas/confighub-compare.sh` marks a value with `*` when it differs from the default the script records. The marker does not say where the change was made. |
+| Every field has a route: apply here, lift upstream, or block | `./examples/springboot-paas/demo-governed-routes.sh` |
+| A regeneration should keep an intentional change | `./examples/springboot-paas/confighub-refresh-preview.sh prod` simulates a refresh on the client and reports a changed `mutable-in-ch` field as `PRESERVE`. Real refresh survival needs server-side merge support, which is not implemented yet. |
+
+`confighub-compare.sh` and `confighub-refresh-preview.sh` read ConfigHub when
+you are signed in, and fall back to the local fixtures when you are not. Both
+are read-only.
+
+The ConfigHub GUI does not yet show route badges, a side-by-side comparison, a
+mutation history, a refresh preview or a field's provenance; those are
+tracked in #209 to #213. This section replaces the former
+`incubator/platform-write-api` example in `confighub/examples`.
+
 ## What this proves today
 
 | Slice | Status | How to prove it now |
