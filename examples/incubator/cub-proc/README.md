@@ -18,7 +18,7 @@ The current wedge remains:
 - ConfigHub
 - evidence
 
-The incubator GitOps import examples already show the operational gaps clearly. They prove that ConfigHub can import and organize WET configuration and surface useful evidence. They also show how much manual stitching is still needed when a procedure spans discovery, import, rendering, controller refresh, and live verification.
+The incubator GitOps import examples already show the operational gaps clearly. They prove that ConfigHub can import and organize rendered configuration and surface useful evidence. They also show how much manual stitching is still needed when a procedure spans discovery, import, rendering, controller refresh, and live verification.
 
 That is why the `cub-proc` design belongs here.
 

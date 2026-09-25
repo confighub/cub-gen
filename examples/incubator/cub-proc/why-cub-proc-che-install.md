@@ -229,7 +229,7 @@ outputs:
     - subnet-0123
   keycloakDbEndpoint: keycloak-postgres.abc123.us-west-2.rds.amazonaws.com
   confighubDbEndpoint: confighub-postgres.def456.us-west-2.rds.amazonaws.com
-  nlbHostname: abc123.elb.us-west-2.elb.amazonaws.com
+  nlbHostname: abc123.elb.us-west-2.amazonaws.com
   urls:
     keycloak: https://keycloak.acme.example.com
     confighub: https://hub.acme.example.com

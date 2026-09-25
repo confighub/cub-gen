@@ -107,7 +107,7 @@ Likely assertions:
 - Flux deployers were discovered
 - `podinfo` rendered successfully
 - broken source paths are surfaced with explicit evidence
-- wet units were created
+- Units holding the rendered configuration were created
 
 ### 4. `gitops-import/argo`
 
@@ -134,8 +134,8 @@ Likely assertions:
 
 - discovery target is present
 - Argo applications were discovered
-- selected dry units rendered
-- wet units were created
+- the selected source Units rendered
+- Units holding the rendered configuration were created
 - at least one expected healthy app is present
 - controller-side failures are surfaced rather than hidden
 
